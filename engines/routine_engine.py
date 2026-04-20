@@ -8,12 +8,13 @@ from collections import defaultdict
 from uuid import uuid4
 from pydantic import BaseModel, Field, ConfigDict, ValidationError
 from pydantic.alias_generators import to_camel
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.exceptions import OutputParserException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from dotenv import load_dotenv
+
+from engines.llm_router import get_llm, map_llm_error, StatusReasonCode
 
 load_dotenv()
 
@@ -22,7 +23,7 @@ load_dotenv()
 # ==========================================
 
 GenerationStatus = Literal["success", "fallback", "failed"]
-StatusReasonCode = Literal["none", "llmTimeout", "schemaError", "networkError"]
+# StatusReasonCode는 engines.llm_router에서 단일 정의 후 re-export됨
 
 DOMS_LEVEL_MAP: Dict[str, int] = {
     "mild": 1,
@@ -760,8 +761,8 @@ def generate_smart_routine(
     else:
         doms_instructions = "현재 근육통 없음. 정상 볼륨으로 진행."
 
-    # 4. LLM 호출
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
+    # 4. LLM 호출 (provider는 LLM_PROVIDER 환경 변수로 결정)
+    llm = get_llm("routine")
     structured_llm = llm.with_structured_output(LLMRoutineOutput)
 
     system_prompt = _build_system_prompt(profile, recent_sets)
@@ -785,7 +786,7 @@ def generate_smart_routine(
         return _build_routine_draft(response, "success", "none", False)
 
     except (asyncio.TimeoutError, httpx.TimeoutException) as e:
-        reason = "llmTimeout"
+        reason = map_llm_error(e)
         print(f"[AI 실패 - TIMEOUT] {e} → fallback 루틴으로 전환")
 
     except (OutputParserException, ValidationError) as e:
@@ -808,13 +809,13 @@ def generate_smart_routine(
             return _build_routine_draft(normalized, "success", "none", False)
 
         except Exception as norm_e:
-            reason = "schemaError"
+            reason = map_llm_error(e)  # 원본 schema 에러 기준으로 분류
             print(f"[정제 어댑터] 복구 실패: {norm_e} → fallback 루틴으로 전환")
         # ─────────────────────────────────────────────────────────────
 
     except Exception as e:
-        reason = "networkError"
-        print(f"[AI 실패 - NETWORK] {e} → fallback 루틴으로 전환")
+        reason = map_llm_error(e)
+        print(f"[AI 실패 - {reason.upper()}] {e} → fallback 루틴으로 전환")
 
     return generate_fallback_routine(
         req, candidates, max_total_sets, doms_db,
