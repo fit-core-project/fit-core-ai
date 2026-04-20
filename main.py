@@ -4,14 +4,19 @@ import tempfile
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Depends
+from sqlalchemy.orm import Session
+from database import get_db
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from faster_whisper import WhisperModel
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
-from engines.routine_engine import generate_smart_routine, RoutineRequest
+from engines.routine_engine import (
+    generate_smart_routine, get_user_profile_context, get_recent_sets,
+    RoutineRequest, RoutineDraftResponse,
+)
 from engines.nlp_engine import parse_natural_language_log
 from engines.supplement_engine import SupplementRAGEngine
 
@@ -85,19 +90,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # ==========================================================
 # 🚀 API 1: 맞춤형 AI 루틴 생성기
 # ==========================================================
-@app.post("/api/ai/generate-routine")
-def api_generate_routine(req: RoutineRequest):
+@app.post("/api/ai/generate-routine", response_model=RoutineDraftResponse)
+def api_generate_routine(req: RoutineRequest, db: Session = Depends(get_db)):
     try:
         print("\n✅ [루틴 생성 요청 수신]")
-        result_json_str = generate_smart_routine(req)
-
-        clean_json_str = result_json_str.strip()
-        if clean_json_str.startswith("```json"):
-            clean_json_str = clean_json_str[7:]
-        if clean_json_str.endswith("```"):
-            clean_json_str = clean_json_str[:-3]
-
-        return json.loads(clean_json_str)
+        profile = get_user_profile_context(db, req.user_id)
+        recent_sets = get_recent_sets(db, req.user_id)
+        return generate_smart_routine(req, db, profile=profile, recent_sets=recent_sets)
 
     except Exception as e:
         import traceback
