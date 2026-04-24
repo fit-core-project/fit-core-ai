@@ -8,7 +8,7 @@ target_file = "exercise_tier.xlsx"
 csv_file_path = os.path.join(BASE_DIR, target_file)
 
 # 2. MariaDB 연결 설정
-DATABASE_URL = "mysql+pymysql://root:root@localhost:3306/fit_core"
+DATABASE_URL = "mysql+pymysql://root:1234@localhost:3307/fit_core"
 engine = create_engine(DATABASE_URL)
 
 def import_data():

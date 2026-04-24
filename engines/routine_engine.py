@@ -3,7 +3,8 @@ import json
 import math
 import asyncio
 import httpx
-from typing import Any, List, Optional, Dict, Literal
+from dataclasses import dataclass
+from typing import Any, List, Optional, Dict, Literal, Tuple
 from collections import defaultdict
 from uuid import uuid4
 from pydantic import BaseModel, Field, ConfigDict, ValidationError
@@ -44,7 +45,8 @@ class DomEntry(BaseModel):
 class RoutineRequest(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
     user_id: Optional[str] = None
-    target_split_label: str                          # "push" | "pull" | "legs" | ...
+    target_split_label: Optional[str] = None         # "push" | "pull" | "legs" | ... (없으면 target_muscles 직접 사용)
+    target_muscles: List[str] = Field(default_factory=list)  # DB Enum 직접 지정 시 사용
     readiness_level: Optional[str] = "normal"
     time_available_min: int
     current_pain_areas: List[str] = Field(default_factory=list)
@@ -174,31 +176,36 @@ SPLIT_LABEL_TO_MUSCLES: Dict[str, List[str]] = {
     "full_body": ["CHEST_UPPER", "BACK_LATS", "SHOULDER_FRONT", "LEG_QUADS", "LEG_HAMSTRINGS", "CORE_ABS"],
 }
 
-# react-body-highlighter 키 → DB Enum (DOMS bodyPart 역매핑용)
-FRONTEND_TO_DB_MAP: Dict[str, List[str]] = {
-    "chest":          ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER"],
-    "upper-back":     ["BACK_UPPER"],
-    "trapezius":      ["BACK_UPPER"],
-    "lats":           ["BACK_LATS"],
-    "lower-back":     ["BACK_LOWER"],
-    "front-deltoids": ["SHOULDER_FRONT"],
-    "back-deltoids":  ["SHOULDER_REAR"],
-    "deltoids":       ["SHOULDER_FRONT", "SHOULDER_REAR", "SHOULDER_SIDE"],
-    "side-deltoids":  ["SHOULDER_SIDE"],
-    "biceps":         ["ARM_BICEPS"],
-    "triceps":        ["ARM_TRICEPS"],
-    "forearm":        ["ARM_FOREARMS"],
-    "abs":            ["CORE_ABS"],
-    "obliques":       ["CORE_OBLIQUES"],
-    "glutes":         ["LEG_GLUTES"],
-    "hamstring":      ["LEG_HAMSTRINGS"],
-    "quadriceps":     ["LEG_QUADS"],
-    "calves":         ["LEG_CALVES"],
-    "adductors":      ["LEG_ADDUCTORS"],
-    "abductors":      ["LEG_ABDUCTORS"],
-    "knees":          ["LEG_QUADS", "LEG_HAMSTRINGS"],
-    "neck":           ["NECK"],
-    "head":           [],
+@dataclass
+class MuscleMapping:
+    ai_targets: List[str]
+    db_enums: List[str]
+
+# react-body-highlighter 키 기준 단일 진실 공급원 (SSOT)
+MUSCLE_REGISTRY: Dict[str, MuscleMapping] = {
+    "chest":          MuscleMapping(["chest"],                              ["CHEST_UPPER", "CHEST_MID_LOWER"]),
+    "upper-back":     MuscleMapping(["upperBack"],                          ["BACK_TRAPS"]),
+    "trapezius":      MuscleMapping(["upperBack"],                          ["BACK_TRAPS"]),
+    "lats":           MuscleMapping(["lats"],                               ["BACK_LATS"]),
+    "lower-back":     MuscleMapping(["lowerBack"],                          ["BACK_LOWER"]),
+    "front-deltoids": MuscleMapping(["frontDelts"],                         ["SHOULDER_FRONT"]),
+    "back-deltoids":  MuscleMapping(["rearDelts"],                          ["SHOULDER_REAR"]),
+    "deltoids":       MuscleMapping(["frontDelts", "rearDelts", "sideDelts"], ["SHOULDER_FRONT", "SHOULDER_REAR", "SHOULDER_LATERAL"]),
+    "side-deltoids":  MuscleMapping(["sideDelts"],                          ["SHOULDER_LATERAL"]),
+    "biceps":         MuscleMapping(["biceps"],                             ["ARM_BICEPS"]),
+    "triceps":        MuscleMapping(["triceps"],                            ["ARM_TRICEPS"]),
+    "forearm":        MuscleMapping(["forearm"],                            ["ARM_FOREARMS"]),
+    "abs":            MuscleMapping(["abs"],                                ["CORE_ABS"]),
+    "obliques":       MuscleMapping(["obliques"],                           ["CORE_OBLIQUES"]),
+    "glutes":         MuscleMapping(["glutes"],                             ["LEG_GLUTES"]),
+    "hamstring":      MuscleMapping(["hamstrings"],                         ["LEG_HAMSTRINGS"]),
+    "quadriceps":     MuscleMapping(["quads"],                              ["LEG_QUADS"]),
+    "calves":         MuscleMapping(["calves"],                             []),
+    "adductors":      MuscleMapping(["adductors"],                          []),
+    "abductors":      MuscleMapping(["abductors"],                          []),
+    "knees":          MuscleMapping(["quads", "hamstrings"],                ["LEG_QUADS", "LEG_HAMSTRINGS"]),
+    "neck":           MuscleMapping(["neck"],                               []),
+    "head":           MuscleMapping([],                                     []),
 }
 
 
@@ -207,13 +214,30 @@ def split_label_to_muscles(label: str) -> List[str]:
     return SPLIT_LABEL_TO_MUSCLES.get(label.lower(), [])
 
 
+def get_mapped_targets(raw_muscles: List[str]) -> Tuple[List[str], List[str]]:
+    """
+    프론트엔드 target_muscles 리스트를 MUSCLE_REGISTRY 기반으로 변환한다.
+    반환: (ai_targets, db_enums) — 각각 중복 제거된 리스트
+    """
+    ai_seen: set = set()
+    db_seen: set = set()
+    for raw in raw_muscles:
+        mapping = MUSCLE_REGISTRY.get(raw.lower())
+        if mapping:
+            ai_seen.update(mapping.ai_targets)
+            db_seen.update(mapping.db_enums)
+        else:
+            ai_seen.add(raw)
+    return list(ai_seen), list(db_seen)
+
+
 def map_doms_to_db(doms: List[DomEntry]) -> Dict[str, int]:
     """DomEntry 배열을 {DB_MUSCLE_ENUM: level_int} 딕셔너리로 변환한다."""
     result: Dict[str, int] = {}
     for entry in doms:
         level_int = DOMS_LEVEL_MAP.get(entry.level.lower(), 1)
-        mapped = FRONTEND_TO_DB_MAP.get(entry.body_part.lower())
-        targets = mapped if mapped is not None else [entry.body_part]
+        mapping = MUSCLE_REGISTRY.get(entry.body_part.lower())
+        targets = mapping.db_enums if mapping is not None else [entry.body_part]
         for db_muscle in targets:
             result[db_muscle] = max(result.get(db_muscle, 0), level_int)
     return result
@@ -710,7 +734,7 @@ def generate_fallback_routine(
         generation_status="fallback",
         status_reason_code=status_reason_code,
         is_fallback=True,
-        summary_title=f"기본 {req.target_split_label} 루틴",
+        summary_title=f"기본 {req.target_split_label or '맞춤형'} 루틴",
         rationale_summary=["AI 코치 연결이 원활하지 않아 기본 루틴으로 대체되었습니다."],
         routine_blocks=blocks,
         warnings=["중량은 본인의 컨디션에 맞게 조절하세요."],
@@ -728,19 +752,29 @@ def generate_smart_routine(
     recent_sets: Optional[List[RecentSetRecord]] = None,
 ) -> RoutineDraftResponse:
 
-    # 0. targetSplitLabel → DB 근육 Enum, DOMS 변환
-    target_muscles = split_label_to_muscles(req.target_split_label)
+    # 0. 타겟 근육 결정: splitLabel 우선 → target_muscles 직접 지정 → 빈 리스트
+    if req.target_split_label:
+        db_target_muscles = split_label_to_muscles(req.target_split_label)
+        ai_target_muscles = db_target_muscles  # split_label은 이미 DB Enum 형식
+        print(f"[매핑] split_label={req.target_split_label} → {db_target_muscles}")
+    elif req.target_muscles:
+        ai_target_muscles, db_target_muscles = get_mapped_targets(req.target_muscles)
+        print(f"[매핑] AI 타겟 → {ai_target_muscles}")
+        print(f"[매핑] DB 타겟 → {db_target_muscles}")
+    else:
+        ai_target_muscles = []
+        db_target_muscles = []
+        print("[매핑] 타겟 근육 없음 — 빈 후보 리스트로 진행")
+
     doms_db = map_doms_to_db(req.doms)
     goal = req.goal or (profile.goal_type if profile else "HYPERTROPHY")
     pain_areas = req.current_pain_areas
-
-    print(f"[매핑] split_label={req.target_split_label} → {target_muscles}")
     print(f"[매핑] doms → {doms_db}")
 
     # 1. 후보 운동 DB 조회
     candidates = get_candidate_exercises(
         db=db,
-        target_muscles=target_muscles,
+        target_muscles=db_target_muscles,   # DB Enum 형식 (예: CHEST_UPPER, BACK_LATS)
         unavailable_equipment=req.unavailable_equipment,
         pain_areas=pain_areas,
     )

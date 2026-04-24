@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 # MariaDB 연결 URL (pymysql 드라이버 사용)
 # 형식: mysql+pymysql://사용자명:비밀번호@호스트:포트/데이터베이스명
-DATABASE_URL = "mysql+pymysql://root:root@localhost:3306/fit_core"
+DATABASE_URL = "mysql+pymysql://root:1234@localhost:3307/fit_core"
 
 # Engine 생성 (연결 풀링 설정 포함)
 engine = create_engine(
