@@ -27,3 +27,5 @@ sqlalchemy
 pymysql
 pandas
 openpyxl
+pytest
+pytest-mock

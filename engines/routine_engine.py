@@ -49,10 +49,10 @@ class RoutineRequest(BaseModel):
     target_muscles: List[str] = Field(default_factory=list)  # DB Enum 직접 지정 시 사용
     readiness_level: Optional[str] = "normal"
     time_available_min: int
-    current_pain_areas: List[str] = Field(default_factory=list)
-    doms: List[DomEntry] = Field(default_factory=list)
-    unavailable_equipment: List[str] = Field(default_factory=list)
-    goal: Optional[str] = None                       # 미전달 시 프로필의 goal_type 사용
+    pain_areas: List[str] = Field(default_factory=list)       # 장기 부상 부위 (부위명 배열)
+    doms_data: Dict[str, int] = Field(default_factory=dict)   # Java가 매핑한 {DB_MUSCLE_ENUM: level(1~3)}
+    equipment: List[str] = Field(default_factory=list)         # 사용 불가 장비 블랙리스트
+    goal: Optional[str] = None                                 # 미전달 시 프로필의 goal_type 사용
     user_note: Optional[str] = None
 
 
@@ -766,16 +766,16 @@ def generate_smart_routine(
         db_target_muscles = []
         print("[매핑] 타겟 근육 없음 — 빈 후보 리스트로 진행")
 
-    doms_db = map_doms_to_db(req.doms)
+    doms_db = req.doms_data
     goal = req.goal or (profile.goal_type if profile else "HYPERTROPHY")
-    pain_areas = req.current_pain_areas
+    pain_areas = req.pain_areas
     print(f"[매핑] doms → {doms_db}")
 
     # 1. 후보 운동 DB 조회
     candidates = get_candidate_exercises(
         db=db,
         target_muscles=db_target_muscles,   # DB Enum 형식 (예: CHEST_UPPER, BACK_LATS)
-        unavailable_equipment=req.unavailable_equipment,
+        unavailable_equipment=req.equipment,
         pain_areas=pain_areas,
     )
     candidate_str = format_candidates_for_prompt(candidates)
@@ -872,9 +872,9 @@ if __name__ == "__main__":
         target_split_label="push",
         readiness_level="normal",
         time_available_min=70,
-        current_pain_areas=[],
-        doms=[DomEntry(body_part="chest", level="mild")],
-        unavailable_equipment=["smith_machine"],
+        pain_areas=[],
+        doms_data={"CHEST_MID": 1},   # mild=1
+        equipment=["smith_machine"],
     )
 
     db = SessionLocal()
