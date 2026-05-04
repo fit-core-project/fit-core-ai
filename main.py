@@ -90,7 +90,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # ==========================================================
 # 🚀 API 1: 맞춤형 AI 루틴 생성기
 # ==========================================================
-@app.post("/api/ai/generate-routine", response_model=RoutineDraftResponse)
+@app.post("/api/ai/generate-routine", response_model=RoutineDraftResponse, response_model_by_alias=True)
 def api_generate_routine(req: RoutineRequest, db: Session = Depends(get_db)):
     try:
         print("\n✅ [루틴 생성 요청 수신]")
