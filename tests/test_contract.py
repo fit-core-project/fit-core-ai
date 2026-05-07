@@ -131,3 +131,21 @@ class TestRoutineDraftResponseSerialization:
             r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
         )
         assert uuid_pattern.match(response.routine_draft_id)
+
+    def test_total_estimated_time_in_response(self, sample_llm_output):
+        from engines.routine_engine import _build_routine_draft
+
+        response = _build_routine_draft(sample_llm_output, "success", "none", False)
+        dumped = response.model_dump(by_alias=True)
+
+        assert "totalEstimatedTime" in dumped
+        assert dumped["totalEstimatedTime"] == 55  # sample_llm_output.total_estimated_time
+
+    def test_is_fallback_serialized_as_camel_case(self, sample_llm_output):
+        from engines.routine_engine import _build_routine_draft
+
+        response = _build_routine_draft(sample_llm_output, "success", "none", False)
+        dumped = response.model_dump(by_alias=True)
+
+        assert "isFallback" in dumped
+        assert "is_fallback" not in dumped

@@ -152,6 +152,7 @@ class RoutineDraftResponse(BaseModel):
     generation_status: GenerationStatus
     status_reason_code: StatusReasonCode
     is_fallback: bool
+    total_estimated_time: int = 0
     summary_title: str
     rationale_summary: List[str]
     routine_blocks: List[RoutineBlock]
@@ -562,6 +563,7 @@ def _build_routine_draft(
         generation_status=generation_status,
         status_reason_code=status_reason_code,
         is_fallback=is_fallback,
+        total_estimated_time=llm_output.total_estimated_time,
         summary_title=llm_output.summary_title,
         rationale_summary=llm_output.rationale_summary,
         routine_blocks=blocks,
@@ -679,6 +681,7 @@ def generate_fallback_routine(
             generation_status="fallback",
             status_reason_code=status_reason_code,
             is_fallback=True,
+            total_estimated_time=req.time_available_min,
             summary_title="기본 루틴",
             rationale_summary=["선택한 조건에 맞는 운동이 없습니다."],
             routine_blocks=[],
@@ -730,10 +733,18 @@ def generate_fallback_routine(
         ))
         order += 1
 
+    total_sec = sum(
+        (45 + presc.target_rest_sec)
+        for block in blocks
+        for presc in block.prescription
+    )
+    estimated_time = max(1, round(total_sec / 60)) if blocks else req.time_available_min
+
     return RoutineDraftResponse(
         generation_status="fallback",
         status_reason_code=status_reason_code,
         is_fallback=True,
+        total_estimated_time=estimated_time,
         summary_title=f"기본 {req.target_split_label or '맞춤형'} 루틴",
         rationale_summary=["AI 코치 연결이 원활하지 않아 기본 루틴으로 대체되었습니다."],
         routine_blocks=blocks,
