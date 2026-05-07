@@ -42,6 +42,13 @@ class DomEntry(BaseModel):
     level: str  # "mild" | "moderate" | "severe"
 
 
+class PainAreaEntry(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+    body_part: str
+    side: Optional[str] = None
+    severity: Optional[str] = None
+
+
 class RoutineRequest(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
     user_id: Optional[str] = None
@@ -49,7 +56,7 @@ class RoutineRequest(BaseModel):
     target_muscles: List[str] = Field(default_factory=list)  # DB Enum 직접 지정 시 사용
     readiness_level: Optional[str] = "normal"
     time_available_min: int
-    pain_areas: List[str] = Field(default_factory=list)       # 장기 부상 부위 (부위명 배열)
+    pain_areas: List[PainAreaEntry] = Field(default_factory=list)  # 장기 부상 부위 객체 배열
     doms_data: Dict[str, int] = Field(default_factory=dict)   # Java가 매핑한 {DB_MUSCLE_ENUM: level(1~3)}
     equipment: List[str] = Field(default_factory=list)         # 사용 불가 장비 블랙리스트
     goal: Optional[str] = None                                 # 미전달 시 프로필의 goal_type 사용
@@ -73,7 +80,7 @@ class UserProfileContext(BaseModel):
     experience_level: Optional[str] = None
     strength_baseline: Dict[str, Any] = Field(default_factory=dict)
     equipment_access: List[str] = Field(default_factory=list)
-    pain_areas: List[str] = Field(default_factory=list)
+    pain_areas: List[PainAreaEntry] = Field(default_factory=list)
 
 
 # ==========================================
@@ -333,7 +340,7 @@ def get_candidate_exercises(
     db: Session,
     target_muscles: List[str],
     unavailable_equipment: List[str],
-    pain_areas: List[str],
+    pain_areas: List[PainAreaEntry],
 ) -> List[dict]:
     """
     근육 부위 필터 + 통증 부위 제외 + 사용 불가 장비 블랙리스트 필터.
@@ -346,13 +353,17 @@ def get_candidate_exercises(
     muscle_placeholders = ", ".join([f":m{i}" for i in range(len(target_muscles))])
     params: dict = {f"m{i}": m for i, m in enumerate(target_muscles)}
 
-    if pain_areas:
+    pain_body_parts = [
+        p.body_part for p in pain_areas
+        if isinstance(p, PainAreaEntry) and p.body_part
+    ]
+    if pain_body_parts:
         not_like_parts = " AND ".join(
-            [f"pain_triggers NOT LIKE :p{i}" for i in range(len(pain_areas))]
+            [f"pain_triggers NOT LIKE :p{i}" for i in range(len(pain_body_parts))]
         )
         pain_filter = f"AND (pain_triggers IS NULL OR ({not_like_parts}))"
-        for i, pain in enumerate(pain_areas):
-            params[f"p{i}"] = f"%{pain}%"
+        for i, part in enumerate(pain_body_parts):
+            params[f"p{i}"] = f"%{part}%"
     else:
         pain_filter = ""
 
@@ -454,7 +465,13 @@ def _build_system_prompt(
         if profile.experience_level:
             lines.append(f"- 경험 수준: {profile.experience_level}")
         if profile.pain_areas:
-            lines.append(f"- 만성 통증 이력: {', '.join(profile.pain_areas)}")
+            pain_strs = [
+                f"{p.body_part}({p.side or ''}, {p.severity or ''})"
+                for p in profile.pain_areas
+                if isinstance(p, PainAreaEntry) and p.body_part
+            ]
+            if pain_strs:
+                lines.append(f"- 만성 통증 이력: {', '.join(pain_strs)}")
         if profile.strength_baseline:
             lines.append("\n[강도 기준 (strength_baseline) — 중량 추정 시 참고]")
             lines.append(_format_strength_baseline(profile.strength_baseline))
