@@ -727,7 +727,7 @@ def generate_fallback_routine(
 
         sets = params["sets"]
         if doms_level == 2:
-            sets = min(sets, 2)
+            sets = max(1, sets // 2)   # 절반 이하로 제한 (level 1보다 항상 낮음)
         elif doms_level == 1:
             sets = max(1, sets - 1)
         sets = min(sets, remaining_sets)
@@ -749,6 +749,8 @@ def generate_fallback_routine(
             substitution_candidates=[],
         ))
         order += 1
+        if remaining_sets <= 0:
+            break
 
     total_sec = sum(
         (45 + presc.target_rest_sec)
@@ -811,8 +813,7 @@ def generate_smart_routine(
 
     # 2. 최대 세트 수 계산
     rest_sec = _GOAL_PARAMS.get(goal, _GOAL_PARAMS["HYPERTROPHY"])["rest_sec"]
-    safe_time = max(req.time_available_min, 15)
-    max_total_sets = int(safe_time / ((60 + rest_sec) / 60))
+    max_total_sets = max(1, int(req.time_available_min / ((60 + rest_sec) / 60)))
 
     # 3. DOMS 프롬프트 문자열 생성
     if doms_db:

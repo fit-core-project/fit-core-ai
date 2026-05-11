@@ -1,0 +1,10 @@
+-r base.txt
+-r ai.txt
+
+# Evaluation
+ragas
+datasets
+
+# Testing
+pytest
+pytest-mock

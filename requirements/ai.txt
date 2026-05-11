@@ -1,0 +1,24 @@
+# LLM / LangChain
+langchain
+langchain-core
+langchain-google-genai
+langchain-huggingface
+langchain-community
+langchain-openai
+langchain-text-splitters
+langchain-chroma
+google-generativeai
+
+# Embeddings / Vector Store / RAG
+sentence-transformers
+faster-whisper
+chromadb
+kiwipiepy
+rank-bm25
+duckduckgo-search
+
+# Data utilities
+pandas
+openpyxl
+jq
+gdown
