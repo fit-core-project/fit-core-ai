@@ -508,9 +508,9 @@ def calculate_1rm(weight: int, reps: int) -> float:
 # ==========================================
 
 _GOAL_PARAMS = {
-    "STRENGTH":    {"sets": 5, "reps": 5,  "rest_sec": 180},
-    "HYPERTROPHY": {"sets": 3, "reps": 10, "rest_sec": 90},
-    "ENDURANCE":   {"sets": 3, "reps": 15, "rest_sec": 60},
+    "strength":    {"sets": 5, "reps": 5,  "rest_sec": 180},
+    "hypertrophy": {"sets": 3, "reps": 10, "rest_sec": 90},
+    "endurance":   {"sets": 3, "reps": 15, "rest_sec": 60},
 }
 
 _MOVEMENT_PRIORITY = {"COMPOUND": 0, "ISOLATION": 1, "STATIC": 2}
@@ -688,16 +688,16 @@ def generate_fallback_routine(
     candidates: List[dict],
     max_total_sets: int,
     doms_db: Optional[Dict[str, int]] = None,
-    goal: str = "HYPERTROPHY",
+    goal: str = "hypertrophy",
     status_reason_code: StatusReasonCode = "networkError",
 ) -> RoutineDraftResponse:
     print("[Fallback] 규칙 기반 루틴 생성 시작")
 
     if not candidates:
         return RoutineDraftResponse(
-            generation_status="fallback",
-            status_reason_code=status_reason_code,
-            is_fallback=True,
+            generation_status="failed",
+            status_reason_code="emptyCandidate",
+            is_fallback=False,
             total_estimated_time=req.time_available_min,
             summary_title="기본 루틴",
             rationale_summary=["선택한 조건에 맞는 운동이 없습니다."],
@@ -705,7 +705,7 @@ def generate_fallback_routine(
             warnings=["타겟 근육 또는 장비 조건을 변경해 주세요."],
         )
 
-    params = _GOAL_PARAMS.get(goal, _GOAL_PARAMS["HYPERTROPHY"])
+    params = _GOAL_PARAMS.get(goal.lower(), _GOAL_PARAMS["hypertrophy"])
     doms = doms_db or {}
 
     sorted_candidates = sorted(
@@ -752,12 +752,24 @@ def generate_fallback_routine(
         if remaining_sets <= 0:
             break
 
+    if not blocks:
+        return RoutineDraftResponse(
+            generation_status="failed",
+            status_reason_code="emptyCandidate",
+            is_fallback=False,
+            total_estimated_time=req.time_available_min,
+            summary_title="기본 루틴",
+            rationale_summary=["모든 후보 운동이 DOMS 제약으로 제외되었습니다."],
+            routine_blocks=[],
+            warnings=["컨디션이 회복된 후 다시 시도해 주세요."],
+        )
+
     total_sec = sum(
         (45 + presc.target_rest_sec)
         for block in blocks
         for presc in block.prescription
     )
-    estimated_time = max(1, round(total_sec / 60)) if blocks else req.time_available_min
+    estimated_time = max(1, round(total_sec / 60))
 
     return RoutineDraftResponse(
         generation_status="fallback",
@@ -797,7 +809,7 @@ def generate_smart_routine(
         print("[매핑] 타겟 근육 없음 — 빈 후보 리스트로 진행")
 
     doms_db = req.doms_data
-    goal = req.goal or (profile.goal_type if profile else "HYPERTROPHY")
+    goal = req.goal or (profile.goal_type if profile else "hypertrophy")
     pain_areas = req.pain_areas
     print(f"[매핑] doms → {doms_db}")
 
@@ -812,7 +824,7 @@ def generate_smart_routine(
     print(f"[후보 운동] {len(candidates)}개 조회됨")
 
     # 2. 최대 세트 수 계산
-    rest_sec = _GOAL_PARAMS.get(goal, _GOAL_PARAMS["HYPERTROPHY"])["rest_sec"]
+    rest_sec = _GOAL_PARAMS.get(goal.lower(), _GOAL_PARAMS["hypertrophy"])["rest_sec"]
     max_total_sets = max(1, int(req.time_available_min / ((60 + rest_sec) / 60)))
 
     # 3. DOMS 프롬프트 문자열 생성
@@ -825,9 +837,6 @@ def generate_smart_routine(
         doms_instructions = "현재 근육통 없음. 정상 볼륨으로 진행."
 
     # 4. LLM 호출 (provider는 LLM_PROVIDER 환경 변수로 결정)
-    llm = get_llm("routine")
-    structured_llm = llm.with_structured_output(LLMRoutineOutput)
-
     system_prompt = _build_system_prompt(profile, recent_sets)
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
@@ -844,6 +853,8 @@ def generate_smart_routine(
 
     reason: StatusReasonCode = "networkError"
     try:
+        llm = get_llm("routine")
+        structured_llm = llm.with_structured_output(LLMRoutineOutput)
         chain = prompt | structured_llm
         response: LLMRoutineOutput = chain.invoke(invoke_kwargs)
         return _build_routine_draft(response, "success", "none", False)
