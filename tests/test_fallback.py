@@ -17,10 +17,11 @@ def push_request():
 
 
 class TestFallbackEmptyCandidates:
-    def test_returns_fallback_status(self, push_request):
+    def test_returns_failed_status_with_empty_candidate(self, push_request):
         result = generate_fallback_routine(push_request, candidates=[], max_total_sets=15)
-        assert result.is_fallback is True
-        assert result.generation_status == "fallback"
+        assert result.generation_status == "failed"
+        assert result.status_reason_code == "emptyCandidate"
+        assert result.is_fallback is False
 
     def test_empty_blocks_with_warning(self, push_request):
         result = generate_fallback_routine(push_request, candidates=[], max_total_sets=15)
