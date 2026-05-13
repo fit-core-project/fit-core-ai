@@ -25,7 +25,7 @@ def sample_request():
 @pytest.fixture
 def sample_profile():
     return UserProfileContext(
-        goal_type="HYPERTROPHY",
+        goal_type="hypertrophy",
         split_type="PPL",
         split_label="push",
         experience_level="intermediate",

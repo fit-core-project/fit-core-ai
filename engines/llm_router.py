@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # routine_engine.py가 여기서 import하므로 단일 정의 지점
-StatusReasonCode = Literal["none", "llmTimeout", "schemaError", "networkError"]
+StatusReasonCode = Literal["none", "llmTimeout", "schemaError", "networkError", "emptyCandidate"]
 
 _LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini").lower()
 

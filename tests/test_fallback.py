@@ -49,7 +49,7 @@ class TestFallbackDomsLogic:
     def test_doms_level1_reduces_sets_by_1(self, push_request, mock_candidates):
         doms_db = {"CHEST_MID": 1}
         result = generate_fallback_routine(
-            push_request, candidates=mock_candidates, max_total_sets=15, doms_db=doms_db, goal="HYPERTROPHY"
+            push_request, candidates=mock_candidates, max_total_sets=15, doms_db=doms_db, goal="hypertrophy"
         )
         # HYPERTROPHY 기본 3세트 → DOMS 1이면 max(1, 3-1)=2
         for block in result.routine_blocks:
@@ -69,7 +69,7 @@ class TestFallbackMaxSets:
 class TestFallbackGoalParams:
     def test_strength_goal_uses_5_reps(self, push_request, mock_candidates):
         result = generate_fallback_routine(
-            push_request, candidates=mock_candidates, max_total_sets=20, goal="STRENGTH"
+            push_request, candidates=mock_candidates, max_total_sets=20, goal="strength"
         )
         for block in result.routine_blocks:
             for s in block.prescription:
@@ -77,7 +77,7 @@ class TestFallbackGoalParams:
 
     def test_endurance_goal_uses_15_reps(self, push_request, mock_candidates):
         result = generate_fallback_routine(
-            push_request, candidates=mock_candidates, max_total_sets=20, goal="ENDURANCE"
+            push_request, candidates=mock_candidates, max_total_sets=20, goal="endurance"
         )
         for block in result.routine_blocks:
             for s in block.prescription:
