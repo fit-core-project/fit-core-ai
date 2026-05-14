@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any, List, Optional, Dict, Literal, Tuple
 from collections import defaultdict
 from uuid import uuid4
-from pydantic import BaseModel, Field, ConfigDict, ValidationError
+from pydantic import BaseModel, Field, ConfigDict, ValidationError, AliasChoices
 from pydantic.alias_generators import to_camel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.exceptions import OutputParserException
@@ -44,7 +44,7 @@ class DomEntry(BaseModel):
 
 class PainAreaEntry(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
-    body_part: str
+    body_part: str = Field(validation_alias=AliasChoices("area", "bodyPart", "body_part"))
     side: Optional[str] = None
     severity: Optional[str] = None
 
