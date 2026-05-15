@@ -171,14 +171,14 @@ class RoutineDraftResponse(BaseModel):
 # ==========================================
 
 SPLIT_LABEL_TO_MUSCLES: Dict[str, List[str]] = {
-    "push":      ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER", "SHOULDER_FRONT", "SHOULDER_SIDE", "ARM_TRICEPS"],
-    "pull":      ["BACK_UPPER", "BACK_LATS", "BACK_LOWER", "ARM_BICEPS", "ARM_FOREARMS"],
+    "push":      ["CHEST_UPPER", "CHEST_MID_LOWER", "SHOULDER_FRONT", "SHOULDER_LATERAL", "ARM_TRICEPS"],
+    "pull":      ["BACK_TRAPS", "BACK_LATS", "BACK_LOWER", "ARM_BICEPS", "ARM_FOREARMS"],
     "legs":      ["LEG_QUADS", "LEG_HAMSTRINGS", "LEG_GLUTES", "LEG_CALVES", "LEG_ADDUCTORS"],
-    "upper":     ["CHEST_UPPER", "CHEST_MID", "BACK_UPPER", "BACK_LATS", "SHOULDER_FRONT", "SHOULDER_SIDE", "ARM_BICEPS", "ARM_TRICEPS"],
+    "upper":     ["CHEST_UPPER", "CHEST_MID_LOWER", "BACK_TRAPS", "BACK_LATS", "SHOULDER_FRONT", "SHOULDER_LATERAL", "ARM_BICEPS", "ARM_TRICEPS"],
     "lower":     ["LEG_QUADS", "LEG_HAMSTRINGS", "LEG_GLUTES", "LEG_CALVES", "LEG_ADDUCTORS", "LEG_ABDUCTORS"],
-    "chest":     ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER"],
-    "back":      ["BACK_UPPER", "BACK_LATS", "BACK_LOWER"],
-    "shoulder":  ["SHOULDER_FRONT", "SHOULDER_SIDE", "SHOULDER_REAR"],
+    "chest":     ["CHEST_UPPER", "CHEST_MID_LOWER"],
+    "back":      ["BACK_TRAPS", "BACK_LATS", "BACK_LOWER"],
+    "shoulder":  ["SHOULDER_FRONT", "SHOULDER_LATERAL", "SHOULDER_REAR"],
     "arm":       ["ARM_BICEPS", "ARM_TRICEPS", "ARM_FOREARMS"],
     "core":      ["CORE_ABS", "CORE_OBLIQUES"],
     "full_body": ["CHEST_UPPER", "BACK_LATS", "SHOULDER_FRONT", "LEG_QUADS", "LEG_HAMSTRINGS", "CORE_ABS"],
@@ -205,13 +205,15 @@ MUSCLE_REGISTRY: Dict[str, MuscleMapping] = {
     "forearm":        MuscleMapping(["forearm"],                            ["ARM_FOREARMS"]),
     "abs":            MuscleMapping(["abs"],                                ["CORE_ABS"]),
     "obliques":       MuscleMapping(["obliques"],                           ["CORE_OBLIQUES"]),
-    "glutes":         MuscleMapping(["glutes"],                             ["LEG_GLUTES"]),
-    "hamstring":      MuscleMapping(["hamstrings"],                         ["LEG_HAMSTRINGS"]),
-    "quadriceps":     MuscleMapping(["quads"],                              ["LEG_QUADS"]),
-    "calves":         MuscleMapping(["calves"],                             []),
-    "adductors":      MuscleMapping(["adductors"],                          []),
-    "abductors":      MuscleMapping(["abductors"],                          []),
-    "knees":          MuscleMapping(["quads", "hamstrings"],                ["LEG_QUADS", "LEG_HAMSTRINGS"]),
+    "glutes":         MuscleMapping(["glutes"],                              ["LEG_GLUTES"]),
+    "gluteal":        MuscleMapping(["glutes"],                              ["LEG_GLUTES"]),      # react-body-highlighter 실제 이벤트 alias
+    "hamstring":      MuscleMapping(["hamstrings"],                          ["LEG_HAMSTRINGS"]),
+    "quadriceps":     MuscleMapping(["quads"],                               ["LEG_QUADS"]),
+    "calves":         MuscleMapping(["calves"],                              ["LEG_CALVES"]),
+    "adductors":      MuscleMapping(["adductors"],                           ["LEG_ADDUCTORS"]),
+    "adductor":       MuscleMapping(["adductors"],                           ["LEG_ADDUCTORS"]),   # react-body-highlighter 실제 이벤트 alias
+    "abductors":      MuscleMapping(["abductors"],                           ["LEG_ABDUCTORS"]),
+    "knees":          MuscleMapping(["quads", "hamstrings"],                 ["LEG_QUADS", "LEG_HAMSTRINGS"]),
     "neck":           MuscleMapping(["neck"],                               []),
     "head":           MuscleMapping([],                                     []),
 }
@@ -913,7 +915,7 @@ if __name__ == "__main__":
         readiness_level="normal",
         time_available_min=70,
         pain_areas=[],
-        doms_data={"CHEST_MID": 1},   # mild=1
+        doms_data={"CHEST_MID_LOWER": 1},   # mild=1
         equipment=["smith_machine"],
     )
 
