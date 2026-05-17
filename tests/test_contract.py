@@ -42,10 +42,10 @@ class TestRoutineRequestParsing:
     def test_doms_data_camel_case_parsed(self):
         payload = {
             "timeAvailableMin": 60,
-            "domsData": {"CHEST_MID": 1, "ARM_TRICEPS": 2},
+            "domsData": {"CHEST_MID_LOWER": 1, "ARM_TRICEPS": 2},
         }
         req = RoutineRequest.model_validate(payload)
-        assert req.doms_data["CHEST_MID"] == 1
+        assert req.doms_data["CHEST_MID_LOWER"] == 1
         assert req.doms_data["ARM_TRICEPS"] == 2
 
     def test_missing_required_field_raises(self):

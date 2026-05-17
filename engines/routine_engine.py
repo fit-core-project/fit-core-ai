@@ -405,12 +405,63 @@ def get_candidate_exercises(
 
 def format_candidates_for_prompt(candidates: List[dict]) -> str:
     if not candidates:
-        return "해당 조건에 맞는 운동이 없습니다."
+        return "?? ??? ?? ??? ????."
     lines = [
-        f"- {ex['name_kr']} (ID: {ex['id']}, {ex['movement_type']}, efficiency={ex['efficiency_tier']})"
+        f"- {ex['name_kr']} (ID: {ex['id']}, score={ex.get('score', 0)}, "
+        f"{ex['movement_type']}, reason={'; '.join(ex.get('score_reasons', []))})"
         for ex in candidates
     ]
     return "\n".join(lines)
+
+
+def score_candidate_exercises(
+    candidates: List[dict],
+    target_muscles: List[str],
+    top_n: int = 12,
+) -> List[dict]:
+    """?? ??? deterministic?? ????? ?? N?? ????."""
+    target_set = {muscle.upper() for muscle in target_muscles}
+    scored: List[dict] = []
+
+    for candidate in candidates:
+        score = 0
+        reasons: List[str] = []
+
+        efficiency = int(candidate.get("efficiency_tier") or 0)
+        score += efficiency * 10
+        reasons.append(f"efficiency {efficiency}")
+
+        movement_type = str(candidate.get("movement_type") or "").upper()
+        if movement_type == "COMPOUND":
+            score += 15
+            reasons.append("compound priority")
+        elif movement_type == "ISOLATION":
+            score += 5
+            reasons.append("isolation support")
+
+        primary = str(candidate.get("primary_muscle") or "").upper()
+        secondary = str(candidate.get("secondary_muscle") or "").upper()
+        if primary and primary in target_set:
+            score += 20
+            reasons.append("primary target match")
+        if secondary and secondary in target_set:
+            score += 8
+            reasons.append("secondary target match")
+
+        scored.append({
+            **candidate,
+            "score": score,
+            "score_reasons": reasons,
+        })
+
+    return sorted(
+        scored,
+        key=lambda ex: (
+            -ex["score"],
+            -int(ex.get("efficiency_tier") or 0),
+            str(ex.get("id") or ""),
+        ),
+    )[:top_n]
 
 
 def _format_strength_baseline(baseline: Dict[str, Any]) -> str:
@@ -450,22 +501,28 @@ def _build_system_prompt(
     sections = []
 
     sections.append(
-        "너는 운동 생리학 지식이 풍부한 피트니스 AI 코치야.\n"
-        "반드시 아래 [선택 가능한 운동 목록]에 있는 운동만 사용해서 루틴을 구성해.\n\n"
-        "[하드 제약 조건]\n"
-        "- 훈련 목표: {goal}\n"
-        "- 전체 총 세트 수 합계는 {max_sets}세트를 초과하지 말 것\n"
-        "- 중량은 {goal} 목표에 맞게 추정할 것 (맨몸 운동은 null)\n"
-        "- exercise_id는 반드시 운동 목록의 ID를 그대로 사용할 것"
+        "[ROLE]\n"
+        "You are Fit-Core's routine composer. Build a safe, time-bounded workout plan from the supplied candidates only.\n\n"
+        "[HARD CONSTRAINTS]\n"
+        "- Use only exercise_id values that appear in [RANKED CANDIDATES].\n"
+        "- Respect the user's goal: {goal}.\n"
+        "- Keep total working sets at or below {max_sets}.\n"
+        "- Treat DOMS, pain, and equipment restrictions as hard constraints; never reintroduce excluded exercises.\n"
+        "- Return stable ordering and valid integer sets/reps/rest values.\n"
+        "- Weight and reps will be finalized by deterministic server logic, so prefer sensible structure over speculative numbers.\n\n"
+        "[RATIONALE POLICY]\n"
+        "- The candidates are pre-ranked by the server.\n"
+        "- When writing exercise_rationale, reflect the provided score reasons such as efficiency, compound priority, and target-muscle match.\n"
+        "- Do not invent unsupported medical claims or selection reasons."
     )
 
     if profile:
-        lines = ["[유저 프로필]"]
+        lines = ["[USER PROFILE]"]
         split_str = profile.split_type + (f" ({profile.split_label})" if profile.split_label else "")
-        lines.append(f"- 훈련 목표: {profile.goal_type}")
-        lines.append(f"- 분할 방식: {split_str}")
+        lines.append(f"- goal: {profile.goal_type}")
+        lines.append(f"- split: {split_str}")
         if profile.experience_level:
-            lines.append(f"- 경험 수준: {profile.experience_level}")
+            lines.append(f"- experience: {profile.experience_level}")
         if profile.pain_areas:
             pain_strs = [
                 f"{p.body_part}({p.side or ''}, {p.severity or ''})"
@@ -473,21 +530,21 @@ def _build_system_prompt(
                 if isinstance(p, PainAreaEntry) and p.body_part
             ]
             if pain_strs:
-                lines.append(f"- 만성 통증 이력: {', '.join(pain_strs)}")
+                lines.append(f"- chronic pain history: {', '.join(pain_strs)}")
         if profile.strength_baseline:
-            lines.append("\n[강도 기준 (strength_baseline) — 중량 추정 시 참고]")
+            lines.append("\n[STRENGTH BASELINE - reference only]")
             lines.append(_format_strength_baseline(profile.strength_baseline))
         sections.append("\n".join(lines))
 
-    sections.append("[오늘의 근육통(DOMS) 상태]\n{doms_instructions}")
+    sections.append("[DOMS]\n{doms_instructions}")
 
     if recent_sets:
         history_str = _format_recent_sets(recent_sets)
         if history_str:
-            sections.append("[최근 운동 기록 (중량 산정 참고)]\n" + history_str)
+            sections.append("[RECENT SETS - reference only]\n" + history_str)
 
     sections.append(
-        "[선택 가능한 운동 목록] (efficiency 높은 순, 반드시 이 목록에서만 선택)\n"
+        "[RANKED CANDIDATES]\n"
         "{candidate_exercises}"
     )
 
@@ -503,6 +560,172 @@ def calculate_1rm(weight: int, reps: int) -> float:
     if reps <= 1:
         return float(weight)
     return weight * (1 + reps / 30.0)
+
+
+def _normalize_tokens(raw: Optional[str]) -> set[str]:
+    if not raw:
+        return set()
+    return {token.strip().upper() for token in str(raw).split(",") if token.strip()}
+
+
+def _candidate_is_safe(
+    candidate: dict,
+    blocked_equipment: List[str],
+    pain_areas: List[PainAreaEntry],
+) -> bool:
+    blocked = {item.strip().upper() for item in blocked_equipment}
+    candidate_equipment = _normalize_tokens(candidate.get("equipment_req")) - {"BODYWEIGHT"}
+    if candidate_equipment & blocked:
+        return False
+
+    pain_tokens = {p.body_part.lower() for p in pain_areas if p.body_part}
+    candidate_pain = str(candidate.get("pain_triggers") or "").lower()
+    return not any(token in candidate_pain for token in pain_tokens)
+
+
+def _candidate_to_plan(candidate: dict, template: LLMExercisePlan) -> LLMExercisePlan:
+    return template.model_copy(update={
+        "exercise_id": str(candidate["id"]),
+        "exercise_name": candidate.get("name_kr") or candidate.get("name_en") or template.exercise_name,
+        "movement_pattern": candidate.get("movement_pattern") or template.movement_pattern,
+        "primary_muscles": [candidate["primary_muscle"]] if candidate.get("primary_muscle") else [],
+        "equipment_type": candidate.get("equipment_req"),
+        "exercise_rationale": f"{template.exercise_rationale} (후검증 repair: 안전 후보로 교체)",
+    })
+
+
+def validate_and_repair_routine_output(
+    llm_output: LLMRoutineOutput,
+    candidates: List[dict],
+    blocked_equipment: List[str],
+    pain_areas: List[PainAreaEntry],
+    max_repairs: int = 2,
+) -> Optional[LLMRoutineOutput]:
+    """
+    LLM success output을 후보군 기준으로 재검증한다.
+    - 후보 밖 exercise_id 또는 현재 제약에 안전하지 않은 후보는 repair 시도
+    - 위반이 많거나 대체 후보가 없으면 None을 반환해 fallback으로 넘긴다
+    """
+    safe_candidates = [
+        c for c in candidates if _candidate_is_safe(c, blocked_equipment, pain_areas)
+    ]
+    safe_by_id = {str(c["id"]): c for c in safe_candidates}
+    if not safe_candidates:
+        return None
+
+    repaired = llm_output.model_copy(deep=True)
+    used_ids: set[str] = set()
+    violations = 0
+
+    for index, exercise in enumerate(repaired.exercises):
+        candidate = safe_by_id.get(exercise.exercise_id)
+        if candidate is not None:
+            used_ids.add(exercise.exercise_id)
+            continue
+
+        violations += 1
+        if violations > max_repairs:
+            return None
+
+        replacement = next(
+            (c for c in safe_candidates if str(c["id"]) not in used_ids),
+            None,
+        )
+        if replacement is None:
+            return None
+
+        repaired.exercises[index] = _candidate_to_plan(replacement, exercise)
+        used_ids.add(str(replacement["id"]))
+
+    if violations:
+        repaired.warnings = [
+            *repaired.warnings,
+            f"LLM 결과 중 {violations}개 운동을 안전 후보로 교체했습니다.",
+        ]
+    return repaired
+
+
+_GOAL_INTENSITY = {
+    "strength": 0.85,
+    "hypertrophy": 0.72,
+    "endurance": 0.60,
+}
+
+
+def _round_to_nearest_2_5(value: float) -> float:
+    return round(value / 2.5) * 2.5
+
+
+def _find_recent_reference(
+    exercise: LLMExercisePlan,
+    recent_sets: Optional[List[RecentSetRecord]],
+) -> Optional[RecentSetRecord]:
+    if not recent_sets:
+        return None
+    normalized_names = {exercise.exercise_name.strip().lower(), exercise.exercise_id.strip().lower()}
+    matching = [
+        record for record in recent_sets
+        if record.exercise_name.strip().lower() in normalized_names and record.weight_kg
+    ]
+    return matching[0] if matching else None
+
+
+def _find_baseline_reference(
+    exercise: LLMExercisePlan,
+    profile: Optional[UserProfileContext],
+) -> Optional[Tuple[float, int]]:
+    if not profile or not profile.strength_baseline:
+        return None
+    normalized_keys = {exercise.exercise_name.strip().lower(), exercise.exercise_id.strip().lower()}
+    for key, value in profile.strength_baseline.items():
+        if key.strip().lower() not in normalized_keys or not isinstance(value, dict):
+            continue
+        weight = value.get("weight_kg")
+        reps = value.get("reps")
+        if weight and reps:
+            return float(weight), int(reps)
+    return None
+
+
+def apply_deterministic_targets(
+    llm_output: LLMRoutineOutput,
+    goal: str,
+    recent_sets: Optional[List[RecentSetRecord]],
+    profile: Optional[UserProfileContext],
+) -> LLMRoutineOutput:
+    """
+    LLM의 kg/reps는 hint로만 두고 최종 값은 서버가 확정한다.
+    최근 세트 > strength_baseline > LLM hint 순으로 참조한다.
+    """
+    adjusted = llm_output.model_copy(deep=True)
+    goal_key = goal.lower()
+    deterministic_reps = _GOAL_PARAMS.get(goal_key, _GOAL_PARAMS["hypertrophy"])["reps"]
+    intensity = _GOAL_INTENSITY.get(goal_key, _GOAL_INTENSITY["hypertrophy"])
+
+    for exercise in adjusted.exercises:
+        exercise.target_reps = deterministic_reps
+
+        equipment = (exercise.equipment_type or "").upper()
+        if "BODYWEIGHT" in equipment:
+            exercise.target_weight_kg = None
+            continue
+
+        recent = _find_recent_reference(exercise, recent_sets)
+        if recent and recent.weight_kg:
+            one_rm = calculate_1rm(recent.weight_kg, recent.reps)
+            exercise.target_weight_kg = _round_to_nearest_2_5(one_rm * intensity)
+            continue
+
+        baseline = _find_baseline_reference(exercise, profile)
+        if baseline:
+            one_rm = calculate_1rm(baseline[0], baseline[1])
+            exercise.target_weight_kg = _round_to_nearest_2_5(one_rm * intensity)
+            continue
+
+        if exercise.target_weight_kg is not None:
+            exercise.target_weight_kg = max(0, _round_to_nearest_2_5(exercise.target_weight_kg))
+
+    return adjusted
 
 
 # ==========================================
@@ -740,6 +963,9 @@ def generate_fallback_routine(
             order=order,
             exercise_id=exercise_id,
             exercise_name=ex["name_kr"],
+            movement_pattern=ex.get("movement_pattern"),
+            primary_muscles=[ex["primary_muscle"]] if ex.get("primary_muscle") else [],
+            equipment_type=ex.get("equipment_type"),
             default_rest_sec=params["rest_sec"],
             prescription=_build_prescription(
                 sets=sets,
@@ -822,7 +1048,8 @@ def generate_smart_routine(
         unavailable_equipment=req.equipment,
         pain_areas=pain_areas,
     )
-    candidate_str = format_candidates_for_prompt(candidates)
+    ranked_candidates = score_candidate_exercises(candidates, db_target_muscles)
+    candidate_str = format_candidates_for_prompt(ranked_candidates)
     print(f"[후보 운동] {len(candidates)}개 조회됨")
 
     # 2. 최대 세트 수 계산
@@ -859,7 +1086,20 @@ def generate_smart_routine(
         structured_llm = llm.with_structured_output(LLMRoutineOutput)
         chain = prompt | structured_llm
         response: LLMRoutineOutput = chain.invoke(invoke_kwargs)
-        return _build_routine_draft(response, "success", "none", False)
+        validated = validate_and_repair_routine_output(
+            response,
+            ranked_candidates,
+            req.equipment,
+            pain_areas,
+        )
+        if validated is None:
+            print("[AI post-validation] unrecoverable violation -> fallback")
+            return generate_fallback_routine(
+                req, ranked_candidates, max_total_sets, doms_db,
+                goal=goal, status_reason_code="schemaError",
+            )
+        deterministic = apply_deterministic_targets(validated, goal, recent_sets, profile)
+        return _build_routine_draft(deterministic, "success", "none", False)
 
     except (asyncio.TimeoutError, httpx.TimeoutException) as e:
         reason = map_llm_error(e)
@@ -881,8 +1121,21 @@ def generate_smart_routine(
                 raw_text = raw_resp.content if hasattr(raw_resp, "content") else str(raw_resp)
 
             normalized = normalize_llm_response(raw_text, llm=llm)
+            validated = validate_and_repair_routine_output(
+                normalized,
+                ranked_candidates,
+                req.equipment,
+                pain_areas,
+            )
+            if validated is None:
+                print("[AI post-validation] normalized output unrecoverable -> fallback")
+                return generate_fallback_routine(
+                    req, ranked_candidates, max_total_sets, doms_db,
+                    goal=goal, status_reason_code="schemaError",
+                )
+            deterministic = apply_deterministic_targets(validated, goal, recent_sets, profile)
             print("[정제 어댑터] 복구 성공!")
-            return _build_routine_draft(normalized, "success", "none", False)
+            return _build_routine_draft(deterministic, "success", "none", False)
 
         except Exception as norm_e:
             reason = map_llm_error(e)  # 원본 schema 에러 기준으로 분류
@@ -894,7 +1147,7 @@ def generate_smart_routine(
         print(f"[AI 실패 - {reason.upper()}] {e} → fallback 루틴으로 전환")
 
     return generate_fallback_routine(
-        req, candidates, max_total_sets, doms_db,
+        req, ranked_candidates, max_total_sets, doms_db,
         goal=goal, status_reason_code=reason,
     )
 

@@ -17,6 +17,9 @@ from langchain_core.runnables import RunnableLambda
 from sqlalchemy.orm import Session
 
 from engines.routine_engine import (
+    LLMExercisePlan,
+    LLMRoutineOutput,
+    RecentSetRecord,
     generate_smart_routine,
 )
 
@@ -78,6 +81,73 @@ class TestHappyPath:
         block = result.routine_blocks[0]
         assert len(block.prescription) == sample_llm_output.exercises[0].sets
         assert block.prescription[0].set_index == 1
+
+    def test_invalid_candidate_is_repaired_to_safe_candidate(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        hallucinated = sample_llm_output.model_copy(deep=True)
+        hallucinated.exercises[0].exercise_id = "ghost_press"
+        mock_llm = _make_llm_mock(return_value=hallucinated)
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                sample_request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert result.generation_status == "success"
+        assert result.routine_blocks[0].exercise_id == "barbell_bench_press"
+        assert any("교체" in warning for warning in result.warnings)
+
+    def test_too_many_invalid_candidates_fall_back(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        bad = sample_llm_output.model_copy(deep=True)
+        bad.exercises = [
+            bad.exercises[0].model_copy(update={"exercise_id": f"ghost_{i}"})
+            for i in range(3)
+        ]
+        mock_llm = _make_llm_mock(return_value=bad)
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                sample_request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert result.generation_status == "fallback"
+        assert result.is_fallback is True
+
+    def test_recent_sets_override_llm_weight_and_reps(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        mock_llm = _make_llm_mock(return_value=sample_llm_output)
+        recent_sets = [
+            RecentSetRecord(
+                exercise_name=sample_llm_output.exercises[0].exercise_name,
+                weight_kg=100,
+                reps=5,
+            )
+        ]
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                sample_request, db, profile=sample_profile, recent_sets=recent_sets
+            )
+
+        first_set = result.routine_blocks[0].prescription[0]
+        assert first_set.target_reps == 10
+        assert first_set.target_weight_kg == 85.0
 
 
 class TestTimeoutFallback:
