@@ -31,7 +31,7 @@ class TestFallbackEmptyCandidates:
 
 class TestFallbackDomsLogic:
     def test_doms_level3_skips_exercise(self, push_request, mock_candidates):
-        doms_db = {"CHEST_MID_LOWER": 3}
+        doms_db = {"CHEST_MID": 3}
         result = generate_fallback_routine(
             push_request, candidates=mock_candidates, max_total_sets=15, doms_db=doms_db
         )
@@ -40,17 +40,17 @@ class TestFallbackDomsLogic:
         assert "dumbbell_fly" not in exercise_ids
 
     def test_doms_level2_limits_sets_to_2(self, push_request, mock_candidates):
-        doms_db = {"CHEST_MID_LOWER": 2}
+        doms_db = {"CHEST_MID": 2}
         result = generate_fallback_routine(
             push_request, candidates=mock_candidates, max_total_sets=15, doms_db=doms_db
         )
-        chest_blocks = [b for b in result.routine_blocks if "CHEST_MID_LOWER" in b.primary_muscles]
+        chest_blocks = [b for b in result.routine_blocks if "CHEST_MID" in b.primary_muscles]
         assert chest_blocks
         for block in chest_blocks:
             assert len(block.prescription) == 1
 
     def test_doms_level1_reduces_sets_by_1(self, push_request, mock_candidates):
-        doms_db = {"CHEST_MID_LOWER": 1}
+        doms_db = {"CHEST_MID": 1}
         result = generate_fallback_routine(
             push_request, candidates=mock_candidates, max_total_sets=15, doms_db=doms_db, goal="hypertrophy"
         )
@@ -63,9 +63,9 @@ class TestFallbackDomsLogic:
             push_request,
             candidates=mock_candidates,
             max_total_sets=15,
-            doms_db={"CHEST_MID_LOWER": 3},
+            doms_db={"CHEST_MID": 3},
         )
-        assert all("CHEST_MID_LOWER" not in block.primary_muscles for block in result.routine_blocks)
+        assert all("CHEST_MID" not in block.primary_muscles for block in result.routine_blocks)
 
 
 class TestFallbackMaxSets:

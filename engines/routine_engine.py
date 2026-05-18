@@ -32,6 +32,31 @@ DOMS_LEVEL_MAP: Dict[str, int] = {
     "severe": 3,
 }
 
+# exercise_tier.xlsx 기준 muscle enum SSOT
+DB_MUSCLE_ENUMS = {
+    "ARM_BICEPS",
+    "ARM_FOREARMS",
+    "ARM_TRICEPS",
+    "BACK_LATS",
+    "BACK_LOWER",
+    "BACK_TRAPS",
+    "CHEST_LOWER",
+    "CHEST_MID",
+    "CHEST_UPPER",
+    "CORE_ABS",
+    "CORE_OBLIQUES",
+    "LEG_ABDUCTORS",
+    "LEG_ADDUCTORS",
+    "LEG_CALVES",
+    "LEG_GLUTES",
+    "LEG_HAMSTRINGS",
+    "LEG_QUADS",
+    "ROTATOR_CUFF",
+    "SHOULDER_FRONT",
+    "SHOULDER_LATERAL",
+    "SHOULDER_REAR",
+}
+
 # ==========================================
 # 2. Request 모델
 # ==========================================
@@ -171,17 +196,17 @@ class RoutineDraftResponse(BaseModel):
 # ==========================================
 
 SPLIT_LABEL_TO_MUSCLES: Dict[str, List[str]] = {
-    "push":      ["CHEST_UPPER", "CHEST_MID_LOWER", "SHOULDER_FRONT", "SHOULDER_LATERAL", "ARM_TRICEPS"],
+    "push":      ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER", "SHOULDER_FRONT", "SHOULDER_LATERAL", "ARM_TRICEPS"],
     "pull":      ["BACK_TRAPS", "BACK_LATS", "BACK_LOWER", "ARM_BICEPS", "ARM_FOREARMS"],
     "legs":      ["LEG_QUADS", "LEG_HAMSTRINGS", "LEG_GLUTES", "LEG_CALVES", "LEG_ADDUCTORS"],
-    "upper":     ["CHEST_UPPER", "CHEST_MID_LOWER", "BACK_TRAPS", "BACK_LATS", "SHOULDER_FRONT", "SHOULDER_LATERAL", "ARM_BICEPS", "ARM_TRICEPS"],
+    "upper":     ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER", "BACK_TRAPS", "BACK_LATS", "SHOULDER_FRONT", "SHOULDER_LATERAL", "ARM_BICEPS", "ARM_TRICEPS"],
     "lower":     ["LEG_QUADS", "LEG_HAMSTRINGS", "LEG_GLUTES", "LEG_CALVES", "LEG_ADDUCTORS", "LEG_ABDUCTORS"],
-    "chest":     ["CHEST_UPPER", "CHEST_MID_LOWER"],
+    "chest":     ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER"],
     "back":      ["BACK_TRAPS", "BACK_LATS", "BACK_LOWER"],
-    "shoulder":  ["SHOULDER_FRONT", "SHOULDER_LATERAL", "SHOULDER_REAR"],
+    "shoulder":  ["SHOULDER_FRONT", "SHOULDER_LATERAL", "SHOULDER_REAR", "ROTATOR_CUFF"],
     "arm":       ["ARM_BICEPS", "ARM_TRICEPS", "ARM_FOREARMS"],
     "core":      ["CORE_ABS", "CORE_OBLIQUES"],
-    "full_body": ["CHEST_UPPER", "BACK_LATS", "SHOULDER_FRONT", "LEG_QUADS", "LEG_HAMSTRINGS", "CORE_ABS"],
+    "full_body": ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER", "BACK_LATS", "SHOULDER_FRONT", "ROTATOR_CUFF", "LEG_QUADS", "LEG_HAMSTRINGS", "CORE_ABS"],
 }
 
 @dataclass
@@ -191,7 +216,7 @@ class MuscleMapping:
 
 # react-body-highlighter 키 기준 단일 진실 공급원 (SSOT)
 MUSCLE_REGISTRY: Dict[str, MuscleMapping] = {
-    "chest":          MuscleMapping(["chest"],                              ["CHEST_UPPER", "CHEST_MID_LOWER"]),
+    "chest":          MuscleMapping(["chest"],                              ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER"]),
     "upper-back":     MuscleMapping(["upperBack"],                          ["BACK_TRAPS"]),
     "trapezius":      MuscleMapping(["upperBack"],                          ["BACK_TRAPS"]),
     "lats":           MuscleMapping(["lats"],                               ["BACK_LATS"]),
@@ -200,6 +225,7 @@ MUSCLE_REGISTRY: Dict[str, MuscleMapping] = {
     "back-deltoids":  MuscleMapping(["rearDelts"],                          ["SHOULDER_REAR"]),
     "deltoids":       MuscleMapping(["frontDelts", "rearDelts", "sideDelts"], ["SHOULDER_FRONT", "SHOULDER_REAR", "SHOULDER_LATERAL"]),
     "side-deltoids":  MuscleMapping(["sideDelts"],                          ["SHOULDER_LATERAL"]),
+    "rotator-cuff":   MuscleMapping(["rotatorCuff"],                        ["ROTATOR_CUFF"]),
     "biceps":         MuscleMapping(["biceps"],                             ["ARM_BICEPS"]),
     "triceps":        MuscleMapping(["triceps"],                            ["ARM_TRICEPS"]),
     "forearm":        MuscleMapping(["forearm"],                            ["ARM_FOREARMS"]),
@@ -237,7 +263,11 @@ def get_mapped_targets(raw_muscles: List[str]) -> Tuple[List[str], List[str]]:
             ai_seen.update(mapping.ai_targets)
             db_seen.update(mapping.db_enums)
         else:
-            ai_seen.add(raw)
+            normalized = raw.upper()
+            if normalized in DB_MUSCLE_ENUMS:
+                db_seen.add(normalized)
+            else:
+                ai_seen.add(raw)
     return list(ai_seen), list(db_seen)
 
 
@@ -247,7 +277,10 @@ def map_doms_to_db(doms: List[DomEntry]) -> Dict[str, int]:
     for entry in doms:
         level_int = DOMS_LEVEL_MAP.get(entry.level.lower(), 1)
         mapping = MUSCLE_REGISTRY.get(entry.body_part.lower())
-        targets = mapping.db_enums if mapping is not None else [entry.body_part]
+        normalized = entry.body_part.upper()
+        targets = mapping.db_enums if mapping is not None else [
+            normalized if normalized in DB_MUSCLE_ENUMS else entry.body_part
+        ]
         for db_muscle in targets:
             result[db_muscle] = max(result.get(db_muscle, 0), level_int)
     return result
@@ -417,13 +450,38 @@ def format_candidates_for_prompt(candidates: List[dict]) -> str:
 def score_candidate_exercises(
     candidates: List[dict],
     target_muscles: List[str],
+    doms_db: Optional[Dict[str, int]] = None,
+    blocked_equipment: Optional[List[str]] = None,
+    pain_areas: Optional[List[PainAreaEntry]] = None,
+    recent_sets: Optional[List[RecentSetRecord]] = None,
     top_n: int = 12,
 ) -> List[dict]:
     """?? ??? deterministic?? ????? ?? N?? ????."""
     target_set = {muscle.upper() for muscle in target_muscles}
     scored: List[dict] = []
 
+    doms = doms_db or {}
+    blocked_equipment = blocked_equipment or []
+    pain_areas = pain_areas or []
+    recent_names = {
+        record.exercise_name.strip().lower()
+        for record in (recent_sets or [])
+        if record.exercise_name
+    }
+
     for candidate in candidates:
+        exclusion_reasons: List[str] = []
+        if not _candidate_is_safe(candidate, blocked_equipment, pain_areas):
+            candidate_equipment = _normalize_tokens(candidate.get("equipment_req")) - {"BODYWEIGHT"}
+            blocked = {item.strip().upper() for item in blocked_equipment}
+            if candidate_equipment & blocked:
+                exclusion_reasons.append("excluded unavailable equipment")
+            pain_tokens = {p.body_part.lower() for p in pain_areas if p.body_part}
+            candidate_pain = str(candidate.get("pain_triggers") or "").lower()
+            if any(token in candidate_pain for token in pain_tokens):
+                exclusion_reasons.append("excluded pain trigger")
+            continue
+
         score = 0
         reasons: List[str] = []
 
@@ -447,6 +505,25 @@ def score_candidate_exercises(
         if secondary and secondary in target_set:
             score += 8
             reasons.append("secondary target match")
+
+        doms_level = doms.get(primary, 0)
+        if doms_level >= 3:
+            continue
+        if doms_level == 2:
+            score -= 25
+            reasons.append("doms moderate penalty")
+        elif doms_level == 1:
+            score -= 10
+            reasons.append("doms mild penalty")
+
+        recent_key_candidates = {
+            str(candidate.get("name_kr") or "").strip().lower(),
+            str(candidate.get("name_en") or "").strip().lower(),
+            str(candidate.get("id") or "").strip().lower(),
+        }
+        if recent_key_candidates & recent_names:
+            score -= 6
+            reasons.append("recent repetition penalty")
 
         scored.append({
             **candidate,
@@ -513,7 +590,17 @@ def _build_system_prompt(
         "[RATIONALE POLICY]\n"
         "- The candidates are pre-ranked by the server.\n"
         "- When writing exercise_rationale, reflect the provided score reasons such as efficiency, compound priority, and target-muscle match.\n"
-        "- Do not invent unsupported medical claims or selection reasons."
+        "- Do not invent unsupported medical claims or selection reasons.\n\n"
+        "[OUTPUT SCHEMA]\n"
+        "- Return one JSON object matching LLMRoutineOutput exactly.\n"
+        "- Required top-level fields: total_estimated_time, summary_title, rationale_summary, warnings, exercises.\n"
+        "- Each exercise must include: exercise_id, exercise_name, primary_muscles, target_reps, sets, rest_time_sec, exercise_rationale.\n"
+        "- Keep exercises as an ordered list; do not wrap the response in markdown or prose.\n\n"
+        "[PROHIBITED BEHAVIOR]\n"
+        "- Never choose an exercise outside [RANKED CANDIDATES].\n"
+        "- Never reintroduce excluded equipment or pain-triggering movements.\n"
+        "- Never ignore DOMS instructions or exceed the working-set cap.\n"
+        "- Never fabricate medical advice, user history, or unavailable rationale."
     )
 
     if profile:
@@ -599,6 +686,9 @@ def validate_and_repair_routine_output(
     candidates: List[dict],
     blocked_equipment: List[str],
     pain_areas: List[PainAreaEntry],
+    doms_db: Optional[Dict[str, int]] = None,
+    max_total_sets: Optional[int] = None,
+    time_available_min: Optional[int] = None,
     max_repairs: int = 2,
 ) -> Optional[LLMRoutineOutput]:
     """
@@ -616,26 +706,65 @@ def validate_and_repair_routine_output(
     repaired = llm_output.model_copy(deep=True)
     used_ids: set[str] = set()
     violations = 0
+    doms = doms_db or {}
 
     for index, exercise in enumerate(repaired.exercises):
         candidate = safe_by_id.get(exercise.exercise_id)
         if candidate is not None:
             used_ids.add(exercise.exercise_id)
-            continue
+            if candidate.get("primary_muscle"):
+                exercise.primary_muscles = [candidate["primary_muscle"]]
+            if candidate.get("equipment_req"):
+                exercise.equipment_type = candidate["equipment_req"]
+        else:
+            violations += 1
+            if violations > max_repairs:
+                return None
 
-        violations += 1
-        if violations > max_repairs:
+            replacement = next(
+                (c for c in safe_candidates if str(c["id"]) not in used_ids),
+                None,
+            )
+            if replacement is None:
+                return None
+
+            repaired.exercises[index] = _candidate_to_plan(replacement, exercise)
+            used_ids.add(str(replacement["id"]))
+            exercise = repaired.exercises[index]
+            candidate = replacement
+
+        primary = str(candidate.get("primary_muscle") or "").upper()
+        doms_level = doms.get(primary, 0)
+        if doms_level >= 3:
             return None
+        if exercise.sets < 1 or exercise.target_reps < 1 or exercise.rest_time_sec < 0:
+            return None
+        if doms_level == 2:
+            exercise.sets = min(exercise.sets, 2)
+        elif doms_level == 1:
+            exercise.sets = max(1, exercise.sets - 1)
 
-        replacement = next(
-            (c for c in safe_candidates if str(c["id"]) not in used_ids),
-            None,
+    if max_total_sets is not None:
+        total_sets = sum(exercise.sets for exercise in repaired.exercises)
+        overflow = total_sets - max_total_sets
+        if overflow > 0:
+            for exercise in reversed(repaired.exercises):
+                reducible = max(0, exercise.sets - 1)
+                reduction = min(reducible, overflow)
+                exercise.sets -= reduction
+                overflow -= reduction
+                if overflow == 0:
+                    break
+            if overflow > 0:
+                return None
+
+    if time_available_min is not None:
+        estimated_sec = sum(
+            exercise.sets * (45 + max(0, exercise.rest_time_sec))
+            for exercise in repaired.exercises
         )
-        if replacement is None:
+        if math.ceil(estimated_sec / 60) > time_available_min:
             return None
-
-        repaired.exercises[index] = _candidate_to_plan(replacement, exercise)
-        used_ids.add(str(replacement["id"]))
 
     if violations:
         repaired.warnings = [
@@ -704,6 +833,7 @@ def apply_deterministic_targets(
 
     for exercise in adjusted.exercises:
         exercise.target_reps = deterministic_reps
+        exercise.rest_time_sec = _GOAL_PARAMS.get(goal_key, _GOAL_PARAMS["hypertrophy"])["rest_sec"]
 
         equipment = (exercise.equipment_type or "").upper()
         if "BODYWEIGHT" in equipment:
@@ -1048,7 +1178,14 @@ def generate_smart_routine(
         unavailable_equipment=req.equipment,
         pain_areas=pain_areas,
     )
-    ranked_candidates = score_candidate_exercises(candidates, db_target_muscles)
+    ranked_candidates = score_candidate_exercises(
+        candidates,
+        db_target_muscles,
+        doms_db=doms_db,
+        blocked_equipment=req.equipment,
+        pain_areas=pain_areas,
+        recent_sets=recent_sets,
+    )
     candidate_str = format_candidates_for_prompt(ranked_candidates)
     print(f"[후보 운동] {len(candidates)}개 조회됨")
 
@@ -1091,6 +1228,9 @@ def generate_smart_routine(
             ranked_candidates,
             req.equipment,
             pain_areas,
+            doms_db=doms_db,
+            max_total_sets=max_total_sets,
+            time_available_min=req.time_available_min,
         )
         if validated is None:
             print("[AI post-validation] unrecoverable violation -> fallback")
@@ -1126,6 +1266,9 @@ def generate_smart_routine(
                 ranked_candidates,
                 req.equipment,
                 pain_areas,
+                doms_db=doms_db,
+                max_total_sets=max_total_sets,
+                time_available_min=req.time_available_min,
             )
             if validated is None:
                 print("[AI post-validation] normalized output unrecoverable -> fallback")
@@ -1168,7 +1311,7 @@ if __name__ == "__main__":
         readiness_level="normal",
         time_available_min=70,
         pain_areas=[],
-        doms_data={"CHEST_MID_LOWER": 1},   # mild=1
+        doms_data={"CHEST_MID": 1},   # mild=1
         equipment=["smith_machine"],
     )
 

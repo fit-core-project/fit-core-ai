@@ -1,0 +1,7 @@
+{
+  "name": "injury shoulder",
+  "request": {"target_split_label": "push", "time_available_min": 60, "doms_data": {}, "equipment": [], "pain_areas": [{"body_part": "shoulder"}]},
+  "candidates": ["painful_press", "pushup"],
+  "llm": {"exercise_id": "painful_press", "sets": 3, "rest_time_sec": 120},
+  "expected": {"status": "success", "exercise_id": "pushup"}
+}

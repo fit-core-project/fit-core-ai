@@ -1,0 +1,7 @@
+{
+  "name": "short time 30min",
+  "request": {"target_split_label": "push", "time_available_min": 30, "doms_data": {}, "equipment": []},
+  "candidates": ["barbell_bench_press", "pushup"],
+  "llm": {"exercise_id": "barbell_bench_press", "sets": 20, "rest_time_sec": 300},
+  "expected": {"status": "fallback"}
+}

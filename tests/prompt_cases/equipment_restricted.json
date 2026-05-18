@@ -1,0 +1,7 @@
+{
+  "name": "equipment restricted",
+  "request": {"target_split_label": "push", "time_available_min": 60, "doms_data": {}, "equipment": ["BARBELL"]},
+  "candidates": ["barbell_bench_press", "pushup"],
+  "llm": {"exercise_id": "barbell_bench_press", "sets": 3, "rest_time_sec": 120},
+  "expected": {"status": "success", "exercise_id": "pushup"}
+}

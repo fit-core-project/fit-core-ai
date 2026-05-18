@@ -79,7 +79,7 @@ class TestHappyPath:
             )
 
         block = result.routine_blocks[0]
-        assert len(block.prescription) == sample_llm_output.exercises[0].sets
+        assert len(block.prescription) == sample_llm_output.exercises[0].sets - 1
         assert block.prescription[0].set_index == 1
 
     def test_invalid_candidate_is_repaired_to_safe_candidate(
@@ -148,6 +148,62 @@ class TestHappyPath:
         first_set = result.routine_blocks[0].prescription[0]
         assert first_set.target_reps == 10
         assert first_set.target_weight_kg == 85.0
+        assert first_set.target_rest_sec == 90
+
+    def test_moderate_doms_clamps_sets(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        request = sample_request.model_copy(update={"doms_data": {"CHEST_MID": 2}})
+        mock_llm = _make_llm_mock(return_value=sample_llm_output)
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert result.generation_status == "success"
+        assert len(result.routine_blocks[0].prescription) == 2
+
+    def test_severe_doms_forces_fallback(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        request = sample_request.model_copy(update={"doms_data": {"CHEST_MID": 3}})
+        mock_llm = _make_llm_mock(return_value=sample_llm_output)
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert result.generation_status == "failed"
+        assert result.status_reason_code == "emptyCandidate"
+
+    def test_over_budget_output_falls_back(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        bad = sample_llm_output.model_copy(deep=True)
+        bad.exercises[0].sets = 20
+        bad.exercises[0].rest_time_sec = 300
+        mock_llm = _make_llm_mock(return_value=bad)
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                sample_request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert result.generation_status == "fallback"
 
 
 class TestTimeoutFallback:

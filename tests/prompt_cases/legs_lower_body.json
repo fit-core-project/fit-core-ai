@@ -1,0 +1,7 @@
+{
+  "name": "legs lower body",
+  "request": {"target_split_label": "legs", "time_available_min": 60, "doms_data": {}, "equipment": []},
+  "candidates": ["barbell_squat"],
+  "llm": {"exercise_id": "barbell_squat", "sets": 4, "rest_time_sec": 180},
+  "expected": {"status": "success", "primary_muscle": "LEG_QUADS"}
+}

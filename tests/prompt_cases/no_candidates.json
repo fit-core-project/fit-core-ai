@@ -1,0 +1,7 @@
+{
+  "name": "no candidates",
+  "request": {"target_split_label": "push", "time_available_min": 60, "doms_data": {}, "equipment": []},
+  "candidates": [],
+  "llm": null,
+  "expected": {"status": "failed", "reason": "emptyCandidate"}
+}
