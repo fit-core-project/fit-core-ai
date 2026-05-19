@@ -20,6 +20,7 @@ from engines.routine_engine import (
     LLMExercisePlan,
     LLMRoutineOutput,
     RecentSetRecord,
+    get_user_profile_context,
     generate_smart_routine,
 )
 
@@ -41,6 +42,46 @@ def _make_llm_mock(return_value=None, side_effect=None):
 
     mock_llm.with_structured_output.return_value = structured
     return mock_llm
+
+
+class _Row:
+    def __init__(self, mapping):
+        self._mapping = mapping
+
+
+class _FetchOne:
+    def __init__(self, row):
+        self._row = row
+
+    def fetchone(self):
+        return self._row
+
+
+class TestProfileContext:
+    def test_strength_baseline_list_from_backend_is_indexed_by_exercise_id_and_name(self):
+        db = _make_db_mock()
+        db.execute.return_value = _FetchOne(_Row({
+            "goal_type": "strength",
+            "split_type": "pushPullLegs",
+            "split_label": "push",
+            "experience_level": "intermediate",
+            "strength_baseline": [
+                {
+                    "exerciseId": "30",
+                    "exerciseNameSnapshot": "Barbell Bench Press",
+                    "workingWeightKg": 100,
+                    "reps": 5,
+                }
+            ],
+            "equipment_access": [],
+            "pain_areas": [],
+        }))
+
+        profile = get_user_profile_context(db, "user-1")
+
+        assert profile is not None
+        assert profile.strength_baseline["30"]["weight_kg"] == 100.0
+        assert profile.strength_baseline["Barbell Bench Press"]["reps"] == 5
 
 
 class TestHappyPath:
@@ -150,11 +191,211 @@ class TestHappyPath:
         assert first_set.target_weight_kg == 85.0
         assert first_set.target_rest_sec == 90
 
+    def test_recent_sets_match_by_exercise_id_before_name(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        mock_llm = _make_llm_mock(return_value=sample_llm_output)
+        recent_sets = [
+            RecentSetRecord(
+                exercise_id=sample_llm_output.exercises[0].exercise_id,
+                exercise_name="Unrelated Snapshot",
+                weight_kg=100,
+                reps=5,
+            )
+        ]
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                sample_request, db, profile=sample_profile, recent_sets=recent_sets
+            )
+
+        assert result.routine_blocks[0].prescription[0].target_weight_kg == 85.0
+
+    def test_fat_loss_goal_uses_endurance_style_reps(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        mock_llm = _make_llm_mock(return_value=sample_llm_output)
+        request = sample_request.model_copy(update={"goal": "fatLoss", "doms_data": {}})
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert result.routine_blocks[0].prescription[0].target_reps == 15
+
+    def test_low_readiness_reduces_compound_sets_and_raises_rir(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        request = sample_request.model_copy(update={"readiness_level": "low", "doms_data": {}})
+        output = sample_llm_output.model_copy(deep=True)
+        output.exercises[0].sets = 4
+        output.exercises[0].target_rir = 2
+        mock_llm = _make_llm_mock(return_value=output)
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert len(result.routine_blocks[0].prescription) == 3
+        assert result.routine_blocks[0].prescription[0].target_rir == 4
+
+    def test_high_readiness_only_lowers_rir(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        request = sample_request.model_copy(update={"readiness_level": "high", "doms_data": {}})
+        output = sample_llm_output.model_copy(deep=True)
+        output.exercises[0].sets = 4
+        output.exercises[0].target_rir = 2
+        mock_llm = _make_llm_mock(return_value=output)
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert len(result.routine_blocks[0].prescription) == 4
+        assert result.routine_blocks[0].prescription[0].target_rir == 1
+
+    def test_push_split_caps_accessory_isolation_sets(
+        self, sample_request, sample_profile, mock_candidates
+    ):
+        db = _make_db_mock()
+        candidates = mock_candidates + [
+            {
+                "id": "cable_pushdown",
+                "name_kr": "Cable Pushdown",
+                "name_en": "Cable Pushdown",
+                "primary_muscle": "triceps",
+                "secondary_muscle": None,
+                "equipment_req": "CABLE",
+                "difficulty_tier": 2,
+                "efficiency_tier": 4,
+                "pain_triggers": "triceps",
+                "movement_type": "ISOLATION",
+            }
+        ]
+        output = LLMRoutineOutput(
+            total_estimated_time=50,
+            summary_title="Push accessory cap",
+            rationale_summary=["case"],
+            warnings=[],
+            exercises=[
+                LLMExercisePlan(
+                    exercise_id="barbell_bench_press",
+                    exercise_name="Barbell Bench Press",
+                    movement_type="COMPOUND",
+                    primary_muscles=["chest"],
+                    equipment_type="BARBELL",
+                    target_reps=8,
+                    sets=3,
+                    rest_time_sec=90,
+                    target_rir=2,
+                    exercise_rationale="main",
+                ),
+                LLMExercisePlan(
+                    exercise_id="cable_pushdown",
+                    exercise_name="Cable Pushdown",
+                    movement_type="ISOLATION",
+                    primary_muscles=["triceps"],
+                    equipment_type="CABLE",
+                    target_reps=10,
+                    sets=4,
+                    rest_time_sec=90,
+                    target_rir=2,
+                    exercise_rationale="accessory",
+                ),
+            ],
+        )
+        mock_llm = _make_llm_mock(return_value=output)
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=candidates),
+        ):
+            result = generate_smart_routine(
+                sample_request.model_copy(update={"doms_data": {}}),
+                db,
+                profile=sample_profile,
+                recent_sets=[],
+            )
+
+        pushdown = next(block for block in result.routine_blocks if block.exercise_id == "cable_pushdown")
+        assert len(pushdown.prescription) == 2
+
+    def test_arm_split_allows_accessory_muscle_as_main_volume(
+        self, sample_request, sample_profile
+    ):
+        db = _make_db_mock()
+        request = sample_request.model_copy(update={"target_split_label": "arm", "doms_data": {}})
+        candidates = [
+            {
+                "id": "cable_pushdown",
+                "name_kr": "Cable Pushdown",
+                "name_en": "Cable Pushdown",
+                "primary_muscle": "triceps",
+                "secondary_muscle": None,
+                "equipment_req": "CABLE",
+                "difficulty_tier": 2,
+                "efficiency_tier": 4,
+                "pain_triggers": "triceps",
+                "movement_type": "ISOLATION",
+            }
+        ]
+        output = LLMRoutineOutput(
+            total_estimated_time=30,
+            summary_title="Arm main",
+            rationale_summary=["case"],
+            warnings=[],
+            exercises=[
+                LLMExercisePlan(
+                    exercise_id="cable_pushdown",
+                    exercise_name="Cable Pushdown",
+                    movement_type="ISOLATION",
+                    primary_muscles=["triceps"],
+                    equipment_type="CABLE",
+                    target_reps=10,
+                    sets=4,
+                    rest_time_sec=90,
+                    target_rir=2,
+                    exercise_rationale="main arm work",
+                ),
+            ],
+        )
+        mock_llm = _make_llm_mock(return_value=output)
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=candidates),
+        ):
+            result = generate_smart_routine(
+                request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert len(result.routine_blocks[0].prescription) == 4
+
     def test_moderate_doms_clamps_sets(
         self, sample_request, sample_profile, sample_llm_output, mock_candidates
     ):
         db = _make_db_mock()
-        request = sample_request.model_copy(update={"doms_data": {"CHEST_MID": 2}})
+        request = sample_request.model_copy(update={"doms_data": {"chest": 2}})
         mock_llm = _make_llm_mock(return_value=sample_llm_output)
 
         with (
@@ -172,7 +413,7 @@ class TestHappyPath:
         self, sample_request, sample_profile, sample_llm_output, mock_candidates
     ):
         db = _make_db_mock()
-        request = sample_request.model_copy(update={"doms_data": {"CHEST_MID": 3}})
+        request = sample_request.model_copy(update={"doms_data": {"chest": 3}})
         mock_llm = _make_llm_mock(return_value=sample_llm_output)
 
         with (
@@ -201,6 +442,67 @@ class TestHappyPath:
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert result.generation_status == "fallback"
+
+    def test_short_time_realistic_time_model_falls_back(
+        self, sample_request, sample_profile, mock_candidates
+    ):
+        db = _make_db_mock()
+        request = sample_request.model_copy(update={"time_available_min": 30, "doms_data": {}})
+        output = LLMRoutineOutput(
+            total_estimated_time=30,
+            summary_title="Short push",
+            rationale_summary=["case"],
+            warnings=[],
+            exercises=[
+                LLMExercisePlan(
+                    exercise_id="barbell_bench_press",
+                    exercise_name="Barbell Bench Press",
+                    movement_type="COMPOUND",
+                    primary_muscles=["chest"],
+                    equipment_type="BARBELL",
+                    target_reps=8,
+                    sets=4,
+                    rest_time_sec=120,
+                    target_rir=2,
+                    exercise_rationale="case",
+                ),
+                LLMExercisePlan(
+                    exercise_id="pushup",
+                    exercise_name="Push-up",
+                    movement_type="COMPOUND",
+                    primary_muscles=["chest"],
+                    equipment_type="BODYWEIGHT",
+                    target_reps=8,
+                    sets=3,
+                    rest_time_sec=120,
+                    target_rir=2,
+                    exercise_rationale="case",
+                ),
+                LLMExercisePlan(
+                    exercise_id="dumbbell_fly",
+                    exercise_name="Dumbbell Fly",
+                    movement_type="ISOLATION",
+                    primary_muscles=["chest"],
+                    equipment_type="DUMBBELL",
+                    target_reps=8,
+                    sets=3,
+                    rest_time_sec=120,
+                    target_rir=2,
+                    exercise_rationale="case",
+                ),
+            ],
+        )
+        mock_llm = _make_llm_mock(return_value=output)
+
+        with (
+            patch("engines.routine_engine.get_llm", return_value=mock_llm),
+            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                request, db, profile=sample_profile, recent_sets=[]
             )
 
         assert result.generation_status == "fallback"
@@ -306,3 +608,4 @@ class TestNoProfile:
             )
 
         assert result.generation_status == "success"
+

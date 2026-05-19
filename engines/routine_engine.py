@@ -32,30 +32,53 @@ DOMS_LEVEL_MAP: Dict[str, int] = {
     "severe": 3,
 }
 
-# exercise_tier.xlsx 기준 muscle enum SSOT
-DB_MUSCLE_ENUMS = {
-    "ARM_BICEPS",
-    "ARM_FOREARMS",
-    "ARM_TRICEPS",
-    "BACK_LATS",
-    "BACK_LOWER",
-    "BACK_TRAPS",
-    "CHEST_LOWER",
-    "CHEST_MID",
-    "CHEST_UPPER",
-    "CORE_ABS",
-    "CORE_OBLIQUES",
-    "LEG_ABDUCTORS",
-    "LEG_ADDUCTORS",
-    "LEG_CALVES",
-    "LEG_GLUTES",
-    "LEG_HAMSTRINGS",
-    "LEG_QUADS",
-    "ROTATOR_CUFF",
-    "SHOULDER_FRONT",
-    "SHOULDER_LATERAL",
-    "SHOULDER_REAR",
+# scripts/exercise_tier.xlsx primary_muscle 기준 slug SSOT
+MUSCLE_SLUGS = {
+    "abductors",
+    "abs",
+    "adductor",
+    "back-deltoids",
+    "biceps",
+    "calves",
+    "chest",
+    "forearm",
+    "front-deltoids",
+    "gluteal",
+    "hamstring",
+    "lower-back",
+    "neck",
+    "obliques",
+    "quadriceps",
+    "trapezius",
+    "triceps",
+    "upper-back",
 }
+
+LARGE_MUSCLE_SLUGS = {
+    "chest",
+    "upper-back",
+    "lower-back",
+    "quadriceps",
+    "hamstring",
+    "gluteal",
+}
+
+ACCESSORY_MUSCLE_SLUGS = {
+    "abductors",
+    "abs",
+    "adductor",
+    "back-deltoids",
+    "biceps",
+    "calves",
+    "forearm",
+    "front-deltoids",
+    "neck",
+    "obliques",
+    "trapezius",
+    "triceps",
+}
+
+ACCESSORY_PRIMARY_SPLITS = {"arm", "core", "shoulder", "neck"}
 
 # ==========================================
 # 2. Request 모델
@@ -78,11 +101,11 @@ class RoutineRequest(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
     user_id: Optional[str] = None
     target_split_label: Optional[str] = None         # "push" | "pull" | "legs" | ... (없으면 target_muscles 직접 사용)
-    target_muscles: List[str] = Field(default_factory=list)  # DB Enum 직접 지정 시 사용
+    target_muscles: List[str] = Field(default_factory=list)  # spreadsheet slug 직접 지정 시 사용
     readiness_level: Optional[str] = "normal"
     time_available_min: int
     pain_areas: List[PainAreaEntry] = Field(default_factory=list)  # 장기 부상 부위 객체 배열
-    doms_data: Dict[str, int] = Field(default_factory=dict)   # Java가 매핑한 {DB_MUSCLE_ENUM: level(1~3)}
+    doms_data: Dict[str, int] = Field(default_factory=dict)   # Java가 매핑한 {spreadsheet_slug: level(1~3)}
     equipment: List[str] = Field(default_factory=list)         # 사용 불가 장비 블랙리스트
     goal: Optional[str] = None                                 # 미전달 시 프로필의 goal_type 사용
     user_note: Optional[str] = None
@@ -93,6 +116,7 @@ class RoutineRequest(BaseModel):
 # ==========================================
 
 class RecentSetRecord(BaseModel):
+    exercise_id: Optional[str] = None
     exercise_name: str
     weight_kg: Optional[float] = None
     reps: int
@@ -122,6 +146,7 @@ class LLMExercisePlan(BaseModel):
     exercise_id: str = Field(description="운동 ID — 반드시 운동 목록의 ID 그대로 사용")
     exercise_name: str = Field(description="운동 이름 (한글)")
     movement_pattern: Optional[str] = Field(default=None, description="동작 패턴 (예: horizontalPush)")
+    movement_type: Optional[str] = Field(default=None, description="운동 유형 (COMPOUND | ISOLATION | STATIC)")
     primary_muscles: List[str] = Field(default_factory=list, description="주동근 목록")
     equipment_type: Optional[str] = Field(default=None, description="사용 장비 (예: barbell)")
     target_weight_kg: Optional[float] = Field(default=None, description="목표 중량(kg). 맨몸이면 null")
@@ -192,21 +217,22 @@ class RoutineDraftResponse(BaseModel):
 
 
 # ==========================================
-# 6. Split Label → DB 근육 Enum 매핑
+# 6. Split Label → spreadsheet slug 매핑
 # ==========================================
 
 SPLIT_LABEL_TO_MUSCLES: Dict[str, List[str]] = {
-    "push":      ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER", "SHOULDER_FRONT", "SHOULDER_LATERAL", "ARM_TRICEPS"],
-    "pull":      ["BACK_TRAPS", "BACK_LATS", "BACK_LOWER", "ARM_BICEPS", "ARM_FOREARMS"],
-    "legs":      ["LEG_QUADS", "LEG_HAMSTRINGS", "LEG_GLUTES", "LEG_CALVES", "LEG_ADDUCTORS"],
-    "upper":     ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER", "BACK_TRAPS", "BACK_LATS", "SHOULDER_FRONT", "SHOULDER_LATERAL", "ARM_BICEPS", "ARM_TRICEPS"],
-    "lower":     ["LEG_QUADS", "LEG_HAMSTRINGS", "LEG_GLUTES", "LEG_CALVES", "LEG_ADDUCTORS", "LEG_ABDUCTORS"],
-    "chest":     ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER"],
-    "back":      ["BACK_TRAPS", "BACK_LATS", "BACK_LOWER"],
-    "shoulder":  ["SHOULDER_FRONT", "SHOULDER_LATERAL", "SHOULDER_REAR", "ROTATOR_CUFF"],
-    "arm":       ["ARM_BICEPS", "ARM_TRICEPS", "ARM_FOREARMS"],
-    "core":      ["CORE_ABS", "CORE_OBLIQUES"],
-    "full_body": ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER", "BACK_LATS", "SHOULDER_FRONT", "ROTATOR_CUFF", "LEG_QUADS", "LEG_HAMSTRINGS", "CORE_ABS"],
+    "push":      ["chest", "front-deltoids", "triceps"],
+    "pull":      ["upper-back", "trapezius", "biceps", "forearm", "back-deltoids"],
+    "legs":      ["quadriceps", "hamstring", "gluteal", "calves", "adductor", "abductors"],
+    "upper":     ["chest", "upper-back", "trapezius", "front-deltoids", "back-deltoids", "biceps", "triceps"],
+    "lower":     ["quadriceps", "hamstring", "gluteal", "calves", "adductor", "abductors"],
+    "chest":     ["chest"],
+    "back":      ["upper-back", "trapezius", "lower-back"],
+    "shoulder":  ["front-deltoids", "back-deltoids", "trapezius"],
+    "arm":       ["biceps", "triceps", "forearm"],
+    "core":      ["abs", "lower-back", "obliques"],
+    "neck":      ["neck"],
+    "full_body": ["chest", "upper-back", "front-deltoids", "quadriceps", "hamstring", "gluteal", "abs"],
 }
 
 @dataclass
@@ -214,46 +240,45 @@ class MuscleMapping:
     ai_targets: List[str]
     db_enums: List[str]
 
-# react-body-highlighter 키 기준 단일 진실 공급원 (SSOT)
+# react-body-highlighter 키와 spreadsheet slug 기준 단일 진실 공급원 (SSOT)
 MUSCLE_REGISTRY: Dict[str, MuscleMapping] = {
-    "chest":          MuscleMapping(["chest"],                              ["CHEST_UPPER", "CHEST_MID", "CHEST_LOWER"]),
-    "upper-back":     MuscleMapping(["upperBack"],                          ["BACK_TRAPS"]),
-    "trapezius":      MuscleMapping(["upperBack"],                          ["BACK_TRAPS"]),
-    "lats":           MuscleMapping(["lats"],                               ["BACK_LATS"]),
-    "lower-back":     MuscleMapping(["lowerBack"],                          ["BACK_LOWER"]),
-    "front-deltoids": MuscleMapping(["frontDelts"],                         ["SHOULDER_FRONT"]),
-    "back-deltoids":  MuscleMapping(["rearDelts"],                          ["SHOULDER_REAR"]),
-    "deltoids":       MuscleMapping(["frontDelts", "rearDelts", "sideDelts"], ["SHOULDER_FRONT", "SHOULDER_REAR", "SHOULDER_LATERAL"]),
-    "side-deltoids":  MuscleMapping(["sideDelts"],                          ["SHOULDER_LATERAL"]),
-    "rotator-cuff":   MuscleMapping(["rotatorCuff"],                        ["ROTATOR_CUFF"]),
-    "biceps":         MuscleMapping(["biceps"],                             ["ARM_BICEPS"]),
-    "triceps":        MuscleMapping(["triceps"],                            ["ARM_TRICEPS"]),
-    "forearm":        MuscleMapping(["forearm"],                            ["ARM_FOREARMS"]),
-    "abs":            MuscleMapping(["abs"],                                ["CORE_ABS"]),
-    "obliques":       MuscleMapping(["obliques"],                           ["CORE_OBLIQUES"]),
-    "glutes":         MuscleMapping(["glutes"],                              ["LEG_GLUTES"]),
-    "gluteal":        MuscleMapping(["glutes"],                              ["LEG_GLUTES"]),      # react-body-highlighter 실제 이벤트 alias
-    "hamstring":      MuscleMapping(["hamstrings"],                          ["LEG_HAMSTRINGS"]),
-    "quadriceps":     MuscleMapping(["quads"],                               ["LEG_QUADS"]),
-    "calves":         MuscleMapping(["calves"],                              ["LEG_CALVES"]),
-    "adductors":      MuscleMapping(["adductors"],                           ["LEG_ADDUCTORS"]),
-    "adductor":       MuscleMapping(["adductors"],                           ["LEG_ADDUCTORS"]),   # react-body-highlighter 실제 이벤트 alias
-    "abductors":      MuscleMapping(["abductors"],                           ["LEG_ABDUCTORS"]),
-    "knees":          MuscleMapping(["quads", "hamstrings"],                 ["LEG_QUADS", "LEG_HAMSTRINGS"]),
-    "neck":           MuscleMapping(["neck"],                               []),
+    "chest":          MuscleMapping(["chest"],                              ["chest"]),
+    "upper-back":     MuscleMapping(["upperBack"],                          ["upper-back"]),
+    "trapezius":      MuscleMapping(["upperBack"],                          ["trapezius"]),
+    "lats":           MuscleMapping(["lats"],                               ["upper-back"]),
+    "lower-back":     MuscleMapping(["lowerBack"],                          ["lower-back"]),
+    "front-deltoids": MuscleMapping(["frontDelts"],                         ["front-deltoids"]),
+    "back-deltoids":  MuscleMapping(["rearDelts"],                          ["back-deltoids"]),
+    "deltoids":       MuscleMapping(["frontDelts", "rearDelts"],            ["front-deltoids", "back-deltoids"]),
+    "rotator-cuff":   MuscleMapping(["rotatorCuff"],                        ["trapezius"]),
+    "biceps":         MuscleMapping(["biceps"],                             ["biceps"]),
+    "triceps":        MuscleMapping(["triceps"],                            ["triceps"]),
+    "forearm":        MuscleMapping(["forearm"],                            ["forearm"]),
+    "abs":            MuscleMapping(["abs"],                                ["abs"]),
+    "obliques":       MuscleMapping(["obliques"],                           ["obliques"]),
+    "glutes":         MuscleMapping(["glutes"],                             ["gluteal"]),
+    "gluteal":        MuscleMapping(["glutes"],                             ["gluteal"]),
+    "hamstring":      MuscleMapping(["hamstrings"],                         ["hamstring"]),
+    "quadriceps":     MuscleMapping(["quads"],                              ["quadriceps"]),
+    "calves":         MuscleMapping(["calves"],                             ["calves"]),
+    "adductors":      MuscleMapping(["adductors"],                          ["adductor"]),
+    "adductor":       MuscleMapping(["adductors"],                          ["adductor"]),
+    "abductors":      MuscleMapping(["abductors"],                          ["abductors"]),
+    "knees":          MuscleMapping(["quads", "hamstrings"],                ["quadriceps", "hamstring"]),
+    "neck":           MuscleMapping(["neck"],                               ["neck"]),
     "head":           MuscleMapping([],                                     []),
 }
 
 
 def split_label_to_muscles(label: str) -> List[str]:
-    """targetSplitLabel("push" 등)을 DB 근육 Enum 리스트로 변환한다."""
+    """targetSplitLabel("push" 등)을 spreadsheet slug 리스트로 변환한다."""
     return SPLIT_LABEL_TO_MUSCLES.get(label.lower(), [])
 
 
 def get_mapped_targets(raw_muscles: List[str]) -> Tuple[List[str], List[str]]:
     """
     프론트엔드 target_muscles 리스트를 MUSCLE_REGISTRY 기반으로 변환한다.
-    반환: (ai_targets, db_enums) — 각각 중복 제거된 리스트
+    반환: (ai_targets, db_enums) — 각각 중복 제거된 리스트. db_enums는 legacy 이름이며 spreadsheet slug를 담는다.
     """
     ai_seen: set = set()
     db_seen: set = set()
@@ -263,8 +288,8 @@ def get_mapped_targets(raw_muscles: List[str]) -> Tuple[List[str], List[str]]:
             ai_seen.update(mapping.ai_targets)
             db_seen.update(mapping.db_enums)
         else:
-            normalized = raw.upper()
-            if normalized in DB_MUSCLE_ENUMS:
+            normalized = raw.strip()
+            if normalized in MUSCLE_SLUGS:
                 db_seen.add(normalized)
             else:
                 ai_seen.add(raw)
@@ -272,14 +297,14 @@ def get_mapped_targets(raw_muscles: List[str]) -> Tuple[List[str], List[str]]:
 
 
 def map_doms_to_db(doms: List[DomEntry]) -> Dict[str, int]:
-    """DomEntry 배열을 {DB_MUSCLE_ENUM: level_int} 딕셔너리로 변환한다."""
+    """DomEntry 배열을 {spreadsheet_slug: level_int} 딕셔너리로 변환한다."""
     result: Dict[str, int] = {}
     for entry in doms:
         level_int = DOMS_LEVEL_MAP.get(entry.level.lower(), 1)
         mapping = MUSCLE_REGISTRY.get(entry.body_part.lower())
-        normalized = entry.body_part.upper()
+        normalized = entry.body_part.strip()
         targets = mapping.db_enums if mapping is not None else [
-            normalized if normalized in DB_MUSCLE_ENUMS else entry.body_part
+            normalized if normalized in MUSCLE_SLUGS else entry.body_part
         ]
         for db_muscle in targets:
             result[db_muscle] = max(result.get(db_muscle, 0), level_int)
@@ -317,12 +342,41 @@ def get_user_profile_context(db: Session, user_id: str) -> Optional[UserProfileC
         parsed = _parse(val)
         return parsed if isinstance(parsed, list) else []
 
+    def _parse_strength_baseline(val):
+        parsed = _parse(val)
+        if isinstance(parsed, dict):
+            return parsed
+        if not isinstance(parsed, list):
+            return {}
+
+        baseline: Dict[str, Dict[str, Any]] = {}
+        for item in parsed:
+            if not isinstance(item, dict):
+                continue
+            exercise_id = item.get("exerciseId") or item.get("exercise_id")
+            exercise_name = item.get("exerciseNameSnapshot") or item.get("exercise_name_snapshot")
+            weight = item.get("workingWeightKg") or item.get("working_weight_kg") or item.get("weight_kg")
+            reps = item.get("reps")
+            if not weight or not reps:
+                continue
+            value = {
+                "exercise_id": str(exercise_id) if exercise_id else None,
+                "exercise_name_snapshot": exercise_name,
+                "weight_kg": float(weight),
+                "reps": int(reps),
+            }
+            if exercise_id:
+                baseline[str(exercise_id)] = value
+            if exercise_name:
+                baseline[str(exercise_name)] = value
+        return baseline
+
     return UserProfileContext(
         goal_type=r["goal_type"],
         split_type=r["split_type"],
         split_label=r.get("split_label"),
         experience_level=r.get("experience_level"),
-        strength_baseline=_parse(r.get("strength_baseline")),
+        strength_baseline=_parse_strength_baseline(r.get("strength_baseline")),
         equipment_access=_parse_list(r.get("equipment_access")),
         pain_areas=_parse_list(r.get("pain_areas")),
     )
@@ -351,7 +405,7 @@ def get_recent_sets(db: Session, user_id: str, limit: int = 30) -> List[RecentSe
 
     rows = db.execute(
         text(f"""
-            SELECT exercise_name_snapshot, weight_kg, reps
+            SELECT exercise_id, exercise_name_snapshot, weight_kg, reps
             FROM workout_sets
             WHERE workout_session_id IN ({sid_placeholders})
               AND set_type = 'working'
@@ -363,9 +417,10 @@ def get_recent_sets(db: Session, user_id: str, limit: int = 30) -> List[RecentSe
 
     return [
         RecentSetRecord(
-            exercise_name=r[0],
-            weight_kg=float(r[1]) if r[1] is not None else None,
-            reps=int(r[2]),
+            exercise_id=str(r[0]) if r[0] is not None else None,
+            exercise_name=r[1],
+            weight_kg=float(r[2]) if r[2] is not None else None,
+            reps=int(r[3]),
         )
         for r in rows
     ]
@@ -439,11 +494,18 @@ def get_candidate_exercises(
 def format_candidates_for_prompt(candidates: List[dict]) -> str:
     if not candidates:
         return "?? ??? ?? ??? ????."
-    lines = [
-        f"- {ex['name_kr']} (ID: {ex['id']}, score={ex.get('score', 0)}, "
-        f"{ex['movement_type']}, reason={'; '.join(ex.get('score_reasons', []))})"
-        for ex in candidates
-    ]
+    lines = []
+    for ex in candidates:
+        secondary = str(ex.get("secondary_muscle") or "none").strip()
+        pain_triggers = str(ex.get("pain_triggers") or "none").strip()
+        equipment = str(ex.get("equipment_req") or "unknown").strip()
+        reasons = "; ".join(ex.get("score_reasons", [])) or "server ranked"
+        lines.append(
+            f"- {ex['name_kr']} (ID: {ex['id']}, score={ex.get('score', 0)}, "
+            f"movement_type={ex.get('movement_type') or 'UNKNOWN'}, "
+            f"primary={ex.get('primary_muscle') or 'unknown'}, secondary={secondary}, "
+            f"equipment={equipment}, pain_triggers={pain_triggers}, reason={reasons})"
+        )
     return "\n".join(lines)
 
 
@@ -457,7 +519,7 @@ def score_candidate_exercises(
     top_n: int = 12,
 ) -> List[dict]:
     """?? ??? deterministic?? ????? ?? N?? ????."""
-    target_set = {muscle.upper() for muscle in target_muscles}
+    target_set = set(target_muscles)
     scored: List[dict] = []
 
     doms = doms_db or {}
@@ -497,14 +559,24 @@ def score_candidate_exercises(
             score += 5
             reasons.append("isolation support")
 
-        primary = str(candidate.get("primary_muscle") or "").upper()
-        secondary = str(candidate.get("secondary_muscle") or "").upper()
+        primary = str(candidate.get("primary_muscle") or "").strip()
+        secondary = {
+            part.strip()
+            for part in str(candidate.get("secondary_muscle") or "").split(",")
+            if part.strip()
+        }
         if primary and primary in target_set:
             score += 20
             reasons.append("primary target match")
-        if secondary and secondary in target_set:
+        if secondary & target_set:
             score += 8
             reasons.append("secondary target match")
+        if primary in LARGE_MUSCLE_SLUGS:
+            score += 10
+            reasons.append("large muscle priority")
+        elif primary in ACCESSORY_MUSCLE_SLUGS:
+            score -= 4
+            reasons.append("accessory volume guard")
 
         doms_level = doms.get(primary, 0)
         if doms_level >= 3:
@@ -571,6 +643,22 @@ def _format_recent_sets(sets: List[RecentSetRecord]) -> str:
     return "\n".join(lines)
 
 
+def _format_request_pain_areas(pain_areas: List[PainAreaEntry]) -> str:
+    if not pain_areas:
+        return "none"
+    values = []
+    for pain in pain_areas:
+        if not isinstance(pain, PainAreaEntry) or not pain.body_part:
+            continue
+        details = [pain.body_part]
+        if pain.side:
+            details.append(f"side={pain.side}")
+        if pain.severity:
+            details.append(f"severity={pain.severity}")
+        values.append("(" + ", ".join(details) + ")")
+    return ", ".join(values) if values else "none"
+
+
 def _build_system_prompt(
     profile: Optional[UserProfileContext],
     recent_sets: Optional[List[RecentSetRecord]],
@@ -580,6 +668,16 @@ def _build_system_prompt(
     sections.append(
         "[ROLE]\n"
         "You are Fit-Core's routine composer. Build a safe, time-bounded workout plan from the supplied candidates only.\n\n"
+        "[REQUEST CONTEXT]\n"
+        "- goal: {goal}\n"
+        "- timeAvailableMin: {time_available_min}\n"
+        "- readinessLevel: {readiness_level}\n"
+        "- unavailable_equipment: {unavailable_equipment}\n"
+        "- target_split_label: {target_split_label}\n"
+        "- target_muscles: {target_muscles}\n"
+        "- current_pain_areas: {current_pain_areas}\n"
+        "- candidate_count: {candidate_count}\n"
+        "- Use this context to write specific exercise_rationale text; server-side filters remain authoritative.\n\n"
         "[HARD CONSTRAINTS]\n"
         "- Use only exercise_id values that appear in [RANKED CANDIDATES].\n"
         "- Respect the user's goal: {goal}.\n"
@@ -587,9 +685,23 @@ def _build_system_prompt(
         "- Treat DOMS, pain, and equipment restrictions as hard constraints; never reintroduce excluded exercises.\n"
         "- Return stable ordering and valid integer sets/reps/rest values.\n"
         "- Weight and reps will be finalized by deterministic server logic, so prefer sensible structure over speculative numbers.\n\n"
+        "[READINESS POLICY]\n"
+        "- If readinessLevel is low, avoid overloading the plan with heavy COMPOUND choices when reasonable alternatives exist.\n"
+        "- If readinessLevel is low and a COMPOUND exercise is selected, keep sets conservative; the server will raise RIR and may reduce sets.\n"
+        "- If readinessLevel is high, do not inflate volume beyond the set cap; the server may only make a small RIR adjustment.\n\n"
+        "[TIME POLICY]\n"
+        "- The server time model includes warmup, transition buffer, movement type, and rest time.\n"
+        "- For short timeAvailableMin values, prefer fewer exercises with clear priorities instead of many low-value additions.\n"
+        "- total_estimated_time is recomputed by the server, but the exercise list must still be plausible within the set cap.\n\n"
+        "[SET ALLOCATION POLICY]\n"
+        "- For push, pull, legs, upper, lower, and full_body splits, allocate main working sets to large-muscle targets first.\n"
+        "- Use small-muscle isolation work as accessory volume after the main targets are covered.\n"
+        "- For arm, core, shoulder, and neck splits, the named small muscle group may be treated as the main target.\n\n"
         "[RATIONALE POLICY]\n"
         "- The candidates are pre-ranked by the server.\n"
-        "- When writing exercise_rationale, reflect the provided score reasons such as efficiency, compound priority, and target-muscle match.\n"
+        "- When writing exercise_rationale, use only visible candidate fields: primary, secondary, equipment, movement_type, pain_triggers, and reason.\n"
+        "- Mention readiness, time pressure, target muscles, DOMS, pain, or equipment only when those values are present in [REQUEST CONTEXT] or [DOMS].\n"
+        "- Do not claim a selected exercise is pain-free; say it was selected from server-filtered candidates when pain context matters.\n"
         "- Do not invent unsupported medical claims or selection reasons.\n\n"
         "[OUTPUT SCHEMA]\n"
         "- Return one JSON object matching LLMRoutineOutput exactly.\n"
@@ -675,6 +787,7 @@ def _candidate_to_plan(candidate: dict, template: LLMExercisePlan) -> LLMExercis
         "exercise_id": str(candidate["id"]),
         "exercise_name": candidate.get("name_kr") or candidate.get("name_en") or template.exercise_name,
         "movement_pattern": candidate.get("movement_pattern") or template.movement_pattern,
+        "movement_type": candidate.get("movement_type") or template.movement_type,
         "primary_muscles": [candidate["primary_muscle"]] if candidate.get("primary_muscle") else [],
         "equipment_type": candidate.get("equipment_req"),
         "exercise_rationale": f"{template.exercise_rationale} (후검증 repair: 안전 후보로 교체)",
@@ -712,6 +825,8 @@ def validate_and_repair_routine_output(
         candidate = safe_by_id.get(exercise.exercise_id)
         if candidate is not None:
             used_ids.add(exercise.exercise_id)
+            if candidate.get("movement_type"):
+                exercise.movement_type = candidate["movement_type"]
             if candidate.get("primary_muscle"):
                 exercise.primary_muscles = [candidate["primary_muscle"]]
             if candidate.get("equipment_req"):
@@ -733,7 +848,7 @@ def validate_and_repair_routine_output(
             exercise = repaired.exercises[index]
             candidate = replacement
 
-        primary = str(candidate.get("primary_muscle") or "").upper()
+        primary = str(candidate.get("primary_muscle") or "").strip()
         doms_level = doms.get(primary, 0)
         if doms_level >= 3:
             return None
@@ -759,11 +874,7 @@ def validate_and_repair_routine_output(
                 return None
 
     if time_available_min is not None:
-        estimated_sec = sum(
-            exercise.sets * (45 + max(0, exercise.rest_time_sec))
-            for exercise in repaired.exercises
-        )
-        if math.ceil(estimated_sec / 60) > time_available_min:
+        if estimate_routine_time_min(repaired.exercises) > time_available_min:
             return None
 
     if violations:
@@ -778,7 +889,92 @@ _GOAL_INTENSITY = {
     "strength": 0.85,
     "hypertrophy": 0.72,
     "endurance": 0.60,
+    "fatloss": 0.60,
+    "recomposition": 0.72,
+    "generalfitness": 0.65,
 }
+
+
+def _movement_type_key(value: Optional[str]) -> str:
+    normalized = (value or "").strip().upper()
+    return normalized if normalized in {"COMPOUND", "ISOLATION", "STATIC"} else "UNKNOWN"
+
+
+def _work_seconds_for_movement(movement_type: Optional[str]) -> int:
+    return {
+        "COMPOUND": 60,
+        "ISOLATION": 40,
+        "STATIC": 45,
+    }.get(_movement_type_key(movement_type), 45)
+
+
+def estimate_routine_time_min(exercises: List[LLMExercisePlan]) -> int:
+    """
+    서버 기준 예상 시간. LLM 산수는 신뢰하지 않고 최종 루틴 블록에서 재계산한다.
+    - warmup: 5분
+    - 운동 간 전환: 각 2분
+    - set 수행 시간: compound 60초, isolation 40초, static/unknown 45초
+    - 휴식은 같은 운동의 세트 사이에만 계산한다.
+    """
+    active = [exercise for exercise in exercises if exercise.sets > 0]
+    if not active:
+        return 0
+
+    total_sec = 5 * 60
+    total_sec += max(0, len(active) - 1) * 2 * 60
+    for exercise in active:
+        sets = max(0, exercise.sets)
+        work_sec = _work_seconds_for_movement(exercise.movement_type)
+        rest_sec = max(0, exercise.rest_time_sec)
+        total_sec += sets * work_sec
+        total_sec += max(0, sets - 1) * rest_sec
+    return max(1, math.ceil(total_sec / 60))
+
+
+def _calculate_max_total_sets(time_available_min: int, goal: str) -> int:
+    rest_sec = _GOAL_PARAMS.get(goal.lower(), _GOAL_PARAMS["hypertrophy"])["rest_sec"]
+    available_sec = max(0, time_available_min - 5) * 60
+    per_set_sec = _work_seconds_for_movement("COMPOUND") + rest_sec
+    return max(1, int(available_sec / per_set_sec))
+
+
+def _apply_readiness_to_exercise(exercise: LLMExercisePlan, readiness_level: Optional[str]) -> None:
+    readiness = (readiness_level or "normal").strip().lower()
+    movement_type = _movement_type_key(exercise.movement_type)
+    base_rir = exercise.target_rir if exercise.target_rir is not None else 2
+
+    if readiness == "low" and movement_type == "COMPOUND":
+        if exercise.sets > 2:
+            exercise.sets = max(2, exercise.sets - 1)
+        exercise.target_rir = min(5, base_rir + 2)
+    elif readiness == "high":
+        exercise.target_rir = max(0, base_rir - 1)
+
+
+def _uses_large_muscle_guard(
+    target_split_label: Optional[str],
+    target_muscles: Optional[List[str]],
+) -> bool:
+    split = (target_split_label or "").strip().lower()
+    if split in ACCESSORY_PRIMARY_SPLITS:
+        return False
+    if target_muscles and not (set(target_muscles) & LARGE_MUSCLE_SLUGS):
+        return False
+    return True
+
+
+def _apply_large_muscle_volume_guard(
+    exercise: LLMExercisePlan,
+    target_split_label: Optional[str],
+    target_muscles: Optional[List[str]],
+) -> None:
+    if not _uses_large_muscle_guard(target_split_label, target_muscles):
+        return
+
+    primary = exercise.primary_muscles[0] if exercise.primary_muscles else ""
+    movement_type = _movement_type_key(exercise.movement_type)
+    if primary in ACCESSORY_MUSCLE_SLUGS and movement_type != "COMPOUND":
+        exercise.sets = min(exercise.sets, 2)
 
 
 def _round_to_nearest_2_5(value: float) -> float:
@@ -791,7 +987,12 @@ def _find_recent_reference(
 ) -> Optional[RecentSetRecord]:
     if not recent_sets:
         return None
-    normalized_names = {exercise.exercise_name.strip().lower(), exercise.exercise_id.strip().lower()}
+    exercise_id = exercise.exercise_id.strip().lower()
+    for record in recent_sets:
+        if record.exercise_id and record.exercise_id.strip().lower() == exercise_id and record.weight_kg:
+            return record
+
+    normalized_names = {exercise.exercise_name.strip().lower(), exercise_id}
     matching = [
         record for record in recent_sets
         if record.exercise_name.strip().lower() in normalized_names and record.weight_kg
@@ -807,9 +1008,20 @@ def _find_baseline_reference(
         return None
     normalized_keys = {exercise.exercise_name.strip().lower(), exercise.exercise_id.strip().lower()}
     for key, value in profile.strength_baseline.items():
-        if key.strip().lower() not in normalized_keys or not isinstance(value, dict):
+        if not isinstance(value, dict):
+            continue
+        value_keys = {
+            key.strip().lower(),
+            str(value.get("exercise_id") or "").strip().lower(),
+            str(value.get("exerciseId") or "").strip().lower(),
+            str(value.get("exercise_name_snapshot") or "").strip().lower(),
+            str(value.get("exerciseNameSnapshot") or "").strip().lower(),
+        }
+        if not (value_keys & normalized_keys):
             continue
         weight = value.get("weight_kg")
+        if weight is None:
+            weight = value.get("workingWeightKg") or value.get("working_weight_kg")
         reps = value.get("reps")
         if weight and reps:
             return float(weight), int(reps)
@@ -821,6 +1033,9 @@ def apply_deterministic_targets(
     goal: str,
     recent_sets: Optional[List[RecentSetRecord]],
     profile: Optional[UserProfileContext],
+    readiness_level: Optional[str] = "normal",
+    target_split_label: Optional[str] = None,
+    target_muscles: Optional[List[str]] = None,
 ) -> LLMRoutineOutput:
     """
     LLM의 kg/reps는 hint로만 두고 최종 값은 서버가 확정한다.
@@ -834,6 +1049,8 @@ def apply_deterministic_targets(
     for exercise in adjusted.exercises:
         exercise.target_reps = deterministic_reps
         exercise.rest_time_sec = _GOAL_PARAMS.get(goal_key, _GOAL_PARAMS["hypertrophy"])["rest_sec"]
+        _apply_readiness_to_exercise(exercise, readiness_level)
+        _apply_large_muscle_volume_guard(exercise, target_split_label, target_muscles)
 
         equipment = (exercise.equipment_type or "").upper()
         if "BODYWEIGHT" in equipment:
@@ -866,6 +1083,9 @@ _GOAL_PARAMS = {
     "strength":    {"sets": 5, "reps": 5,  "rest_sec": 180},
     "hypertrophy": {"sets": 3, "reps": 10, "rest_sec": 90},
     "endurance":   {"sets": 3, "reps": 15, "rest_sec": 60},
+    "fatloss":     {"sets": 3, "reps": 15, "rest_sec": 60},
+    "recomposition": {"sets": 3, "reps": 10, "rest_sec": 90},
+    "generalfitness": {"sets": 3, "reps": 12, "rest_sec": 75},
 }
 
 _MOVEMENT_PRIORITY = {"COMPOUND": 0, "ISOLATION": 1, "STATIC": 2}
@@ -918,7 +1138,7 @@ def _build_routine_draft(
                 reps=ex.target_reps,
                 weight_kg=ex.target_weight_kg,
                 rest_sec=ex.rest_time_sec,
-                target_rir=ex.target_rir or 2,
+                target_rir=ex.target_rir if ex.target_rir is not None else 2,
             ),
             exercise_rationale=ex.exercise_rationale,
             substitution_candidates=[
@@ -935,7 +1155,7 @@ def _build_routine_draft(
         generation_status=generation_status,
         status_reason_code=status_reason_code,
         is_fallback=is_fallback,
-        total_estimated_time=llm_output.total_estimated_time,
+        total_estimated_time=estimate_routine_time_min(llm_output.exercises),
         summary_title=llm_output.summary_title,
         rationale_summary=llm_output.rationale_summary,
         routine_blocks=blocks,
@@ -1053,7 +1273,7 @@ def generate_fallback_routine(
             generation_status="failed",
             status_reason_code="emptyCandidate",
             is_fallback=False,
-            total_estimated_time=req.time_available_min,
+            total_estimated_time=0,
             summary_title="기본 루틴",
             rationale_summary=["선택한 조건에 맞는 운동이 없습니다."],
             routine_blocks=[],
@@ -1062,6 +1282,12 @@ def generate_fallback_routine(
 
     params = _GOAL_PARAMS.get(goal.lower(), _GOAL_PARAMS["hypertrophy"])
     doms = doms_db or {}
+    if req.target_split_label:
+        fallback_target_muscles = split_label_to_muscles(req.target_split_label)
+    elif req.target_muscles:
+        _, fallback_target_muscles = get_mapped_targets(req.target_muscles)
+    else:
+        fallback_target_muscles = []
 
     sorted_candidates = sorted(
         candidates,
@@ -1069,6 +1295,7 @@ def generate_fallback_routine(
     )
 
     blocks: List[RoutineBlock] = []
+    fallback_plans: List[LLMExercisePlan] = []
     remaining_sets = max_total_sets
     order = 1
 
@@ -1086,26 +1313,45 @@ def generate_fallback_routine(
         elif doms_level == 1:
             sets = max(1, sets - 1)
         sets = min(sets, remaining_sets)
-        remaining_sets -= sets
 
-        exercise_id = str(ex.get("id", ex["name_kr"].replace(" ", "_").lower()))
-        blocks.append(RoutineBlock(
-            order=order,
-            exercise_id=exercise_id,
+        plan = LLMExercisePlan(
+            exercise_id=str(ex.get("id", ex["name_kr"].replace(" ", "_").lower())),
             exercise_name=ex["name_kr"],
             movement_pattern=ex.get("movement_pattern"),
+            movement_type=ex.get("movement_type"),
             primary_muscles=[ex["primary_muscle"]] if ex.get("primary_muscle") else [],
-            equipment_type=ex.get("equipment_type"),
+            equipment_type=ex.get("equipment_req"),
+            target_weight_kg=None,
+            target_reps=params["reps"],
+            sets=sets,
+            rest_time_sec=params["rest_sec"],
+            target_rir=2,
+            exercise_rationale=_FALLBACK_TIPS.get(ex["movement_type"], "정확한 자세로 수행하세요."),
+        )
+        _apply_readiness_to_exercise(plan, req.readiness_level)
+        _apply_large_muscle_volume_guard(plan, req.target_split_label, fallback_target_muscles)
+        sets = plan.sets
+        remaining_sets -= sets
+
+        blocks.append(RoutineBlock(
+            order=order,
+            exercise_id=plan.exercise_id,
+            exercise_name=plan.exercise_name,
+            movement_pattern=plan.movement_pattern,
+            primary_muscles=plan.primary_muscles,
+            equipment_type=plan.equipment_type,
             default_rest_sec=params["rest_sec"],
             prescription=_build_prescription(
-                sets=sets,
-                reps=params["reps"],
+                sets=plan.sets,
+                reps=plan.target_reps,
                 weight_kg=None,
-                rest_sec=params["rest_sec"],
+                rest_sec=plan.rest_time_sec,
+                target_rir=plan.target_rir if plan.target_rir is not None else 2,
             ),
-            exercise_rationale=_FALLBACK_TIPS.get(ex["movement_type"], "정확한 자세로 수행하세요."),
+            exercise_rationale=plan.exercise_rationale,
             substitution_candidates=[],
         ))
+        fallback_plans.append(plan)
         order += 1
         if remaining_sets <= 0:
             break
@@ -1115,25 +1361,18 @@ def generate_fallback_routine(
             generation_status="failed",
             status_reason_code="emptyCandidate",
             is_fallback=False,
-            total_estimated_time=req.time_available_min,
+            total_estimated_time=0,
             summary_title="기본 루틴",
             rationale_summary=["모든 후보 운동이 DOMS 제약으로 제외되었습니다."],
             routine_blocks=[],
             warnings=["컨디션이 회복된 후 다시 시도해 주세요."],
         )
 
-    total_sec = sum(
-        (45 + presc.target_rest_sec)
-        for block in blocks
-        for presc in block.prescription
-    )
-    estimated_time = max(1, round(total_sec / 60))
-
     return RoutineDraftResponse(
         generation_status="fallback",
         status_reason_code=status_reason_code,
         is_fallback=True,
-        total_estimated_time=estimated_time,
+        total_estimated_time=estimate_routine_time_min(fallback_plans),
         summary_title=f"기본 {req.target_split_label or '맞춤형'} 루틴",
         rationale_summary=["AI 코치 연결이 원활하지 않아 기본 루틴으로 대체되었습니다."],
         routine_blocks=blocks,
@@ -1155,14 +1394,11 @@ def generate_smart_routine(
     # 0. 타겟 근육 결정: splitLabel 우선 → target_muscles 직접 지정 → 빈 리스트
     if req.target_split_label:
         db_target_muscles = split_label_to_muscles(req.target_split_label)
-        ai_target_muscles = db_target_muscles  # split_label은 이미 DB Enum 형식
         print(f"[매핑] split_label={req.target_split_label} → {db_target_muscles}")
     elif req.target_muscles:
-        ai_target_muscles, db_target_muscles = get_mapped_targets(req.target_muscles)
-        print(f"[매핑] AI 타겟 → {ai_target_muscles}")
+        _, db_target_muscles = get_mapped_targets(req.target_muscles)
         print(f"[매핑] DB 타겟 → {db_target_muscles}")
     else:
-        ai_target_muscles = []
         db_target_muscles = []
         print("[매핑] 타겟 근육 없음 — 빈 후보 리스트로 진행")
 
@@ -1174,7 +1410,7 @@ def generate_smart_routine(
     # 1. 후보 운동 DB 조회
     candidates = get_candidate_exercises(
         db=db,
-        target_muscles=db_target_muscles,   # DB Enum 형식 (예: CHEST_UPPER, BACK_LATS)
+        target_muscles=db_target_muscles,   # spreadsheet slug 형식 (예: chest, upper-back)
         unavailable_equipment=req.equipment,
         pain_areas=pain_areas,
     )
@@ -1187,11 +1423,11 @@ def generate_smart_routine(
         recent_sets=recent_sets,
     )
     candidate_str = format_candidates_for_prompt(ranked_candidates)
+    current_pain_areas = _format_request_pain_areas(pain_areas)
     print(f"[후보 운동] {len(candidates)}개 조회됨")
 
     # 2. 최대 세트 수 계산
-    rest_sec = _GOAL_PARAMS.get(goal.lower(), _GOAL_PARAMS["hypertrophy"])["rest_sec"]
-    max_total_sets = max(1, int(req.time_available_min / ((60 + rest_sec) / 60)))
+    max_total_sets = _calculate_max_total_sets(req.time_available_min, goal)
 
     # 3. DOMS 프롬프트 문자열 생성
     if doms_db:
@@ -1206,7 +1442,7 @@ def generate_smart_routine(
     system_prompt = _build_system_prompt(profile, recent_sets)
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
-        ("human", "유저 코멘트: {user_note}")
+        ("human", "User note: {user_note}\nUse only the request context and ranked candidates above.")
     ])
 
     invoke_kwargs = {
@@ -1215,6 +1451,13 @@ def generate_smart_routine(
         "doms_instructions": doms_instructions,
         "candidate_exercises": candidate_str,
         "user_note": req.user_note or "없음",
+        "time_available_min": req.time_available_min,
+        "readiness_level": req.readiness_level or "normal",
+        "unavailable_equipment": ", ".join(req.equipment) if req.equipment else "none",
+        "target_split_label": req.target_split_label or "none",
+        "target_muscles": ", ".join(db_target_muscles) if db_target_muscles else "none",
+        "current_pain_areas": current_pain_areas,
+        "candidate_count": len(ranked_candidates),
     }
 
     reason: StatusReasonCode = "networkError"
@@ -1238,7 +1481,21 @@ def generate_smart_routine(
                 req, ranked_candidates, max_total_sets, doms_db,
                 goal=goal, status_reason_code="schemaError",
             )
-        deterministic = apply_deterministic_targets(validated, goal, recent_sets, profile)
+        deterministic = apply_deterministic_targets(
+            validated,
+            goal,
+            recent_sets,
+            profile,
+            req.readiness_level,
+            req.target_split_label,
+            db_target_muscles,
+        )
+        if estimate_routine_time_min(deterministic.exercises) > req.time_available_min:
+            print("[AI post-deterministic] final routine exceeds time budget -> fallback")
+            return generate_fallback_routine(
+                req, ranked_candidates, max_total_sets, doms_db,
+                goal=goal, status_reason_code="schemaError",
+            )
         return _build_routine_draft(deterministic, "success", "none", False)
 
     except (asyncio.TimeoutError, httpx.TimeoutException) as e:
@@ -1276,7 +1533,21 @@ def generate_smart_routine(
                     req, ranked_candidates, max_total_sets, doms_db,
                     goal=goal, status_reason_code="schemaError",
                 )
-            deterministic = apply_deterministic_targets(validated, goal, recent_sets, profile)
+            deterministic = apply_deterministic_targets(
+                validated,
+                goal,
+                recent_sets,
+                profile,
+                req.readiness_level,
+                req.target_split_label,
+                db_target_muscles,
+            )
+            if estimate_routine_time_min(deterministic.exercises) > req.time_available_min:
+                print("[AI post-deterministic] normalized routine exceeds time budget -> fallback")
+                return generate_fallback_routine(
+                    req, ranked_candidates, max_total_sets, doms_db,
+                    goal=goal, status_reason_code="schemaError",
+                )
             print("[정제 어댑터] 복구 성공!")
             return _build_routine_draft(deterministic, "success", "none", False)
 
@@ -1311,7 +1582,7 @@ if __name__ == "__main__":
         readiness_level="normal",
         time_available_min=70,
         pain_areas=[],
-        doms_data={"CHEST_MID": 1},   # mild=1
+        doms_data={"chest": 1},   # mild=1
         equipment=["smith_machine"],
     )
 

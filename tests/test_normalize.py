@@ -95,3 +95,4 @@ class TestValidOutput:
         assert result.summary_title == sample_llm_output.summary_title
         assert len(result.exercises) == len(sample_llm_output.exercises)
         assert result.exercises[0].exercise_id == sample_llm_output.exercises[0].exercise_id
+

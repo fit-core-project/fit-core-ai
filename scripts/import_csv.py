@@ -32,7 +32,7 @@ def import_data():
         df.to_sql(
             name='exercise_tier',
             con=engine,
-            if_exists='append',
+            if_exists='replace',
             index=False
         )
         print("✅ 성공적으로 저장되었습니다!")

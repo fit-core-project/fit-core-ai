@@ -5,3 +5,4 @@
   "llm": {"exercise_id": "barbell_bench_press", "sets": 20, "rest_time_sec": 300},
   "expected": {"status": "fallback"}
 }
+

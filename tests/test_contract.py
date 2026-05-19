@@ -42,11 +42,11 @@ class TestRoutineRequestParsing:
     def test_doms_data_camel_case_parsed(self):
         payload = {
             "timeAvailableMin": 60,
-            "domsData": {"CHEST_MID": 1, "ARM_TRICEPS": 2},
+            "domsData": {"chest": 1, "triceps": 2},
         }
         req = RoutineRequest.model_validate(payload)
-        assert req.doms_data["CHEST_MID"] == 1
-        assert req.doms_data["ARM_TRICEPS"] == 2
+        assert req.doms_data["chest"] == 1
+        assert req.doms_data["triceps"] == 2
 
     def test_missing_required_field_raises(self):
         with pytest.raises(ValidationError):
@@ -133,13 +133,13 @@ class TestRoutineDraftResponseSerialization:
         assert uuid_pattern.match(response.routine_draft_id)
 
     def test_total_estimated_time_in_response(self, sample_llm_output):
-        from engines.routine_engine import _build_routine_draft
+        from engines.routine_engine import _build_routine_draft, estimate_routine_time_min
 
         response = _build_routine_draft(sample_llm_output, "success", "none", False)
         dumped = response.model_dump(by_alias=True)
 
         assert "totalEstimatedTime" in dumped
-        assert dumped["totalEstimatedTime"] == 55  # sample_llm_output.total_estimated_time
+        assert dumped["totalEstimatedTime"] == estimate_routine_time_min(sample_llm_output.exercises)
 
     def test_is_fallback_serialized_as_camel_case(self, sample_llm_output):
         from engines.routine_engine import _build_routine_draft
@@ -149,3 +149,4 @@ class TestRoutineDraftResponseSerialization:
 
         assert "isFallback" in dumped
         assert "is_fallback" not in dumped
+

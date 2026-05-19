@@ -3,13 +3,15 @@ from engines.routine_engine import (
     RecentSetRecord,
     UserProfileContext,
     _build_system_prompt,
+    _format_request_pain_areas,
     format_candidates_for_prompt,
     score_candidate_exercises,
 )
+from langchain_core.prompts import ChatPromptTemplate
 
 
 def test_scoring_prefers_compound_primary_target_match(mock_candidates):
-    ranked = score_candidate_exercises(mock_candidates, ["CHEST_MID"])
+    ranked = score_candidate_exercises(mock_candidates, ["chest"])
     assert ranked[0]["id"] == "barbell_bench_press"
     assert "compound priority" in ranked[0]["score_reasons"]
     assert "primary target match" in ranked[0]["score_reasons"]
@@ -20,7 +22,7 @@ def test_scoring_limits_prompt_candidates_to_top_n(mock_candidates):
         {**mock_candidates[i % len(mock_candidates)], "id": f"candidate_{i}"}
         for i in range(20)
     ]
-    ranked = score_candidate_exercises(expanded, ["CHEST_MID"], top_n=5)
+    ranked = score_candidate_exercises(expanded, ["chest"], top_n=5)
     assert len(ranked) == 5
 
 
@@ -32,8 +34,8 @@ def test_scoring_penalizes_doms_and_excludes_blocked_candidates(mock_candidates)
     ]
     ranked = score_candidate_exercises(
         candidates,
-        ["CHEST_MID"],
-        doms_db={"CHEST_MID": 2},
+        ["chest"],
+        doms_db={"chest": 2},
         blocked_equipment=["MACHINE"],
     )
     ids = [candidate["id"] for candidate in ranked]
@@ -44,7 +46,19 @@ def test_scoring_penalizes_doms_and_excludes_blocked_candidates(mock_candidates)
 def test_prompt_v2_mentions_hard_constraints_and_ranked_candidates():
     prompt = _build_system_prompt(profile=None, recent_sets=None)
     assert "[ROLE]" in prompt
+    assert "[REQUEST CONTEXT]" in prompt
+    assert "timeAvailableMin: {time_available_min}" in prompt
+    assert "readinessLevel: {readiness_level}" in prompt
+    assert "unavailable_equipment: {unavailable_equipment}" in prompt
+    assert "target_split_label: {target_split_label}" in prompt
+    assert "target_muscles: {target_muscles}" in prompt
+    assert "current_pain_areas: {current_pain_areas}" in prompt
+    assert "candidate_count: {candidate_count}" in prompt
     assert "[HARD CONSTRAINTS]" in prompt
+    assert "[READINESS POLICY]" in prompt
+    assert "[TIME POLICY]" in prompt
+    assert "[SET ALLOCATION POLICY]" in prompt
+    assert "[RATIONALE POLICY]" in prompt
     assert "[OUTPUT SCHEMA]" in prompt
     assert "[PROHIBITED BEHAVIOR]" in prompt
     assert "[RANKED CANDIDATES]" in prompt
@@ -69,7 +83,114 @@ def test_prompt_includes_profile_pain_and_recent_sets_context():
 
 
 def test_prompt_candidate_text_exposes_score_reasons(mock_candidates):
-    ranked = score_candidate_exercises(mock_candidates, ["CHEST_MID"])
+    ranked = score_candidate_exercises(mock_candidates, ["chest"])
     rendered = format_candidates_for_prompt(ranked)
     assert "score=" in rendered
+    assert "primary=chest" in rendered
+    assert "secondary=triceps" in rendered
+    assert "equipment=BARBELL" in rendered
+    assert "pain_triggers=none" in rendered
+    assert "movement_type=COMPOUND" in rendered
     assert "compound priority" in rendered
+    assert "large muscle priority" in rendered
+
+
+def test_rendered_prompt_snapshot_for_low_readiness_pain_and_short_time(mock_candidates):
+    candidates = [
+        {
+            **mock_candidates[0],
+            "pain_triggers": "chest, front-deltoids, triceps",
+        },
+        {
+            **mock_candidates[1],
+            "pain_triggers": "chest",
+        },
+        {
+            **mock_candidates[2],
+            "pain_triggers": "chest, triceps",
+        },
+    ]
+    pain_areas = [PainAreaEntry(body_part="chest", side="left", severity="mild")]
+    ranked = score_candidate_exercises(
+        candidates,
+        ["chest", "front-deltoids", "triceps"],
+        pain_areas=pain_areas,
+    )
+    candidate_text = format_candidates_for_prompt(ranked)
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", _build_system_prompt(profile=None, recent_sets=None)),
+        ("human", "User note: {user_note}\nUse only the request context and ranked candidates above."),
+    ])
+
+    rendered = prompt.format(
+        goal="hypertrophy",
+        max_sets=8,
+        doms_instructions="none",
+        candidate_exercises=candidate_text,
+        user_note="가볍게 진행",
+        time_available_min=30,
+        readiness_level="low",
+        unavailable_equipment="BARBELL",
+        target_split_label="push",
+        target_muscles="chest, front-deltoids, triceps",
+        current_pain_areas=_format_request_pain_areas(pain_areas),
+        candidate_count=len(ranked),
+    )
+
+    assert "timeAvailableMin: 30" in rendered
+    assert "readinessLevel: low" in rendered
+    assert "unavailable_equipment: BARBELL" in rendered
+    assert "target_muscles: chest, front-deltoids, triceps" in rendered
+    assert "current_pain_areas: (chest, side=left, severity=mild)" in rendered
+    assert "candidate_count: 0" in rendered
+    assert "[READINESS POLICY]" in rendered
+    assert "[TIME POLICY]" in rendered
+    assert "Use only the request context and ranked candidates above." in rendered
+
+
+def test_pain_slug_filter_excludes_chest_upper_back_and_trapezius():
+    candidates = [
+        {
+            "id": "bench",
+            "name_kr": "Bench",
+            "primary_muscle": "chest",
+            "secondary_muscle": "triceps",
+            "equipment_req": "BARBELL",
+            "efficiency_tier": 5,
+            "movement_type": "COMPOUND",
+            "pain_triggers": "chest, front-deltoids, triceps",
+        },
+        {
+            "id": "row",
+            "name_kr": "Row",
+            "primary_muscle": "upper-back",
+            "secondary_muscle": "trapezius, biceps",
+            "equipment_req": "CABLE",
+            "efficiency_tier": 4,
+            "movement_type": "COMPOUND",
+            "pain_triggers": "upper-back, trapezius, biceps",
+        },
+        {
+            "id": "curl",
+            "name_kr": "Curl",
+            "primary_muscle": "biceps",
+            "secondary_muscle": "forearm",
+            "equipment_req": "DUMBBELL",
+            "efficiency_tier": 3,
+            "movement_type": "ISOLATION",
+            "pain_triggers": "biceps, forearm",
+        },
+    ]
+
+    ranked = score_candidate_exercises(
+        candidates,
+        ["chest", "upper-back", "trapezius", "biceps"],
+        pain_areas=[
+            PainAreaEntry(body_part="chest"),
+            PainAreaEntry(body_part="upper-back"),
+            PainAreaEntry(body_part="trapezius"),
+        ],
+    )
+
+    assert [candidate["id"] for candidate in ranked] == ["curl"]
+

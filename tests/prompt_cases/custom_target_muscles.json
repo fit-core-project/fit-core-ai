@@ -3,5 +3,6 @@
   "request": {"target_muscles": ["triceps"], "time_available_min": 45, "doms_data": {}, "equipment": []},
   "candidates": ["cable_pushdown"],
   "llm": {"exercise_id": "cable_pushdown", "sets": 3, "rest_time_sec": 90},
-  "expected": {"status": "success", "primary_muscle": "ARM_TRICEPS"}
+  "expected": {"status": "success", "primary_muscle": "triceps"}
 }
+

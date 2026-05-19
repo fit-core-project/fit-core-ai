@@ -17,7 +17,7 @@ def sample_request():
         readiness_level="normal",
         time_available_min=60,
         pain_areas=[],
-        doms_data={"CHEST_MID": 1},
+        doms_data={"chest": 1},
         equipment=[],
     )
 
@@ -47,7 +47,7 @@ def sample_llm_output():
                 exercise_id="barbell_bench_press",
                 exercise_name="바벨 벤치프레스",
                 movement_pattern="horizontalPush",
-        primary_muscles=["CHEST_MID"],
+        primary_muscles=["chest"],
                 equipment_type="barbell",
                 target_weight_kg=80.0,
                 target_reps=8,
@@ -74,8 +74,8 @@ def mock_candidates():
             "id": "barbell_bench_press",
             "name_kr": "바벨 벤치프레스",
             "name_en": "Barbell Bench Press",
-        "primary_muscle": "CHEST_MID",
-            "secondary_muscle": "ARM_TRICEPS",
+        "primary_muscle": "chest",
+            "secondary_muscle": "triceps",
             "equipment_req": "BARBELL",
             "difficulty_tier": 3,
             "efficiency_tier": 5,
@@ -86,7 +86,7 @@ def mock_candidates():
             "id": "dumbbell_fly",
             "name_kr": "덤벨 플라이",
             "name_en": "Dumbbell Fly",
-        "primary_muscle": "CHEST_MID",
+        "primary_muscle": "chest",
             "secondary_muscle": None,
             "equipment_req": "DUMBBELL",
             "difficulty_tier": 2,
@@ -98,8 +98,8 @@ def mock_candidates():
             "id": "pushup",
             "name_kr": "푸시업",
             "name_en": "Push-up",
-        "primary_muscle": "CHEST_MID",
-            "secondary_muscle": "ARM_TRICEPS",
+        "primary_muscle": "chest",
+            "secondary_muscle": "triceps",
             "equipment_req": "BODYWEIGHT",
             "difficulty_tier": 1,
             "efficiency_tier": 2,
@@ -107,3 +107,4 @@ def mock_candidates():
             "movement_type": "COMPOUND",
         },
     ]
+

@@ -31,7 +31,7 @@ class TestFallbackEmptyCandidates:
 
 class TestFallbackDomsLogic:
     def test_doms_level3_skips_exercise(self, push_request, mock_candidates):
-        doms_db = {"CHEST_MID": 3}
+        doms_db = {"chest": 3}
         result = generate_fallback_routine(
             push_request, candidates=mock_candidates, max_total_sets=15, doms_db=doms_db
         )
@@ -40,17 +40,17 @@ class TestFallbackDomsLogic:
         assert "dumbbell_fly" not in exercise_ids
 
     def test_doms_level2_limits_sets_to_2(self, push_request, mock_candidates):
-        doms_db = {"CHEST_MID": 2}
+        doms_db = {"chest": 2}
         result = generate_fallback_routine(
             push_request, candidates=mock_candidates, max_total_sets=15, doms_db=doms_db
         )
-        chest_blocks = [b for b in result.routine_blocks if "CHEST_MID" in b.primary_muscles]
+        chest_blocks = [b for b in result.routine_blocks if "chest" in b.primary_muscles]
         assert chest_blocks
         for block in chest_blocks:
             assert len(block.prescription) == 1
 
     def test_doms_level1_reduces_sets_by_1(self, push_request, mock_candidates):
-        doms_db = {"CHEST_MID": 1}
+        doms_db = {"chest": 1}
         result = generate_fallback_routine(
             push_request, candidates=mock_candidates, max_total_sets=15, doms_db=doms_db, goal="hypertrophy"
         )
@@ -63,9 +63,9 @@ class TestFallbackDomsLogic:
             push_request,
             candidates=mock_candidates,
             max_total_sets=15,
-            doms_db={"CHEST_MID": 3},
+            doms_db={"chest": 3},
         )
-        assert all("CHEST_MID" not in block.primary_muscles for block in result.routine_blocks)
+        assert all("chest" not in block.primary_muscles for block in result.routine_blocks)
 
 
 class TestFallbackMaxSets:
@@ -96,6 +96,26 @@ class TestFallbackGoalParams:
                 assert s.target_reps == 15
 
 
+class TestFallbackReadiness:
+    def test_low_readiness_reduces_compound_sets_and_raises_rir(self, push_request, mock_candidates):
+        request = push_request.model_copy(update={"readiness_level": "low"})
+        result = generate_fallback_routine(
+            request, candidates=mock_candidates, max_total_sets=20, goal="hypertrophy"
+        )
+        compound = next(block for block in result.routine_blocks if block.exercise_id == "barbell_bench_press")
+        assert len(compound.prescription) == 2
+        assert compound.prescription[0].target_rir == 4
+
+    def test_high_readiness_keeps_sets_and_lowers_rir(self, push_request, mock_candidates):
+        request = push_request.model_copy(update={"readiness_level": "high"})
+        result = generate_fallback_routine(
+            request, candidates=mock_candidates, max_total_sets=20, goal="hypertrophy"
+        )
+        first = result.routine_blocks[0]
+        assert len(first.prescription) == 3
+        assert first.prescription[0].target_rir == 1
+
+
 class TestFallbackStatusReasonCode:
     def test_custom_status_reason_code_preserved(self, push_request, mock_candidates):
         result = generate_fallback_routine(
@@ -113,3 +133,4 @@ class TestFallbackStatusReasonCode:
             first_id = result.routine_blocks[0].exercise_id
             compound_ids = {"barbell_bench_press", "pushup"}
             assert first_id in compound_ids
+
