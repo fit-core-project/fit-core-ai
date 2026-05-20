@@ -31,6 +31,7 @@ def import_data():
         print(f"DB('exercise_tier' 테이블)에 {len(df)}개 데이터 삽입 시작...")
         df.to_sql(
             name='exercise_tier',
+
             con=engine,
             if_exists='replace',
             index=False

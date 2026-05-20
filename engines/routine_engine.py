@@ -80,6 +80,17 @@ ACCESSORY_MUSCLE_SLUGS = {
 
 ACCESSORY_PRIMARY_SPLITS = {"arm", "core", "shoulder", "neck"}
 
+LOADED_EQUIPMENT_TOKENS = {
+    "BARBELL",
+    "DUMBBELL",
+    "MACHINE",
+    "CABLE",
+    "SMITH_MACHINE",
+    "KETTLEBELL",
+    "PLATE",
+    "LANDMINE",
+}
+
 # ==========================================
 # 2. Request 모델
 # ==========================================
@@ -118,6 +129,7 @@ class RoutineRequest(BaseModel):
 class RecentSetRecord(BaseModel):
     exercise_id: Optional[str] = None
     exercise_name: str
+    primary_muscle: Optional[str] = None
     weight_kg: Optional[float] = None
     reps: int
 
@@ -405,11 +417,15 @@ def get_recent_sets(db: Session, user_id: str, limit: int = 30) -> List[RecentSe
 
     rows = db.execute(
         text(f"""
-            SELECT exercise_id, exercise_name_snapshot, weight_kg, reps
-            FROM workout_sets
-            WHERE workout_session_id IN ({sid_placeholders})
-              AND set_type = 'working'
-            ORDER BY created_at DESC
+            SELECT ws.exercise_id, ws.exercise_name_snapshot, et.primary_muscle, ws.weight_kg, ws.reps
+            FROM workout_sets ws
+            LEFT JOIN exercise_tier et
+              ON CAST(et.id AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci = ws.exercise_id COLLATE utf8mb4_unicode_ci
+                 OR et.name_kr COLLATE utf8mb4_unicode_ci = ws.exercise_name_snapshot COLLATE utf8mb4_unicode_ci
+                 OR et.name_en COLLATE utf8mb4_unicode_ci = ws.exercise_name_snapshot COLLATE utf8mb4_unicode_ci
+            WHERE ws.workout_session_id IN ({sid_placeholders})
+              AND ws.set_type = 'working'
+            ORDER BY ws.created_at DESC
             LIMIT :limit
         """),
         params
@@ -419,8 +435,9 @@ def get_recent_sets(db: Session, user_id: str, limit: int = 30) -> List[RecentSe
         RecentSetRecord(
             exercise_id=str(r[0]) if r[0] is not None else None,
             exercise_name=r[1],
-            weight_kg=float(r[2]) if r[2] is not None else None,
-            reps=int(r[3]),
+            primary_muscle=str(r[2]) if r[2] is not None else None,
+            weight_kg=float(r[3]) if r[3] is not None else None,
+            reps=int(r[4]),
         )
         for r in rows
     ]
@@ -559,6 +576,14 @@ def score_candidate_exercises(
             score += 5
             reasons.append("isolation support")
 
+        equipment_req = candidate.get("equipment_req")
+        if _is_loadable_equipment(equipment_req):
+            score += 18
+            reasons.append("loadable equipment priority")
+        elif _is_bodyweight_only(equipment_req):
+            score -= 18
+            reasons.append("bodyweight deprioritized")
+
         primary = str(candidate.get("primary_muscle") or "").strip()
         secondary = {
             part.strip()
@@ -671,6 +696,7 @@ def _build_system_prompt(
         "[REQUEST CONTEXT]\n"
         "- goal: {goal}\n"
         "- timeAvailableMin: {time_available_min}\n"
+        "- targetExerciseCount: {target_exercise_count}\n"
         "- readinessLevel: {readiness_level}\n"
         "- unavailable_equipment: {unavailable_equipment}\n"
         "- target_split_label: {target_split_label}\n"
@@ -691,16 +717,29 @@ def _build_system_prompt(
         "- If readinessLevel is high, do not inflate volume beyond the set cap; the server may only make a small RIR adjustment.\n\n"
         "[TIME POLICY]\n"
         "- The server time model includes warmup, transition buffer, movement type, and rest time.\n"
+        "- Select close to targetExerciseCount exercises when candidates and safety constraints allow.\n"
+        "- If candidate shortage, DOMS, pain, equipment, or low readiness makes targetExerciseCount unsafe, use fewer exercises and prioritize quality.\n"
         "- For short timeAvailableMin values, prefer fewer exercises with clear priorities instead of many low-value additions.\n"
         "- total_estimated_time is recomputed by the server, but the exercise list must still be plausible within the set cap.\n\n"
+        "[EQUIPMENT POLICY]\n"
+        "- This product coaches intermediate-and-above lifters; prefer loadable equipment over bodyweight when safe candidates exist.\n"
+        "- Prioritize barbell, dumbbell, machine, cable, Smith machine, kettlebell, plate, or landmine exercises before pure BODYWEIGHT exercises.\n"
+        "- Use BODYWEIGHT exercises only when loadable candidates are unavailable, unsafe, blocked by equipment restrictions, or clearly lower-risk for pain/readiness.\n\n"
         "[SET ALLOCATION POLICY]\n"
         "- For push, pull, legs, upper, lower, and full_body splits, allocate main working sets to large-muscle targets first.\n"
         "- Use small-muscle isolation work as accessory volume after the main targets are covered.\n"
         "- For arm, core, shoulder, and neck splits, the named small muscle group may be treated as the main target.\n\n"
+        "[EXERCISE ORDER POLICY]\n"
+        "- Order exercises so high-skill, high-load COMPOUND movements for large muscles come first while the user is freshest.\n"
+        "- Place small-muscle isolation and low-load accessory work after the main compound lifts.\n"
+        "- Keep warmup or static/core work after heavy compounds unless the target split specifically makes that work the main focus.\n\n"
         "[RATIONALE POLICY]\n"
         "- The candidates are pre-ranked by the server.\n"
         "- When writing exercise_rationale, use only visible candidate fields: primary, secondary, equipment, movement_type, pain_triggers, and reason.\n"
+        "- Every exercise_rationale must cite at least one concrete input value from [REQUEST CONTEXT], [DOMS], [USER PROFILE], [RECENT SETS], or that candidate's visible fields.\n"
+        "- Prefer rationale text that ties the selected exercise to the actual goal, readinessLevel, timeAvailableMin, target_split_label, target_muscles, equipment, DOMS, pain, candidate primary/secondary, and candidate reason values.\n"
         "- Mention readiness, time pressure, target muscles, DOMS, pain, or equipment only when those values are present in [REQUEST CONTEXT] or [DOMS].\n"
+        "- Avoid generic explanations such as 'good exercise' or 'effective movement' unless they are anchored to a visible candidate or request value.\n"
         "- Do not claim a selected exercise is pain-free; say it was selected from server-filtered candidates when pain context matters.\n"
         "- Do not invent unsupported medical claims or selection reasons.\n\n"
         "[OUTPUT SCHEMA]\n"
@@ -765,6 +804,15 @@ def _normalize_tokens(raw: Optional[str]) -> set[str]:
     if not raw:
         return set()
     return {token.strip().upper() for token in str(raw).split(",") if token.strip()}
+
+
+def _is_loadable_equipment(raw: Optional[str]) -> bool:
+    return bool(_normalize_tokens(raw) & LOADED_EQUIPMENT_TOKENS)
+
+
+def _is_bodyweight_only(raw: Optional[str]) -> bool:
+    tokens = _normalize_tokens(raw)
+    return bool(tokens) and tokens <= {"BODYWEIGHT"}
 
 
 def _candidate_is_safe(
@@ -894,6 +942,29 @@ _GOAL_INTENSITY = {
     "generalfitness": 0.65,
 }
 
+_BIG_FOUR_BASELINE = {
+    "overhead_press": {"ids": {"75", "barbell_overhead_press"}, "ratio": 0.70},
+    "bench_press": {"ids": {"30", "barbell_bench_press"}, "ratio": 0.75},
+    "deadlift": {"ids": {"7", "deadlift"}, "ratio": 0.60},
+    "squat": {"ids": {"98", "back_squat"}, "ratio": 0.65},
+}
+
+_MUSCLE_TO_BIG_FOUR = {
+    "chest": "bench_press",
+    "triceps": "bench_press",
+    "front-deltoids": "overhead_press",
+    "back-deltoids": "overhead_press",
+    "trapezius": "overhead_press",
+    "upper-back": "deadlift",
+    "lower-back": "deadlift",
+    "hamstring": "deadlift",
+    "gluteal": "squat",
+    "quadriceps": "squat",
+    "adductor": "squat",
+    "abductors": "squat",
+    "calves": "squat",
+}
+
 
 def _movement_type_key(value: Optional[str]) -> str:
     normalized = (value or "").strip().upper()
@@ -936,6 +1007,18 @@ def _calculate_max_total_sets(time_available_min: int, goal: str) -> int:
     available_sec = max(0, time_available_min - 5) * 60
     per_set_sec = _work_seconds_for_movement("COMPOUND") + rest_sec
     return max(1, int(available_sec / per_set_sec))
+
+
+def _target_exercise_count(time_available_min: int) -> int:
+    if time_available_min <= 30:
+        return 4
+    if time_available_min <= 45:
+        return 5
+    if time_available_min <= 60:
+        return 6
+    if time_available_min <= 75:
+        return 7
+    return 8
 
 
 def _apply_readiness_to_exercise(exercise: LLMExercisePlan, readiness_level: Optional[str]) -> None:
@@ -981,6 +1064,54 @@ def _round_to_nearest_2_5(value: float) -> float:
     return round(value / 2.5) * 2.5
 
 
+def _goal_key(goal: str) -> str:
+    return (goal or "hypertrophy").replace("_", "").lower()
+
+
+def _prescription_params_for_exercise(exercise: LLMExercisePlan, goal: str) -> Tuple[int, int]:
+    goal_key = _goal_key(goal)
+    movement_type = _movement_type_key(exercise.movement_type)
+    table = {
+        "strength": {
+            "COMPOUND": (5, 180),
+            "ISOLATION": (8, 90),
+            "STATIC": (30, 60),
+            "UNKNOWN": (6, 120),
+        },
+        "hypertrophy": {
+            "COMPOUND": (8, 120),
+            "ISOLATION": (12, 75),
+            "STATIC": (30, 60),
+            "UNKNOWN": (10, 90),
+        },
+        "recomposition": {
+            "COMPOUND": (8, 90),
+            "ISOLATION": (12, 60),
+            "STATIC": (30, 45),
+            "UNKNOWN": (10, 75),
+        },
+        "fatloss": {
+            "COMPOUND": (12, 75),
+            "ISOLATION": (15, 45),
+            "STATIC": (30, 45),
+            "UNKNOWN": (15, 60),
+        },
+        "generalfitness": {
+            "COMPOUND": (10, 90),
+            "ISOLATION": (12, 60),
+            "STATIC": (30, 45),
+            "UNKNOWN": (12, 75),
+        },
+        "endurance": {
+            "COMPOUND": (15, 60),
+            "ISOLATION": (15, 45),
+            "STATIC": (30, 45),
+            "UNKNOWN": (15, 60),
+        },
+    }
+    return table.get(goal_key, table["hypertrophy"]).get(movement_type, table["hypertrophy"]["UNKNOWN"])
+
+
 def _find_recent_reference(
     exercise: LLMExercisePlan,
     recent_sets: Optional[List[RecentSetRecord]],
@@ -998,6 +1129,23 @@ def _find_recent_reference(
         if record.exercise_name.strip().lower() in normalized_names and record.weight_kg
     ]
     return matching[0] if matching else None
+
+
+def _find_same_muscle_recent_reference(
+    exercise: LLMExercisePlan,
+    recent_sets: Optional[List[RecentSetRecord]],
+) -> Optional[RecentSetRecord]:
+    if not recent_sets or not exercise.primary_muscles:
+        return None
+    primary = exercise.primary_muscles[0]
+    same_muscle = [
+        record
+        for record in recent_sets
+        if record.primary_muscle == primary and record.weight_kg
+    ]
+    if not same_muscle:
+        return None
+    return max(same_muscle, key=lambda record: calculate_1rm(record.weight_kg or 0, record.reps))
 
 
 def _find_baseline_reference(
@@ -1028,6 +1176,131 @@ def _find_baseline_reference(
     return None
 
 
+def _find_big_four_baseline_reference(
+    exercise: LLMExercisePlan,
+    profile: Optional[UserProfileContext],
+) -> Optional[Tuple[float, int, float]]:
+    if not profile or not profile.strength_baseline or not exercise.primary_muscles:
+        return None
+    primary = exercise.primary_muscles[0]
+    baseline_key = _MUSCLE_TO_BIG_FOUR.get(primary)
+    if not baseline_key:
+        return None
+
+    target = _BIG_FOUR_BASELINE[baseline_key]
+    target_ids = target["ids"]
+    base_ratio = float(target["ratio"])
+    movement_ratio = 1.0 if _movement_type_key(exercise.movement_type) == "COMPOUND" else 0.55
+
+    for key, value in profile.strength_baseline.items():
+        if not isinstance(value, dict):
+            continue
+        value_ids = {
+            key.strip().lower(),
+            str(value.get("exercise_id") or "").strip().lower(),
+            str(value.get("exerciseId") or "").strip().lower(),
+        }
+        if not (value_ids & target_ids):
+            continue
+        weight = value.get("weight_kg")
+        if weight is None:
+            weight = value.get("workingWeightKg") or value.get("working_weight_kg")
+        reps = value.get("reps")
+        if weight and reps:
+            return float(weight), int(reps), base_ratio * movement_ratio
+    return None
+
+
+def _resolve_target_weight(
+    exercise: LLMExercisePlan,
+    goal: str,
+    recent_sets: Optional[List[RecentSetRecord]],
+    profile: Optional[UserProfileContext],
+) -> Optional[float]:
+    equipment = (exercise.equipment_type or "").upper()
+    if "BODYWEIGHT" in equipment:
+        return None
+
+    intensity = _GOAL_INTENSITY.get(_goal_key(goal), _GOAL_INTENSITY["hypertrophy"])
+    exact_recent = _find_recent_reference(exercise, recent_sets)
+    if exact_recent and exact_recent.weight_kg:
+        return _round_to_nearest_2_5(calculate_1rm(exact_recent.weight_kg, exact_recent.reps) * intensity)
+
+    same_muscle_recent = _find_same_muscle_recent_reference(exercise, recent_sets)
+    if same_muscle_recent and same_muscle_recent.weight_kg:
+        return _round_to_nearest_2_5(calculate_1rm(same_muscle_recent.weight_kg, same_muscle_recent.reps) * intensity * 0.85)
+
+    exact_baseline = _find_baseline_reference(exercise, profile)
+    if exact_baseline:
+        return _round_to_nearest_2_5(calculate_1rm(exact_baseline[0], exact_baseline[1]) * intensity)
+
+    big_four = _find_big_four_baseline_reference(exercise, profile)
+    if big_four:
+        weight, reps, ratio = big_four
+        return _round_to_nearest_2_5(calculate_1rm(weight, reps) * intensity * ratio)
+
+    if exercise.target_weight_kg is not None:
+        return max(0, _round_to_nearest_2_5(exercise.target_weight_kg))
+    return None
+
+
+def _max_sets_for_exercise(exercise: LLMExercisePlan, goal: str, target_split_label: Optional[str]) -> int:
+    goal_key = _goal_key(goal)
+    movement_type = _movement_type_key(exercise.movement_type)
+    primary = exercise.primary_muscles[0] if exercise.primary_muscles else ""
+    if movement_type == "COMPOUND":
+        return 5 if goal_key == "strength" else 4
+    if (target_split_label or "").lower() in ACCESSORY_PRIMARY_SPLITS:
+        return 4
+    if primary in LARGE_MUSCLE_SLUGS:
+        return 3
+    return 2
+
+
+def _fill_available_time(
+    output: LLMRoutineOutput,
+    time_available_min: int,
+    goal: str,
+    readiness_level: Optional[str],
+    target_split_label: Optional[str],
+    doms_db: Optional[Dict[str, int]] = None,
+) -> None:
+    if (readiness_level or "normal").lower() == "low":
+        return
+    target_min = max(1, math.floor(time_available_min * 0.85))
+    current = estimate_routine_time_min(output.exercises)
+    if current >= target_min:
+        return
+
+    candidates = sorted(
+        output.exercises,
+        key=lambda ex: (
+            0 if _movement_type_key(ex.movement_type) == "COMPOUND" else 1,
+            0 if (ex.primary_muscles and ex.primary_muscles[0] in LARGE_MUSCLE_SLUGS) else 1,
+        ),
+    )
+    doms = doms_db or {}
+    changed = True
+    while changed and current < target_min:
+        changed = False
+        for exercise in candidates:
+            primary = exercise.primary_muscles[0] if exercise.primary_muscles else ""
+            if doms.get(primary, 0) > 0:
+                continue
+            max_sets = _max_sets_for_exercise(exercise, goal, target_split_label)
+            if exercise.sets >= max_sets:
+                continue
+            exercise.sets += 1
+            next_time = estimate_routine_time_min(output.exercises)
+            if next_time > time_available_min:
+                exercise.sets -= 1
+                continue
+            current = next_time
+            changed = True
+            if current >= target_min:
+                break
+
+
 def apply_deterministic_targets(
     llm_output: LLMRoutineOutput,
     goal: str,
@@ -1036,41 +1309,32 @@ def apply_deterministic_targets(
     readiness_level: Optional[str] = "normal",
     target_split_label: Optional[str] = None,
     target_muscles: Optional[List[str]] = None,
+    doms_db: Optional[Dict[str, int]] = None,
+    time_available_min: Optional[int] = None,
 ) -> LLMRoutineOutput:
     """
     LLM의 kg/reps는 hint로만 두고 최종 값은 서버가 확정한다.
     최근 세트 > strength_baseline > LLM hint 순으로 참조한다.
     """
     adjusted = llm_output.model_copy(deep=True)
-    goal_key = goal.lower()
-    deterministic_reps = _GOAL_PARAMS.get(goal_key, _GOAL_PARAMS["hypertrophy"])["reps"]
-    intensity = _GOAL_INTENSITY.get(goal_key, _GOAL_INTENSITY["hypertrophy"])
 
     for exercise in adjusted.exercises:
-        exercise.target_reps = deterministic_reps
-        exercise.rest_time_sec = _GOAL_PARAMS.get(goal_key, _GOAL_PARAMS["hypertrophy"])["rest_sec"]
+        target_reps, rest_sec = _prescription_params_for_exercise(exercise, goal)
+        exercise.target_reps = target_reps
+        exercise.rest_time_sec = rest_sec
         _apply_readiness_to_exercise(exercise, readiness_level)
         _apply_large_muscle_volume_guard(exercise, target_split_label, target_muscles)
+        exercise.target_weight_kg = _resolve_target_weight(exercise, goal, recent_sets, profile)
 
-        equipment = (exercise.equipment_type or "").upper()
-        if "BODYWEIGHT" in equipment:
-            exercise.target_weight_kg = None
-            continue
-
-        recent = _find_recent_reference(exercise, recent_sets)
-        if recent and recent.weight_kg:
-            one_rm = calculate_1rm(recent.weight_kg, recent.reps)
-            exercise.target_weight_kg = _round_to_nearest_2_5(one_rm * intensity)
-            continue
-
-        baseline = _find_baseline_reference(exercise, profile)
-        if baseline:
-            one_rm = calculate_1rm(baseline[0], baseline[1])
-            exercise.target_weight_kg = _round_to_nearest_2_5(one_rm * intensity)
-            continue
-
-        if exercise.target_weight_kg is not None:
-            exercise.target_weight_kg = max(0, _round_to_nearest_2_5(exercise.target_weight_kg))
+    if time_available_min:
+        _fill_available_time(
+            adjusted,
+            time_available_min,
+            goal,
+            readiness_level,
+            target_split_label,
+            doms_db=doms_db,
+        )
 
     return adjusted
 
@@ -1089,6 +1353,46 @@ _GOAL_PARAMS = {
 }
 
 _MOVEMENT_PRIORITY = {"COMPOUND": 0, "ISOLATION": 1, "STATIC": 2}
+
+
+def _primary_muscle_priority(primary: Optional[str]) -> int:
+    if primary in LARGE_MUSCLE_SLUGS:
+        return 0
+    if primary in ACCESSORY_MUSCLE_SLUGS:
+        return 1
+    return 2
+
+
+def _planned_exercise_order_key(item: Tuple[int, LLMExercisePlan]) -> Tuple[int, int, float, int]:
+    original_order, exercise = item
+    primary = exercise.primary_muscles[0] if exercise.primary_muscles else None
+    weight = exercise.target_weight_kg or 0
+    return (
+        _MOVEMENT_PRIORITY.get(_movement_type_key(exercise.movement_type), 3),
+        _primary_muscle_priority(primary),
+        -weight,
+        original_order,
+    )
+
+
+def _candidate_order_key(candidate: dict) -> Tuple[int, int, int, int, str]:
+    return (
+        0 if _is_loadable_equipment(candidate.get("equipment_req")) else 1,
+        _MOVEMENT_PRIORITY.get(_movement_type_key(candidate.get("movement_type")), 3),
+        _primary_muscle_priority(candidate.get("primary_muscle")),
+        -int(candidate.get("efficiency_tier") or 0),
+        str(candidate.get("id") or ""),
+    )
+
+
+def _order_exercises_for_training(exercises: List[LLMExercisePlan]) -> List[LLMExercisePlan]:
+    return [
+        exercise
+        for _, exercise in sorted(
+            enumerate(exercises),
+            key=_planned_exercise_order_key,
+        )
+    ]
 
 _FALLBACK_TIPS = {
     "COMPOUND":  "주동근에 집중하며 정확한 자세를 유지하세요.",
@@ -1124,7 +1428,8 @@ def _build_routine_draft(
     is_fallback: bool,
 ) -> RoutineDraftResponse:
     blocks = []
-    for order, ex in enumerate(llm_output.exercises, start=1):
+    ordered_exercises = _order_exercises_for_training(llm_output.exercises)
+    for order, ex in enumerate(ordered_exercises, start=1):
         blocks.append(RoutineBlock(
             order=order,
             exercise_id=ex.exercise_id,
@@ -1155,12 +1460,61 @@ def _build_routine_draft(
         generation_status=generation_status,
         status_reason_code=status_reason_code,
         is_fallback=is_fallback,
-        total_estimated_time=estimate_routine_time_min(llm_output.exercises),
+        total_estimated_time=estimate_routine_time_min(ordered_exercises),
         summary_title=llm_output.summary_title,
         rationale_summary=llm_output.rationale_summary,
         routine_blocks=blocks,
         warnings=llm_output.warnings,
     )
+
+
+def _debug_print_prompt(prompt: ChatPromptTemplate, invoke_kwargs: Dict[str, Any]) -> None:
+    try:
+        rendered = prompt.format(**invoke_kwargs)
+    except Exception as exc:
+        print(f"[AI DEBUG][PROMPT] render failed: {exc}")
+        print(f"[AI DEBUG][PROMPT VARS] {invoke_kwargs}")
+        return
+
+    print("\n========== [AI DEBUG] RENDERED ROUTINE PROMPT ==========")
+    print(rendered)
+    print("========== [AI DEBUG] END ROUTINE PROMPT ==========\n")
+
+
+def _debug_print_llm_output(label: str, output: LLMRoutineOutput) -> None:
+    print(f"\n========== [AI DEBUG] {label} ==========")
+    print(
+        f"summary={output.summary_title} | llm_total_estimated_time={output.total_estimated_time} | "
+        f"server_estimated_time={estimate_routine_time_min(output.exercises)}"
+    )
+    for index, exercise in enumerate(output.exercises, start=1):
+        print(
+            f"{index}. id={exercise.exercise_id} name={exercise.exercise_name} "
+            f"type={exercise.movement_type} primary={exercise.primary_muscles} "
+            f"sets={exercise.sets} reps={exercise.target_reps} "
+            f"weight={exercise.target_weight_kg}kg rir={exercise.target_rir} "
+            f"rest={exercise.rest_time_sec}s rationale={exercise.exercise_rationale}"
+        )
+    print(f"========== [AI DEBUG] END {label} ==========\n")
+
+
+def _debug_print_draft(label: str, draft: RoutineDraftResponse) -> None:
+    print(f"\n========== [AI DEBUG] {label} ==========")
+    print(
+        f"status={draft.generation_status} reason={draft.status_reason_code} "
+        f"is_fallback={draft.is_fallback} total_estimated_time={draft.total_estimated_time}"
+    )
+    for block in draft.routine_blocks:
+        first_set = block.prescription[0] if block.prescription else None
+        print(
+            f"{block.order}. id={block.exercise_id} name={block.exercise_name} "
+            f"primary={block.primary_muscles} sets={len(block.prescription)} "
+            f"reps={first_set.target_reps if first_set else None} "
+            f"weight={first_set.target_weight_kg if first_set else None}kg "
+            f"rir={first_set.target_rir if first_set else None} "
+            f"rest={first_set.target_rest_sec if first_set else None}s"
+        )
+    print(f"========== [AI DEBUG] END {label} ==========\n")
 
 
 # ==========================================
@@ -1265,6 +1619,8 @@ def generate_fallback_routine(
     doms_db: Optional[Dict[str, int]] = None,
     goal: str = "hypertrophy",
     status_reason_code: StatusReasonCode = "networkError",
+    recent_sets: Optional[List[RecentSetRecord]] = None,
+    profile: Optional[UserProfileContext] = None,
 ) -> RoutineDraftResponse:
     print("[Fallback] 규칙 기반 루틴 생성 시작")
 
@@ -1291,7 +1647,7 @@ def generate_fallback_routine(
 
     sorted_candidates = sorted(
         candidates,
-        key=lambda x: (_MOVEMENT_PRIORITY.get(x["movement_type"], 1), -x["efficiency_tier"])
+        key=_candidate_order_key,
     )
 
     blocks: List[RoutineBlock] = []
@@ -1313,6 +1669,19 @@ def generate_fallback_routine(
         elif doms_level == 1:
             sets = max(1, sets - 1)
         sets = min(sets, remaining_sets)
+        target_reps, rest_sec = _prescription_params_for_exercise(
+            LLMExercisePlan(
+                exercise_id=str(ex.get("id", "")),
+                exercise_name=str(ex.get("name_kr", "")),
+                movement_type=ex.get("movement_type"),
+                primary_muscles=[ex["primary_muscle"]] if ex.get("primary_muscle") else [],
+                target_reps=params["reps"],
+                sets=sets,
+                rest_time_sec=params["rest_sec"],
+                exercise_rationale="",
+            ),
+            goal,
+        )
 
         plan = LLMExercisePlan(
             exercise_id=str(ex.get("id", ex["name_kr"].replace(" ", "_").lower())),
@@ -1322,14 +1691,15 @@ def generate_fallback_routine(
             primary_muscles=[ex["primary_muscle"]] if ex.get("primary_muscle") else [],
             equipment_type=ex.get("equipment_req"),
             target_weight_kg=None,
-            target_reps=params["reps"],
+            target_reps=target_reps,
             sets=sets,
-            rest_time_sec=params["rest_sec"],
+            rest_time_sec=rest_sec,
             target_rir=2,
             exercise_rationale=_FALLBACK_TIPS.get(ex["movement_type"], "정확한 자세로 수행하세요."),
         )
         _apply_readiness_to_exercise(plan, req.readiness_level)
         _apply_large_muscle_volume_guard(plan, req.target_split_label, fallback_target_muscles)
+        plan.target_weight_kg = _resolve_target_weight(plan, goal, recent_sets, profile)
         sets = plan.sets
         remaining_sets -= sets
 
@@ -1340,11 +1710,11 @@ def generate_fallback_routine(
             movement_pattern=plan.movement_pattern,
             primary_muscles=plan.primary_muscles,
             equipment_type=plan.equipment_type,
-            default_rest_sec=params["rest_sec"],
+            default_rest_sec=plan.rest_time_sec,
             prescription=_build_prescription(
                 sets=plan.sets,
                 reps=plan.target_reps,
-                weight_kg=None,
+                weight_kg=plan.target_weight_kg,
                 rest_sec=plan.rest_time_sec,
                 target_rir=plan.target_rir if plan.target_rir is not None else 2,
             ),
@@ -1428,6 +1798,7 @@ def generate_smart_routine(
 
     # 2. 최대 세트 수 계산
     max_total_sets = _calculate_max_total_sets(req.time_available_min, goal)
+    target_exercise_count = _target_exercise_count(req.time_available_min)
 
     # 3. DOMS 프롬프트 문자열 생성
     if doms_db:
@@ -1452,6 +1823,7 @@ def generate_smart_routine(
         "candidate_exercises": candidate_str,
         "user_note": req.user_note or "없음",
         "time_available_min": req.time_available_min,
+        "target_exercise_count": target_exercise_count,
         "readiness_level": req.readiness_level or "normal",
         "unavailable_equipment": ", ".join(req.equipment) if req.equipment else "none",
         "target_split_label": req.target_split_label or "none",
@@ -1459,6 +1831,7 @@ def generate_smart_routine(
         "current_pain_areas": current_pain_areas,
         "candidate_count": len(ranked_candidates),
     }
+    _debug_print_prompt(prompt, invoke_kwargs)
 
     reason: StatusReasonCode = "networkError"
     try:
@@ -1466,6 +1839,7 @@ def generate_smart_routine(
         structured_llm = llm.with_structured_output(LLMRoutineOutput)
         chain = prompt | structured_llm
         response: LLMRoutineOutput = chain.invoke(invoke_kwargs)
+        _debug_print_llm_output("LLM STRUCTURED OUTPUT", response)
         validated = validate_and_repair_routine_output(
             response,
             ranked_candidates,
@@ -1480,23 +1854,30 @@ def generate_smart_routine(
             return generate_fallback_routine(
                 req, ranked_candidates, max_total_sets, doms_db,
                 goal=goal, status_reason_code="schemaError",
+                recent_sets=recent_sets, profile=profile,
             )
         deterministic = apply_deterministic_targets(
             validated,
-            goal,
-            recent_sets,
-            profile,
-            req.readiness_level,
-            req.target_split_label,
-            db_target_muscles,
+            goal=goal,
+            recent_sets=recent_sets,
+            profile=profile,
+            readiness_level=req.readiness_level,
+            target_split_label=req.target_split_label,
+            target_muscles=db_target_muscles,
+            doms_db=doms_db,
+            time_available_min=req.time_available_min,
         )
+        _debug_print_llm_output("DETERMINISTIC OUTPUT", deterministic)
         if estimate_routine_time_min(deterministic.exercises) > req.time_available_min:
             print("[AI post-deterministic] final routine exceeds time budget -> fallback")
             return generate_fallback_routine(
                 req, ranked_candidates, max_total_sets, doms_db,
                 goal=goal, status_reason_code="schemaError",
+                recent_sets=recent_sets, profile=profile,
             )
-        return _build_routine_draft(deterministic, "success", "none", False)
+        draft = _build_routine_draft(deterministic, "success", "none", False)
+        _debug_print_draft("FINAL DRAFT RESPONSE", draft)
+        return draft
 
     except (asyncio.TimeoutError, httpx.TimeoutException) as e:
         reason = map_llm_error(e)
@@ -1518,6 +1899,7 @@ def generate_smart_routine(
                 raw_text = raw_resp.content if hasattr(raw_resp, "content") else str(raw_resp)
 
             normalized = normalize_llm_response(raw_text, llm=llm)
+            _debug_print_llm_output("NORMALIZED LLM OUTPUT", normalized)
             validated = validate_and_repair_routine_output(
                 normalized,
                 ranked_candidates,
@@ -1532,24 +1914,31 @@ def generate_smart_routine(
                 return generate_fallback_routine(
                     req, ranked_candidates, max_total_sets, doms_db,
                     goal=goal, status_reason_code="schemaError",
+                    recent_sets=recent_sets, profile=profile,
                 )
             deterministic = apply_deterministic_targets(
                 validated,
-                goal,
-                recent_sets,
-                profile,
-                req.readiness_level,
-                req.target_split_label,
-                db_target_muscles,
+                goal=goal,
+                recent_sets=recent_sets,
+                profile=profile,
+                readiness_level=req.readiness_level,
+                target_split_label=req.target_split_label,
+                target_muscles=db_target_muscles,
+                doms_db=doms_db,
+                time_available_min=req.time_available_min,
             )
+            _debug_print_llm_output("NORMALIZED DETERMINISTIC OUTPUT", deterministic)
             if estimate_routine_time_min(deterministic.exercises) > req.time_available_min:
                 print("[AI post-deterministic] normalized routine exceeds time budget -> fallback")
                 return generate_fallback_routine(
                     req, ranked_candidates, max_total_sets, doms_db,
                     goal=goal, status_reason_code="schemaError",
+                    recent_sets=recent_sets, profile=profile,
                 )
             print("[정제 어댑터] 복구 성공!")
-            return _build_routine_draft(deterministic, "success", "none", False)
+            draft = _build_routine_draft(deterministic, "success", "none", False)
+            _debug_print_draft("FINAL NORMALIZED DRAFT RESPONSE", draft)
+            return draft
 
         except Exception as norm_e:
             reason = map_llm_error(e)  # 원본 schema 에러 기준으로 분류
@@ -1563,6 +1952,7 @@ def generate_smart_routine(
     return generate_fallback_routine(
         req, ranked_candidates, max_total_sets, doms_db,
         goal=goal, status_reason_code=reason,
+        recent_sets=recent_sets, profile=profile,
     )
 
 

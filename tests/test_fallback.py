@@ -1,7 +1,7 @@
 """generate_fallback_routine — DB/LLM 없이 순수 로직 테스트"""
 import pytest
 
-from engines.routine_engine import RoutineRequest, generate_fallback_routine
+from engines.routine_engine import RecentSetRecord, RoutineRequest, generate_fallback_routine
 
 
 @pytest.fixture
@@ -79,13 +79,15 @@ class TestFallbackMaxSets:
 
 
 class TestFallbackGoalParams:
-    def test_strength_goal_uses_5_reps(self, push_request, mock_candidates):
+    def test_strength_goal_uses_movement_specific_reps(self, push_request, mock_candidates):
         result = generate_fallback_routine(
             push_request, candidates=mock_candidates, max_total_sets=20, goal="strength"
         )
-        for block in result.routine_blocks:
-            for s in block.prescription:
-                assert s.target_reps == 5
+        compound = next(block for block in result.routine_blocks if block.exercise_id == "barbell_bench_press")
+        isolation = next(block for block in result.routine_blocks if block.exercise_id == "dumbbell_fly")
+
+        assert compound.prescription[0].target_reps == 5
+        assert isolation.prescription[0].target_reps == 8
 
     def test_endurance_goal_uses_15_reps(self, push_request, mock_candidates):
         result = generate_fallback_routine(
@@ -94,6 +96,26 @@ class TestFallbackGoalParams:
         for block in result.routine_blocks:
             for s in block.prescription:
                 assert s.target_reps == 15
+
+    def test_same_muscle_recent_sets_seed_fallback_weight(self, push_request, mock_candidates):
+        recent_sets = [
+            RecentSetRecord(
+                exercise_name="Different Chest Exercise",
+                primary_muscle="chest",
+                weight_kg=100,
+                reps=5,
+            )
+        ]
+        result = generate_fallback_routine(
+            push_request,
+            candidates=mock_candidates,
+            max_total_sets=20,
+            goal="hypertrophy",
+            recent_sets=recent_sets,
+        )
+        fly = next(block for block in result.routine_blocks if block.exercise_id == "dumbbell_fly")
+
+        assert fly.prescription[0].target_weight_kg == 72.5
 
 
 class TestFallbackReadiness:

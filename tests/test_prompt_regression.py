@@ -4,6 +4,7 @@ from engines.routine_engine import (
     UserProfileContext,
     _build_system_prompt,
     _format_request_pain_areas,
+    _target_exercise_count,
     format_candidates_for_prompt,
     score_candidate_exercises,
 )
@@ -43,11 +44,45 @@ def test_scoring_penalizes_doms_and_excludes_blocked_candidates(mock_candidates)
     assert "doms moderate penalty" in ranked[0]["score_reasons"]
 
 
+def test_scoring_prefers_loadable_equipment_over_bodyweight():
+    candidates = [
+        {
+            "id": "high_efficiency_pushup",
+            "name_kr": "Push-up",
+            "name_en": "Push-up",
+            "primary_muscle": "chest",
+            "secondary_muscle": "triceps",
+            "equipment_req": "BODYWEIGHT",
+            "efficiency_tier": 5,
+            "movement_type": "COMPOUND",
+            "pain_triggers": None,
+        },
+        {
+            "id": "dumbbell_bench_press",
+            "name_kr": "Dumbbell Bench Press",
+            "name_en": "Dumbbell Bench Press",
+            "primary_muscle": "chest",
+            "secondary_muscle": "triceps",
+            "equipment_req": "DUMBBELL",
+            "efficiency_tier": 4,
+            "movement_type": "COMPOUND",
+            "pain_triggers": None,
+        },
+    ]
+
+    ranked = score_candidate_exercises(candidates, ["chest"])
+
+    assert ranked[0]["id"] == "dumbbell_bench_press"
+    assert "loadable equipment priority" in ranked[0]["score_reasons"]
+    assert "bodyweight deprioritized" in ranked[1]["score_reasons"]
+
+
 def test_prompt_v2_mentions_hard_constraints_and_ranked_candidates():
     prompt = _build_system_prompt(profile=None, recent_sets=None)
     assert "[ROLE]" in prompt
     assert "[REQUEST CONTEXT]" in prompt
     assert "timeAvailableMin: {time_available_min}" in prompt
+    assert "targetExerciseCount: {target_exercise_count}" in prompt
     assert "readinessLevel: {readiness_level}" in prompt
     assert "unavailable_equipment: {unavailable_equipment}" in prompt
     assert "target_split_label: {target_split_label}" in prompt
@@ -57,12 +92,24 @@ def test_prompt_v2_mentions_hard_constraints_and_ranked_candidates():
     assert "[HARD CONSTRAINTS]" in prompt
     assert "[READINESS POLICY]" in prompt
     assert "[TIME POLICY]" in prompt
+    assert "[EQUIPMENT POLICY]" in prompt
     assert "[SET ALLOCATION POLICY]" in prompt
+    assert "[EXERCISE ORDER POLICY]" in prompt
     assert "[RATIONALE POLICY]" in prompt
+    assert "Every exercise_rationale must cite at least one concrete input value" in prompt
+    assert "Avoid generic explanations" in prompt
     assert "[OUTPUT SCHEMA]" in prompt
     assert "[PROHIBITED BEHAVIOR]" in prompt
     assert "[RANKED CANDIDATES]" in prompt
     assert "at or below {max_sets}" in prompt
+
+
+def test_target_exercise_count_uses_time_bands():
+    assert _target_exercise_count(30) == 4
+    assert _target_exercise_count(45) == 5
+    assert _target_exercise_count(60) == 6
+    assert _target_exercise_count(75) == 7
+    assert _target_exercise_count(90) == 8
 
 
 def test_prompt_includes_profile_pain_and_recent_sets_context():
@@ -129,6 +176,7 @@ def test_rendered_prompt_snapshot_for_low_readiness_pain_and_short_time(mock_can
         candidate_exercises=candidate_text,
         user_note="가볍게 진행",
         time_available_min=30,
+        target_exercise_count=4,
         readiness_level="low",
         unavailable_equipment="BARBELL",
         target_split_label="push",
@@ -138,6 +186,7 @@ def test_rendered_prompt_snapshot_for_low_readiness_pain_and_short_time(mock_can
     )
 
     assert "timeAvailableMin: 30" in rendered
+    assert "targetExerciseCount: 4" in rendered
     assert "readinessLevel: low" in rendered
     assert "unavailable_equipment: BARBELL" in rendered
     assert "target_muscles: chest, front-deltoids, triceps" in rendered
