@@ -87,6 +87,19 @@ class TestInjectDefaults:
         result = normalize_llm_response(json.dumps(data))
         assert result.exercises[0].substitution_candidates == []
 
+    def test_local_model_loose_types_are_coerced(self):
+        data = json.loads(_minimal_valid_json())
+        data["rationale_summary"] = "single reason"
+        data["exercises"][0]["exercise_id"] = 33
+        data["exercises"][0]["primary_muscles"] = "triceps"
+        data["exercises"][0]["target_reps"] = "8-12"
+        result = normalize_llm_response(json.dumps(data))
+
+        assert result.rationale_summary == ["single reason"]
+        assert result.exercises[0].exercise_id == "33"
+        assert result.exercises[0].primary_muscles == ["triceps"]
+        assert result.exercises[0].target_reps == 8
+
 
 class TestValidOutput:
     def test_full_valid_json_parses_correctly(self, sample_llm_output):

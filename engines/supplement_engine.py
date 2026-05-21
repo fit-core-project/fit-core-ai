@@ -7,10 +7,10 @@ from pathlib import Path
 # LangChain & AI 관련 임포트
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
+from engines.llm_router import get_llm
 
 # 🌐 웹 검색 툴 추가
 from langchain_community.tools import DuckDuckGoSearchRun
@@ -30,8 +30,8 @@ class SupplementRAGEngine:
         self.device = 'cuda' if __import__('torch').cuda.is_available() else 'cpu'
 
         # 1. 생성용 LLM 세팅 (gemini-2.5-flash)
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1)
-        self.query_optimizer = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.0)
+        self.llm = get_llm("supplement", temperature=0.1)
+        self.query_optimizer = get_llm("supplement", temperature=0.0)
 
         # 🌐 웹 검색기 초기화
         self.web_search = DuckDuckGoSearchRun()

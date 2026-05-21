@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from faster_whisper import WhisperModel
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
+from dev_logs import dev_log_buffer, install_stdout_capture
 
 from engines.routine_engine import (
     generate_smart_routine, get_user_profile_context, get_recent_sets,
@@ -19,6 +20,8 @@ from engines.routine_engine import (
 )
 from engines.nlp_engine import parse_natural_language_log
 from engines.supplement_engine import SupplementRAGEngine
+
+install_stdout_capture()
 
 # ==========================================================
 # 🚀 전역 변수 설정 (함수 밖에서는 'None'으로 이름만 선언)
@@ -69,11 +72,16 @@ app = FastAPI(title="Fit-Core AI Server", lifespan=lifespan)
 # --- CORS 설정 ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://192.168.75.85:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://192.168.75.85:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/api/dev/logs")
+def api_dev_logs(limit: int = 120):
+    return dev_log_buffer.tail(limit)
 
 # ==========================================================
 # 🚨 [에러 핸들러] 422 검증 에러 발생 시 상세 로깅

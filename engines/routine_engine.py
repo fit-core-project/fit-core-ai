@@ -1548,6 +1548,8 @@ def _inject_defaults(data: dict) -> dict:
     Pydantic 검증 전 누락된 필수 필드에 기본값을 주입한다 (Graceful Degradation).
     """
     data.setdefault("summary_title", "맞춤형 AI 루틴")
+    if isinstance(data.get("rationale_summary"), str):
+        data["rationale_summary"] = [data["rationale_summary"]]
     data.setdefault("rationale_summary", ["회원님의 데이터 기반으로 생성된 루틴입니다."])
     data.setdefault("warnings", [])
     data.setdefault("total_estimated_time", 45)
@@ -1560,13 +1562,22 @@ def _inject_defaults(data: dict) -> dict:
             "exercise_id",
             re.sub(r"\s+", "_", ex.get("exercise_name", "unknown")).lower(),
         )
+        ex["exercise_id"] = str(ex["exercise_id"])
         ex.setdefault("primary_muscles", [])
+        if isinstance(ex["primary_muscles"], str):
+            ex["primary_muscles"] = [ex["primary_muscles"]]
         ex.setdefault("target_rir", 2)
         ex.setdefault("substitution_candidates", [])
         ex.setdefault("exercise_rationale", "AI 추천 운동")
         ex.setdefault("rest_time_sec", 90)
         ex.setdefault("sets", 3)
         ex.setdefault("target_reps", 10)
+        for numeric_key in ("target_reps", "sets", "rest_time_sec", "target_rir"):
+            value = ex.get(numeric_key)
+            if isinstance(value, str):
+                match = re.search(r"\d+", value)
+                if match:
+                    ex[numeric_key] = int(match.group())
 
     return data
 

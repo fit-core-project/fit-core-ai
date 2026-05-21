@@ -1,8 +1,8 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
+from engines.llm_router import get_llm
 
 # .env 파일에서 GOOGLE_API_KEY를 불러옵니다.
 load_dotenv()
@@ -33,7 +33,7 @@ class ParsedDailyLog(BaseModel):
 # ==========================================
 def parse_natural_language_log(user_text: str) -> str:
     # 온도(temperature)를 0.1로 낮추어 창의성보다는 정확한 정보 추출에 집중하게 합니다.
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1)
+    llm = get_llm("nlp", temperature=0.1)
 
     # Pydantic 스키마를 LLM에 강제 적용 (가장 중요한 부분)
     structured_llm = llm.with_structured_output(ParsedDailyLog)
