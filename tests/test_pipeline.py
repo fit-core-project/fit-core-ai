@@ -16,13 +16,13 @@ from langchain_core.exceptions import OutputParserException
 from langchain_core.runnables import RunnableLambda
 from sqlalchemy.orm import Session
 
-from engines.routine_engine import (
+from engines.db_queries import get_user_profile_context
+from engines.routine_pipeline import generate_smart_routine
+from engines.schemas import (
     LLMExercisePlan,
     LLMRoutineOutput,
     PainAreaEntry,
     RecentSetRecord,
-    get_user_profile_context,
-    generate_smart_routine,
 )
 
 
@@ -93,8 +93,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=sample_llm_output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=[]
@@ -113,8 +113,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=sample_llm_output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=[]
@@ -161,8 +161,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request.model_copy(update={"doms_data": {}}),
@@ -185,8 +185,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=hallucinated)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=[]
@@ -208,8 +208,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=bad)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=[]
@@ -232,8 +232,8 @@ class TestHappyPath:
         ]
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=recent_sets
@@ -259,8 +259,8 @@ class TestHappyPath:
         ]
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=recent_sets
@@ -276,8 +276,8 @@ class TestHappyPath:
         request = sample_request.model_copy(update={"goal": "fatLoss", "doms_data": {}})
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 request, db, profile=sample_profile, recent_sets=[]
@@ -296,8 +296,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 request, db, profile=sample_profile, recent_sets=[]
@@ -317,8 +317,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 request, db, profile=sample_profile, recent_sets=[]
@@ -384,8 +384,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=candidates),
         ):
             result = generate_smart_routine(
                 request, db, profile=sample_profile, recent_sets=[]
@@ -453,8 +453,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=candidates),
         ):
             result = generate_smart_routine(
                 request, db, profile=profile, recent_sets=[]
@@ -516,8 +516,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=candidates),
         ):
             result = generate_smart_routine(
                 sample_request.model_copy(update={"doms_data": {}}),
@@ -571,8 +571,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=candidates),
         ):
             result = generate_smart_routine(
                 request, db, profile=sample_profile, recent_sets=[]
@@ -588,8 +588,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=sample_llm_output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 request, db, profile=sample_profile, recent_sets=[]
@@ -606,8 +606,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=sample_llm_output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 request, db, profile=sample_profile, recent_sets=[]
@@ -626,8 +626,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=bad)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=[]
@@ -687,8 +687,8 @@ class TestHappyPath:
         mock_llm = _make_llm_mock(return_value=output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 request, db, profile=sample_profile, recent_sets=[]
@@ -705,8 +705,8 @@ class TestTimeoutFallback:
         mock_llm = _make_llm_mock(side_effect=httpx.TimeoutException("timeout"))
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=[]
@@ -723,8 +723,8 @@ class TestTimeoutFallback:
         mock_llm = _make_llm_mock(side_effect=asyncio.TimeoutError())
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=[]
@@ -747,8 +747,8 @@ class TestSchemaErrorRecovery:
         mock_llm = _make_llm_mock(side_effect=parser_exc)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=[]
@@ -771,8 +771,8 @@ class TestSchemaErrorRecovery:
         mock_llm.invoke.side_effect = RuntimeError("LLM도 죽음")
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=sample_profile, recent_sets=[]
@@ -789,8 +789,8 @@ class TestNoProfile:
         mock_llm = _make_llm_mock(return_value=sample_llm_output)
 
         with (
-            patch("engines.routine_engine.get_llm", return_value=mock_llm),
-            patch("engines.routine_engine.get_candidate_exercises", return_value=mock_candidates),
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
         ):
             result = generate_smart_routine(
                 sample_request, db, profile=None, recent_sets=[]

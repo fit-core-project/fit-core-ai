@@ -7,7 +7,7 @@ from langchain_core.exceptions import OutputParserException
 from pydantic import ValidationError
 
 from engines.llm_router import _parse_json_content, get_llm, map_llm_error
-from engines.routine_engine import LLMRoutineOutput
+from engines.schemas import LLMRoutineOutput
 
 
 class TestMapLlmError:

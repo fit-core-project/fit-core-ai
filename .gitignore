@@ -317,6 +317,7 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/intellij,windows,python
 
 data/
+pre-phase-archive/
 
 .claude
 AGENTS.md

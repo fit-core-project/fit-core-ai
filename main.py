@@ -4,6 +4,10 @@ import tempfile
 import os
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Depends
 from sqlalchemy.orm import Session
 from database import get_db
@@ -14,10 +18,9 @@ from pydantic import BaseModel
 from starlette.responses import JSONResponse
 from dev_logs import dev_log_buffer, install_stdout_capture
 
-from engines.routine_engine import (
-    generate_smart_routine, get_user_profile_context, get_recent_sets,
-    RoutineRequest, RoutineDraftResponse,
-)
+from engines.db_queries import get_recent_sets, get_user_profile_context
+from engines.routine_pipeline import generate_smart_routine
+from engines.schemas import RoutineDraftResponse, RoutineRequest
 from engines.nlp_engine import parse_natural_language_log
 from engines.supplement_engine import SupplementRAGEngine
 

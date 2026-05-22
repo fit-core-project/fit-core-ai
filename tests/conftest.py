@@ -1,6 +1,6 @@
 """공통 fixture"""
 import pytest
-from engines.routine_engine import (
+from engines.schemas import (
     LLMExercisePlan,
     LLMRoutineOutput,
     LLMSubstitutionCandidate,

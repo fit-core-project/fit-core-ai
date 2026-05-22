@@ -3,18 +3,17 @@ from pathlib import Path
 
 import pytest
 
-from engines.routine_engine import (
+from engines.candidate_ranker import score_candidate_exercises
+from engines.fallback import generate_fallback_routine
+from engines.muscle_mapping import get_mapped_targets, split_label_to_muscles
+from engines.prescription.targets import apply_deterministic_targets
+from engines.schemas import (
     LLMExercisePlan,
     LLMRoutineOutput,
     PainAreaEntry,
     RoutineRequest,
-    apply_deterministic_targets,
-    generate_fallback_routine,
-    score_candidate_exercises,
-    split_label_to_muscles,
-    get_mapped_targets,
-    validate_and_repair_routine_output,
 )
+from engines.llm_parser import validate_and_repair_routine_output
 
 
 CASE_DIR = Path(__file__).parent / "prompt_cases"

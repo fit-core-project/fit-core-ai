@@ -1,7 +1,8 @@
 """generate_fallback_routine — DB/LLM 없이 순수 로직 테스트"""
 import pytest
 
-from engines.routine_engine import RecentSetRecord, RoutineRequest, generate_fallback_routine
+from engines.fallback import generate_fallback_routine
+from engines.schemas import RecentSetRecord, RoutineRequest
 
 
 @pytest.fixture

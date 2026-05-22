@@ -1,0 +1,60 @@
+{
+  "routine_draft_id": "<UUID>",
+  "generation_status": "success",
+  "status_reason_code": "none",
+  "is_fallback": false,
+  "total_estimated_time": 12,
+  "summary_title": "Push 세션 추천 루틴",
+  "rationale_summary": [
+    "상체 밀기 패턴 중심",
+    "DOMS 고려 볼륨 조정"
+  ],
+  "routine_blocks": [
+    {
+      "order": 1,
+      "exercise_id": "barbell_bench_press",
+      "exercise_name": "바벨 벤치프레스",
+      "movement_pattern": "horizontalPush",
+      "primary_muscles": [
+        "chest"
+      ],
+      "equipment_type": "BARBELL",
+      "default_rest_sec": 120,
+      "prescription": [
+        {
+          "set_index": 1,
+          "set_type": "working",
+          "target_reps": 8,
+          "target_weight_kg": 80.0,
+          "target_rir": 2,
+          "target_rest_sec": 120
+        },
+        {
+          "set_index": 2,
+          "set_type": "working",
+          "target_reps": 8,
+          "target_weight_kg": 80.0,
+          "target_rir": 2,
+          "target_rest_sec": 120
+        },
+        {
+          "set_index": 3,
+          "set_type": "working",
+          "target_reps": 8,
+          "target_weight_kg": 80.0,
+          "target_rir": 2,
+          "target_rest_sec": 120
+        }
+      ],
+      "exercise_rationale": "주요 복합 운동",
+      "substitution_candidates": [
+        {
+          "exercise_id": "dumbbell_bench_press",
+          "exercise_name": "덤벨 벤치프레스",
+          "reason": "바벨 없을 때 대체"
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

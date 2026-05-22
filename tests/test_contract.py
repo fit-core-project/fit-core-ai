@@ -6,7 +6,7 @@
 import pytest
 from pydantic import ValidationError
 
-from engines.routine_engine import (
+from engines.schemas import (
     RoutineDraftResponse,
     RoutineRequest,
 )
@@ -65,7 +65,7 @@ class TestRoutineDraftResponseSerialization:
     """백엔드 → 프론트엔드 출력 계약"""
 
     def test_top_level_keys_are_camel_case(self, sample_llm_output):
-        from engines.routine_engine import _build_routine_draft
+        from engines.fallback import build_routine_draft as _build_routine_draft
 
         response = _build_routine_draft(sample_llm_output, "success", "none", False)
         dumped = response.model_dump(by_alias=True)
@@ -80,7 +80,7 @@ class TestRoutineDraftResponseSerialization:
         assert "rationaleSum mary" not in dumped
 
     def test_routine_blocks_keys_are_camel_case(self, sample_llm_output):
-        from engines.routine_engine import _build_routine_draft
+        from engines.fallback import build_routine_draft as _build_routine_draft
 
         response = _build_routine_draft(sample_llm_output, "success", "none", False)
         dumped = response.model_dump(by_alias=True)
@@ -96,7 +96,7 @@ class TestRoutineDraftResponseSerialization:
         assert "substitutionCandidates" in block
 
     def test_prescription_keys_are_camel_case(self, sample_llm_output):
-        from engines.routine_engine import _build_routine_draft
+        from engines.fallback import build_routine_draft as _build_routine_draft
 
         response = _build_routine_draft(sample_llm_output, "success", "none", False)
         dumped = response.model_dump(by_alias=True)
@@ -110,13 +110,13 @@ class TestRoutineDraftResponseSerialization:
         assert "targetRestSec" in prescription
 
     def test_is_fallback_false_on_success(self, sample_llm_output):
-        from engines.routine_engine import _build_routine_draft
+        from engines.fallback import build_routine_draft as _build_routine_draft
 
         response = _build_routine_draft(sample_llm_output, "success", "none", False)
         assert response.is_fallback is False
 
     def test_is_fallback_true_on_fallback(self, sample_llm_output):
-        from engines.routine_engine import _build_routine_draft
+        from engines.fallback import build_routine_draft as _build_routine_draft
 
         response = _build_routine_draft(sample_llm_output, "fallback", "llmTimeout", True)
         assert response.is_fallback is True
@@ -124,7 +124,7 @@ class TestRoutineDraftResponseSerialization:
 
     def test_routine_draft_id_is_uuid_string(self, sample_llm_output):
         import re
-        from engines.routine_engine import _build_routine_draft
+        from engines.fallback import build_routine_draft as _build_routine_draft
 
         response = _build_routine_draft(sample_llm_output, "success", "none", False)
         uuid_pattern = re.compile(
@@ -133,7 +133,8 @@ class TestRoutineDraftResponseSerialization:
         assert uuid_pattern.match(response.routine_draft_id)
 
     def test_total_estimated_time_in_response(self, sample_llm_output):
-        from engines.routine_engine import _build_routine_draft, estimate_routine_time_min
+        from engines.fallback import build_routine_draft as _build_routine_draft
+        from engines.prescription.estimator import estimate_routine_time_min
 
         response = _build_routine_draft(sample_llm_output, "success", "none", False)
         dumped = response.model_dump(by_alias=True)
@@ -142,7 +143,7 @@ class TestRoutineDraftResponseSerialization:
         assert dumped["totalEstimatedTime"] == estimate_routine_time_min(sample_llm_output.exercises)
 
     def test_is_fallback_serialized_as_camel_case(self, sample_llm_output):
-        from engines.routine_engine import _build_routine_draft
+        from engines.fallback import build_routine_draft as _build_routine_draft
 
         response = _build_routine_draft(sample_llm_output, "success", "none", False)
         dumped = response.model_dump(by_alias=True)

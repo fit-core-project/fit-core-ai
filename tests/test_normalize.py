@@ -3,7 +3,8 @@ import json
 
 import pytest
 
-from engines.routine_engine import LLMRoutineOutput, normalize_llm_response
+from engines.llm_parser import normalize_llm_response
+from engines.schemas import LLMRoutineOutput
 
 
 def _minimal_valid_json(extra: dict | None = None) -> str:

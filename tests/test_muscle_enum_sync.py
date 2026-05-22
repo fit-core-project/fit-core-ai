@@ -2,14 +2,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from engines.routine_engine import (
+from engines.muscle_mapping import get_mapped_targets, map_doms_to_db
+from engines.registry import (
     MUSCLE_SLUGS,
-    DomEntry,
     MUSCLE_REGISTRY,
     SPLIT_LABEL_TO_MUSCLES,
-    get_mapped_targets,
-    map_doms_to_db,
 )
+from engines.schemas import DomEntry
 
 
 def _exercise_tier_enums() -> set[str]:
@@ -44,6 +43,14 @@ def test_direct_db_enum_inputs_are_normalized_and_preserved():
     _, db_enums = get_mapped_targets(["chest"])
     assert db_enums == ["chest"]
 
-    doms = map_doms_to_db([DomEntry(body_part="glutes", level="mild")])
+    doms = map_doms_to_db([DomEntry(body_part="gluteal", level="mild")])
     assert doms == {"gluteal": 1}
+
+
+def test_target_and_doms_values_are_not_alias_mapped():
+    _, db_enums = get_mapped_targets(["glutes", "knees"])
+    assert db_enums == ["glutes", "knees"]
+
+    doms = map_doms_to_db([DomEntry(body_part="knees", level="severe")])
+    assert doms == {"knees": 3}
 
