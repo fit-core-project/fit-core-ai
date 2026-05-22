@@ -70,9 +70,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Fit-Core AI Server", lifespan=lifespan)
 
 # --- CORS 설정 ---
+_default_origins = "http://localhost:3000,http://localhost:3001"
+_cors_origins = [o.strip() for o in os.environ.get("CORS_ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://192.168.75.85:3000"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

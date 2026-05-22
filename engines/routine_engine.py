@@ -120,6 +120,8 @@ class RoutineRequest(BaseModel):
     equipment: List[str] = Field(default_factory=list)         # 사용 불가 장비 블랙리스트
     goal: Optional[str] = None                                 # 미전달 시 프로필의 goal_type 사용
     user_note: Optional[str] = None
+    preferred_exercise_ids: List[str] = Field(default_factory=list)
+    unpreferred_exercise_ids: List[str] = Field(default_factory=list)
 
 
 # ==========================================
@@ -132,6 +134,9 @@ class RecentSetRecord(BaseModel):
     primary_muscle: Optional[str] = None
     weight_kg: Optional[float] = None
     reps: int
+    rir: Optional[float] = None
+    rpe: Optional[float] = None
+    is_failure: bool = False
 
 
 class UserProfileContext(BaseModel):
@@ -417,7 +422,8 @@ def get_recent_sets(db: Session, user_id: str, limit: int = 30) -> List[RecentSe
 
     rows = db.execute(
         text(f"""
-            SELECT ws.exercise_id, ws.exercise_name_snapshot, et.primary_muscle, ws.weight_kg, ws.reps
+            SELECT ws.exercise_id, ws.exercise_name_snapshot, et.primary_muscle,
+                   ws.weight_kg, ws.reps, ws.rir, ws.rpe, ws.is_failure
             FROM workout_sets ws
             LEFT JOIN exercise_tier et
               ON CAST(et.id AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci = ws.exercise_id COLLATE utf8mb4_unicode_ci
@@ -438,6 +444,9 @@ def get_recent_sets(db: Session, user_id: str, limit: int = 30) -> List[RecentSe
             primary_muscle=str(r[2]) if r[2] is not None else None,
             weight_kg=float(r[3]) if r[3] is not None else None,
             reps=int(r[4]),
+            rir=float(r[5]) if r[5] is not None else None,
+            rpe=float(r[6]) if r[6] is not None else None,
+            is_failure=bool(r[7]) if r[7] is not None else False,
         )
         for r in rows
     ]
@@ -533,15 +542,19 @@ def score_candidate_exercises(
     blocked_equipment: Optional[List[str]] = None,
     pain_areas: Optional[List[PainAreaEntry]] = None,
     recent_sets: Optional[List[RecentSetRecord]] = None,
+    preferred_exercise_ids: Optional[List[str]] = None,
+    unpreferred_exercise_ids: Optional[List[str]] = None,
     top_n: int = 12,
 ) -> List[dict]:
-    """?? ??? deterministic?? ????? ?? N?? ????."""
+    """후보 운동을 deterministic하게 점수화해 상위 N개를 반환한다."""
     target_set = set(target_muscles)
     scored: List[dict] = []
 
     doms = doms_db or {}
     blocked_equipment = blocked_equipment or []
     pain_areas = pain_areas or []
+    preferred_set = {eid.strip().lower() for eid in (preferred_exercise_ids or [])}
+    unpreferred_set = {eid.strip().lower() for eid in (unpreferred_exercise_ids or [])}
     recent_names = {
         record.exercise_name.strip().lower()
         for record in (recent_sets or [])
@@ -549,6 +562,13 @@ def score_candidate_exercises(
     }
 
     for candidate in candidates:
+        candidate_keys = {
+            str(candidate.get("id") or "").strip().lower(),
+            str(candidate.get("name_en") or "").strip().lower(),
+        }
+        if candidate_keys & unpreferred_set:
+            continue
+
         exclusion_reasons: List[str] = []
         if not _candidate_is_safe(candidate, blocked_equipment, pain_areas):
             candidate_equipment = _normalize_tokens(candidate.get("equipment_req")) - {"BODYWEIGHT"}
@@ -622,6 +642,10 @@ def score_candidate_exercises(
             score -= 6
             reasons.append("recent repetition penalty")
 
+        if candidate_keys & preferred_set:
+            score += 20
+            reasons.append("user preferred exercise")
+
         scored.append({
             **candidate,
             "score": score,
@@ -660,10 +684,17 @@ def _format_recent_sets(sets: List[RecentSetRecord]) -> str:
         groups[s.exercise_name].append(s)
     lines = []
     for name, records in groups.items():
-        set_strs = [
-            f"{r.weight_kg}kg×{r.reps}" if r.weight_kg else f"{r.reps}회"
-            for r in records[:3]
-        ]
+        set_strs = []
+        for r in records[:3]:
+            if r.weight_kg:
+                s = f"{r.weight_kg}kg×{r.reps}"
+                if r.rir is not None:
+                    s += f" @RIR{r.rir:.0f}"
+                if r.is_failure:
+                    s += " (failure)"
+            else:
+                s = f"{r.reps}회"
+            set_strs.append(s)
         lines.append(f"- {name}: {', '.join(set_strs)}")
     return "\n".join(lines)
 
@@ -1224,7 +1255,11 @@ def _resolve_target_weight(
     intensity = _GOAL_INTENSITY.get(_goal_key(goal), _GOAL_INTENSITY["hypertrophy"])
     exact_recent = _find_recent_reference(exercise, recent_sets)
     if exact_recent and exact_recent.weight_kg:
-        return _round_to_nearest_2_5(calculate_1rm(exact_recent.weight_kg, exact_recent.reps) * intensity)
+        base = _round_to_nearest_2_5(calculate_1rm(exact_recent.weight_kg, exact_recent.reps) * intensity)
+        # 점진적 과부하: 마지막 세트 RIR >= 2이고 실패하지 않았으면 +2.5kg 제안
+        if exact_recent.rir is not None and exact_recent.rir >= 2.0 and not exact_recent.is_failure:
+            return base + 2.5
+        return base
 
     same_muscle_recent = _find_same_muscle_recent_reference(exercise, recent_sets)
     if same_muscle_recent and same_muscle_recent.weight_kg:
@@ -1802,6 +1837,8 @@ def generate_smart_routine(
         blocked_equipment=req.equipment,
         pain_areas=pain_areas,
         recent_sets=recent_sets,
+        preferred_exercise_ids=req.preferred_exercise_ids,
+        unpreferred_exercise_ids=req.unpreferred_exercise_ids,
     )
     candidate_str = format_candidates_for_prompt(ranked_candidates)
     current_pain_areas = _format_request_pain_areas(pain_areas)

@@ -77,7 +77,7 @@ def get_llm(engine_type: str, temperature: float = 0):
     provider = os.getenv("LLM_PROVIDER", "gemini").strip().lower()
 
     if provider == "local":
-        from langchain_community.chat_models import ChatOllama
+        from langchain_ollama import ChatOllama
 
         model_name = os.getenv("LOCAL_LLM_MODEL", "gemma4").strip() or "gemma4"
         base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip() or "http://localhost:11434"
