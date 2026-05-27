@@ -127,7 +127,7 @@ def test_prompt_case_constraints(case):
             )
         ],
     )
-    validated = validate_and_repair_routine_output(
+    validated, _ = validate_and_repair_routine_output(
         llm_output,
         ranked,
         req.equipment,

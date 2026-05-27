@@ -38,7 +38,7 @@ from .fallback import (
     generate_fallback_routine,
 )
 from .llm_router import StatusReasonCode, get_llm, map_llm_error
-from .llm_parser import normalize_llm_response
+from .llm_parser import normalize_llm_response, trim_routine_to_time_budget
 from .muscle_mapping import get_mapped_targets, split_label_to_muscles
 from .prescription.adjustments import _calculate_max_total_sets, _target_exercise_count
 from .prescription.estimator import estimate_routine_time_min
@@ -104,17 +104,19 @@ def _deterministic_or_fallback(
     )
     _debug_print_llm_output(output_label, deterministic)
     if estimate_routine_time_min(deterministic.exercises) > req.time_available_min:
-        print("[AI post-deterministic] routine exceeds time budget -> fallback")
-        return _fallback(
-            req,
-            ranked_candidates,
-            max_total_sets,
-            doms_db,
-            goal,
-            "schemaError",
-            recent_sets,
-            profile,
-        )
+        print("[AI post-deterministic] routine exceeds time budget -> trying trim")
+        if not trim_routine_to_time_budget(deterministic, req.time_available_min):
+            print("[AI post-deterministic] trim failed -> fallback")
+            return _fallback(
+                req,
+                ranked_candidates,
+                max_total_sets,
+                doms_db,
+                goal,
+                "schemaError",
+                recent_sets,
+                profile,
+            )
     return _finalize_success(deterministic, draft_label)
 
 
@@ -132,7 +134,7 @@ def _validate_or_fallback(
 ) -> RoutineDraftResponse:
     from .llm_parser import validate_and_repair_routine_output
 
-    validated = validate_and_repair_routine_output(
+    validated, repair_reason = validate_and_repair_routine_output(
         output,
         ranked_candidates,
         req.equipment,
@@ -142,8 +144,8 @@ def _validate_or_fallback(
         time_available_min=req.time_available_min,
     )
     if validated is None:
-        print("[AI post-validation] output unrecoverable -> fallback")
-        return _fallback(req, ranked_candidates, max_total_sets, doms_db, goal, "schemaError", recent_sets, profile)
+        print(f"[AI post-validation] output unrecoverable (reason={repair_reason}) -> fallback")
+        return _fallback(req, ranked_candidates, max_total_sets, doms_db, goal, repair_reason, recent_sets, profile)
     return _deterministic_or_fallback(
         validated,
         req,

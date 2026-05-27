@@ -194,7 +194,7 @@ class TestHappyPath:
 
         assert result.generation_status == "success"
         assert result.routine_blocks[0].exercise_id == "barbell_bench_press"
-        assert any("교체" in warning for warning in result.warnings)
+        assert any("replaced" in warning for warning in result.warnings)
 
     def test_too_many_invalid_candidates_fall_back(
         self, sample_request, sample_profile, sample_llm_output, mock_candidates
@@ -203,7 +203,7 @@ class TestHappyPath:
         bad = sample_llm_output.model_copy(deep=True)
         bad.exercises = [
             bad.exercises[0].model_copy(update={"exercise_id": f"ghost_{i}"})
-            for i in range(3)
+            for i in range(5)
         ]
         mock_llm = _make_llm_mock(return_value=bad)
 
@@ -616,7 +616,7 @@ class TestHappyPath:
         assert result.generation_status == "failed"
         assert result.status_reason_code == "emptyCandidate"
 
-    def test_over_budget_output_falls_back(
+    def test_over_budget_output_is_trimmed_before_fallback(
         self, sample_request, sample_profile, sample_llm_output, mock_candidates
     ):
         db = _make_db_mock()
@@ -633,9 +633,11 @@ class TestHappyPath:
                 sample_request, db, profile=sample_profile, recent_sets=[]
             )
 
-        assert result.generation_status == "fallback"
+        assert result.generation_status == "success"
+        assert result.total_estimated_time <= sample_request.time_available_min
+        assert len(result.routine_blocks[0].prescription) < 20
 
-    def test_short_time_realistic_time_model_falls_back(
+    def test_short_time_realistic_time_model_trims_before_fallback(
         self, sample_request, sample_profile, mock_candidates
     ):
         db = _make_db_mock()
@@ -694,7 +696,8 @@ class TestHappyPath:
                 request, db, profile=sample_profile, recent_sets=[]
             )
 
-        assert result.generation_status == "fallback"
+        assert result.generation_status == "success"
+        assert result.total_estimated_time <= request.time_available_min
 
 
 class TestTimeoutFallback:

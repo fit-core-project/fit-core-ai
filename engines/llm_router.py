@@ -73,8 +73,14 @@ def get_llm(engine_type: str, temperature: float = 0):
 
     LLM_PROVIDER=local switches generation to Ollama. Local mode always uses
     Ollama JSON mode because routine generation depends on strict JSON output.
+    In production (APP_ENV=production), local is always overridden to gemini.
     """
     provider = os.getenv("LLM_PROVIDER", "gemini").strip().lower()
+
+    app_env = os.getenv("APP_ENV", "").strip().lower()
+    if app_env == "production" and provider == "local":
+        print("[LLM Router] WARNING: APP_ENV=production — LLM_PROVIDER=local overridden to gemini")
+        provider = "gemini"
 
     if provider == "local":
         from langchain_ollama import ChatOllama

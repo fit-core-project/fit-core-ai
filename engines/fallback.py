@@ -18,11 +18,12 @@ from .schemas import (
 )
 from .registry import LARGE_MUSCLE_SLUGS, ACCESSORY_MUSCLE_SLUGS
 from .prescription.estimator import estimate_routine_time_min, _movement_type_key
-from .prescription.params import _prescription_params_for_exercise, GOAL_PARAMS
+from .prescription.params import _prescription_params_for_exercise
 from .prescription.weight import _resolve_target_weight
 from .prescription.adjustments import _apply_readiness_to_exercise, _apply_large_muscle_volume_guard
 from .candidate_ranker import _is_loadable_equipment
 from .muscle_mapping import get_mapped_targets, split_label_to_muscles
+from .llm_parser import trim_routine_to_time_budget
 
 # ==========================================
 # 9. Fallback 루틴 (규칙 기반)  →  fallback.py 로 이동됨
@@ -65,7 +66,7 @@ def _candidate_order_key(candidate: dict) -> Tuple[int, int, int, int, str]:
         0 if _is_loadable_equipment(candidate.get("equipment_req")) else 1,
         _MOVEMENT_PRIORITY.get(_movement_type_key(candidate.get("movement_type")), 3),
         _primary_muscle_priority(candidate.get("primary_muscle")),
-        -int(candidate.get("efficiency_tier") or 0),
+        int(candidate.get("efficiency_tier") or 99),
         str(candidate.get("id") or ""),
     )
 

@@ -86,6 +86,8 @@ app.add_middleware(
 
 @app.get("/api/dev/logs")
 def api_dev_logs(limit: int = 120):
+    if os.getenv("APP_ENV", "").strip().lower() == "production":
+        raise HTTPException(status_code=404, detail="Not found")
     return dev_log_buffer.tail(limit)
 
 # ==========================================================

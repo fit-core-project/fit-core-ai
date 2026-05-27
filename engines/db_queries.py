@@ -1,5 +1,5 @@
 """DB 조회 함수 — user_profiles, workout_sets, exercise_tier."""
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -161,11 +161,11 @@ def get_candidate_exercises(
     query = text(f"""
         SELECT id, name_kr, name_en, primary_muscle, secondary_muscle,
                equipment_req, difficulty_tier, efficiency_tier,
-               pain_triggers, movement_type
+               pain_triggers, movement_type, substitute_exercise_ids
         FROM exercise_tier
         WHERE primary_muscle IN ({muscle_placeholders})
         {pain_filter}
-        ORDER BY efficiency_tier DESC
+        ORDER BY efficiency_tier ASC
     """)
 
     rows = db.execute(query, params).fetchall()
@@ -173,16 +173,61 @@ def get_candidate_exercises(
     blocked = {e.strip().upper() for e in unavailable_equipment}
 
     candidates = []
+    substitute_ids: Set[str] = set()
     for row in rows:
         row_dict = dict(row._mapping)
         equip_str = row_dict.get("equipment_req")
-        if equip_str is None:
+        if _is_equipment_allowed(equip_str, blocked):
             candidates.append(row_dict)
             continue
-        exercise_equip = {e.strip().upper() for e in equip_str.split(",")}
-        non_bw = exercise_equip - {"BODYWEIGHT"}
-        # 비-맨몸 장비가 모두 블랙리스트에 없거나, 맨몸 운동인 경우 포함
-        if not non_bw or not (non_bw & blocked):
-            candidates.append(row_dict)
+
+        substitute_ids.update(_parse_id_tokens(row_dict.get("substitute_exercise_ids")))
+
+    for candidate in candidates:
+        if str(candidate.get("id")) in substitute_ids:
+            candidate["score_reasons"] = ["mapped substitute for unavailable equipment"]
+
+    existing_ids = {str(candidate.get("id")) for candidate in candidates}
+    missing_substitute_ids = substitute_ids - existing_ids
+    pain_tokens = {part.lower() for part in pain_body_parts}
+    if missing_substitute_ids:
+        substitute_placeholders = ", ".join([f":sid{i}" for i in range(len(missing_substitute_ids))])
+        substitute_params = {f"sid{i}": sid for i, sid in enumerate(sorted(missing_substitute_ids))}
+        substitute_query = text(f"""
+            SELECT id, name_kr, name_en, primary_muscle, secondary_muscle,
+                   equipment_req, difficulty_tier, efficiency_tier,
+                   pain_triggers, movement_type, substitute_exercise_ids
+            FROM exercise_tier
+            WHERE CAST(id AS CHAR) IN ({substitute_placeholders})
+        """)
+        for row in db.execute(substitute_query, substitute_params).fetchall():
+            row_dict = dict(row._mapping)
+            if (
+                _is_equipment_allowed(row_dict.get("equipment_req"), blocked)
+                and _is_pain_allowed(row_dict.get("pain_triggers"), pain_tokens)
+            ):
+                row_dict["score_reasons"] = ["mapped substitute for unavailable equipment"]
+                candidates.append(row_dict)
 
     return candidates
+
+
+def _parse_id_tokens(raw: Optional[str]) -> Set[str]:
+    if not raw:
+        return set()
+    return {token.strip() for token in str(raw).split(",") if token.strip()}
+
+
+def _is_equipment_allowed(raw: Optional[str], blocked: Set[str]) -> bool:
+    if raw is None:
+        return True
+    exercise_equip = {e.strip().upper() for e in str(raw).split(",") if e.strip()}
+    non_bw = exercise_equip - {"BODYWEIGHT"}
+    return not non_bw or not (non_bw & blocked)
+
+
+def _is_pain_allowed(raw: Optional[str], pain_tokens: Set[str]) -> bool:
+    if not pain_tokens:
+        return True
+    candidate_pain = str(raw or "").lower()
+    return not any(token in candidate_pain for token in pain_tokens)

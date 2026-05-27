@@ -82,15 +82,17 @@ def score_candidate_exercises(
             continue
 
         score = 0
-        reasons: List[str] = []
+        reasons: List[str] = list(candidate.get("score_reasons") or [])
+        if "mapped substitute for unavailable equipment" in reasons:
+            score += 12
 
-        efficiency = int(candidate.get("efficiency_tier") or 0)
-        score += efficiency * 10
+        efficiency = int(candidate.get("efficiency_tier") or 7)
+        score += max(0, 8 - efficiency) * 10
         reasons.append(f"efficiency {efficiency}")
 
         movement_type = str(candidate.get("movement_type") or "").upper()
         if movement_type == "COMPOUND":
-            score += 15
+            score += 30
             reasons.append("compound priority")
         elif movement_type == "ISOLATION":
             score += 5
@@ -156,7 +158,7 @@ def score_candidate_exercises(
         scored,
         key=lambda ex: (
             -ex["score"],
-            -int(ex.get("efficiency_tier") or 0),
+            int(ex.get("efficiency_tier") or 99),
             str(ex.get("id") or ""),
         ),
     )[:top_n]

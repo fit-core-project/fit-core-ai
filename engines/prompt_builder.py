@@ -10,11 +10,18 @@ def _format_strength_baseline(baseline: Dict[str, Any]) -> str:
     for exercise, data in baseline.items():
         if isinstance(data, dict):
             parts = []
+            weight_kg = None
+            reps = None
             if "weight_kg" in data:
-                parts.append(f"{data['weight_kg']}kg")
+                weight_kg = data["weight_kg"]
+                parts.append(f"{weight_kg}kg")
             if "reps" in data:
-                parts.append(f"{data['reps']}회")
+                reps = data["reps"]
+                parts.append(f"{reps}회")
             value_str = " × ".join(parts) if parts else str(data)
+            if weight_kg and reps and reps > 0:
+                est_1rm = round(weight_kg * (1 + reps / 30))
+                value_str += f" → est. 1RM {est_1rm}kg"
         else:
             value_str = str(data)
         lines.append(f"- {exercise}: {value_str}")
@@ -107,6 +114,13 @@ def build_system_prompt(
         "- Order exercises so high-skill, high-load COMPOUND movements for large muscles come first while the user is freshest.\n"
         "- Place small-muscle isolation and low-load accessory work after the main compound lifts.\n"
         "- Keep warmup or static/core work after heavy compounds unless the target split specifically makes that work the main focus.\n\n"
+        "[WEIGHT PRESCRIPTION POLICY]\n"
+        "- If [STRENGTH BASELINE - reference only] data is present, use est. 1RM values as the reference for initial weight prescription.\n"
+        "- strength goal: prescribe 80–90 % of 1RM (3–5 rep range).\n"
+        "- hypertrophy goal: prescribe 65–80 % of 1RM (8–12 rep range).\n"
+        "- fatLoss / recomposition / generalFitness goal: prescribe 50–70 % of 1RM (12–20 rep range).\n"
+        "- Round prescribed weights to the nearest 2.5 kg plate increment.\n"
+        "- If no 1RM data is available, defer weight selection to the deterministic server logic.\n\n"
         "[RATIONALE POLICY]\n"
         "- The candidates are pre-ranked by the server.\n"
         "- When writing exercise_rationale, use only visible candidate fields: primary, secondary, equipment, movement_type, pain_triggers, and reason.\n"
