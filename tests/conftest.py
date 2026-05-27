@@ -1,5 +1,10 @@
 """공통 fixture"""
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from database import Base, get_db
 from engines.schemas import (
     LLMExercisePlan,
     LLMRoutineOutput,
@@ -107,4 +112,41 @@ def mock_candidates():
             "movement_type": "COMPOUND",
         },
     ]
+
+
+@pytest.fixture(scope="function")
+def test_db():
+    from models.routine_feedback import RoutineFeedback  # noqa: F401
+
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    session = Session()
+    try:
+        yield session
+    finally:
+        session.close()
+        Base.metadata.drop_all(engine)
+        engine.dispose()
+
+
+@pytest.fixture
+def feedback_client(test_db):
+    from fastapi.testclient import TestClient
+    from main import app
+
+    def override_get_db():
+        yield test_db
+
+    app.dependency_overrides[get_db] = override_get_db
+    client = TestClient(app)
+    try:
+        yield client
+    finally:
+        app.dependency_overrides.clear()
+        client.close()
 

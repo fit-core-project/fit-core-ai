@@ -45,6 +45,7 @@ from .prescription.estimator import estimate_routine_time_min
 from .prescription.targets import apply_deterministic_targets
 from .prompt_builder import _format_request_pain_areas, build_system_prompt
 from .schemas import LLMRoutineOutput, RecentSetRecord, RoutineDraftResponse, RoutineRequest, UserProfileContext
+from .temperature_policy import resolve_generation_temperature
 
 
 def _fallback(
@@ -228,7 +229,8 @@ def generate_smart_routine(
 
     reason: StatusReasonCode = "networkError"
     try:
-        llm = get_llm("routine")
+        generation_temp = resolve_generation_temperature(req.readiness_level)
+        llm = get_llm("routine", temperature=generation_temp)
         response: LLMRoutineOutput = (prompt | llm.with_structured_output(LLMRoutineOutput)).invoke(invoke_kwargs)
         _debug_print_llm_output("LLM STRUCTURED OUTPUT", response)
         return _validate_or_fallback(
@@ -240,12 +242,13 @@ def generate_smart_routine(
     except (OutputParserException, ValidationError) as e:
         print(f"[AI - SCHEMA 오류] 정제 어댑터로 복구 시도... ({type(e).__name__})")
         try:
+            repair_llm = get_llm("routine", temperature=0)
             raw_text: str | None = getattr(e, "llm_output", None)
             if raw_text is None:
                 print("[정제 어댑터] raw 텍스트 없음 -> LLM 비구조화 재호출")
-                raw_resp = (prompt | llm).invoke(invoke_kwargs)
+                raw_resp = (prompt | repair_llm).invoke(invoke_kwargs)
                 raw_text = raw_resp.content if hasattr(raw_resp, "content") else str(raw_resp)
-            normalized = normalize_llm_response(raw_text, llm=llm)
+            normalized = normalize_llm_response(raw_text, llm=repair_llm)
             _debug_print_llm_output("NORMALIZED LLM OUTPUT", normalized)
             return _validate_or_fallback(
                 normalized,

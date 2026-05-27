@@ -2,7 +2,7 @@
 from typing import Any, Dict, List, Literal, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, ConfigDict, AliasChoices
+from pydantic import BaseModel, Field, ConfigDict, AliasChoices, field_validator, model_validator
 from pydantic.alias_generators import to_camel
 
 from engines.llm_router import StatusReasonCode
@@ -150,3 +150,90 @@ class RoutineDraftResponse(BaseModel):
     rationale_summary: List[str]
     routine_blocks: List[RoutineBlock]
     warnings: List[str] = Field(default_factory=list)
+
+
+EditReason = Literal[
+    "too_heavy",
+    "too_easy",
+    "pain",
+    "no_equipment",
+    "dislike",
+    "duplicate",
+    "other",
+]
+
+
+class EditedExercise(BaseModel):
+    original_exercise_id: str = Field(..., min_length=1, max_length=128)
+    replacement_exercise_id: Optional[str] = Field(default=None, max_length=128)
+    reason: EditReason
+
+    @field_validator("original_exercise_id", "replacement_exercise_id", mode="before")
+    @classmethod
+    def strip_exercise_id(cls, value):
+        if value is None:
+            return None
+        return str(value).strip()
+
+
+class RoutineFeedbackRequest(BaseModel):
+    routine_draft_id: str = Field(..., min_length=1, max_length=128)
+    user_id: Optional[str] = Field(default=None, max_length=128)
+    rating: Optional[int] = Field(default=None, ge=1, le=5)
+    completed: Optional[bool] = None
+    accepted_without_edits: Optional[bool] = None
+    skipped_exercises: List[str] = Field(default_factory=list)
+    edited_exercises: List[EditedExercise] = Field(default_factory=list)
+    user_note: Optional[str] = None
+
+    @field_validator("routine_draft_id", "user_id", mode="before")
+    @classmethod
+    def strip_optional_text(cls, value):
+        if value is None:
+            return None
+        return str(value).strip()
+
+    @field_validator("user_note", mode="before")
+    @classmethod
+    def strip_user_note(cls, value):
+        if value is None:
+            return None
+        stripped = str(value).strip()
+        if not stripped:
+            return None
+        if len(stripped) > 500:
+            raise ValueError("user_note must be at most 500 characters after strip")
+        return stripped
+
+    @field_validator("skipped_exercises")
+    @classmethod
+    def validate_skipped_exercises(cls, value):
+        stripped = [item.strip() for item in value]
+        if any(not item for item in stripped):
+            raise ValueError("skipped_exercises must contain non-empty exercise_id strings")
+        if any(len(item) > 128 for item in stripped):
+            raise ValueError("skipped_exercises exercise_id values must be at most 128 characters")
+        return stripped
+
+    @model_validator(mode="after")
+    def at_least_one_feedback_field(self) -> "RoutineFeedbackRequest":
+        has_payload = any([
+            self.rating is not None,
+            self.completed is not None,
+            self.accepted_without_edits is not None,
+            bool(self.skipped_exercises),
+            bool(self.edited_exercises),
+            bool(self.user_note),
+        ])
+        if not has_payload:
+            raise ValueError(
+                "At least one of rating, completed, accepted_without_edits, "
+                "skipped_exercises, edited_exercises, user_note must be provided."
+            )
+        return self
+
+
+class RoutineFeedbackResponse(BaseModel):
+    ok: bool = True
+    feedback_id: str
+    stored_at: str

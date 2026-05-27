@@ -1,6 +1,6 @@
-﻿"""LLM raw output ??LLMRoutineOutput ?뺤젣 ?대뙌??"""
-import re
+"""Normalize raw LLM output into LLMRoutineOutput."""
 import json
+import re
 from typing import Dict, List, Optional, Tuple
 
 from .candidate_ranker import _candidate_is_safe
@@ -13,32 +13,29 @@ _MARKDOWN_FENCE_RE = re.compile(r"```(?:json)?\s*|\s*```")
 
 
 def _try_repair_json(text: str) -> dict:
-    """
-    遺덉셿?꾪븳 JSON 臾몄옄?댁뿉 ?ル뒗 愿꾪샇瑜??쒖감?곸쑝濡?蹂댁땐???뚯떛???ъ떆?꾪븳??
-    留덉?留??좏슚 ?좏겙 ?꾩튂源뚯?留??섎씪?대뒗 ?꾩쿂由щ룄 蹂묓뻾?쒕떎.
-    """
+    """Repair common truncated JSON output by appending or trimming closing braces."""
     for suffix in ("}", "}]}", "}]}}", "}]}}]}"):
         try:
             return json.loads(text + suffix)
         except json.JSONDecodeError:
             pass
-    # 留덉?留??꾩쟾??`}` ?꾩튂源뚯?留??섎씪?댁뼱 ?ъ떆??    last_brace = text.rfind("}")
+
+    # If trailing text is present, retry up to the final complete object boundary.
+    last_brace = text.rfind("}")
     if last_brace != -1:
         try:
             return json.loads(text[: last_brace + 1])
         except json.JSONDecodeError:
             pass
-    raise json.JSONDecodeError("JSON ?먭? 蹂듦뎄 ?ㅽ뙣", text, 0)
+    raise json.JSONDecodeError("JSON auto repair failed", text, 0)
 
 
 def _inject_defaults(data: dict) -> dict:
-    """
-    Pydantic 寃利????꾨씫???꾩닔 ?꾨뱶??湲곕낯媛믪쓣 二쇱엯?쒕떎 (Graceful Degradation).
-    """
+    """Inject required defaults before Pydantic validation."""
     data.setdefault("summary_title", "맞춤형 AI 루틴")
     if isinstance(data.get("rationale_summary"), str):
         data["rationale_summary"] = [data["rationale_summary"]]
-    data.setdefault("rationale_summary", ["?뚯썝?섏쓽 ?곗씠??湲곕컲?쇰줈 ?앹꽦??猷⑦떞?낅땲??"])
+    data.setdefault("rationale_summary", ["회원 데이터 기반으로 생성한 루틴입니다."])
     data.setdefault("warnings", [])
     data.setdefault("total_estimated_time", 45)
     data.setdefault("exercises", [])
@@ -72,26 +69,28 @@ def _inject_defaults(data: dict) -> dict:
 
 def normalize_llm_response(raw_text: str, llm=None) -> LLMRoutineOutput:
     """
-    LLM raw output ??LLMRoutineOutput ?뺤젣 ?대뙌??
+    Normalize raw LLM output into LLMRoutineOutput.
 
-    泥섎━ ?쒖꽌:
-    1. 留덊겕?ㅼ슫 肄붾뱶?쒖뒪(```json ... ```) ?쒓굅
-    2. json.loads ?뚯떛 ?쒕룄
-    3. ?ㅽ뙣 ???먭? 蹂듦뎄(_try_repair_json) ?ъ떆??    4. ?ъ쟾???ㅽ뙣?섍퀬 llm??二쇱뼱吏?寃쎌슦 OutputFixingParser濡??ъ떆??    5. ?꾨씫 ?꾨뱶 湲곕낯媛?二쇱엯(_inject_defaults)
-    6. Pydantic 寃利?    """
+    Steps:
+    1. Remove markdown code fences.
+    2. Try json.loads.
+    3. Retry with local JSON repair.
+    4. If provided, retry with OutputFixingParser.
+    5. Inject missing defaults.
+    6. Validate with Pydantic.
+    """
     cleaned = _MARKDOWN_FENCE_RE.sub("", raw_text).strip()
 
-    # JSON ?뚯떛
     data: dict | None = None
     try:
         data = json.loads(cleaned)
     except json.JSONDecodeError:
         try:
             data = _try_repair_json(cleaned)
-            print("[?뺤젣 ?대뙌?? ?먭? 蹂듦뎄(bracket repair) ?깃났")
+            print("[LLM parser] JSON bracket repair succeeded")
         except json.JSONDecodeError:
             if llm is not None:
-                print("[?뺤젣 ?대뙌?? OutputFixingParser濡??ъ떆??..")
+                print("[LLM parser] retrying with OutputFixingParser")
                 try:
                     from langchain.output_parsers import OutputFixingParser
                     from langchain_core.output_parsers import PydanticOutputParser
@@ -100,7 +99,7 @@ def normalize_llm_response(raw_text: str, llm=None) -> LLMRoutineOutput:
                     fixing_parser = OutputFixingParser.from_llm(parser=base_parser, llm=llm)
                     return fixing_parser.parse(cleaned)
                 except Exception as fix_e:
-                    raise ValueError(f"OutputFixingParser ?ㅽ뙣: {fix_e}") from fix_e
+                    raise ValueError(f"OutputFixingParser failed: {fix_e}") from fix_e
             raise
 
     # Inject defaults before Pydantic validation so loose local-model output can be salvaged.
@@ -116,7 +115,7 @@ def _candidate_to_plan(candidate: dict, template: LLMExercisePlan) -> LLMExercis
         "movement_type": candidate.get("movement_type") or template.movement_type,
         "primary_muscles": [candidate["primary_muscle"]] if candidate.get("primary_muscle") else [],
         "equipment_type": candidate.get("equipment_req"),
-        "exercise_rationale": f"{template.exercise_rationale} (?꾧?利?repair: ?덉쟾 ?꾨낫濡?援먯껜)",
+        "exercise_rationale": f"{template.exercise_rationale} (guard repair: replaced with safe candidate)",
     })
 
 
@@ -135,7 +134,7 @@ def trim_routine_to_time_budget(output: LLMRoutineOutput, time_available_min: in
                 if estimate_routine_time_min(output.exercises) <= time_available_min:
                     output.warnings = [
                         *output.warnings,
-                        "?쒓컙 ?덉궛??留욎텛湲??꾪빐 ?쇰? ?명듃 ?섎? 以꾩??듬땲??",
+                        "시간 예산에 맞추기 위해 일부 세트 수를 줄였습니다.",
                     ]
                     return True
 
@@ -143,7 +142,7 @@ def trim_routine_to_time_budget(output: LLMRoutineOutput, time_available_min: in
         removed = output.exercises.pop()
         output.warnings = [
             *output.warnings,
-            f"?쒓컙 ?덉궛??留욎텛湲??꾪빐 {removed.exercise_name} ?대룞???쒖쇅?덉뒿?덈떎.",
+            f"시간 예산에 맞추기 위해 {removed.exercise_name} 운동을 제외했습니다.",
         ]
 
     return bool(output.exercises) and estimate_routine_time_min(output.exercises) <= time_available_min
@@ -173,15 +172,15 @@ def validate_and_repair_routine_output(
     max_repairs: Optional[int] = None,
 ) -> Tuple[Optional[LLMRoutineOutput], StatusReasonCode]:
     """
-    LLM success output???꾨낫援?湲곗??쇰줈 ?ш?利앺븳??
-    - ?꾨낫 諛?exercise_id ?먮뒗 ?꾩옱 ?쒖빟???덉쟾?섏? ?딆? ?꾨낫??repair ?쒕룄
-    - ?꾨컲??留롪굅???泥??꾨낫媛 ?놁쑝硫?(None, "emptyCandidate") 諛섑솚
-    - DOMS/?명듃/?쒓컙 洹쒖튃 ?꾨컲 ??(None, "schemaError") 諛섑솚
-    - ?깃났 ??(repaired, "none") 諛섑솚
+    Validate LLM success output against the safe candidate set.
+    - Repair missing or unsafe exercise_id values when safe candidates exist.
+    - Return (None, "emptyCandidate") when no replacement candidate exists.
+    - Return (None, "schemaError") for DOMS, set, or time rule violations.
+    - Return (repaired, "none") on success.
 
-    guard audit 寃곌낵??response payload??warnings 諛??쒕쾭 濡쒓렇??紐낆떆?곸쑝濡?湲곕줉?쒕떎.
+    Guard audit results are explicitly recorded in response warnings and logs.
     """
-    # --- Guard: ?쒖빟 ?꾨컲 媛먯궗 (?쒖닔 愿李? 蹂???놁쓬) ---
+    # Guard audit: observe constraint violations before repair.
     report = audit_routine_output(llm_output, candidates, blocked_equipment, pain_areas)
     log_guard_report(report)
 
@@ -220,7 +219,7 @@ def validate_and_repair_routine_output(
                 None,
             )
             if replacement is None:
-                print("[Guard] ?덉쟾 ?꾨낫 ?뚯쭊 -> fallback")
+                print("[Guard] safe candidate exhausted -> fallback")
                 return None, "emptyCandidate"
 
             original_id = exercise.exercise_id
@@ -235,10 +234,10 @@ def validate_and_repair_routine_output(
         primary = str(candidate.get("primary_muscle") or "").strip()
         doms_level = doms.get(primary, 0)
         if doms_level >= 3:
-            print(f"[Guard] DOMS level 3 媛먯?: {primary} -> fallback")
+            print(f"[Guard] DOMS level 3 detected: {primary} -> fallback")
             return None, "schemaError"
         if exercise.sets < 1 or exercise.target_reps < 1 or exercise.rest_time_sec < 0:
-            print(f"[Guard] ?좏슚?섏? ?딆? ?명듃/諛섎났 媛? {exercise.exercise_id} -> fallback")
+            print(f"[Guard] invalid set/reps/rest value: {exercise.exercise_id} -> fallback")
             return None, "schemaError"
         if doms_level == 2:
             exercise.sets = min(exercise.sets, 2)
@@ -257,7 +256,7 @@ def validate_and_repair_routine_output(
                 if overflow == 0:
                     break
             if overflow > 0:
-                print(f"[Guard] ?명듃 ?덉궛 珥덇낵 ?댁냼 遺덇? -> fallback")
+                print("[Guard] set budget overflow cannot be reduced -> fallback")
                 return None, "schemaError"
 
     pre_time_trim_exercise_count = len(repaired.exercises)

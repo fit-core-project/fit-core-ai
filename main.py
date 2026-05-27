@@ -18,11 +18,11 @@ from pydantic import BaseModel
 from starlette.responses import JSONResponse
 from dev_logs import dev_log_buffer, install_stdout_capture
 
+from models.routine_feedback import RoutineFeedback
 from engines.db_queries import get_recent_sets, get_user_profile_context
 from engines.routine_pipeline import generate_smart_routine
-from engines.schemas import RoutineDraftResponse, RoutineRequest
+from engines.schemas import RoutineDraftResponse, RoutineFeedbackRequest, RoutineFeedbackResponse, RoutineRequest
 from engines.nlp_engine import parse_natural_language_log
-from engines.supplement_engine import SupplementRAGEngine
 
 install_stdout_capture()
 
@@ -52,6 +52,8 @@ async def lifespan(app: FastAPI):
     if supplement_rag is None:
         print("💊 2. 영양제 RAG 엔진 로딩 중...")
         try:
+            from engines.supplement_engine import SupplementRAGEngine
+
             # 💡 Tip: DB 경로가 'latest_index'를 포함하고 있는지 확인하세요.
             supplement_rag = SupplementRAGEngine(db_path="./data/chroma_db")
             print("✅ 영양제 RAG 엔진 로딩 완료!")
@@ -95,11 +97,24 @@ def api_dev_logs(limit: int = 120):
 # ==========================================================
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    def sanitize_error(error: dict) -> dict:
+        sanitized = dict(error)
+        loc = sanitized.get("loc") or []
+        if "user_note" in loc or "userNote" in loc:
+            sanitized["input"] = "[REDACTED]"
+        if "ctx" in sanitized:
+            sanitized["ctx"] = {
+                key: str(value)
+                for key, value in sanitized["ctx"].items()
+            }
+        return sanitized
+
+    sanitized_errors = [sanitize_error(error) for error in exc.errors()]
     print("\n" + "="*50)
     print("🚨 [데이터 검증 에러 (422)] 프론트엔드 데이터 입구컷 발생!")
-    print(f"상세 원인: {exc.errors()}")
+    print(f"상세 원인: {sanitized_errors}")
     print("="*50 + "\n")
-    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+    return JSONResponse(status_code=422, content={"detail": sanitized_errors})
 
 
 # ==========================================================
@@ -117,6 +132,40 @@ def api_generate_routine(req: RoutineRequest, db: Session = Depends(get_db)):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/api/ai/routine-feedback",
+    response_model=RoutineFeedbackResponse,
+    status_code=201,
+)
+def api_routine_feedback(req: RoutineFeedbackRequest, db: Session = Depends(get_db)):
+    user_note = req.user_note.strip() if req.user_note else None
+    if user_note == "":
+        user_note = None
+    feedback = RoutineFeedback(
+        user_id=req.user_id,
+        routine_draft_id=req.routine_draft_id,
+        rating=req.rating,
+        completed=req.completed,
+        accepted_without_edits=req.accepted_without_edits,
+        skipped_exercise_ids=req.skipped_exercises,
+        edited_exercises=[item.model_dump() for item in req.edited_exercises],
+        user_note=user_note,
+        source="api",
+    )
+    try:
+        db.add(feedback)
+        db.commit()
+        db.refresh(feedback)
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to store routine feedback") from exc
+
+    return RoutineFeedbackResponse(
+        feedback_id=feedback.id,
+        stored_at=feedback.created_at.isoformat(),
+    )
 
 
 # ==========================================================

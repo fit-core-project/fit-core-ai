@@ -1,4 +1,4 @@
-"""루틴 생성용 시스템 프롬프트 빌더."""
+"""Routine generation system prompt builder."""
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
@@ -17,11 +17,11 @@ def _format_strength_baseline(baseline: Dict[str, Any]) -> str:
                 parts.append(f"{weight_kg}kg")
             if "reps" in data:
                 reps = data["reps"]
-                parts.append(f"{reps}회")
-            value_str = " × ".join(parts) if parts else str(data)
+                parts.append(f"{reps} reps")
+            value_str = " x ".join(parts) if parts else str(data)
             if weight_kg and reps and reps > 0:
                 est_1rm = round(weight_kg * (1 + reps / 30))
-                value_str += f" → est. 1RM {est_1rm}kg"
+                value_str += f" -> est. 1RM {est_1rm}kg"
         else:
             value_str = str(data)
         lines.append(f"- {exercise}: {value_str}")
@@ -37,13 +37,13 @@ def _format_recent_sets(sets: List[RecentSetRecord]) -> str:
         set_strs = []
         for r in records[:3]:
             if r.weight_kg:
-                s = f"{r.weight_kg}kg×{r.reps}"
+                s = f"{r.weight_kg}kg x {r.reps}"
                 if r.rir is not None:
                     s += f" @RIR{r.rir:.0f}"
                 if r.is_failure:
                     s += " (failure)"
             else:
-                s = f"{r.reps}회"
+                s = f"{r.reps} reps"
             set_strs.append(s)
         lines.append(f"- {name}: {', '.join(set_strs)}")
     return "\n".join(lines)
@@ -115,12 +115,11 @@ def build_system_prompt(
         "- Place small-muscle isolation and low-load accessory work after the main compound lifts.\n"
         "- Keep warmup or static/core work after heavy compounds unless the target split specifically makes that work the main focus.\n\n"
         "[WEIGHT PRESCRIPTION POLICY]\n"
-        "- If [STRENGTH BASELINE - reference only] data is present, use est. 1RM values as the reference for initial weight prescription.\n"
-        "- strength goal: prescribe 80–90 % of 1RM (3–5 rep range).\n"
-        "- hypertrophy goal: prescribe 65–80 % of 1RM (8–12 rep range).\n"
-        "- fatLoss / recomposition / generalFitness goal: prescribe 50–70 % of 1RM (12–20 rep range).\n"
-        "- Round prescribed weights to the nearest 2.5 kg plate increment.\n"
-        "- If no 1RM data is available, defer weight selection to the deterministic server logic.\n\n"
+        "- target_reps, sets, and rest_time_sec are required schema fields; provide plausible intent values consistent with the goal and movement type.\n"
+        "- The server overrides target_reps and rest_time_sec with deterministic tables (goal x movement_type); your values serve as structural hints only.\n"
+        "- target_weight_kg: set to null by default. The server resolves weight from recent sets and strength baseline; your value is used only when no historical data exists.\n"
+        "- Do not perform 1RM percentage calculations; all weight math is handled server-side.\n"
+        "- Always set target_weight_kg to null for BODYWEIGHT equipment.\n\n"
         "[RATIONALE POLICY]\n"
         "- The candidates are pre-ranked by the server.\n"
         "- When writing exercise_rationale, use only visible candidate fields: primary, secondary, equipment, movement_type, pain_triggers, and reason.\n"
@@ -135,10 +134,15 @@ def build_system_prompt(
         "- Required top-level fields: total_estimated_time, summary_title, rationale_summary, warnings, exercises.\n"
         "- Each exercise must include: exercise_id, exercise_name, primary_muscles, target_reps, sets, rest_time_sec, exercise_rationale.\n"
         "- Keep exercises as an ordered list; do not wrap the response in markdown or prose.\n\n"
+        "[EXAMPLES]\n"
+        "Note: EXAMPLE_A/B/C IDs are illustration only; use only IDs from [RANKED CANDIDATES].\n\n"
+        "Example 1 - hypertrophy / push / barbell available / no constraints:\n"
+        '{{"total_estimated_time":45,"summary_title":"Push Hypertrophy","rationale_summary":["Barbell bench press leads compound chest work.","Lateral raise adds shoulder isolation."],"warnings":[],"exercises":[{{"exercise_id":"EXAMPLE_A","exercise_name":"Barbell Bench Press","primary_muscles":["chest"],"target_reps":10,"sets":3,"rest_time_sec":90,"target_weight_kg":null,"exercise_rationale":"COMPOUND chest primary; barbell available; hypertrophy; server finalizes weight."}},{{"exercise_id":"EXAMPLE_B","exercise_name":"Dumbbell Lateral Raise","primary_muscles":["side-deltoids"],"target_reps":12,"sets":2,"rest_time_sec":60,"target_weight_kg":null,"exercise_rationale":"ISOLATION shoulder accessory; placed after compound."}}]}}\n\n'
+        "Example 2 - barbell blocked + shoulder pain -> BODYWEIGHT substitute, reduced volume:\n"
+        '{{"total_estimated_time":30,"summary_title":"Push Constraint Safe","rationale_summary":["Barbell blocked; server-filtered candidates exclude barbell exercises.","Shoulder pain excluded overhead movements; exercise count reduced."],"warnings":["Barbell unavailable; bodyweight substitute used."],"exercises":[{{"exercise_id":"EXAMPLE_C","exercise_name":"Push-up","primary_muscles":["chest"],"target_reps":10,"sets":3,"rest_time_sec":75,"target_weight_kg":null,"exercise_rationale":"BODYWEIGHT from server-filtered candidates; barbell blocked and shoulder pain excluded loadable alternatives; target_weight_kg null."}}]}}\n\n'
+        "[FINAL SELECTION REMINDER]\n"
+        "In the actual response, never use EXAMPLE_* ids. Use only exercise_id values from [RANKED CANDIDATES].\n\n"
         "[PROHIBITED BEHAVIOR]\n"
-        "- Never choose an exercise outside [RANKED CANDIDATES].\n"
-        "- Never reintroduce excluded equipment or pain-triggering movements.\n"
-        "- Never ignore DOMS instructions or exceed the working-set cap.\n"
         "- Never fabricate medical advice, user history, or unavailable rationale."
     )
 
