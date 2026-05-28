@@ -1,12 +1,16 @@
 """LLM provider factory and provider-neutral error mapping."""
 
+import asyncio
 import os
 import json
 import re
 from typing import Literal
 
+import httpx
 from dotenv import load_dotenv
+from langchain_core.exceptions import OutputParserException
 from langchain_core.runnables import Runnable
+from pydantic import ValidationError
 
 load_dotenv()
 
@@ -139,3 +143,35 @@ def map_llm_error(exc: Exception) -> StatusReasonCode:
         return "schemaError"
 
     return "networkError"
+
+
+def classify_llm_error(exc: Exception) -> str:
+    """Return a structured, non-sensitive LLM error type for telemetry."""
+    try:
+        if isinstance(exc, (asyncio.TimeoutError, httpx.TimeoutException)):
+            return "timeout"
+
+        if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429:
+            return "quota_exhausted"
+
+        exc_msg = str(exc).lower()
+        compact_msg = exc_msg.replace("_", "").replace(" ", "")
+        if "resourceexhausted" in compact_msg or "quota" in exc_msg or "429" in exc_msg:
+            return "quota_exhausted"
+
+        if isinstance(exc, OutputParserException):
+            return "schema_parse_error"
+        if isinstance(exc, ValidationError):
+            return "validation_error"
+
+        network_types = (
+            httpx.NetworkError,
+            httpx.ConnectError,
+            httpx.RemoteProtocolError,
+        )
+        if isinstance(exc, network_types):
+            return "network_error"
+
+        return "unknown"
+    except Exception:
+        return "unknown"

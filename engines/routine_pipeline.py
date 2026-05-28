@@ -20,7 +20,8 @@ complex or takes on a separate responsibility, consider splitting it into
 pipeline_llm.py.
 """
 import asyncio
-from typing import Dict, List, Optional
+import time
+from typing import Callable, Dict, List, Optional
 
 import httpx
 from langchain_core.exceptions import OutputParserException
@@ -28,6 +29,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
+from .candidate_pool_policy import get_candidate_pool_size
 from .candidate_ranker import format_candidates_for_prompt, score_candidate_exercises
 from .db_queries import get_candidate_exercises
 from .fallback import (
@@ -37,8 +39,9 @@ from .fallback import (
     build_routine_draft,
     generate_fallback_routine,
 )
-from .llm_router import StatusReasonCode, get_llm, map_llm_error
+from .llm_router import StatusReasonCode, classify_llm_error, get_llm, map_llm_error
 from .llm_parser import normalize_llm_response, trim_routine_to_time_budget
+from .log_redaction import sanitize_exception_for_log, summarize_text_for_log
 from .muscle_mapping import get_mapped_targets, split_label_to_muscles
 from .prescription.adjustments import _calculate_max_total_sets, _target_exercise_count
 from .prescription.estimator import estimate_routine_time_min
@@ -46,6 +49,7 @@ from .prescription.targets import apply_deterministic_targets
 from .prompt_builder import _format_request_pain_areas, build_system_prompt
 from .schemas import LLMRoutineOutput, RecentSetRecord, RoutineDraftResponse, RoutineRequest, UserProfileContext
 from .temperature_policy import resolve_generation_temperature
+from .routine_telemetry import classify_fallback_reason, observe_routine_quality
 
 
 def _fallback(
@@ -70,6 +74,85 @@ def _fallback(
     )
 
 
+def _get_feedback_adjustments_if_enabled(
+    db,
+    user_id: Optional[str],
+    candidates: List[dict],
+) -> Optional[dict]:
+    adjustments, _, _ = _get_feedback_adjustments_with_status(db, user_id, candidates)
+    return adjustments
+
+
+def _get_feedback_adjustments_with_status(
+    db,
+    user_id: Optional[str],
+    candidates: List[dict],
+) -> tuple[Optional[dict], bool, Optional[str]]:
+    from .feedback_aggregation import (
+        get_feedback_adjustments,
+        get_feedback_aware_ranking_enabled,
+    )
+
+    if not get_feedback_aware_ranking_enabled():
+        return None, False, None
+
+    exercise_ids = [
+        exercise_id
+        for candidate in candidates
+        if (exercise_id := str(candidate.get("id") or "").strip().lower())
+    ]
+    if not exercise_ids:
+        return None, False, None
+
+    try:
+        return get_feedback_adjustments(
+            db,
+            user_id=user_id,
+            exercise_ids=exercise_ids,
+        ), False, None
+    except Exception as exc:
+        err = sanitize_exception_for_log(exc)
+        print(
+            f"[FeedbackRanker] adjustment fetch failed "
+            f"type={err['type']} category={err['category']}"
+        )
+        return None, True, err["category"]
+
+
+def _compute_feedback_stats(
+    ranked: List[dict],
+    adjustments: Optional[dict],
+) -> dict:
+    if not adjustments:
+        return {"adjusted": 0, "positive": 0, "negative": 0, "abs_avg": 0.0}
+
+    values: List[float] = []
+    for candidate in ranked:
+        candidate_id = str(candidate.get("id") or "").strip().lower()
+        if not candidate_id:
+            continue
+        adjustment = adjustments.get(candidate_id)
+        if adjustment is None:
+            continue
+        raw = getattr(adjustment, "blended_adjustment", adjustment)
+        try:
+            value = max(-10.0, min(10.0, float(raw)))
+        except (TypeError, ValueError):
+            continue
+        if value != 0.0:
+            values.append(value)
+
+    if not values:
+        return {"adjusted": 0, "positive": 0, "negative": 0, "abs_avg": 0.0}
+
+    return {
+        "adjusted": len(values),
+        "positive": sum(1 for value in values if value > 0),
+        "negative": sum(1 for value in values if value < 0),
+        "abs_avg": round(sum(abs(value) for value in values) / len(values), 3),
+    }
+
+
 def _finalize_success(
     output: LLMRoutineOutput,
     label: str,
@@ -91,6 +174,7 @@ def _deterministic_or_fallback(
     profile: Optional[UserProfileContext],
     output_label: str,
     draft_label: str,
+    on_time_budget_exceeded: Optional[Callable[[], None]] = None,
 ) -> RoutineDraftResponse:
     deterministic = apply_deterministic_targets(
         validated,
@@ -108,6 +192,8 @@ def _deterministic_or_fallback(
         print("[AI post-deterministic] routine exceeds time budget -> trying trim")
         if not trim_routine_to_time_budget(deterministic, req.time_available_min):
             print("[AI post-deterministic] trim failed -> fallback")
+            if on_time_budget_exceeded is not None:
+                on_time_budget_exceeded()
             return _fallback(
                 req,
                 ranked_candidates,
@@ -132,6 +218,8 @@ def _validate_or_fallback(
     recent_sets: Optional[List[RecentSetRecord]],
     profile: Optional[UserProfileContext],
     normalized: bool = False,
+    on_validation_failed: Optional[Callable[[], None]] = None,
+    on_time_budget_exceeded: Optional[Callable[[], None]] = None,
 ) -> RoutineDraftResponse:
     from .llm_parser import validate_and_repair_routine_output
 
@@ -145,6 +233,8 @@ def _validate_or_fallback(
         time_available_min=req.time_available_min,
     )
     if validated is None:
+        if on_validation_failed is not None:
+            on_validation_failed()
         print(f"[AI post-validation] output unrecoverable (reason={repair_reason}) -> fallback")
         return _fallback(req, ranked_candidates, max_total_sets, doms_db, goal, repair_reason, recent_sets, profile)
     return _deterministic_or_fallback(
@@ -159,6 +249,7 @@ def _validate_or_fallback(
         profile,
         "NORMALIZED DETERMINISTIC OUTPUT" if normalized else "DETERMINISTIC OUTPUT",
         "FINAL NORMALIZED DRAFT RESPONSE" if normalized else "FINAL DRAFT RESPONSE",
+        on_time_budget_exceeded=on_time_budget_exceeded,
     )
 
 
@@ -184,6 +275,21 @@ def generate_smart_routine(
     print(f"[매핑] doms -> {doms_db}")
 
     candidates = get_candidate_exercises(db, db_target_muscles, req.equipment, pain_areas)
+    candidate_pool_size = get_candidate_pool_size()
+    from .feedback_aggregation import get_feedback_aware_ranking_enabled
+
+    feedback_enabled = get_feedback_aware_ranking_enabled()
+    feedback_query_latency_ms: Optional[int] = None
+    feedback_query_failed = False
+    feedback_query_error_category: Optional[str] = None
+    feedback_started = time.perf_counter()
+    feedback_adjustments, feedback_query_failed, feedback_query_error_category = _get_feedback_adjustments_with_status(
+        db,
+        req.user_id,
+        candidates,
+    )
+    if feedback_enabled:
+        feedback_query_latency_ms = round((time.perf_counter() - feedback_started) * 1000)
     ranked_candidates = score_candidate_exercises(
         candidates,
         db_target_muscles,
@@ -193,9 +299,17 @@ def generate_smart_routine(
         recent_sets=recent_sets,
         preferred_exercise_ids=req.preferred_exercise_ids,
         unpreferred_exercise_ids=req.unpreferred_exercise_ids,
+        top_n=candidate_pool_size,
+        feedback_adjustments=feedback_adjustments,
     )
+    feedback_stats = _compute_feedback_stats(ranked_candidates, feedback_adjustments)
+    feedback_adjusted_candidate_count = feedback_stats["adjusted"]
+    feedback_positive_count = feedback_stats["positive"]
+    feedback_negative_count = feedback_stats["negative"]
+    feedback_abs_adjustment_avg = feedback_stats["abs_avg"]
     max_total_sets = _calculate_max_total_sets(req.time_available_min, goal)
     target_exercise_count = _target_exercise_count(req.time_available_min)
+    candidate_payload = format_candidates_for_prompt(ranked_candidates)
     label_map = {
         1: "약간 근육통 (볼륨 20% 감소)",
         2: "매우 근육통 (가벼운 자극 1~2세트만)",
@@ -214,7 +328,7 @@ def generate_smart_routine(
         "goal": goal,
         "max_sets": max_total_sets,
         "doms_instructions": doms_instructions,
-        "candidate_exercises": format_candidates_for_prompt(ranked_candidates),
+        "candidate_exercises": candidate_payload,
         "user_note": req.user_note or "없음",
         "time_available_min": req.time_available_min,
         "target_exercise_count": target_exercise_count,
@@ -228,18 +342,88 @@ def generate_smart_routine(
     _debug_print_prompt(prompt, invoke_kwargs)
 
     reason: StatusReasonCode = "networkError"
-    try:
-        generation_temp = resolve_generation_temperature(req.readiness_level)
-        llm = get_llm("routine", temperature=generation_temp)
-        response: LLMRoutineOutput = (prompt | llm.with_structured_output(LLMRoutineOutput)).invoke(invoke_kwargs)
-        _debug_print_llm_output("LLM STRUCTURED OUTPUT", response)
-        return _validate_or_fallback(
-            response, req, ranked_candidates, max_total_sets, doms_db, goal, db_target_muscles, recent_sets, profile
+    generation_temp = resolve_generation_temperature(req.readiness_level)
+    generation_latency_ms: Optional[int] = None
+    schema_repair_latency_ms: Optional[int] = None
+    llm_error_type: Optional[str] = None
+    schema_repair_attempted = False
+    schema_repair_succeeded = False
+    validation_failed = False
+    time_budget_exceeded = False
+
+    def _mark_validation_failed() -> None:
+        nonlocal validation_failed
+        validation_failed = True
+
+    def _mark_time_budget_exceeded() -> None:
+        nonlocal time_budget_exceeded
+        time_budget_exceeded = True
+
+    def _observe(response: RoutineDraftResponse) -> RoutineDraftResponse:
+        fallback_used = response.is_fallback or response.generation_status == "fallback"
+        fallback_reason = classify_fallback_reason(
+            fallback_used=fallback_used,
+            llm_error_type=llm_error_type,
+            schema_repair_attempted=schema_repair_attempted,
+            schema_repair_succeeded=schema_repair_succeeded,
+            validation_failed=validation_failed,
+            time_budget_exceeded=time_budget_exceeded,
         )
+        return observe_routine_quality(
+            response=response,
+            req=req,
+            ranked_candidates=ranked_candidates,
+            db_target_muscles=db_target_muscles,
+            recent_sets=recent_sets,
+            max_total_sets=max_total_sets,
+            candidate_pool_size=candidate_pool_size,
+            candidate_payload=candidate_payload,
+            generation_temperature=generation_temp,
+            generation_latency_ms=generation_latency_ms,
+            schema_repair_latency_ms=schema_repair_latency_ms,
+            fallback_reason=fallback_reason,
+            llm_error_type=llm_error_type,
+            schema_repair_attempted=schema_repair_attempted,
+            schema_repair_succeeded=schema_repair_succeeded,
+            feedback_enabled=feedback_enabled,
+            feedback_adjusted_candidate_count=feedback_adjusted_candidate_count,
+            feedback_positive_count=feedback_positive_count,
+            feedback_negative_count=feedback_negative_count,
+            feedback_abs_adjustment_avg=feedback_abs_adjustment_avg,
+            feedback_query_latency_ms=feedback_query_latency_ms,
+            feedback_query_failed=feedback_query_failed,
+            feedback_query_error_category=feedback_query_error_category,
+        )
+
+    try:
+        llm = get_llm("routine", temperature=generation_temp)
+        generation_started = time.perf_counter()
+        try:
+            response: LLMRoutineOutput = (prompt | llm.with_structured_output(LLMRoutineOutput)).invoke(invoke_kwargs)
+        finally:
+            generation_latency_ms = round((time.perf_counter() - generation_started) * 1000)
+        _debug_print_llm_output("LLM STRUCTURED OUTPUT", response)
+        draft = _validate_or_fallback(
+            response,
+            req,
+            ranked_candidates,
+            max_total_sets,
+            doms_db,
+            goal,
+            db_target_muscles,
+            recent_sets,
+            profile,
+            on_validation_failed=_mark_validation_failed,
+            on_time_budget_exceeded=_mark_time_budget_exceeded,
+        )
+        return _observe(draft)
     except (asyncio.TimeoutError, httpx.TimeoutException) as e:
+        llm_error_type = classify_llm_error(e)
         reason = map_llm_error(e)
-        print(f"[AI 실패 - TIMEOUT] {e} -> fallback 루틴으로 전환")
+        print("[AI 실패 - TIMEOUT]", sanitize_exception_for_log(e), "-> fallback 루틴으로 전환")
     except (OutputParserException, ValidationError) as e:
+        llm_error_type = classify_llm_error(e)
+        schema_repair_attempted = True
         print(f"[AI - SCHEMA 오류] 정제 어댑터로 복구 시도... ({type(e).__name__})")
         try:
             repair_llm = get_llm("routine", temperature=0)
@@ -248,9 +432,22 @@ def generate_smart_routine(
                 print("[정제 어댑터] raw 텍스트 없음 -> LLM 비구조화 재호출")
                 raw_resp = (prompt | repair_llm).invoke(invoke_kwargs)
                 raw_text = raw_resp.content if hasattr(raw_resp, "content") else str(raw_resp)
-            normalized = normalize_llm_response(raw_text, llm=repair_llm)
+                raw_summary = summarize_text_for_log(raw_text)
+                print(
+                    "[정제 어댑터] raw LLM output 수신",
+                    {
+                        "redacted": True,
+                        "llm_output_char_count": raw_summary["char_count"],
+                        "llm_output_approx_tokens": raw_summary["approx_tokens"],
+                    },
+                )
+            repair_started = time.perf_counter()
+            try:
+                normalized = normalize_llm_response(raw_text, llm=repair_llm)
+            finally:
+                schema_repair_latency_ms = round((time.perf_counter() - repair_started) * 1000)
             _debug_print_llm_output("NORMALIZED LLM OUTPUT", normalized)
-            return _validate_or_fallback(
+            draft = _validate_or_fallback(
                 normalized,
                 req,
                 ranked_candidates,
@@ -261,12 +458,19 @@ def generate_smart_routine(
                 recent_sets,
                 profile,
                 normalized=True,
+                on_validation_failed=_mark_validation_failed,
+                on_time_budget_exceeded=_mark_time_budget_exceeded,
             )
+            if not validation_failed and not draft.is_fallback and draft.generation_status != "fallback":
+                schema_repair_succeeded = True
+            return _observe(draft)
         except Exception as norm_e:
             reason = map_llm_error(e)
-            print(f"[정제 어댑터] 복구 실패: {norm_e} -> fallback 루틴으로 전환")
+            print("[정제 어댑터] 복구 실패:", sanitize_exception_for_log(norm_e), "-> fallback 루틴으로 전환")
     except Exception as e:
+        llm_error_type = classify_llm_error(e)
         reason = map_llm_error(e)
-        print(f"[AI 실패 - {reason.upper()}] {e} -> fallback 루틴으로 전환")
+        print(f"[AI 실패 - {reason.upper()}]", sanitize_exception_for_log(e), "-> fallback 루틴으로 전환")
 
-    return _fallback(req, ranked_candidates, max_total_sets, doms_db, goal, reason, recent_sets, profile)
+    draft = _fallback(req, ranked_candidates, max_total_sets, doms_db, goal, reason, recent_sets, profile)
+    return _observe(draft)

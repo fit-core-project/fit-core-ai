@@ -1,0 +1,233 @@
+{
+  "scenarios": [
+    {
+      "id": "FB01",
+      "name": "positive_replacement_promotes_candidate",
+      "description": "Repeated replacement choice promotes a lower tie-break candidate.",
+      "goal": "hypertrophy",
+      "target_muscles": ["chest"],
+      "duration_min": 45,
+      "readiness_level": "normal",
+      "unavailable_equipment": [],
+      "current_pain_areas": [],
+      "doms": {},
+      "recent_exercises": [],
+      "request_context": {"user_id": "user-a", "target_muscles": ["chest"]},
+      "candidates": [
+        {"id": "alpha_press", "name_en": "Alpha Press", "name_kr": "Alpha Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null},
+        {"id": "zeta_press", "name_en": "Zeta Press", "name_kr": "Zeta Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null}
+      ],
+      "feedback_rows": [
+        {"repeat": 10, "user_id": "user-a", "routine_draft_id": "fb01", "rating": 5, "completed": true, "accepted_without_edits": true, "skipped_exercise_ids": [], "edited_exercises": [{"original_exercise_id": "alpha_press", "replacement_exercise_id": "zeta_press", "reason": "other"}], "user_note": null}
+      ],
+      "expected": {"flag_off_order": ["alpha_press", "zeta_press"], "flag_on_order": ["zeta_press", "alpha_press"], "promoted_exercise_ids": ["zeta_press"], "demoted_exercise_ids": ["alpha_press"], "forbidden_exercise_ids": [], "min_score_delta": 4, "max_hard_violations": 0, "notes": "replacement positive should promote zeta_press"},
+      "mock_llm_output": null
+    },
+    {
+      "id": "FB02",
+      "name": "skipped_exercise_demotes_candidate",
+      "description": "Repeated skips demote the skipped candidate.",
+      "goal": "hypertrophy",
+      "target_muscles": ["chest"],
+      "duration_min": 45,
+      "readiness_level": "normal",
+      "unavailable_equipment": [],
+      "current_pain_areas": [],
+      "doms": {},
+      "recent_exercises": [],
+      "request_context": {"user_id": "user-a", "target_muscles": ["chest"]},
+      "candidates": [
+        {"id": "alpha_press", "name_en": "Alpha Press", "name_kr": "Alpha Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null},
+        {"id": "zeta_press", "name_en": "Zeta Press", "name_kr": "Zeta Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null}
+      ],
+      "feedback_rows": [
+        {"repeat": 10, "user_id": "user-a", "routine_draft_id": "fb02", "rating": 2, "completed": false, "accepted_without_edits": false, "skipped_exercise_ids": ["alpha_press"], "edited_exercises": [], "user_note": null}
+      ],
+      "expected": {"flag_off_order": ["alpha_press", "zeta_press"], "flag_on_order": ["zeta_press", "alpha_press"], "promoted_exercise_ids": ["zeta_press"], "demoted_exercise_ids": ["alpha_press"], "forbidden_exercise_ids": [], "min_score_delta": 5, "max_hard_violations": 0, "notes": "skip negative should demote alpha_press"},
+      "mock_llm_output": null
+    },
+    {
+      "id": "FB03",
+      "name": "pain_reason_strong_negative",
+      "description": "Pain reason creates a strong negative adjustment for the original exercise.",
+      "goal": "hypertrophy",
+      "target_muscles": ["chest"],
+      "duration_min": 45,
+      "readiness_level": "normal",
+      "unavailable_equipment": [],
+      "current_pain_areas": [],
+      "doms": {},
+      "recent_exercises": [],
+      "request_context": {"user_id": "user-a", "target_muscles": ["chest"]},
+      "candidates": [
+        {"id": "alpha_press", "name_en": "Alpha Press", "name_kr": "Alpha Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null},
+        {"id": "zeta_press", "name_en": "Zeta Press", "name_kr": "Zeta Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null}
+      ],
+      "feedback_rows": [
+        {"repeat": 10, "user_id": "user-a", "routine_draft_id": "fb03", "rating": 1, "completed": false, "accepted_without_edits": false, "skipped_exercise_ids": [], "edited_exercises": [{"original_exercise_id": "alpha_press", "replacement_exercise_id": "zeta_press", "reason": "pain"}], "user_note": null}
+      ],
+      "expected": {"flag_off_order": ["alpha_press", "zeta_press"], "flag_on_order": ["zeta_press", "alpha_press"], "promoted_exercise_ids": ["zeta_press"], "demoted_exercise_ids": ["alpha_press"], "forbidden_exercise_ids": [], "min_score_delta": 10, "max_hard_violations": 0, "notes": "pain reason should clamp near lower bound"},
+      "mock_llm_output": null
+    },
+    {
+      "id": "FB04",
+      "name": "no_feedback_no_change",
+      "description": "No feedback rows means feedback-aware path produces identical ranking.",
+      "goal": "hypertrophy",
+      "target_muscles": ["chest"],
+      "duration_min": 45,
+      "readiness_level": "normal",
+      "unavailable_equipment": [],
+      "current_pain_areas": [],
+      "doms": {},
+      "recent_exercises": [],
+      "request_context": {"user_id": "user-a", "target_muscles": ["chest"]},
+      "candidates": [
+        {"id": "alpha_press", "name_en": "Alpha Press", "name_kr": "Alpha Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null},
+        {"id": "zeta_press", "name_en": "Zeta Press", "name_kr": "Zeta Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null}
+      ],
+      "feedback_rows": [],
+      "expected": {"flag_off_order": ["alpha_press", "zeta_press"], "flag_on_order": ["alpha_press", "zeta_press"], "promoted_exercise_ids": [], "demoted_exercise_ids": [], "forbidden_exercise_ids": [], "min_score_delta": 0, "max_hard_violations": 0, "notes": "no feedback should be identical"},
+      "mock_llm_output": null
+    },
+    {
+      "id": "FB05",
+      "name": "flag_off_no_change",
+      "description": "Feedback rows exist but flag-off style ranking passes no adjustments.",
+      "goal": "hypertrophy",
+      "target_muscles": ["chest"],
+      "duration_min": 45,
+      "readiness_level": "normal",
+      "unavailable_equipment": [],
+      "current_pain_areas": [],
+      "doms": {},
+      "recent_exercises": [],
+      "request_context": {"user_id": "user-a", "target_muscles": ["chest"]},
+      "candidates": [
+        {"id": "alpha_press", "name_en": "Alpha Press", "name_kr": "Alpha Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null},
+        {"id": "zeta_press", "name_en": "Zeta Press", "name_kr": "Zeta Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null}
+      ],
+      "feedback_rows": [
+        {"repeat": 10, "user_id": "user-a", "routine_draft_id": "fb05", "rating": 5, "completed": true, "accepted_without_edits": true, "skipped_exercise_ids": [], "edited_exercises": [{"original_exercise_id": "alpha_press", "replacement_exercise_id": "zeta_press", "reason": "other"}], "user_note": null}
+      ],
+      "expected": {"flag_off_order": ["alpha_press", "zeta_press"], "flag_on_order": ["zeta_press", "alpha_press"], "promoted_exercise_ids": ["zeta_press"], "demoted_exercise_ids": ["alpha_press"], "forbidden_exercise_ids": [], "min_score_delta": 4, "max_hard_violations": 0, "notes": "passing None adjustments should keep flag-off order"},
+      "mock_llm_output": null
+    },
+    {
+      "id": "FB06",
+      "name": "hard_constraint_blocked_equipment_not_restored",
+      "description": "Positive feedback cannot restore a blocked BARBELL candidate.",
+      "goal": "hypertrophy",
+      "target_muscles": ["chest"],
+      "duration_min": 45,
+      "readiness_level": "normal",
+      "unavailable_equipment": ["BARBELL"],
+      "current_pain_areas": [],
+      "doms": {},
+      "recent_exercises": [],
+      "request_context": {"user_id": "user-a", "target_muscles": ["chest"], "unavailable_equipment": ["BARBELL"]},
+      "candidates": [
+        {"id": "barbell_press", "name_en": "Barbell Press", "name_kr": "Barbell Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "BARBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null},
+        {"id": "dumbbell_press", "name_en": "Dumbbell Press", "name_kr": "Dumbbell Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null}
+      ],
+      "feedback_rows": [
+        {"repeat": 10, "user_id": "user-a", "routine_draft_id": "fb06", "rating": 5, "completed": true, "accepted_without_edits": true, "skipped_exercise_ids": [], "edited_exercises": [{"original_exercise_id": "dumbbell_press", "replacement_exercise_id": "barbell_press", "reason": "other"}], "user_note": null}
+      ],
+      "expected": {"flag_off_order": ["dumbbell_press"], "flag_on_order": ["dumbbell_press"], "promoted_exercise_ids": [], "demoted_exercise_ids": [], "forbidden_exercise_ids": ["barbell_press"], "min_score_delta": 0, "max_hard_violations": 0, "must_pass": true, "is_fallback": false, "expected_repair": false, "required_muscle_coverage": ["chest"], "min_compound_count": 1, "max_time_error_min": 20, "max_working_sets": 12, "rationale_must_be_nonempty": true, "notes": "blocked equipment remains excluded"},
+      "mock_llm_output": {"total_estimated_time": 30, "summary_title": "Safe chest", "rationale_summary": ["Dumbbell press avoids blocked barbell."], "warnings": [], "exercises": [{"exercise_id": "dumbbell_press", "exercise_name": "Dumbbell Press", "primary_muscles": ["chest"], "movement_type": "COMPOUND", "equipment_type": "DUMBBELL", "target_reps": 10, "sets": 3, "rest_time_sec": 90, "target_weight_kg": null, "exercise_rationale": "chest COMPOUND with available dumbbell equipment"}]}
+    },
+    {
+      "id": "FB07",
+      "name": "hard_constraint_pain_trigger_not_restored",
+      "description": "Positive feedback cannot restore a pain-trigger candidate.",
+      "goal": "hypertrophy",
+      "target_muscles": ["front-deltoids", "chest"],
+      "duration_min": 45,
+      "readiness_level": "normal",
+      "unavailable_equipment": [],
+      "current_pain_areas": [{"body_part": "shoulder"}],
+      "doms": {},
+      "recent_exercises": [],
+      "request_context": {"user_id": "user-a", "target_muscles": ["front-deltoids", "chest"], "current_pain_areas": [{"body_part": "shoulder"}]},
+      "candidates": [
+        {"id": "overhead_press", "name_en": "Overhead Press", "name_kr": "Overhead Press", "primary_muscle": "front-deltoids", "secondary_muscle": "triceps", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": "shoulder"},
+        {"id": "dumbbell_press", "name_en": "Dumbbell Press", "name_kr": "Dumbbell Press", "primary_muscle": "chest", "secondary_muscle": "triceps", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null}
+      ],
+      "feedback_rows": [
+        {"repeat": 10, "user_id": "user-a", "routine_draft_id": "fb07", "rating": 5, "completed": true, "accepted_without_edits": true, "skipped_exercise_ids": [], "edited_exercises": [{"original_exercise_id": "dumbbell_press", "replacement_exercise_id": "overhead_press", "reason": "other"}], "user_note": null}
+      ],
+      "expected": {"flag_off_order": ["dumbbell_press"], "flag_on_order": ["dumbbell_press"], "promoted_exercise_ids": [], "demoted_exercise_ids": [], "forbidden_exercise_ids": ["overhead_press"], "min_score_delta": 0, "max_hard_violations": 0, "must_pass": true, "is_fallback": false, "expected_repair": false, "required_muscle_coverage": ["chest"], "coverage_exception": true, "min_compound_count": 1, "max_time_error_min": 25, "max_working_sets": 12, "rationale_must_be_nonempty": true, "notes": "pain trigger remains excluded"},
+      "mock_llm_output": {"total_estimated_time": 30, "summary_title": "Pain-safe push", "rationale_summary": ["Dumbbell press avoids shoulder pain trigger."], "warnings": [], "exercises": [{"exercise_id": "dumbbell_press", "exercise_name": "Dumbbell Press", "primary_muscles": ["chest"], "movement_type": "COMPOUND", "equipment_type": "DUMBBELL", "target_reps": 10, "sets": 3, "rest_time_sec": 90, "target_weight_kg": null, "exercise_rationale": "chest COMPOUND while shoulder pain trigger is avoided"}]}
+    },
+    {
+      "id": "FB08",
+      "name": "hard_constraint_doms3_not_restored",
+      "description": "Positive feedback cannot restore DOMS level 3 target candidate.",
+      "goal": "hypertrophy",
+      "target_muscles": ["chest", "upper-back"],
+      "duration_min": 45,
+      "readiness_level": "normal",
+      "unavailable_equipment": [],
+      "current_pain_areas": [],
+      "doms": {"chest": 3},
+      "recent_exercises": [],
+      "request_context": {"user_id": "user-a", "target_muscles": ["chest", "upper-back"], "doms": {"chest": 3}},
+      "candidates": [
+        {"id": "chest_press", "name_en": "Chest Press", "name_kr": "Chest Press", "primary_muscle": "chest", "secondary_muscle": "triceps", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null},
+        {"id": "row", "name_en": "Row", "name_kr": "Row", "primary_muscle": "upper-back", "secondary_muscle": "biceps", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null}
+      ],
+      "feedback_rows": [
+        {"repeat": 10, "user_id": "user-a", "routine_draft_id": "fb08", "rating": 5, "completed": true, "accepted_without_edits": true, "skipped_exercise_ids": [], "edited_exercises": [{"original_exercise_id": "row", "replacement_exercise_id": "chest_press", "reason": "other"}], "user_note": null}
+      ],
+      "expected": {"flag_off_order": ["row"], "flag_on_order": ["row"], "promoted_exercise_ids": [], "demoted_exercise_ids": [], "forbidden_exercise_ids": ["chest_press"], "min_score_delta": 0, "max_hard_violations": 0, "notes": "DOMS3 candidate remains excluded"},
+      "mock_llm_output": null
+    },
+    {
+      "id": "FB09",
+      "name": "global_feedback_weak_effect",
+      "description": "Anonymous/global adjustment is weaker than user-specific adjustment.",
+      "goal": "hypertrophy",
+      "target_muscles": ["chest"],
+      "duration_min": 45,
+      "readiness_level": "normal",
+      "unavailable_equipment": [],
+      "current_pain_areas": [],
+      "doms": {},
+      "recent_exercises": [],
+      "request_context": {"user_id": null, "target_muscles": ["chest"]},
+      "candidates": [
+        {"id": "alpha_press", "name_en": "Alpha Press", "name_kr": "Alpha Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null},
+        {"id": "zeta_press", "name_en": "Zeta Press", "name_kr": "Zeta Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null}
+      ],
+      "feedback_rows": [
+        {"repeat": 10, "user_id": "other-user", "routine_draft_id": "fb09", "rating": 5, "completed": true, "accepted_without_edits": true, "skipped_exercise_ids": [], "edited_exercises": [{"original_exercise_id": "alpha_press", "replacement_exercise_id": "zeta_press", "reason": "other"}], "user_note": null}
+      ],
+      "expected": {"flag_off_order": ["alpha_press", "zeta_press"], "flag_on_order": ["zeta_press", "alpha_press"], "promoted_exercise_ids": ["zeta_press"], "demoted_exercise_ids": [], "forbidden_exercise_ids": [], "min_score_delta": 1, "max_hard_violations": 0, "notes": "global feedback should be weak but observable"},
+      "mock_llm_output": null
+    },
+    {
+      "id": "FB10",
+      "name": "user_feedback_dominates_global",
+      "description": "User-specific negative dominates conflicting global positive.",
+      "goal": "hypertrophy",
+      "target_muscles": ["chest"],
+      "duration_min": 45,
+      "readiness_level": "normal",
+      "unavailable_equipment": [],
+      "current_pain_areas": [],
+      "doms": {},
+      "recent_exercises": [],
+      "request_context": {"user_id": "user-a", "target_muscles": ["chest"]},
+      "candidates": [
+        {"id": "alpha_press", "name_en": "Alpha Press", "name_kr": "Alpha Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null},
+        {"id": "zeta_press", "name_en": "Zeta Press", "name_kr": "Zeta Press", "primary_muscle": "chest", "secondary_muscle": "", "equipment_req": "DUMBBELL", "efficiency_tier": 5, "movement_type": "COMPOUND", "pain_triggers": null}
+      ],
+      "feedback_rows": [
+        {"repeat": 10, "user_id": "other-user", "routine_draft_id": "fb10g", "rating": 5, "completed": true, "accepted_without_edits": true, "skipped_exercise_ids": [], "edited_exercises": [{"original_exercise_id": "alpha_press", "replacement_exercise_id": "zeta_press", "reason": "other"}], "user_note": null},
+        {"repeat": 10, "user_id": "user-a", "routine_draft_id": "fb10u", "rating": 1, "completed": false, "accepted_without_edits": false, "skipped_exercise_ids": ["zeta_press"], "edited_exercises": [{"original_exercise_id": "zeta_press", "replacement_exercise_id": "alpha_press", "reason": "pain"}], "user_note": null}
+      ],
+      "expected": {"flag_off_order": ["alpha_press", "zeta_press"], "flag_on_order": ["alpha_press", "zeta_press"], "promoted_exercise_ids": [], "demoted_exercise_ids": ["zeta_press"], "forbidden_exercise_ids": [], "min_score_delta": 6, "max_hard_violations": 0, "notes": "user negative should dominate global positive"},
+      "mock_llm_output": null
+    }
+  ]
+}

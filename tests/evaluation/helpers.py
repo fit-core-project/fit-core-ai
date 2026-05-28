@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from engines.candidate_ranker import score_candidate_exercises
 from engines.prescription.adjustments import _calculate_max_total_sets
@@ -66,7 +66,12 @@ def check_hard_constraints(
 
 
 class EvalHarness:
-    def run(self, scenario: dict[str, Any]) -> ScenarioResult:
+    def run(
+        self,
+        scenario: dict[str, Any],
+        *,
+        feedback_adjustments: Optional[dict] = None,
+    ) -> ScenarioResult:
         expected = scenario.get("expected", {})
         pain_areas = [PainAreaEntry(**item) for item in scenario.get("current_pain_areas", [])]
         recent_sets = [
@@ -96,6 +101,7 @@ class EvalHarness:
             blocked_equipment=scenario.get("unavailable_equipment", []),
             pain_areas=pain_areas,
             recent_sets=recent_sets,
+            feedback_adjustments=feedback_adjustments,
         )
         output = LLMRoutineOutput.model_validate(scenario["mock_llm_output"])
         default_max_sets = _calculate_max_total_sets(scenario["duration_min"], scenario["goal"])

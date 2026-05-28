@@ -45,6 +45,7 @@ def score_candidate_exercises(
     preferred_exercise_ids: Optional[List[str]] = None,
     unpreferred_exercise_ids: Optional[List[str]] = None,
     top_n: int = 12,
+    feedback_adjustments: Optional[dict] = None,
 ) -> List[dict]:
     """후보 운동을 deterministic하게 점수화해 상위 N개를 반환한다."""
     target_set = set(target_muscles)
@@ -148,6 +149,13 @@ def score_candidate_exercises(
             score += 20
             reasons.append("user preferred exercise")
 
+        if feedback_adjustments is not None:
+            candidate_id = str(candidate.get("id") or "").strip().lower()
+            feedback_score = _resolve_feedback_score(feedback_adjustments.get(candidate_id))
+            if feedback_score != 0.0:
+                score += int(round(feedback_score))
+                reasons.append(f"feedback adj {feedback_score:+.1f}")
+
         scored.append({
             **candidate,
             "score": score,
@@ -162,6 +170,17 @@ def score_candidate_exercises(
             str(ex.get("id") or ""),
         ),
     )[:top_n]
+
+
+def _resolve_feedback_score(adjustment) -> float:
+    if adjustment is None:
+        return 0.0
+    raw = getattr(adjustment, "blended_adjustment", adjustment)
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return 0.0
+    return max(-10.0, min(10.0, value))
 
 
 def format_candidates_for_prompt(candidates: List[dict]) -> str:

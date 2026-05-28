@@ -10,6 +10,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
+from engines.log_redaction import sanitize_exception_for_log
 from engines.llm_router import get_llm
 
 # 🌐 웹 검색 툴 추가
@@ -201,5 +202,5 @@ class SupplementRAGEngine:
 
         except Exception as e:
             # 에러 발생 시 처리
-            print(f"❌ [Advanced RAG 에러]: {str(e)}")
+            print("❌ [Advanced RAG 에러]:", sanitize_exception_for_log(e))
             return {"answer": "오류가 발생했습니다.", "sources": []}

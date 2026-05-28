@@ -2,6 +2,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
+from engines.log_redaction import sanitize_exception_for_log, summarize_text_for_log
 from engines.llm_router import get_llm
 
 # .env 파일에서 GOOGLE_API_KEY를 불러옵니다.
@@ -53,7 +54,7 @@ def parse_natural_language_log(user_text: str) -> str:
 
     try:
         chain = prompt | structured_llm
-        print(f"🤖 [Gemini 파싱 시작] 분석 중인 텍스트: {user_text}")
+        print("🤖 [Gemini 파싱 시작] 분석 중인 텍스트:", summarize_text_for_log(user_text))
 
         # AI가 텍스트를 읽고 ParsedDailyLog 객체 형태로 변환하여 반환
         parsed_result = chain.invoke({"text": user_text})
@@ -62,5 +63,5 @@ def parse_natural_language_log(user_text: str) -> str:
         return parsed_result.model_dump_json()
 
     except Exception as e:
-        print(f"❌ [Gemini 파싱 에러 상세]: {str(e)}")
+        print("❌ [Gemini 파싱 에러 상세]:", sanitize_exception_for_log(e))
         raise Exception("자연어 기록을 AI가 분석하는 중 오류가 발생했습니다.")

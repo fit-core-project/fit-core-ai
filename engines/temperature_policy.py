@@ -15,6 +15,10 @@ _READINESS_TEMPERATURE_MAP: dict[str, float] = {
 _DEFAULT_TEMPERATURE: float = 0.0
 
 
+def is_dynamic_temperature_enabled() -> bool:
+    return _DYNAMIC_ENABLED
+
+
 def resolve_generation_temperature(
     readiness_level: Optional[str],
     default_temperature: float = _DEFAULT_TEMPERATURE,

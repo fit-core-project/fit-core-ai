@@ -1,8 +1,9 @@
 import uvicorn
 import json
+import io
 import tempfile
 import os
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, redirect_stderr
 
 from dotenv import load_dotenv
 
@@ -20,6 +21,7 @@ from dev_logs import dev_log_buffer, install_stdout_capture
 
 from models.routine_feedback import RoutineFeedback
 from engines.db_queries import get_recent_sets, get_user_profile_context
+from engines.log_redaction import sanitize_exception_for_log, summarize_text_for_log
 from engines.routine_pipeline import generate_smart_routine
 from engines.schemas import RoutineDraftResponse, RoutineFeedbackRequest, RoutineFeedbackResponse, RoutineRequest
 from engines.nlp_engine import parse_natural_language_log
@@ -52,13 +54,14 @@ async def lifespan(app: FastAPI):
     if supplement_rag is None:
         print("💊 2. 영양제 RAG 엔진 로딩 중...")
         try:
-            from engines.supplement_engine import SupplementRAGEngine
+            with redirect_stderr(io.StringIO()):
+                from engines.supplement_engine import SupplementRAGEngine
 
             # 💡 Tip: DB 경로가 'latest_index'를 포함하고 있는지 확인하세요.
-            supplement_rag = SupplementRAGEngine(db_path="./data/chroma_db")
+                supplement_rag = SupplementRAGEngine(db_path="./data/chroma_db")
             print("✅ 영양제 RAG 엔진 로딩 완료!")
         except Exception as e:
-            print(f"⚠️ RAG 엔진 로드 실패: {e}")
+            print("⚠️ RAG 엔진 로드 실패:", sanitize_exception_for_log(e))
             supplement_rag = None
 
     print("✅ 모든 모델 로드 완료! 서버가 준비되었습니다.")
@@ -100,7 +103,16 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     def sanitize_error(error: dict) -> dict:
         sanitized = dict(error)
         loc = sanitized.get("loc") or []
-        if "user_note" in loc or "userNote" in loc:
+        sensitive_fields = {
+            "body",
+            "request_body",
+            "text",
+            "question",
+            "transcript",
+            "user_note",
+            "userNote",
+        }
+        if any(part in sensitive_fields for part in loc):
             sanitized["input"] = "[REDACTED]"
         if "ctx" in sanitized:
             sanitized["ctx"] = {
@@ -129,8 +141,7 @@ def api_generate_routine(req: RoutineRequest, db: Session = Depends(get_db)):
         return generate_smart_routine(req, db, profile=profile, recent_sets=recent_sets)
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        print("[Routine Error]", sanitize_exception_for_log(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -177,13 +188,12 @@ class LogRequest(BaseModel):
 @app.post("/api/ai/parse-log")
 def api_parse_log(req: LogRequest):
     try:
-        print(f"\n✅ [NLP 파싱 요청 수신] 텍스트: {req.text}")
+        print("\n✅ [NLP 파싱 요청 수신] 텍스트:", summarize_text_for_log(req.text))
         result_json_str = parse_natural_language_log(req.text)
         return json.loads(result_json_str)
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        print("[NLP Error]", sanitize_exception_for_log(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -209,13 +219,12 @@ async def api_speech_to_text(audio_file: UploadFile = File(...)):
         )
 
         transcript = " ".join([segment.text for segment in segments])
-        print(f"🗣️ [Whisper 인식 결과]: {transcript}")
+        print("🗣️ [Whisper 인식 결과]:", summarize_text_for_log(transcript))
 
         return {"text": transcript}
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        print("[STT Error]", sanitize_exception_for_log(e))
         raise HTTPException(status_code=500, detail="음성 인식 실패")
 
     finally:
@@ -239,12 +248,12 @@ def api_supplement_chat(req: SupplementChatRequest):
         )
 
     try:
-        print(f"\n💬 [영양제 질문 수신]: {req.question}")
+        print("\n💬 [영양제 질문 수신]:", summarize_text_for_log(req.question))
         result = supplement_rag.answer_question(req.question)
         return result
 
     except Exception as e:
-        print(f"❌ [챗봇 에러]: {str(e)}")
+        print("❌ [챗봇 에러]:", sanitize_exception_for_log(e))
         raise HTTPException(status_code=500, detail="답변 생성 중 오류가 발생했습니다.")
 
 

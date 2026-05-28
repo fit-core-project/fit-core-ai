@@ -22,6 +22,11 @@ from .prescription.params import _prescription_params_for_exercise
 from .prescription.weight import _resolve_target_weight
 from .prescription.adjustments import _apply_readiness_to_exercise, _apply_large_muscle_volume_guard
 from .candidate_ranker import _is_loadable_equipment
+from .log_redaction import (
+    sanitize_dev_log_payload,
+    sanitize_exception_for_log,
+    summarize_text_for_log,
+)
 from .muscle_mapping import get_mapped_targets, split_label_to_muscles
 from .llm_parser import trim_routine_to_time_budget
 
@@ -158,30 +163,49 @@ def _debug_print_prompt(prompt: ChatPromptTemplate, invoke_kwargs: Dict[str, Any
     try:
         rendered = prompt.format(**invoke_kwargs)
     except Exception as exc:
-        print(f"[AI DEBUG][PROMPT] render failed: {exc}")
-        print(f"[AI DEBUG][PROMPT VARS] {invoke_kwargs}")
+        error = sanitize_exception_for_log(exc)
+        print(
+            "[AI DEBUG][PROMPT]",
+            sanitize_dev_log_payload(
+                {
+                    "event": "routine_prompt_render_failed",
+                    "redacted": True,
+                    "error_type": error["type"],
+                    "error_category": error["category"],
+                }
+            ),
+        )
         return
 
-    print("\n========== [AI DEBUG] RENDERED ROUTINE PROMPT ==========")
-    print(rendered)
-    print("========== [AI DEBUG] END ROUTINE PROMPT ==========\n")
+    summary = summarize_text_for_log(rendered)
+    print(
+        "[AI DEBUG][PROMPT]",
+        sanitize_dev_log_payload(
+            {
+                "event": "routine_prompt_rendered",
+                "redacted": True,
+                "prompt_char_count": summary["char_count"],
+                "prompt_approx_tokens": summary["approx_tokens"],
+            }
+        ),
+    )
 
 
 def _debug_print_llm_output(label: str, output: LLMRoutineOutput) -> None:
-    print(f"\n========== [AI DEBUG] {label} ==========")
+    serialized = output.model_dump_json()
+    summary = summarize_text_for_log(serialized)
     print(
-        f"summary={output.summary_title} | llm_total_estimated_time={output.total_estimated_time} | "
-        f"server_estimated_time={estimate_routine_time_min(output.exercises)}"
+        f"[AI DEBUG][{label}]",
+        sanitize_dev_log_payload(
+            {
+                "event": "routine_llm_output_parsed",
+                "redacted": True,
+                "llm_output_char_count": summary["char_count"],
+                "llm_output_approx_tokens": summary["approx_tokens"],
+                "parsed_exercise_count": len(output.exercises),
+            }
+        ),
     )
-    for index, exercise in enumerate(output.exercises, start=1):
-        print(
-            f"{index}. id={exercise.exercise_id} name={exercise.exercise_name} "
-            f"type={exercise.movement_type} primary={exercise.primary_muscles} "
-            f"sets={exercise.sets} reps={exercise.target_reps} "
-            f"weight={exercise.target_weight_kg}kg rir={exercise.target_rir} "
-            f"rest={exercise.rest_time_sec}s rationale={exercise.exercise_rationale}"
-        )
-    print(f"========== [AI DEBUG] END {label} ==========\n")
 
 
 def _debug_print_draft(label: str, draft: RoutineDraftResponse) -> None:
