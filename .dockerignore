@@ -1,0 +1,48 @@
+# Secrets — NEVER include
+.env
+*.env
+.env.*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Model / embedding caches (can be hundreds of MB – GB)
+data/chroma_db/
+*.pt
+*.bin
+*.gguf
+*.onnx
+.cache/
+huggingface/
+torch_cache/
+
+# Version control
+.git/
+.gitignore
+
+# IDE / OS noise
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.out.log
+*.err.log
+
+# Tests / docs (not needed at runtime)
+tests/
+docs/
+
+# Scripts (optional; comment out if startup scripts are needed)
+scripts/

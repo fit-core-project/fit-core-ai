@@ -4,22 +4,19 @@ import numpy as np
 from typing import List, Dict, Any
 from pathlib import Path
 
-# LangChain & AI 관련 임포트
-from langchain_community.vectorstores import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
+# LangChain core (경량)
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
 from engines.log_redaction import sanitize_exception_for_log
 from engines.llm_router import get_llm
 
-# 🌐 웹 검색 툴 추가
+# 웹 검색 (경량)
 from langchain_community.tools import DuckDuckGoSearchRun
 
-# BM25 & Reranker
+# BM25 (경량)
 from kiwipiepy import Kiwi
 from rank_bm25 import BM25Okapi
-from sentence_transformers import CrossEncoder
 
 from dotenv import load_dotenv
 
@@ -28,7 +25,14 @@ load_dotenv()
 class SupplementRAGEngine:
     def __init__(self, db_path: str = "./data/chroma_db"):
         print("💊 [Agentic Supplement RAG] 엔진 초기화 시작...")
-        self.device = 'cuda' if __import__('torch').cuda.is_available() else 'cpu'
+
+        # 무거운 의존성: slim 이미지에서는 미설치 → 호출 시점에 ImportError 발생
+        from langchain_community.vectorstores import Chroma
+        from langchain_huggingface import HuggingFaceEmbeddings
+        from sentence_transformers import CrossEncoder
+
+        import torch
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         # 1. 생성용 LLM 세팅 (gemini-2.5-flash)
         self.llm = get_llm("supplement", temperature=0.1)

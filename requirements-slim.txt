@@ -1,0 +1,34 @@
+# Slim requirements — routine/NLP path only.
+# Excludes: faster-whisper, sentence-transformers, chromadb, langchain-chroma
+# (STT and supplement-chat endpoints will raise ImportError if called)
+
+# base
+fastapi
+uvicorn
+pydantic
+python-dotenv
+python-multipart
+sqlalchemy
+pymysql
+
+# LLM / LangChain (no vector-store or embedding packages)
+langchain
+langchain-core
+langchain-google-genai
+langchain-huggingface
+langchain-community
+langchain-ollama>=1.1.0
+langchain-openai
+langchain-text-splitters
+google-generativeai
+
+# BM25 / NLP utilities
+kiwipiepy
+rank-bm25
+duckduckgo-search
+
+# Data utilities
+pandas
+openpyxl
+jq
+gdown

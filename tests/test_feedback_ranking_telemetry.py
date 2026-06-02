@@ -144,7 +144,7 @@ def test_compute_feedback_stats_empty():
 
 def test_staging_script_help_commands():
     script = "scripts/run_feedback_ranking_staging_test.py"
-    for command in ["seed", "run", "compare"]:
+    for command in ["check-db", "seed", "verify-seed", "run", "compare"]:
         result = subprocess.run(
             [sys.executable, script, command, "--help"],
             check=False,

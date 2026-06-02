@@ -14,7 +14,6 @@ from sqlalchemy.orm import Session
 from database import get_db
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from faster_whisper import WhisperModel
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 from dev_logs import dev_log_buffer, install_stdout_capture
@@ -44,11 +43,14 @@ async def lifespan(app: FastAPI):
     print("\n" + "="*40)
     print("🚀 [서버 시작] AI 모델 로딩을 시작합니다 (딱 1회만 로드됨)")
 
-    # 1. Whisper 모델 로드
-    if whisper_model is None:
+    # 1. Whisper 모델 로드 (WHISPER_PRELOAD=true 일 때만 시작 시 로드, 기본 false)
+    if whisper_model is None and os.environ.get("WHISPER_PRELOAD", "false").strip().lower() == "true":
         print("🤖 1. Whisper AI(STT) 모델 로딩 중...")
+        from faster_whisper import WhisperModel
         whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
         print("✅ Whisper 모델 로딩 완료!")
+    elif os.environ.get("WHISPER_PRELOAD", "false").strip().lower() != "true":
+        print("⏭️ 1. Whisper 모델 시작 로드 스킵 (WHISPER_PRELOAD=false)")
 
     # 2. 영양제 RAG 엔진 로드
     if supplement_rag is None:
@@ -77,9 +79,9 @@ async def lifespan(app: FastAPI):
 # FastAPI 앱 객체 생성 및 lifespan 연결
 app = FastAPI(title="Fit-Core AI Server", lifespan=lifespan)
 
-# --- CORS 설정 ---
+# --- CORS 설정 (AI_CORS_ALLOWED_ORIGINS env, 기본값: localhost:3000,3001) ---
 _default_origins = "http://localhost:3000,http://localhost:3001"
-_cors_origins = [o.strip() for o in os.environ.get("CORS_ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()]
+_cors_origins = [o.strip() for o in os.environ.get("AI_CORS_ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
@@ -211,7 +213,13 @@ async def api_speech_to_text(audio_file: UploadFile = File(...)):
             temp_file.write(audio_bytes)
             temp_file_path = temp_file.name
 
-        # global로 선언된 whisper_model 사용
+        # whisper_model이 None이면 요청 시점에 lazy 로드
+        global whisper_model
+        if whisper_model is None:
+            print("🤖 [STT] Whisper 모델 lazy 로딩 중...")
+            from faster_whisper import WhisperModel
+            whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
+            print("✅ [STT] Whisper 모델 로딩 완료!")
         segments, info = whisper_model.transcribe(
             temp_file_path,
             beam_size=5,
