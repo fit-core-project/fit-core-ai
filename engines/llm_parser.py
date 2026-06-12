@@ -1,7 +1,10 @@
 """Normalize raw LLM output into LLMRoutineOutput."""
 import json
 import re
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
+
+from pydantic import ValidationError
 
 from .candidate_ranker import _candidate_is_safe
 from .llm_router import StatusReasonCode
@@ -10,6 +13,428 @@ from .prescription.estimator import estimate_routine_time_min
 from .schemas import LLMExercisePlan, LLMRoutineOutput, PainAreaEntry
 
 _MARKDOWN_FENCE_RE = re.compile(r"```(?:json)?\s*|\s*```")
+_ALLOWED_VALIDATION_FIELDS = {
+    "routine_blocks",
+    "exercises",
+    "exercise_id",
+    "exercise_name",
+    "target_reps",
+    "sets",
+    "rest_time_sec",
+    "target_weight_kg",
+    "exercise_rationale",
+    "summary_title",
+    "rationale_summary",
+    "total_estimated_time",
+    "warnings",
+}
+
+
+@dataclass(frozen=True)
+class ParseResult:
+    success: bool
+    data: Optional[dict] = None
+    subtype: str = "unknown"
+    sanitized_error_category: Optional[str] = None
+    json_decode_error_category: Optional[str] = None
+    json_decode_recovery_attempted: bool = False
+    json_decode_recovery_succeeded: bool = False
+    json_decode_recovery_strategy: str = "none"
+
+
+class SchemaRepairError(ValueError):
+    def __init__(
+        self,
+        message: str,
+        *,
+        parse_failure_subtype: str = "unknown",
+        schema_validation_error_category: Optional[str] = None,
+        schema_validation_field_names: Optional[list[str]] = None,
+        repair_failure_reason: Optional[str] = None,
+        json_decode_error_category: Optional[str] = None,
+        json_decode_recovery_attempted: bool = False,
+        json_decode_recovery_succeeded: bool = False,
+        json_decode_recovery_strategy: str = "none",
+    ):
+        super().__init__(message)
+        self.parse_failure_subtype = parse_failure_subtype
+        self.schema_validation_error_category = schema_validation_error_category
+        self.schema_validation_field_names = schema_validation_field_names or []
+        self.repair_failure_reason = repair_failure_reason or parse_failure_subtype
+        self.json_decode_error_category = json_decode_error_category
+        self.json_decode_recovery_attempted = json_decode_recovery_attempted
+        self.json_decode_recovery_succeeded = json_decode_recovery_succeeded
+        self.json_decode_recovery_strategy = json_decode_recovery_strategy
+
+
+def _non_empty_text(value) -> str | None:
+    if isinstance(value, str) and value.strip():
+        return value
+    return None
+
+
+def extract_raw_llm_output_from_exception(exc: BaseException | None) -> tuple[str | None, str]:
+    """Recover raw LLM text for internal repair without logging or storing it."""
+    seen: set[int] = set()
+
+    def visit(current: BaseException | None) -> tuple[str | None, str]:
+        if current is None or id(current) in seen:
+            return None, "none"
+        seen.add(id(current))
+
+        for attr, source in (
+            ("llm_output", "exception_llm_output"),
+            ("observation", "exception_observation"),
+        ):
+            text = _non_empty_text(getattr(current, attr, None))
+            if text is not None:
+                return text, source
+
+        for arg in getattr(current, "args", ()) or ():
+            text = _non_empty_text(arg)
+            if text is not None:
+                return text, "exception_args"
+
+        text, source = visit(getattr(current, "__cause__", None))
+        if text is not None:
+            return text, source
+        return visit(getattr(current, "__context__", None))
+
+    return visit(exc)
+
+
+def _strip_markdown_fence(text: str) -> tuple[str, bool]:
+    stripped = text.strip()
+    without_fence = _MARKDOWN_FENCE_RE.sub("", stripped).strip()
+    return without_fence, without_fence != stripped
+
+
+def _extract_first_balanced_json_object(text: str) -> tuple[Optional[str], bool]:
+    start = text.find("{")
+    if start == -1:
+        return None, False
+
+    depth = 0
+    in_string = False
+    escape = False
+    for index in range(start, len(text)):
+        char = text[index]
+        if in_string:
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : index + 1], (start != 0 or index != len(text) - 1)
+    return None, False
+
+
+def _has_balanced_delimiters(text: str, open_char: str, close_char: str) -> bool:
+    depth = 0
+    in_string = False
+    escape = False
+    for char in text:
+        if in_string:
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == open_char:
+            depth += 1
+        elif char == close_char:
+            depth -= 1
+            if depth < 0:
+                return False
+    return depth == 0 and not in_string
+
+
+def _maybe_trailing_comma_outside_string(text: str) -> bool:
+    in_string = False
+    escape = False
+    for index, char in enumerate(text):
+        if in_string:
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == ",":
+            remainder = text[index + 1 :].lstrip()
+            if remainder.startswith("}") or remainder.startswith("]"):
+                return True
+    return False
+
+
+def _remove_trailing_commas_outside_strings(text: str) -> str:
+    chars: list[str] = []
+    in_string = False
+    escape = False
+    index = 0
+    while index < len(text):
+        char = text[index]
+        if in_string:
+            chars.append(char)
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == '"':
+                in_string = False
+            index += 1
+            continue
+        if char == '"':
+            in_string = True
+            chars.append(char)
+            index += 1
+            continue
+        if char == ",":
+            lookahead = index + 1
+            while lookahead < len(text) and text[lookahead].isspace():
+                lookahead += 1
+            if lookahead < len(text) and text[lookahead] in ("}", "]"):
+                index += 1
+                continue
+        chars.append(char)
+        index += 1
+    return "".join(chars)
+
+
+def _contains_python_literal_outside_strings(text: str) -> bool:
+    scrubbed = []
+    in_string = False
+    escape = False
+    for char in text:
+        if in_string:
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == '"':
+                in_string = False
+            scrubbed.append(" ")
+            continue
+        if char == '"':
+            in_string = True
+            scrubbed.append(" ")
+        else:
+            scrubbed.append(char)
+    return bool(re.search(r"\b(None|True|False)\b", "".join(scrubbed)))
+
+
+def _single_quotes_suspected(text: str) -> bool:
+    return "'" in text and '"' not in text[: max(len(text), 1)]
+
+
+def classify_json_decode_error(error: json.JSONDecodeError, text: str) -> str:
+    message = str(error.msg or "").lower()
+    if "unterminated string" in message:
+        return "json_decode_unterminated_string"
+    if "invalid control character" in message:
+        return "json_decode_invalid_control_character"
+    if "extra data" in message:
+        return "json_decode_extra_data"
+    if "expecting property name" in message:
+        if _maybe_trailing_comma_outside_string(text):
+            return "json_decode_trailing_comma"
+        if _single_quotes_suspected(text):
+            return "json_decode_single_quotes_suspected"
+        return "json_decode_expect_property_name"
+    if "expecting value" in message:
+        if _contains_python_literal_outside_strings(text):
+            return "json_decode_python_literal"
+        return "json_decode_expect_value"
+    if not _has_balanced_delimiters(text, "{", "}"):
+        return "json_decode_unbalanced_braces"
+    if not _has_balanced_delimiters(text, "[", "]"):
+        return "json_decode_unbalanced_brackets"
+    if "```" in text:
+        return "json_decode_markdown_or_prose_residual"
+    return "json_decode_unknown"
+
+
+def _json_decode_failure_result(error: json.JSONDecodeError, text: str) -> ParseResult:
+    category = classify_json_decode_error(error, text)
+    return ParseResult(
+        False,
+        subtype="json_decode_error",
+        sanitized_error_category="json_decode_error",
+        json_decode_error_category=category,
+    )
+
+
+def _loads_with_safe_recovery(candidate: str) -> ParseResult:
+    try:
+        data = json.loads(candidate)
+        if not isinstance(data, dict):
+            return ParseResult(False, subtype="non_object_json", sanitized_error_category="non_object_json")
+        return ParseResult(True, data=data)
+    except json.JSONDecodeError as first_error:
+        if _maybe_trailing_comma_outside_string(candidate):
+            repaired = _remove_trailing_commas_outside_strings(candidate)
+            try:
+                data = json.loads(repaired)
+                if not isinstance(data, dict):
+                    return ParseResult(False, subtype="non_object_json", sanitized_error_category="non_object_json")
+                return ParseResult(
+                    True,
+                    data=data,
+                    subtype="json_decode_error",
+                    json_decode_error_category="json_decode_trailing_comma",
+                    json_decode_recovery_attempted=True,
+                    json_decode_recovery_succeeded=True,
+                    json_decode_recovery_strategy="trailing_comma_removed",
+                )
+            except json.JSONDecodeError:
+                return ParseResult(
+                    False,
+                    subtype="json_decode_error",
+                    sanitized_error_category="json_decode_error",
+                    json_decode_error_category=classify_json_decode_error(first_error, candidate),
+                    json_decode_recovery_attempted=True,
+                    json_decode_recovery_succeeded=False,
+                    json_decode_recovery_strategy="trailing_comma_removed",
+                )
+        return _json_decode_failure_result(first_error, candidate)
+
+
+def parse_json_candidate(raw_text: str) -> ParseResult:
+    if raw_text is None or not str(raw_text).strip():
+        return ParseResult(False, subtype="empty_response", sanitized_error_category="empty_response")
+
+    cleaned, had_fence = _strip_markdown_fence(str(raw_text))
+    candidate = cleaned
+    had_prose = False
+    if candidate.startswith("{"):
+        result = _loads_with_safe_recovery(candidate)
+        if result.success:
+            subtype = result.subtype
+            if had_fence and subtype == "unknown":
+                subtype = "markdown_fence_wrapped"
+            return ParseResult(
+                True,
+                data=result.data,
+                subtype=subtype,
+                json_decode_error_category=result.json_decode_error_category,
+                json_decode_recovery_attempted=result.json_decode_recovery_attempted,
+                json_decode_recovery_succeeded=result.json_decode_recovery_succeeded,
+                json_decode_recovery_strategy=result.json_decode_recovery_strategy,
+            )
+        if result.subtype != "json_decode_error":
+            return result
+        try:
+            data = _try_repair_json(candidate)
+            return ParseResult(
+                True,
+                data=data,
+                subtype="json_decode_error",
+                json_decode_error_category=result.json_decode_error_category,
+            )
+        except json.JSONDecodeError:
+            return result
+
+    if not candidate.startswith("{") or not candidate.endswith("}"):
+        try:
+            parsed = json.loads(candidate)
+            if not isinstance(parsed, dict):
+                return ParseResult(False, subtype="non_object_json", sanitized_error_category="non_object_json")
+        except json.JSONDecodeError as decode_error:
+            decode_category = classify_json_decode_error(decode_error, candidate)
+            if "```" in candidate and not had_fence:
+                return ParseResult(
+                    False,
+                    subtype="json_decode_error",
+                    sanitized_error_category="json_decode_error",
+                    json_decode_error_category="json_decode_markdown_or_prose_residual",
+                )
+            pass
+        extracted, had_prose = _extract_first_balanced_json_object(candidate)
+        if extracted is None:
+            return ParseResult(
+                False,
+                subtype="json_decode_error",
+                sanitized_error_category="json_decode_error",
+                json_decode_error_category=decode_category if "decode_category" in locals() else "json_decode_unknown",
+            )
+        candidate = extracted
+
+    result = _loads_with_safe_recovery(candidate)
+    if not result.success:
+        if result.subtype != "json_decode_error":
+            return result
+        try:
+            data = _try_repair_json(candidate)
+        except json.JSONDecodeError:
+            return result
+    else:
+        data = result.data
+
+    if not isinstance(data, dict):
+        return ParseResult(False, subtype="non_object_json", sanitized_error_category="non_object_json")
+
+    subtype = result.subtype if "result" in locals() and result.subtype != "unknown" else "unknown"
+    if had_fence:
+        subtype = "markdown_fence_wrapped"
+    elif had_prose:
+        subtype = "leading_or_trailing_prose"
+    return ParseResult(
+        True,
+        data=data,
+        subtype=subtype,
+        json_decode_error_category=result.json_decode_error_category if "result" in locals() else None,
+        json_decode_recovery_attempted=result.json_decode_recovery_attempted if "result" in locals() else False,
+        json_decode_recovery_succeeded=result.json_decode_recovery_succeeded if "result" in locals() else False,
+        json_decode_recovery_strategy=result.json_decode_recovery_strategy if "result" in locals() else "none",
+    )
+
+
+def classify_validation_error(error: ValidationError) -> tuple[str, list[str]]:
+    categories: set[str] = set()
+    fields: set[str] = set()
+    for item in error.errors():
+        loc = item.get("loc") or ()
+        leaf = next(
+            (part for part in reversed(loc) if isinstance(part, str) and part in _ALLOWED_VALIDATION_FIELDS),
+            None,
+        )
+        if leaf is not None:
+            fields.add(leaf)
+        error_type = str(item.get("type") or "")
+        if error_type == "missing":
+            categories.add("missing_required_field")
+        elif "list" in error_type:
+            categories.add("invalid_list_shape")
+        elif any(token in error_type for token in ("int", "float", "string", "bool", "dict", "model_type")):
+            categories.add("wrong_field_type")
+        else:
+            categories.add("unknown_validation_error")
+
+    if "missing_required_field" in categories:
+        category = "missing_required_field"
+    elif "wrong_field_type" in categories:
+        category = "wrong_field_type"
+    elif "invalid_list_shape" in categories:
+        category = "invalid_list_shape"
+    else:
+        category = "unknown_validation_error"
+    return category, sorted(fields)
 
 
 def _try_repair_json(text: str) -> dict:
@@ -39,6 +464,9 @@ def _inject_defaults(data: dict) -> dict:
     data.setdefault("warnings", [])
     data.setdefault("total_estimated_time", 45)
     data.setdefault("exercises", [])
+
+    if not isinstance(data["exercises"], list):
+        return data
 
     for ex in data["exercises"]:
         if not isinstance(ex, dict):
@@ -79,32 +507,51 @@ def normalize_llm_response(raw_text: str, llm=None) -> LLMRoutineOutput:
     5. Inject missing defaults.
     6. Validate with Pydantic.
     """
-    cleaned = _MARKDOWN_FENCE_RE.sub("", raw_text).strip()
+    parse_result = parse_json_candidate(raw_text)
+    if not parse_result.success:
+        if llm is not None:
+            print("[LLM parser] retrying with OutputFixingParser")
+            cleaned, _had_fence = _strip_markdown_fence(str(raw_text or ""))
+            try:
+                from langchain.output_parsers import OutputFixingParser
+                from langchain_core.output_parsers import PydanticOutputParser
 
-    data: dict | None = None
-    try:
-        data = json.loads(cleaned)
-    except json.JSONDecodeError:
-        try:
-            data = _try_repair_json(cleaned)
-            print("[LLM parser] JSON bracket repair succeeded")
-        except json.JSONDecodeError:
-            if llm is not None:
-                print("[LLM parser] retrying with OutputFixingParser")
-                try:
-                    from langchain.output_parsers import OutputFixingParser
-                    from langchain_core.output_parsers import PydanticOutputParser
-
-                    base_parser = PydanticOutputParser(pydantic_object=LLMRoutineOutput)
-                    fixing_parser = OutputFixingParser.from_llm(parser=base_parser, llm=llm)
-                    return fixing_parser.parse(cleaned)
-                except Exception as fix_e:
-                    raise ValueError(f"OutputFixingParser failed: {fix_e}") from fix_e
-            raise
+                base_parser = PydanticOutputParser(pydantic_object=LLMRoutineOutput)
+                fixing_parser = OutputFixingParser.from_llm(parser=base_parser, llm=llm)
+                return fixing_parser.parse(cleaned)
+            except Exception as fix_e:
+                raise SchemaRepairError(
+                    "OutputFixingParser failed",
+                    parse_failure_subtype=parse_result.subtype,
+                    repair_failure_reason=parse_result.subtype,
+                    json_decode_error_category=parse_result.json_decode_error_category,
+                    json_decode_recovery_attempted=parse_result.json_decode_recovery_attempted,
+                    json_decode_recovery_succeeded=parse_result.json_decode_recovery_succeeded,
+                    json_decode_recovery_strategy=parse_result.json_decode_recovery_strategy,
+                ) from fix_e
+        raise SchemaRepairError(
+            "LLM output JSON parse failed",
+            parse_failure_subtype=parse_result.subtype,
+            repair_failure_reason=parse_result.subtype,
+            json_decode_error_category=parse_result.json_decode_error_category,
+            json_decode_recovery_attempted=parse_result.json_decode_recovery_attempted,
+            json_decode_recovery_succeeded=parse_result.json_decode_recovery_succeeded,
+            json_decode_recovery_strategy=parse_result.json_decode_recovery_strategy,
+        )
 
     # Inject defaults before Pydantic validation so loose local-model output can be salvaged.
-    data = _inject_defaults(data)
-    return LLMRoutineOutput(**data)
+    data = _inject_defaults(parse_result.data or {})
+    try:
+        return LLMRoutineOutput(**data)
+    except ValidationError as validation_error:
+        category, fields = classify_validation_error(validation_error)
+        raise SchemaRepairError(
+            "LLM output schema validation failed",
+            parse_failure_subtype="pydantic_validation_error",
+            schema_validation_error_category=category,
+            schema_validation_field_names=fields,
+            repair_failure_reason=category,
+        ) from validation_error
 
 
 def _candidate_to_plan(candidate: dict, template: LLMExercisePlan) -> LLMExercisePlan:
@@ -228,7 +675,7 @@ def validate_and_repair_routine_output(
             exercise = repaired.exercises[index]
             candidate = replacement
             guard_warning_messages.append(
-                f"Guard: '{original_id}' -> '{replacement['id']}' (constraint violation replaced)"
+                f"Guard: '{original_id}' -> '{replacement['id']}' 제약 위반으로 replaced 처리했습니다."
             )
 
         primary = str(candidate.get("primary_muscle") or "").strip()
@@ -287,7 +734,7 @@ def validate_and_repair_routine_output(
         repaired.warnings = [
             *repaired.warnings,
             (
-                "Guard diagnostics: "
+                "Guard 진단: "
                 f"repairCount={violations}, trimmedSetCount={trimmed_sets}, "
                 f"removedExerciseCount={removed_exercises}"
             ),

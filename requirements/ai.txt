@@ -11,12 +11,16 @@ langchain-chroma
 google-generativeai
 
 # Embeddings / Vector Store / RAG
-sentence-transformers
+numpy==1.26.4
+numba==0.60.0
+librosa==0.10.2.post1
+sentence-transformers==5.2.2
 faster-whisper
-chromadb
+chromadb==1.5.0
 kiwipiepy
 rank-bm25
 duckduckgo-search
+ddgs
 
 # Data utilities
 pandas

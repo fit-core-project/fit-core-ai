@@ -100,6 +100,7 @@ def test_prompt_v2_mentions_hard_constraints_and_ranked_candidates():
     assert "current_pain_areas: {current_pain_areas}" in prompt
     assert "candidate_count: {candidate_count}" in prompt
     assert "[HARD CONSTRAINTS]" in prompt
+    assert "[LANGUAGE POLICY]" in prompt
     assert "[READINESS POLICY]" in prompt
     assert "[TIME POLICY]" in prompt
     assert "[EQUIPMENT POLICY]" in prompt
@@ -112,6 +113,15 @@ def test_prompt_v2_mentions_hard_constraints_and_ranked_candidates():
     assert "[PROHIBITED BEHAVIOR]" in prompt
     assert "[RANKED CANDIDATES]" in prompt
     assert "at or below {max_sets}" in prompt
+
+
+def test_prompt_requires_korean_user_facing_text():
+    prompt = _build_system_prompt(profile=None, recent_sets=None)
+    language_policy = _section(prompt, "[LANGUAGE POLICY]")
+
+    assert "All user-facing natural language fields must be Korean." in language_policy
+    assert "summary_title, rationale_summary, exercise_rationale, and warnings must be Korean." in language_policy
+    assert "Do not output English explanations unless the field is an enum, id, equipment key, or muscle key." in language_policy
 
 
 def test_prompt_weight_policy_delegates_prescription_to_server():

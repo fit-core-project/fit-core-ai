@@ -20,8 +20,9 @@ complex or takes on a separate responsibility, consider splitting it into
 pipeline_llm.py.
 """
 import asyncio
+import os
 import time
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import httpx
 from langchain_core.exceptions import OutputParserException
@@ -39,8 +40,15 @@ from .fallback import (
     build_routine_draft,
     generate_fallback_routine,
 )
-from .llm_router import StatusReasonCode, classify_llm_error, get_llm, map_llm_error
-from .llm_parser import normalize_llm_response, trim_routine_to_time_budget
+from .llm_router import StatusReasonCode, classify_llm_error, get_llm, map_llm_error, resolve_llm_provider
+from .llm_parser import (
+    SchemaRepairError,
+    classify_validation_error,
+    normalize_llm_response,
+    extract_raw_llm_output_from_exception,
+    parse_json_candidate,
+    trim_routine_to_time_budget,
+)
 from .log_redaction import sanitize_exception_for_log, summarize_text_for_log
 from .muscle_mapping import get_mapped_targets, split_label_to_muscles
 from .prescription.adjustments import _calculate_max_total_sets, _target_exercise_count
@@ -50,6 +58,152 @@ from .prompt_builder import _format_request_pain_areas, build_system_prompt
 from .schemas import LLMRoutineOutput, RecentSetRecord, RoutineDraftResponse, RoutineRequest, UserProfileContext
 from .temperature_policy import resolve_generation_temperature
 from .routine_telemetry import classify_fallback_reason, observe_routine_quality
+
+
+_TRUE_VALUES = {"true", "1", "yes", "on"}
+
+
+def _local_raw_json_invoke_flag_enabled() -> bool:
+    return os.getenv("ENABLE_LOCAL_RAW_JSON_INVOKE", "").strip().lower() in _TRUE_VALUES
+
+
+def _should_use_local_raw_json_invoke() -> bool:
+    return (
+        _local_raw_json_invoke_flag_enabled()
+        and resolve_llm_provider().effective_provider == "local"
+    )
+
+
+def _extract_llm_message_content(message) -> str:
+    content, _shape = _extract_llm_message_content_with_shape(message)
+    return content
+
+
+def _content_length_bucket(value: str) -> str:
+    length = len(value or "")
+    if length == 0:
+        return "empty"
+    if length < 100:
+        return "short_lt_100"
+    if length < 1000:
+        return "medium_lt_1000"
+    return "long_gte_1000"
+
+
+def _safe_metadata_category(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    if len(text) <= 64 and all(char.isalnum() or char in "_.:-" for char in text):
+        return text
+    return "present"
+
+
+def _text_from_content_blocks(blocks: list[Any]) -> str:
+    parts: list[str] = []
+    for block in blocks:
+        if isinstance(block, str):
+            parts.append(block)
+        elif isinstance(block, dict):
+            text = block.get("text")
+            if isinstance(text, str):
+                parts.append(text)
+    return "".join(parts)
+
+
+def _extract_response_metadata(message) -> dict[str, Any]:
+    metadata = getattr(message, "response_metadata", None)
+    return metadata if isinstance(metadata, dict) else {}
+
+
+def _extract_llm_message_content_with_shape(message) -> tuple[str, dict[str, Any]]:
+    response_class = type(message).__name__
+    content_value = getattr(message, "content", None)
+    content_present = content_value is not None
+    content_type = type(content_value).__name__ if content_present else "missing"
+    text: Optional[str] = None
+
+    if isinstance(content_value, str):
+        text = content_value
+    elif isinstance(content_value, list):
+        text = _text_from_content_blocks(content_value)
+    else:
+        nested_message = getattr(message, "message", None)
+        nested_content = getattr(nested_message, "content", None) if nested_message is not None else None
+        if isinstance(nested_content, str):
+            text = nested_content
+            content_present = True
+            content_type = "message.content:str"
+        elif isinstance(nested_content, list):
+            text = _text_from_content_blocks(nested_content)
+            content_present = True
+            content_type = "message.content:list"
+        else:
+            text_method = getattr(message, "text", None)
+            if callable(text_method):
+                try:
+                    method_text = text_method()
+                    if isinstance(method_text, str):
+                        text = method_text
+                        content_present = True
+                        content_type = "text_method:str"
+                except Exception:
+                    text = None
+
+    if text is None:
+        text = ""
+
+    metadata = _extract_response_metadata(message)
+    usage_metadata = getattr(message, "usage_metadata", None)
+    shape = {
+        "raw_invoke_response_class": response_class,
+        "raw_invoke_content_present": content_present,
+        "raw_invoke_content_type": content_type,
+        "raw_invoke_content_length_bucket": _content_length_bucket(text),
+        "raw_invoke_content_stripped_empty": not bool(text.strip()),
+        "raw_invoke_has_response_metadata": bool(metadata),
+        "raw_invoke_finish_reason": _safe_metadata_category(
+            metadata.get("finish_reason") or metadata.get("done_reason")
+        ),
+        "raw_invoke_done_reason": _safe_metadata_category(
+            metadata.get("done_reason") or metadata.get("done")
+        ),
+        "raw_invoke_error_category": "present" if metadata.get("error") else None,
+        "raw_invoke_usage_present": usage_metadata is not None,
+    }
+    return text, shape
+
+
+def _invoke_local_raw_json_output_with_shape(prompt, llm, invoke_kwargs: dict) -> tuple[LLMRoutineOutput, dict[str, Any]]:
+    raw_resp = (prompt | llm).invoke(invoke_kwargs)
+    raw_text, shape = _extract_llm_message_content_with_shape(raw_resp)
+    return normalize_llm_response(raw_text), shape
+
+
+def _invoke_local_raw_json_output(prompt, llm, invoke_kwargs: dict) -> LLMRoutineOutput:
+    output, _shape = _invoke_local_raw_json_output_with_shape(prompt, llm, invoke_kwargs)
+    return output
+
+
+def _safe_positive_int_env(name: str) -> Optional[int]:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return None
+    try:
+        value = int(raw.strip())
+    except ValueError:
+        return None
+    return value if value > 0 else None
+
+
+def _rendered_prompt_char_count(prompt, invoke_kwargs: dict) -> int:
+    try:
+        messages = prompt.format_messages(**invoke_kwargs)
+    except Exception:
+        return 0
+    return sum(len(str(message)) for message in messages)
 
 
 def _fallback(
@@ -186,6 +340,7 @@ def _deterministic_or_fallback(
         target_muscles=db_target_muscles,
         doms_db=doms_db,
         time_available_min=req.time_available_min,
+        max_total_sets=max_total_sets,
     )
     _debug_print_llm_output(output_label, deterministic)
     if estimate_routine_time_min(deterministic.exercises) > req.time_available_min:
@@ -340,6 +495,10 @@ def generate_smart_routine(
         "candidate_count": len(ranked_candidates),
     }
     _debug_print_prompt(prompt, invoke_kwargs)
+    prompt_char_count = _rendered_prompt_char_count(prompt, invoke_kwargs)
+    prompt_approx_tokens = (prompt_char_count + 3) // 4 if prompt_char_count else 0
+    local_llm_num_predict = _safe_positive_int_env("LOCAL_LLM_NUM_PREDICT")
+    local_llm_num_ctx = _safe_positive_int_env("LOCAL_LLM_NUM_CTX")
 
     reason: StatusReasonCode = "networkError"
     generation_temp = resolve_generation_temperature(req.readiness_level)
@@ -348,6 +507,33 @@ def generate_smart_routine(
     llm_error_type: Optional[str] = None
     schema_repair_attempted = False
     schema_repair_succeeded = False
+    parse_failure_subtype: Optional[str] = None
+    schema_validation_error_category: Optional[str] = None
+    schema_validation_field_names: list[str] = []
+    repair_failure_reason: Optional[str] = None
+    raw_output_recovery_attempted = False
+    raw_output_recovery_succeeded = False
+    raw_output_recovery_source: Optional[str] = None
+    raw_output_recovery_failed_reason: Optional[str] = None
+    json_decode_error_category: Optional[str] = None
+    json_decode_recovery_attempted = False
+    json_decode_recovery_succeeded = False
+    json_decode_recovery_strategy: Optional[str] = None
+    local_raw_json_invoke_enabled = _local_raw_json_invoke_flag_enabled()
+    local_raw_json_invoke_used = False
+    local_raw_json_invoke_succeeded = False
+    local_raw_json_invoke_failed_reason: Optional[str] = None
+    structured_output_bypassed = False
+    raw_invoke_response_class: Optional[str] = None
+    raw_invoke_content_present = False
+    raw_invoke_content_type: Optional[str] = None
+    raw_invoke_content_length_bucket: Optional[str] = None
+    raw_invoke_content_stripped_empty = False
+    raw_invoke_has_response_metadata = False
+    raw_invoke_finish_reason: Optional[str] = None
+    raw_invoke_done_reason: Optional[str] = None
+    raw_invoke_error_category: Optional[str] = None
+    raw_invoke_usage_present = False
     validation_failed = False
     time_budget_exceeded = False
 
@@ -378,13 +564,44 @@ def generate_smart_routine(
             max_total_sets=max_total_sets,
             candidate_pool_size=candidate_pool_size,
             candidate_payload=candidate_payload,
+            prompt_char_count=prompt_char_count,
+            prompt_approx_tokens=prompt_approx_tokens,
             generation_temperature=generation_temp,
+            local_llm_num_predict=local_llm_num_predict,
+            local_llm_num_ctx=local_llm_num_ctx,
             generation_latency_ms=generation_latency_ms,
             schema_repair_latency_ms=schema_repair_latency_ms,
             fallback_reason=fallback_reason,
             llm_error_type=llm_error_type,
             schema_repair_attempted=schema_repair_attempted,
             schema_repair_succeeded=schema_repair_succeeded,
+            parse_failure_subtype=parse_failure_subtype,
+            schema_validation_error_category=schema_validation_error_category,
+            schema_validation_field_names=schema_validation_field_names,
+            repair_failure_reason=repair_failure_reason,
+            raw_output_recovery_attempted=raw_output_recovery_attempted,
+            raw_output_recovery_succeeded=raw_output_recovery_succeeded,
+            raw_output_recovery_source=raw_output_recovery_source,
+            raw_output_recovery_failed_reason=raw_output_recovery_failed_reason,
+            json_decode_error_category=json_decode_error_category,
+            json_decode_recovery_attempted=json_decode_recovery_attempted,
+            json_decode_recovery_succeeded=json_decode_recovery_succeeded,
+            json_decode_recovery_strategy=json_decode_recovery_strategy,
+            local_raw_json_invoke_enabled=local_raw_json_invoke_enabled,
+            local_raw_json_invoke_used=local_raw_json_invoke_used,
+            local_raw_json_invoke_succeeded=local_raw_json_invoke_succeeded,
+            local_raw_json_invoke_failed_reason=local_raw_json_invoke_failed_reason,
+            structured_output_bypassed=structured_output_bypassed,
+            raw_invoke_response_class=raw_invoke_response_class,
+            raw_invoke_content_present=raw_invoke_content_present,
+            raw_invoke_content_type=raw_invoke_content_type,
+            raw_invoke_content_length_bucket=raw_invoke_content_length_bucket,
+            raw_invoke_content_stripped_empty=raw_invoke_content_stripped_empty,
+            raw_invoke_has_response_metadata=raw_invoke_has_response_metadata,
+            raw_invoke_finish_reason=raw_invoke_finish_reason,
+            raw_invoke_done_reason=raw_invoke_done_reason,
+            raw_invoke_error_category=raw_invoke_error_category,
+            raw_invoke_usage_present=raw_invoke_usage_present,
             feedback_enabled=feedback_enabled,
             feedback_adjusted_candidate_count=feedback_adjusted_candidate_count,
             feedback_positive_count=feedback_positive_count,
@@ -397,9 +614,48 @@ def generate_smart_routine(
 
     try:
         llm = get_llm("routine", temperature=generation_temp)
+        use_local_raw_json_invoke = _should_use_local_raw_json_invoke()
         generation_started = time.perf_counter()
         try:
-            response: LLMRoutineOutput = (prompt | llm.with_structured_output(LLMRoutineOutput)).invoke(invoke_kwargs)
+            if use_local_raw_json_invoke:
+                local_raw_json_invoke_used = True
+                structured_output_bypassed = True
+                try:
+                    raw_resp = (prompt | llm).invoke(invoke_kwargs)
+                    raw_text, raw_shape = _extract_llm_message_content_with_shape(raw_resp)
+                    raw_invoke_response_class = raw_shape["raw_invoke_response_class"]
+                    raw_invoke_content_present = raw_shape["raw_invoke_content_present"]
+                    raw_invoke_content_type = raw_shape["raw_invoke_content_type"]
+                    raw_invoke_content_length_bucket = raw_shape["raw_invoke_content_length_bucket"]
+                    raw_invoke_content_stripped_empty = raw_shape["raw_invoke_content_stripped_empty"]
+                    raw_invoke_has_response_metadata = raw_shape["raw_invoke_has_response_metadata"]
+                    raw_invoke_finish_reason = raw_shape["raw_invoke_finish_reason"]
+                    raw_invoke_done_reason = raw_shape["raw_invoke_done_reason"]
+                    raw_invoke_error_category = raw_shape["raw_invoke_error_category"]
+                    raw_invoke_usage_present = raw_shape["raw_invoke_usage_present"]
+                    response = normalize_llm_response(raw_text)
+                    local_raw_json_invoke_succeeded = True
+                except SchemaRepairError as raw_e:
+                    local_raw_json_invoke_failed_reason = raw_e.repair_failure_reason or raw_e.parse_failure_subtype
+                    parse_failure_subtype = raw_e.parse_failure_subtype or parse_failure_subtype
+                    schema_validation_error_category = (
+                        raw_e.schema_validation_error_category or schema_validation_error_category
+                    )
+                    schema_validation_field_names = (
+                        raw_e.schema_validation_field_names or schema_validation_field_names
+                    )
+                    repair_failure_reason = raw_e.repair_failure_reason
+                    json_decode_error_category = raw_e.json_decode_error_category or json_decode_error_category
+                    json_decode_recovery_attempted = (
+                        raw_e.json_decode_recovery_attempted or json_decode_recovery_attempted
+                    )
+                    json_decode_recovery_succeeded = (
+                        raw_e.json_decode_recovery_succeeded or json_decode_recovery_succeeded
+                    )
+                    json_decode_recovery_strategy = raw_e.json_decode_recovery_strategy or json_decode_recovery_strategy
+                    raise OutputParserException("local raw JSON invoke failed") from raw_e
+            else:
+                response = (prompt | llm.with_structured_output(LLMRoutineOutput)).invoke(invoke_kwargs)
         finally:
             generation_latency_ms = round((time.perf_counter() - generation_started) * 1000)
         _debug_print_llm_output("LLM STRUCTURED OUTPUT", response)
@@ -424,14 +680,31 @@ def generate_smart_routine(
     except (OutputParserException, ValidationError) as e:
         llm_error_type = classify_llm_error(e)
         schema_repair_attempted = True
+        if isinstance(e, ValidationError):
+            schema_validation_error_category, schema_validation_field_names = classify_validation_error(e)
+            parse_failure_subtype = "pydantic_validation_error"
+        elif parse_failure_subtype is None:
+            original_raw_text, _original_source = extract_raw_llm_output_from_exception(e)
+            parse_failure_subtype = parse_json_candidate(original_raw_text or "").subtype
         print(f"[AI - SCHEMA 오류] 정제 어댑터로 복구 시도... ({type(e).__name__})")
         try:
             repair_llm = get_llm("routine", temperature=0)
-            raw_text: str | None = getattr(e, "llm_output", None)
-            if raw_text is None:
+            raw_output_recovery_attempted = True
+            raw_text, raw_output_recovery_source = extract_raw_llm_output_from_exception(e)
+            if raw_text:
+                raw_output_recovery_succeeded = True
+            else:
+                raw_output_recovery_failed_reason = "no_raw_content"
                 print("[정제 어댑터] raw 텍스트 없음 -> LLM 비구조화 재호출")
                 raw_resp = (prompt | repair_llm).invoke(invoke_kwargs)
                 raw_text = raw_resp.content if hasattr(raw_resp, "content") else str(raw_resp)
+                if raw_text and raw_text.strip():
+                    raw_output_recovery_succeeded = True
+                    raw_output_recovery_source = "raw_retry"
+                    raw_output_recovery_failed_reason = None
+                else:
+                    raw_output_recovery_source = "none"
+                    raw_output_recovery_failed_reason = "no_raw_content"
                 raw_summary = summarize_text_for_log(raw_text)
                 print(
                     "[정제 어댑터] raw LLM output 수신",
@@ -441,8 +714,14 @@ def generate_smart_routine(
                         "llm_output_approx_tokens": raw_summary["approx_tokens"],
                     },
                 )
+            raw_output_recovery_source = raw_output_recovery_source or "none"
             repair_started = time.perf_counter()
             try:
+                pre_parse_result = parse_json_candidate(raw_text or "")
+                json_decode_error_category = pre_parse_result.json_decode_error_category
+                json_decode_recovery_attempted = pre_parse_result.json_decode_recovery_attempted
+                json_decode_recovery_succeeded = pre_parse_result.json_decode_recovery_succeeded
+                json_decode_recovery_strategy = pre_parse_result.json_decode_recovery_strategy
                 normalized = normalize_llm_response(raw_text, llm=repair_llm)
             finally:
                 schema_repair_latency_ms = round((time.perf_counter() - repair_started) * 1000)
@@ -466,6 +745,23 @@ def generate_smart_routine(
             return _observe(draft)
         except Exception as norm_e:
             reason = map_llm_error(e)
+            if isinstance(norm_e, SchemaRepairError):
+                parse_failure_subtype = norm_e.parse_failure_subtype or parse_failure_subtype
+                schema_validation_error_category = (
+                    norm_e.schema_validation_error_category or schema_validation_error_category
+                )
+                schema_validation_field_names = norm_e.schema_validation_field_names or schema_validation_field_names
+                repair_failure_reason = norm_e.repair_failure_reason
+                json_decode_error_category = norm_e.json_decode_error_category or json_decode_error_category
+                json_decode_recovery_attempted = (
+                    norm_e.json_decode_recovery_attempted or json_decode_recovery_attempted
+                )
+                json_decode_recovery_succeeded = (
+                    norm_e.json_decode_recovery_succeeded or json_decode_recovery_succeeded
+                )
+                json_decode_recovery_strategy = norm_e.json_decode_recovery_strategy or json_decode_recovery_strategy
+            else:
+                repair_failure_reason = type(norm_e).__name__
             print("[정제 어댑터] 복구 실패:", sanitize_exception_for_log(norm_e), "-> fallback 루틴으로 전환")
     except Exception as e:
         llm_error_type = classify_llm_error(e)

@@ -214,6 +214,26 @@ SEEDED_SCENARIOS: list[dict[str, Any]] = [
     },
 ]
 
+
+def _parse_scenario_ids(value: str | None) -> list[str] | None:
+    if value is None:
+        return None
+    ids = [item.strip() for item in value.split(",") if item.strip()]
+    return ids or None
+
+
+def _select_scenarios(
+    scenarios: list[dict[str, Any]],
+    scenario_ids: list[str] | None,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    if not scenario_ids:
+        return scenarios, []
+    available = {scenario["id"]: scenario for scenario in scenarios}
+    missing = [scenario_id for scenario_id in scenario_ids if scenario_id not in available]
+    if missing:
+        raise SystemExit(f"unknown scenario id(s): {', '.join(missing)}")
+    return [available[scenario_id] for scenario_id in scenario_ids], scenario_ids
+
 SEED_ROWS: list[dict[str, Any]] = [
     {
         "routine_draft_id": "staging-seed-001",
@@ -684,14 +704,45 @@ def _telemetry_summary(event: dict[str, Any]) -> dict[str, Any]:
         "generation_latency_ms",
         "candidate_pool_size",
         "candidate_count",
+        "prompt_char_count",
+        "prompt_approx_tokens",
         "candidate_payload_char_count",
         "approx_candidate_payload_tokens",
+        "local_llm_num_predict",
+        "local_llm_num_ctx",
         "dynamic_temperature_enabled",
         "generation_temperature",
         "repair_count",
         "schema_repair_attempted",
         "schema_repair_succeeded",
         "schema_repair_latency_ms",
+        "parse_failure_subtype",
+        "schema_validation_error_category",
+        "schema_validation_field_names",
+        "repair_failure_reason",
+        "raw_output_recovery_attempted",
+        "raw_output_recovery_succeeded",
+        "raw_output_recovery_source",
+        "raw_output_recovery_failed_reason",
+        "json_decode_error_category",
+        "json_decode_recovery_attempted",
+        "json_decode_recovery_succeeded",
+        "json_decode_recovery_strategy",
+        "local_raw_json_invoke_enabled",
+        "local_raw_json_invoke_used",
+        "local_raw_json_invoke_succeeded",
+        "local_raw_json_invoke_failed_reason",
+        "structured_output_bypassed",
+        "raw_invoke_response_class",
+        "raw_invoke_content_present",
+        "raw_invoke_content_type",
+        "raw_invoke_content_length_bucket",
+        "raw_invoke_content_stripped_empty",
+        "raw_invoke_has_response_metadata",
+        "raw_invoke_finish_reason",
+        "raw_invoke_done_reason",
+        "raw_invoke_error_category",
+        "raw_invoke_usage_present",
         "exercise_count",
         "total_estimated_time",
         "target_duration_min",
@@ -806,6 +857,41 @@ def _hard_violation_category_counts(results: list[dict[str, Any]]) -> dict[str, 
     return dict(sorted(counts.items()))
 
 
+def _hard_violation_category_counts_by_scenario(results: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    counts_by_scenario: dict[str, Counter[str]] = {}
+    for result in results:
+        scenario_id = result.get("scenario_id")
+        telemetry = result.get("telemetry")
+        if not scenario_id or not isinstance(telemetry, dict):
+            continue
+        hard_count = int(telemetry.get("hard_violation_count") or 0)
+        if hard_count <= 0:
+            continue
+
+        scenario_counts = counts_by_scenario.setdefault(str(scenario_id), Counter())
+        before = sum(scenario_counts.values())
+        supplied_counts = telemetry.get("hard_violation_category_counts")
+        if isinstance(supplied_counts, dict):
+            for category, count in supplied_counts.items():
+                key = str(category) if str(category) in _ALLOWED_HARD_VIOLATION_CATEGORIES else "unknown"
+                scenario_counts[key] += int(count or 0)
+        else:
+            supplied_categories = telemetry.get("hard_violation_categories")
+            if isinstance(supplied_categories, list) and supplied_categories:
+                for category in supplied_categories:
+                    key = str(category) if str(category) in _ALLOWED_HARD_VIOLATION_CATEGORIES else "unknown"
+                    scenario_counts[key] += 1
+
+        added = sum(scenario_counts.values()) - before
+        if added < hard_count:
+            scenario_counts["unknown"] += hard_count - added
+
+    return {
+        scenario_id: dict(sorted(counts.items()))
+        for scenario_id, counts in sorted(counts_by_scenario.items())
+    }
+
+
 def _run_summary(results: list[dict[str, Any]], request_timeout: int) -> dict[str, Any]:
     latencies = _successful_generation_latencies(results)
     return {
@@ -819,6 +905,7 @@ def _run_summary(results: list[dict[str, Any]], request_timeout: int) -> dict[st
         "telemetry_missing_count": _telemetry_missing_count(results),
         "hard_violation_count_by_scenario": _hard_violation_count_by_scenario(results),
         "hard_violation_category_counts": _hard_violation_category_counts(results),
+        "hard_violation_category_counts_by_scenario": _hard_violation_category_counts_by_scenario(results),
         "hard_violation_scenarios": sorted(_hard_violation_count_by_scenario(results)),
     }
 
@@ -859,6 +946,10 @@ def cmd_verify_seed(args: argparse.Namespace) -> None:
 def cmd_run(args: argparse.Namespace) -> None:
     expected_enabled = args.group == "b"
     scenarios = [dict(item) for item in BASE_SCENARIOS + SEEDED_SCENARIOS]
+    scenarios, selected_scenario_ids = _select_scenarios(
+        scenarios,
+        _parse_scenario_ids(getattr(args, "scenario_ids", None)),
+    )
     for scenario in scenarios:
         if scenario["id"].endswith("_fb"):
             scenario["payload"] = dict(scenario["payload"], userId=args.user_id)
@@ -869,7 +960,7 @@ def cmd_run(args: argparse.Namespace) -> None:
     if not seed_readiness["seed_verification_passed"]:
         raise SystemExit(f"seed verification failed: {seed_readiness['seed_readiness_status']}")
 
-    probe = _run_one(args.base_url, scenarios[-2], args.request_timeout, args.group)
+    probe = _run_one(args.base_url, scenarios[0], args.request_timeout, args.group)
     telemetry = probe.get("telemetry") or {}
     if telemetry.get("feedback_enabled") is not expected_enabled:
         raise SystemExit(
@@ -894,6 +985,10 @@ def cmd_run(args: argparse.Namespace) -> None:
         "local_llm_model": os.getenv("LOCAL_LLM_MODEL"),
         "ollama_base_url": os.getenv("OLLAMA_BASE_URL"),
         "request_count": len(results),
+        "focused_run": bool(selected_scenario_ids),
+        "selected_scenario_ids": selected_scenario_ids,
+        "selected_scenario_count": len(selected_scenario_ids),
+        "purpose": "schema_failure_subtype_smoke" if selected_scenario_ids else None,
         "failed_requests": failed,
         "results": results,
         "privacy_leak_detected": _privacy_leak_detected(results),
@@ -939,6 +1034,14 @@ def _p95(events: list[dict[str, Any]], key: str) -> float:
         return 0.0
     index = min(len(values) - 1, math.ceil(0.95 * len(values)) - 1)
     return values[index]
+
+
+def _first_non_null(events: list[dict[str, Any]], key: str) -> Any:
+    for event in events:
+        value = event.get(key)
+        if value is not None:
+            return value
+    return None
 
 
 def _max(events: list[dict[str, Any]], key: str) -> float:
@@ -995,6 +1098,14 @@ def _is_local_gemma4_run(report: dict[str, Any]) -> bool:
     return "local" in provider_values and any("gemma4" in model for model in model_values)
 
 
+def _control_hard_violation_count(report: dict[str, Any]) -> int:
+    return int(report.get("control_hard_violation_count") or report.get("hard_violation_count_a") or 0)
+
+
+def _treatment_hard_violation_count(report: dict[str, Any]) -> int:
+    return int(report.get("treatment_hard_violation_count") or report.get("hard_violation_count_b") or 0)
+
+
 def _recommend(report: dict[str, Any]) -> str:
     if report.get("readiness_blocked"):
         return "inconclusive_readiness_failed"
@@ -1002,18 +1113,20 @@ def _recommend(report: dict[str, Any]) -> str:
         return "inconclusive_seed_not_ready"
     if report["privacy_leak_detected"]:
         return "keep_feedback_off"
-    if report["hard_violation_count_b"] > 0:
+    if _treatment_hard_violation_count(report) > 0:
         return "keep_feedback_off"
     if report["feedback_query_failed_rate_b"] > 0:
         return "keep_feedback_off"
+    total_timeouts = int(report.get("timeout_count_a") or 0) + int(report.get("timeout_count_b") or 0)
     if _is_local_gemma4_run(report):
-        total_timeouts = int(report.get("timeout_count_a") or 0) + int(report.get("timeout_count_b") or 0)
         total_requests = int(report.get("submitted_request_count_a") or 0) + int(report.get("submitted_request_count_b") or 0)
         timeout_rate = total_timeouts / max(total_requests, 1)
         if total_timeouts > 0 and timeout_rate > 0:
             return "inconclusive_local_timeout"
-        if int(report.get("hard_violation_count_a") or 0) > 0:
+        if _control_hard_violation_count(report) > 0:
             return "inconclusive_gemma4_baseline_unstable"
+    if _control_hard_violation_count(report) > 0:
+        return "inconclusive_control_hard_violations"
     if report["fallback_rate_b"] > report["fallback_rate_a"] + 0.05:
         return "keep_feedback_off"
     if report["p95_feedback_query_latency_ms_b"] > 100:
@@ -1087,6 +1200,14 @@ def cmd_compare(args: argparse.Namespace) -> None:
             "hard_violation_category_counts",
             _hard_violation_category_counts(raw_b.get("results", [])),
         ),
+        "hard_violation_category_counts_by_scenario_a": raw_a.get(
+            "hard_violation_category_counts_by_scenario",
+            _hard_violation_category_counts_by_scenario(raw_a.get("results", [])),
+        ),
+        "hard_violation_category_counts_by_scenario_b": raw_b.get(
+            "hard_violation_category_counts_by_scenario",
+            _hard_violation_category_counts_by_scenario(raw_b.get("results", [])),
+        ),
         "hard_violation_scenarios_a": raw_a.get(
             "hard_violation_scenarios",
             sorted(_hard_violation_count_by_scenario(raw_a.get("results", []))),
@@ -1107,6 +1228,42 @@ def cmd_compare(args: argparse.Namespace) -> None:
         "schema_repair_attempted_count_b": sum(1 for event in events_b if event.get("schema_repair_attempted") is True),
         "schema_repair_succeeded_count_a": sum(1 for event in events_a if event.get("schema_repair_succeeded") is True),
         "schema_repair_succeeded_count_b": sum(1 for event in events_b if event.get("schema_repair_succeeded") is True),
+        "local_raw_json_invoke_used_count_a": sum(1 for event in events_a if event.get("local_raw_json_invoke_used") is True),
+        "local_raw_json_invoke_used_count_b": sum(1 for event in events_b if event.get("local_raw_json_invoke_used") is True),
+        "local_raw_json_invoke_succeeded_count_a": sum(1 for event in events_a if event.get("local_raw_json_invoke_succeeded") is True),
+        "local_raw_json_invoke_succeeded_count_b": sum(1 for event in events_b if event.get("local_raw_json_invoke_succeeded") is True),
+        "local_raw_json_invoke_failed_reason_counts_a": _counter_for_events(
+            events_a, "local_raw_json_invoke_failed_reason"
+        ),
+        "local_raw_json_invoke_failed_reason_counts_b": _counter_for_events(
+            events_b, "local_raw_json_invoke_failed_reason"
+        ),
+        "structured_output_bypassed_count_a": sum(1 for event in events_a if event.get("structured_output_bypassed") is True),
+        "structured_output_bypassed_count_b": sum(1 for event in events_b if event.get("structured_output_bypassed") is True),
+        "prompt_char_count_avg_a": _avg(events_a, "prompt_char_count"),
+        "prompt_char_count_avg_b": _avg(events_b, "prompt_char_count"),
+        "prompt_char_count_p95_a": _p95(events_a, "prompt_char_count"),
+        "prompt_char_count_p95_b": _p95(events_b, "prompt_char_count"),
+        "prompt_approx_tokens_avg_a": _avg(events_a, "prompt_approx_tokens"),
+        "prompt_approx_tokens_avg_b": _avg(events_b, "prompt_approx_tokens"),
+        "prompt_approx_tokens_p95_a": _p95(events_a, "prompt_approx_tokens"),
+        "prompt_approx_tokens_p95_b": _p95(events_b, "prompt_approx_tokens"),
+        "local_llm_num_predict_a": _first_non_null(events_a, "local_llm_num_predict"),
+        "local_llm_num_predict_b": _first_non_null(events_b, "local_llm_num_predict"),
+        "local_llm_num_ctx_a": _first_non_null(events_a, "local_llm_num_ctx"),
+        "local_llm_num_ctx_b": _first_non_null(events_b, "local_llm_num_ctx"),
+        "raw_invoke_response_class_counts_a": _counter_for_events(events_a, "raw_invoke_response_class"),
+        "raw_invoke_response_class_counts_b": _counter_for_events(events_b, "raw_invoke_response_class"),
+        "raw_invoke_content_present_count_a": sum(1 for event in events_a if event.get("raw_invoke_content_present") is True),
+        "raw_invoke_content_present_count_b": sum(1 for event in events_b if event.get("raw_invoke_content_present") is True),
+        "raw_invoke_stripped_empty_count_a": sum(1 for event in events_a if event.get("raw_invoke_content_stripped_empty") is True),
+        "raw_invoke_stripped_empty_count_b": sum(1 for event in events_b if event.get("raw_invoke_content_stripped_empty") is True),
+        "raw_invoke_finish_reason_counts_a": _counter_for_events(events_a, "raw_invoke_finish_reason"),
+        "raw_invoke_finish_reason_counts_b": _counter_for_events(events_b, "raw_invoke_finish_reason"),
+        "raw_invoke_done_reason_counts_a": _counter_for_events(events_a, "raw_invoke_done_reason"),
+        "raw_invoke_done_reason_counts_b": _counter_for_events(events_b, "raw_invoke_done_reason"),
+        "raw_invoke_error_category_counts_a": _counter_for_events(events_a, "raw_invoke_error_category"),
+        "raw_invoke_error_category_counts_b": _counter_for_events(events_b, "raw_invoke_error_category"),
         "quota_fallback_rate_a": _quota_rate(events_a),
         "quota_fallback_rate_b": _quota_rate(events_b),
         "privacy_leak_detected": bool(raw_a.get("privacy_leak_detected")) or bool(raw_b.get("privacy_leak_detected")),
@@ -1133,6 +1290,10 @@ def cmd_compare(args: argparse.Namespace) -> None:
     report["hard_violation_category_counts"] = {
         "a": report["hard_violation_category_counts_a"],
         "b": report["hard_violation_category_counts_b"],
+    }
+    report["hard_violation_category_counts_by_scenario"] = {
+        "a": report["hard_violation_category_counts_by_scenario_a"],
+        "b": report["hard_violation_category_counts_by_scenario_b"],
     }
     report["recommendation"] = _recommend(report)
     output = Path(args.output)
@@ -1163,8 +1324,12 @@ def _markdown(report: dict[str, Any]) -> str:
             f"- avg critic score: A={report['avg_critic_score_a']}, B={report['avg_critic_score_b']}",
             f"- fallback rate: A={report['fallback_rate_a']}, B={report['fallback_rate_b']}",
             f"- hard violations: A={report['hard_violation_count_a']}, B={report['hard_violation_count_b']}",
+            f"- hard violation category counts A: `{report['hard_violation_category_counts_a']}`",
+            f"- hard violation category counts B: `{report['hard_violation_category_counts_b']}`",
             f"- hard violation scenarios A: `{report['hard_violation_scenarios_a']}`",
             f"- hard violation scenarios B: `{report['hard_violation_scenarios_b']}`",
+            f"- hard violation categories by scenario A: `{report['hard_violation_category_counts_by_scenario_a']}`",
+            f"- hard violation categories by scenario B: `{report['hard_violation_category_counts_by_scenario_b']}`",
             f"- quota fallback rate: A={report['quota_fallback_rate_a']}, B={report['quota_fallback_rate_b']}",
             f"- DB readiness: A={report['db_readiness_status_a']}, B={report['db_readiness_status_b']}",
             f"- seed readiness: A={report['seed_readiness_status_a']}, B={report['seed_readiness_status_b']}",
@@ -1205,6 +1370,7 @@ def main() -> None:
     run.add_argument("--repeats", type=int, default=3)
     run.add_argument("--user-id", default=DEFAULT_USER_ID)
     run.add_argument("--request-timeout", type=int, default=DEFAULT_TIMEOUT)
+    run.add_argument("--scenario-ids", help="Comma-separated scenario ids for a focused smoke run.")
     run.set_defaults(func=cmd_run)
 
     compare = subparsers.add_parser("compare")

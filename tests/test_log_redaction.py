@@ -200,10 +200,11 @@ def test_main_supplement_exception_logging_redacts_message(monkeypatch, capsys):
 
     monkeypatch.setattr(main, "supplement_rag", FailingSupplementRag())
 
-    with pytest.raises(HTTPException):
-        main.api_supplement_chat(
-            main.SupplementChatRequest(question="secret supplement question")
-        )
+    result = main.api_supplement_chat(
+        main.SupplementChatRequest(question="secret supplement question")
+    )
+
+    assert result["mode"] == "degraded"
 
     captured = capsys.readouterr().out
     assert "secret supplement question" not in captured

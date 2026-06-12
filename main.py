@@ -1,87 +1,88 @@
-import uvicorn
-import json
 import io
-import tempfile
+import importlib.util
+import json
 import os
+import shutil
+import tempfile
 from contextlib import asynccontextmanager, redirect_stderr
 
+import uvicorn
 from dotenv import load_dotenv
-
-load_dotenv()
-
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Depends
-from sqlalchemy.orm import Session
-from database import get_db
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
-from dev_logs import dev_log_buffer, install_stdout_capture
 
-from models.routine_feedback import RoutineFeedback
+from database import get_db
+from dev_logs import dev_log_buffer, install_stdout_capture
 from engines.db_queries import get_recent_sets, get_user_profile_context
 from engines.log_redaction import sanitize_exception_for_log, summarize_text_for_log
+from engines.llm_router import resolve_llm_provider
+from engines.quicklog.nlp_engine import parse_natural_language_log
 from engines.routine_pipeline import generate_smart_routine
 from engines.schemas import RoutineDraftResponse, RoutineFeedbackRequest, RoutineFeedbackResponse, RoutineRequest
-from engines.nlp_engine import parse_natural_language_log
+from engines.supplement.supplement_engine import SupplementRAGEngine
+from models.routine_feedback import RoutineFeedback
 
+load_dotenv()
 install_stdout_capture()
 
-# ==========================================================
-# 🚀 전역 변수 설정 (함수 밖에서는 'None'으로 이름만 선언)
-# ==========================================================
 whisper_model = None
 supplement_rag = None
 
+
+def get_supplement_engine() -> SupplementRAGEngine:
+    global supplement_rag
+    if supplement_rag is None:
+        supplement_rag = SupplementRAGEngine(db_path=os.environ.get("SUPPLEMENT_RAG_DB_PATH", "./data/chroma_db"))
+    return supplement_rag
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    서버의 시작과 종료 시 딱 1번만 실행되는 수명 주기 관리 함수
-    """
     global whisper_model, supplement_rag
 
-    print("\n" + "="*40)
-    print("🚀 [서버 시작] AI 모델 로딩을 시작합니다 (딱 1회만 로드됨)")
+    print("\n" + "=" * 40)
+    print("[server startup] loading optional AI engines")
 
-    # 1. Whisper 모델 로드 (WHISPER_PRELOAD=true 일 때만 시작 시 로드, 기본 false)
     if whisper_model is None and os.environ.get("WHISPER_PRELOAD", "false").strip().lower() == "true":
-        print("🤖 1. Whisper AI(STT) 모델 로딩 중...")
+        print("[STT] loading Whisper model")
         from faster_whisper import WhisperModel
-        whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
-        print("✅ Whisper 모델 로딩 완료!")
-    elif os.environ.get("WHISPER_PRELOAD", "false").strip().lower() != "true":
-        print("⏭️ 1. Whisper 모델 시작 로드 스킵 (WHISPER_PRELOAD=false)")
 
-    # 2. 영양제 RAG 엔진 로드
+        whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
+        print("[STT] Whisper model loaded")
+    elif os.environ.get("WHISPER_PRELOAD", "false").strip().lower() != "true":
+        print("[STT] startup preload skipped")
+
     if supplement_rag is None:
-        print("💊 2. 영양제 RAG 엔진 로딩 중...")
+        print("[Supplement RAG] startup load")
         try:
             with redirect_stderr(io.StringIO()):
-                from engines.supplement_engine import SupplementRAGEngine
+                supplement_rag = SupplementRAGEngine(db_path=os.environ.get("SUPPLEMENT_RAG_DB_PATH", "./data/chroma_db"))
+            if getattr(supplement_rag, "ready", False):
+                print("[Supplement RAG] full mode ready")
+            else:
+                print("[Supplement RAG] degraded mode", getattr(supplement_rag, "degraded_reason", "unavailable"))
+        except Exception as exc:
+            print("[Supplement RAG] startup fallback", sanitize_exception_for_log(exc))
+            supplement_rag = SupplementRAGEngine(db_path=os.environ.get("SUPPLEMENT_RAG_DB_PATH", "./data/chroma_db"))
 
-            # 💡 Tip: DB 경로가 'latest_index'를 포함하고 있는지 확인하세요.
-                supplement_rag = SupplementRAGEngine(db_path="./data/chroma_db")
-            print("✅ 영양제 RAG 엔진 로딩 완료!")
-        except Exception as e:
-            print("⚠️ RAG 엔진 로드 실패:", sanitize_exception_for_log(e))
-            supplement_rag = None
+    print("[server startup] ready")
+    print("=" * 40 + "\n")
 
-    print("✅ 모든 모델 로드 완료! 서버가 준비되었습니다.")
-    print("="*40 + "\n")
+    yield
 
-    yield  # 서버 가동 시작
-
-    # 서버 종료 시 정리
     whisper_model = None
     supplement_rag = None
-    print("\n👋 [서버 종료] AI 모델 메모리가 정리되었습니다.")
+    print("\n[server shutdown] optional AI engines cleared")
 
-# FastAPI 앱 객체 생성 및 lifespan 연결
+
 app = FastAPI(title="Fit-Core AI Server", lifespan=lifespan)
 
-# --- CORS 설정 (AI_CORS_ALLOWED_ORIGINS env, 기본값: localhost:3000,3001) ---
 _default_origins = "http://localhost:3000,http://localhost:3001"
-_cors_origins = [o.strip() for o in os.environ.get("AI_CORS_ALLOWED_ORIGINS", _default_origins).split(",") if o.strip()]
+_cors_origins = [origin.strip() for origin in os.environ.get("AI_CORS_ALLOWED_ORIGINS", _default_origins).split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
@@ -97,9 +98,27 @@ def api_dev_logs(limit: int = 120):
         raise HTTPException(status_code=404, detail="Not found")
     return dev_log_buffer.tail(limit)
 
-# ==========================================================
-# 🚨 [에러 핸들러] 422 검증 에러 발생 시 상세 로깅
-# ==========================================================
+
+@app.get("/api/health")
+@app.get("/api/ai/health")
+@app.get("/health")
+def api_health():
+    rag_ready = bool(getattr(supplement_rag, "ready", False)) if supplement_rag is not None else False
+    provider_config = resolve_llm_provider()
+    return {
+        "ai": "up",
+        "appEnv": os.environ.get("APP_ENV", "local"),
+        "llmProvider": provider_config.requested_provider,
+        "llmProviderConfigured": provider_config.requested_provider,
+        "llmProviderEffective": provider_config.effective_provider,
+        "allowLocalLlmInProduction": provider_config.local_allowed_in_production,
+        "localLlmModel": provider_config.model_name,
+        "ollamaBaseUrlConfigured": bool(os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")),
+        "supplementRag": "ready" if rag_ready else "degraded_or_not_loaded",
+        "whisperPreload": os.environ.get("WHISPER_PRELOAD", "false").strip().lower() == "true",
+    }
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     def sanitize_error(error: dict) -> dict:
@@ -117,34 +136,24 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         if any(part in sensitive_fields for part in loc):
             sanitized["input"] = "[REDACTED]"
         if "ctx" in sanitized:
-            sanitized["ctx"] = {
-                key: str(value)
-                for key, value in sanitized["ctx"].items()
-            }
+            sanitized["ctx"] = {key: str(value) for key, value in sanitized["ctx"].items()}
         return sanitized
 
     sanitized_errors = [sanitize_error(error) for error in exc.errors()]
-    print("\n" + "="*50)
-    print("🚨 [데이터 검증 에러 (422)] 프론트엔드 데이터 입구컷 발생!")
-    print(f"상세 원인: {sanitized_errors}")
-    print("="*50 + "\n")
+    print("[validation error]", sanitized_errors)
     return JSONResponse(status_code=422, content={"detail": sanitized_errors})
 
 
-# ==========================================================
-# 🚀 API 1: 맞춤형 AI 루틴 생성기
-# ==========================================================
 @app.post("/api/ai/generate-routine", response_model=RoutineDraftResponse, response_model_by_alias=True)
 def api_generate_routine(req: RoutineRequest, db: Session = Depends(get_db)):
     try:
-        print("\n✅ [루틴 생성 요청 수신]")
+        print("[routine generation request]")
         profile = get_user_profile_context(db, req.user_id)
         recent_sets = get_recent_sets(db, req.user_id)
         return generate_smart_routine(req, db, profile=profile, recent_sets=recent_sets)
-
-    except Exception as e:
-        print("[Routine Error]", sanitize_exception_for_log(e))
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as exc:
+        print("[Routine Error]", sanitize_exception_for_log(exc))
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @app.post(
@@ -181,90 +190,76 @@ def api_routine_feedback(req: RoutineFeedbackRequest, db: Session = Depends(get_
     )
 
 
-# ==========================================================
-# 🚀 API 2: 자연어 퀵 로그 분석 (텍스트 -> 식단/운동 추출)
-# ==========================================================
 class LogRequest(BaseModel):
     text: str
+
 
 @app.post("/api/ai/parse-log")
 def api_parse_log(req: LogRequest):
     try:
-        print("\n✅ [NLP 파싱 요청 수신] 텍스트:", summarize_text_for_log(req.text))
+        print("[quicklog parse request]", summarize_text_for_log(req.text))
         result_json_str = parse_natural_language_log(req.text)
         return json.loads(result_json_str)
+    except Exception as exc:
+        print("[NLP Error]", sanitize_exception_for_log(exc))
+        fallback = parse_natural_language_log("")
+        return json.loads(fallback)
 
-    except Exception as e:
-        print("[NLP Error]", sanitize_exception_for_log(e))
-        raise HTTPException(status_code=500, detail=str(e))
 
-
-# ==========================================================
-# 🎙️ API 3: 오디오 파일 STT 변환 (음성 -> 텍스트)
-# ==========================================================
 @app.post("/api/ai/stt")
 async def api_speech_to_text(audio_file: UploadFile = File(...)):
     temp_file_path = ""
     try:
-        print(f"\n🎙️ [음성 인식 요청 수신] 파일명: {audio_file.filename}")
+        print("[STT request]", summarize_text_for_log(audio_file.filename or ""))
+        if importlib.util.find_spec("faster_whisper") is None or shutil.which("ffmpeg") is None:
+            return {
+                "text": "",
+                "status": "unavailable",
+                "message": "음성 인식 기능은 현재 데모 환경에서 비활성화되어 있습니다. 텍스트 입력을 사용해 주세요.",
+            }
+
         audio_bytes = await audio_file.read()
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
             temp_file.write(audio_bytes)
             temp_file_path = temp_file.name
 
-        # whisper_model이 None이면 요청 시점에 lazy 로드
         global whisper_model
         if whisper_model is None:
-            print("🤖 [STT] Whisper 모델 lazy 로딩 중...")
+            print("[STT] lazy loading Whisper model")
             from faster_whisper import WhisperModel
+
             whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
-            print("✅ [STT] Whisper 모델 로딩 완료!")
-        segments, info = whisper_model.transcribe(
-            temp_file_path,
-            beam_size=5,
-            language="ko"
-        )
-
+            print("[STT] Whisper model loaded")
+        segments, info = whisper_model.transcribe(temp_file_path, beam_size=5, language="ko")
         transcript = " ".join([segment.text for segment in segments])
-        print("🗣️ [Whisper 인식 결과]:", summarize_text_for_log(transcript))
-
-        return {"text": transcript}
-
-    except Exception as e:
-        print("[STT Error]", sanitize_exception_for_log(e))
-        raise HTTPException(status_code=500, detail="음성 인식 실패")
-
+        print("[STT result]", summarize_text_for_log(transcript))
+        return {"text": transcript, "status": "success"}
+    except Exception as exc:
+        print("[STT Error]", sanitize_exception_for_log(exc))
+        return {
+            "text": "",
+            "status": "unavailable",
+            "message": "음성 인식 기능은 현재 데모 환경에서 사용할 수 없습니다. 텍스트 입력을 사용해 주세요.",
+        }
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
 
 
-# ==========================================================
-# 💊 API 4: 영양제 및 약물 전문 AI 챗봇
-# ==========================================================
 class SupplementChatRequest(BaseModel):
     question: str
 
+
 @app.post("/api/ai/supplement-chat")
 def api_supplement_chat(req: SupplementChatRequest):
-    # lifespan에서 로드된 supplement_rag 사용
-    if not supplement_rag:
-        raise HTTPException(
-            status_code=503,
-            detail="영양제 챗봇 엔진이 준비되지 않았습니다. DB 경로를 확인하세요."
-        )
-
     try:
-        print("\n💬 [영양제 질문 수신]:", summarize_text_for_log(req.question))
-        result = supplement_rag.answer_question(req.question)
-        return result
-
-    except Exception as e:
-        print("❌ [챗봇 에러]:", sanitize_exception_for_log(e))
-        raise HTTPException(status_code=500, detail="답변 생성 중 오류가 발생했습니다.")
+        print("[supplement question]", summarize_text_for_log(req.question))
+        return get_supplement_engine().answer_question(req.question)
+    except Exception as exc:
+        print("[Supplement Error]", sanitize_exception_for_log(exc))
+        return SupplementRAGEngine.degraded("endpoint_runtime_error").answer_question(req.question)
 
 
 if __name__ == "__main__":
-    # 문자열 형태로 전달해야 리로더가 정상적으로 작동하며 중복 로드를 피하기 쉬움
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

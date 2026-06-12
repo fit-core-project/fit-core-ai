@@ -4,6 +4,7 @@ import asyncio
 import os
 import json
 import re
+from dataclasses import dataclass
 from typing import Literal
 
 import httpx
@@ -18,6 +19,17 @@ StatusReasonCode = Literal["none", "llmTimeout", "schemaError", "networkError", 
 
 
 _MARKDOWN_FENCE_RE = re.compile(r"```(?:json)?\s*|\s*```")
+_TRUE_VALUES = {"true", "1", "yes", "on"}
+
+
+@dataclass(frozen=True)
+class LlmProviderConfig:
+    requested_provider: str
+    effective_provider: str
+    local_allowed_in_production: bool
+    model_name: str
+    is_production: bool
+    blocked_reason: str | None = None
 
 
 def _parse_json_content(content: str) -> dict:
@@ -30,6 +42,64 @@ def _parse_json_content(content: str) -> dict:
         if first != -1 and last != -1 and first < last:
             return json.loads(cleaned[first : last + 1])
         raise
+
+
+def _env_flag_enabled(value: str | None) -> bool:
+    return str(value or "").strip().lower() in _TRUE_VALUES
+
+
+def _sanitize_model_name(value: str | None, default: str = "gemma4") -> str:
+    raw = str(value or "").strip() or default
+    sanitized = re.sub(r"[^A-Za-z0-9._:-]", "", raw)
+    return sanitized or default
+
+
+def _parse_positive_int_env(name: str) -> int | None:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return None
+    try:
+        value = int(raw.strip())
+    except ValueError:
+        return None
+    return value if value > 0 else None
+
+
+def _local_ollama_options_from_env() -> dict[str, int]:
+    options: dict[str, int] = {}
+    num_predict = _parse_positive_int_env("LOCAL_LLM_NUM_PREDICT")
+    num_ctx = _parse_positive_int_env("LOCAL_LLM_NUM_CTX")
+    if num_predict is not None:
+        options["num_predict"] = num_predict
+    if num_ctx is not None:
+        options["num_ctx"] = num_ctx
+    return options
+
+
+def resolve_llm_provider() -> LlmProviderConfig:
+    requested_provider = os.getenv("LLM_PROVIDER", "gemini").strip().lower() or "gemini"
+    app_env = os.getenv("APP_ENV", "").strip().lower()
+    is_production = app_env == "production"
+    local_allowed = _env_flag_enabled(os.getenv("ALLOW_LOCAL_LLM_IN_PRODUCTION"))
+    model_name = _sanitize_model_name(os.getenv("LOCAL_LLM_MODEL"), "gemma4")
+
+    if is_production and requested_provider == "local" and not local_allowed:
+        return LlmProviderConfig(
+            requested_provider=requested_provider,
+            effective_provider="gemini",
+            local_allowed_in_production=False,
+            model_name=model_name,
+            is_production=True,
+            blocked_reason="production_local_not_allowed",
+        )
+
+    return LlmProviderConfig(
+        requested_provider=requested_provider,
+        effective_provider=requested_provider,
+        local_allowed_in_production=local_allowed,
+        model_name=model_name,
+        is_production=is_production,
+    )
 
 
 class LocalJsonChatModel(Runnable):
@@ -77,19 +147,25 @@ def get_llm(engine_type: str, temperature: float = 0):
 
     LLM_PROVIDER=local switches generation to Ollama. Local mode always uses
     Ollama JSON mode because routine generation depends on strict JSON output.
-    In production (APP_ENV=production), local is always overridden to gemini.
+    In production, local is overridden to gemini unless
+    ALLOW_LOCAL_LLM_IN_PRODUCTION is explicitly enabled.
     """
-    provider = os.getenv("LLM_PROVIDER", "gemini").strip().lower()
+    config = resolve_llm_provider()
+    provider = config.effective_provider
 
     app_env = os.getenv("APP_ENV", "").strip().lower()
-    if app_env == "production" and provider == "local":
-        print("[LLM Router] WARNING: APP_ENV=production — LLM_PROVIDER=local overridden to gemini")
-        provider = "gemini"
+    if config.blocked_reason == "production_local_not_allowed":
+        print(
+            "[LLM Router] WARNING: local provider blocked in production; "
+            "set ALLOW_LOCAL_LLM_IN_PRODUCTION=true to enable"
+        )
+    elif app_env == "production" and config.requested_provider == "local" and config.local_allowed_in_production:
+        print("[LLM Router] production local provider enabled via explicit opt-in")
 
     if provider == "local":
         from langchain_ollama import ChatOllama
 
-        model_name = os.getenv("LOCAL_LLM_MODEL", "gemma4").strip() or "gemma4"
+        model_name = config.model_name
         base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip() or "http://localhost:11434"
         print(f"[LLM Router] local -> ChatOllama(model={model_name}, format=json, engine={engine_type})")
         llm = ChatOllama(
@@ -97,6 +173,7 @@ def get_llm(engine_type: str, temperature: float = 0):
             base_url=base_url,
             temperature=temperature,
             format="json",
+            **_local_ollama_options_from_env(),
         )
         return LocalJsonChatModel(llm)
 

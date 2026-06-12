@@ -4,7 +4,12 @@ from typing import Dict, List, Optional
 from ..schemas import LLMRoutineOutput, RecentSetRecord, UserProfileContext
 from .params import _prescription_params_for_exercise
 from .weight import _resolve_target_weight
-from .adjustments import _apply_readiness_to_exercise, _apply_large_muscle_volume_guard, _fill_available_time
+from .adjustments import (
+    _apply_readiness_to_exercise,
+    _apply_large_muscle_volume_guard,
+    _fill_available_time,
+    enforce_total_set_cap,
+)
 
 
 def apply_deterministic_targets(
@@ -17,6 +22,7 @@ def apply_deterministic_targets(
     target_muscles: Optional[List[str]] = None,
     doms_db: Optional[Dict[str, int]] = None,
     time_available_min: Optional[int] = None,
+    max_total_sets: Optional[int] = None,
 ) -> LLMRoutineOutput:
     """
     LLM의 kg/reps는 hint로만 두고 최종 값은 서버가 확정한다.
@@ -41,5 +47,8 @@ def apply_deterministic_targets(
             target_split_label,
             doms_db=doms_db,
         )
+
+    if max_total_sets is not None:
+        enforce_total_set_cap(adjusted, max_total_sets, target_muscles)
 
     return adjusted

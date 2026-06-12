@@ -121,3 +121,50 @@ def _fill_available_time(
             changed = True
             if current >= target_min:
                 break
+
+
+def enforce_total_set_cap(
+    output: LLMRoutineOutput,
+    max_total_sets: int,
+    target_muscles: Optional[List[str]] = None,
+) -> bool:
+    """Trim deterministic prescriptions so final working sets never exceed the cap."""
+    if max_total_sets < 1:
+        max_total_sets = 1
+
+    total_sets = sum(max(0, exercise.sets) for exercise in output.exercises)
+    if total_sets <= max_total_sets:
+        return False
+
+    target_set = set(target_muscles or [])
+
+    def priority(index: int, exercise: LLMExercisePlan) -> tuple[int, int, int]:
+        movement_bonus = 1 if _movement_type_key(exercise.movement_type) == "COMPOUND" else 0
+        primary = exercise.primary_muscles[0] if exercise.primary_muscles else ""
+        target_bonus = 1 if primary in target_set else 0
+        return (movement_bonus + target_bonus, movement_bonus, -index)
+
+    trim_order = sorted(
+        enumerate(output.exercises),
+        key=lambda item: priority(item[0], item[1]),
+    )
+    overflow = total_sets - max_total_sets
+
+    for _, exercise in trim_order:
+        if overflow <= 0:
+            break
+        reducible = max(0, exercise.sets - 1)
+        reduction = min(reducible, overflow)
+        exercise.sets -= reduction
+        overflow -= reduction
+
+    while overflow > 0 and len(output.exercises) > 1:
+        removable_index, removable = min(
+            enumerate(output.exercises),
+            key=lambda item: priority(item[0], item[1]),
+        )
+        overflow -= max(1, removable.sets)
+        output.exercises.pop(removable_index)
+
+    output.warnings = [*output.warnings, "set cap enforced"]
+    return True

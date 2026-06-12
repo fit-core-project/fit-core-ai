@@ -29,6 +29,7 @@ from .log_redaction import (
 )
 from .muscle_mapping import get_mapped_targets, split_label_to_muscles
 from .llm_parser import trim_routine_to_time_budget
+from .korean_text_guard import enforce_korean_user_text_on_output, enforce_korean_user_text_on_response
 
 # ==========================================
 # 9. Fallback 루틴 (규칙 기반)  →  fallback.py 로 이동됨
@@ -119,6 +120,7 @@ def build_routine_draft(
     is_fallback: bool,
 ) -> RoutineDraftResponse:
     blocks = []
+    llm_output = enforce_korean_user_text_on_output(llm_output)
     ordered_exercises = _order_exercises_for_training(llm_output.exercises)
     for order, ex in enumerate(ordered_exercises, start=1):
         blocks.append(RoutineBlock(
@@ -147,7 +149,7 @@ def build_routine_draft(
             ],
         ))
 
-    return RoutineDraftResponse(
+    return enforce_korean_user_text_on_response(RoutineDraftResponse(
         generation_status=generation_status,
         status_reason_code=status_reason_code,
         is_fallback=is_fallback,
@@ -156,7 +158,7 @@ def build_routine_draft(
         rationale_summary=llm_output.rationale_summary,
         routine_blocks=blocks,
         warnings=llm_output.warnings,
-    )
+    ))
 
 
 def _debug_print_prompt(prompt: ChatPromptTemplate, invoke_kwargs: Dict[str, Any]) -> None:
@@ -240,7 +242,7 @@ def generate_fallback_routine(
     print("[Fallback] 규칙 기반 루틴 생성 시작")
 
     if not candidates:
-        return RoutineDraftResponse(
+        return enforce_korean_user_text_on_response(RoutineDraftResponse(
             generation_status="failed",
             status_reason_code="emptyCandidate",
             is_fallback=False,
@@ -249,7 +251,7 @@ def generate_fallback_routine(
             rationale_summary=["선택한 조건에 맞는 운동이 없습니다."],
             routine_blocks=[],
             warnings=["타겟 근육 또는 장비 조건을 변경해 주세요."],
-        )
+        ))
 
     params = _GOAL_PARAMS.get(goal.lower(), _GOAL_PARAMS["hypertrophy"])
     doms = doms_db or {}
@@ -342,7 +344,7 @@ def generate_fallback_routine(
             break
 
     if not blocks:
-        return RoutineDraftResponse(
+        return enforce_korean_user_text_on_response(RoutineDraftResponse(
             generation_status="failed",
             status_reason_code="emptyCandidate",
             is_fallback=False,
@@ -351,9 +353,9 @@ def generate_fallback_routine(
             rationale_summary=["모든 후보 운동이 DOMS 제약으로 제외되었습니다."],
             routine_blocks=[],
             warnings=["컨디션이 회복된 후 다시 시도해 주세요."],
-        )
+        ))
 
-    return RoutineDraftResponse(
+    return enforce_korean_user_text_on_response(RoutineDraftResponse(
         generation_status="fallback",
         status_reason_code=status_reason_code,
         is_fallback=True,
@@ -362,4 +364,4 @@ def generate_fallback_routine(
         rationale_summary=["AI 코치 연결이 원활하지 않아 기본 루틴으로 대체되었습니다."],
         routine_blocks=blocks,
         warnings=["중량은 본인의 컨디션에 맞게 조절하세요."],
-    )
+    ))

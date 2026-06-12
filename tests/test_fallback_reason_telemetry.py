@@ -164,7 +164,11 @@ def test_payload_contains_new_fallback_fields():
         candidate_pool_size=12,
         ranked_candidates=[_candidate()],
         candidate_payload="x",
+        prompt_char_count=1234,
+        prompt_approx_tokens=309,
         generation_temperature=0.0,
+        local_llm_num_predict=4096,
+        local_llm_num_ctx=8192,
         critic_result=_Critic(),
         repair_count=0,
         fallback_used=True,
@@ -173,11 +177,69 @@ def test_payload_contains_new_fallback_fields():
         llm_error_type="quota_exhausted",
         schema_repair_attempted=True,
         schema_repair_succeeded=False,
+        parse_failure_subtype="json_decode_error",
+        schema_validation_error_category="missing_required_field",
+        schema_validation_field_names=["target_reps"],
+        repair_failure_reason="json_decode_error",
+        raw_output_recovery_attempted=True,
+        raw_output_recovery_succeeded=False,
+        raw_output_recovery_source="none",
+        raw_output_recovery_failed_reason="no_raw_content",
+        json_decode_error_category="json_decode_trailing_comma",
+        json_decode_recovery_attempted=True,
+        json_decode_recovery_succeeded=True,
+        json_decode_recovery_strategy="trailing_comma_removed",
+        local_raw_json_invoke_enabled=True,
+        local_raw_json_invoke_used=True,
+        local_raw_json_invoke_succeeded=False,
+        local_raw_json_invoke_failed_reason="json_decode_error",
+        structured_output_bypassed=True,
+        raw_invoke_response_class="AIMessage",
+        raw_invoke_content_present=True,
+        raw_invoke_content_type="str",
+        raw_invoke_content_length_bucket="short_lt_100",
+        raw_invoke_content_stripped_empty=False,
+        raw_invoke_has_response_metadata=True,
+        raw_invoke_finish_reason="stop",
+        raw_invoke_done_reason="stop",
+        raw_invoke_error_category=None,
+        raw_invoke_usage_present=True,
     )
     assert payload["fallback_reason"] == "quota_exhausted"
+    assert payload["prompt_char_count"] == 1234
+    assert payload["prompt_approx_tokens"] == 309
+    assert payload["local_llm_num_predict"] == 4096
+    assert payload["local_llm_num_ctx"] == 8192
     assert payload["llm_error_type"] == "quota_exhausted"
     assert payload["schema_repair_attempted"] is True
     assert payload["schema_repair_succeeded"] is False
+    assert payload["parse_failure_subtype"] == "json_decode_error"
+    assert payload["schema_validation_error_category"] == "missing_required_field"
+    assert payload["schema_validation_field_names"] == ["target_reps"]
+    assert payload["repair_failure_reason"] == "json_decode_error"
+    assert payload["raw_output_recovery_attempted"] is True
+    assert payload["raw_output_recovery_succeeded"] is False
+    assert payload["raw_output_recovery_source"] == "none"
+    assert payload["raw_output_recovery_failed_reason"] == "no_raw_content"
+    assert payload["json_decode_error_category"] == "json_decode_trailing_comma"
+    assert payload["json_decode_recovery_attempted"] is True
+    assert payload["json_decode_recovery_succeeded"] is True
+    assert payload["json_decode_recovery_strategy"] == "trailing_comma_removed"
+    assert payload["local_raw_json_invoke_enabled"] is True
+    assert payload["local_raw_json_invoke_used"] is True
+    assert payload["local_raw_json_invoke_succeeded"] is False
+    assert payload["local_raw_json_invoke_failed_reason"] == "json_decode_error"
+    assert payload["structured_output_bypassed"] is True
+    assert payload["raw_invoke_response_class"] == "AIMessage"
+    assert payload["raw_invoke_content_present"] is True
+    assert payload["raw_invoke_content_type"] == "str"
+    assert payload["raw_invoke_content_length_bucket"] == "short_lt_100"
+    assert payload["raw_invoke_content_stripped_empty"] is False
+    assert payload["raw_invoke_has_response_metadata"] is True
+    assert payload["raw_invoke_finish_reason"] == "stop"
+    assert payload["raw_invoke_done_reason"] == "stop"
+    assert payload["raw_invoke_error_category"] is None
+    assert payload["raw_invoke_usage_present"] is True
 
 
 def test_payload_default_fallback_reason_none():
