@@ -1,7 +1,7 @@
 import json
 
 from engines.quicklog import nlp_engine
-from engines.quicklog.nlp_engine import ParsedDailyLog, parse_natural_language_log
+from engines.quicklog.nlp_engine import DietItem, ParsedDailyLog, parse_natural_language_log
 
 
 class _StructuredSuccess:
@@ -18,9 +18,42 @@ class _StructuredFailure:
         raise RuntimeError("raw user text should not leak")
 
 
+class _StructuredZeroNutrition:
+    def invoke(self, payload):
+        return ParsedDailyLog(
+            diet_logs=[
+                DietItem(
+                    food_name="\ub2ed\uac00\uc2b4\uc0b4",
+                    amount=200,
+                    unit="g",
+                    estimated_calories=0,
+                    protein_g=0,
+                    carbs_g=0,
+                    fat_g=0,
+                ),
+                DietItem(
+                    food_name="\uc300\ubc25",
+                    amount=200,
+                    unit="g",
+                    estimated_calories=0,
+                    protein_g=0,
+                    carbs_g=0,
+                    fat_g=0,
+                ),
+            ],
+            workout_logs=[],
+            overall_summary="parsed",
+        )
+
+
 class _LlmSuccess:
     def with_structured_output(self, schema):
         return _StructuredSuccess()
+
+
+class _LlmZeroNutrition:
+    def with_structured_output(self, schema):
+        return _StructuredZeroNutrition()
 
 
 class _LlmFailure:
@@ -30,6 +63,7 @@ class _LlmFailure:
 
 def test_quicklog_parse_success_mock(monkeypatch):
     monkeypatch.setattr(nlp_engine, "get_llm", lambda *args, **kwargs: _LlmSuccess())
+    monkeypatch.setattr(nlp_engine, "_local_raw_json_enabled", lambda: False)
 
     payload = json.loads(parse_natural_language_log("bench 80kg 3 sets 8 reps"))
 
@@ -45,6 +79,60 @@ def test_quicklog_llm_failure_returns_fallback_json(monkeypatch, capsys):
     assert parsed.overall_summary
     assert parsed.workout_logs[0].weight_kg == 80
     assert "raw user text should not leak" not in capsys.readouterr().out
+
+
+def test_quicklog_fills_known_food_nutrition_when_llm_returns_zero(monkeypatch):
+    monkeypatch.setattr(nlp_engine, "get_llm", lambda *args, **kwargs: _LlmZeroNutrition())
+    monkeypatch.setattr(nlp_engine, "_local_raw_json_enabled", lambda: False)
+
+    payload = json.loads(parse_natural_language_log("\uc624\ub298 \ub2ed\uac00\uc2b4\uc0b4 200g\uacfc \uc300\ubc25 200g\uc744 \uba39\uc5c8\uc2b5\ub2c8\ub2e4."))
+
+    parsed = ParsedDailyLog.model_validate(payload)
+    assert len(parsed.diet_logs) == 2
+    chicken = parsed.diet_logs[0]
+    rice = parsed.diet_logs[1]
+    assert chicken.food_name == "\ub2ed\uac00\uc2b4\uc0b4"
+    assert rice.food_name == "\uc300\ubc25"
+    assert chicken.estimated_calories > 0
+    assert chicken.protein_g > 0
+    assert rice.estimated_calories > 0
+    assert rice.carbs_g > 0
+    assert sum(item.estimated_calories for item in parsed.diet_logs) > 0
+
+
+def test_quicklog_unknown_food_keeps_zero_nutrition():
+    item = DietItem(
+        food_name="unknown-food",
+        amount=200,
+        unit="g",
+        estimated_calories=0,
+        protein_g=0,
+        carbs_g=0,
+        fat_g=0,
+    )
+
+    parsed = nlp_engine._fill_known_food_nutrition(
+        ParsedDailyLog(diet_logs=[item], workout_logs=[], overall_summary="parsed")
+    )
+
+    assert parsed.diet_logs[0].estimated_calories == 0
+    assert parsed.diet_logs[0].protein_g == 0
+    assert parsed.diet_logs[0].carbs_g == 0
+    assert parsed.diet_logs[0].fat_g == 0
+
+
+def test_quicklog_deterministic_common_korean_foods_are_not_zero(monkeypatch):
+    monkeypatch.setattr(nlp_engine, "get_llm", lambda *args, **kwargs: _LlmFailure())
+
+    payload = json.loads(parse_natural_language_log("\uc624\ub298 \ub2ed\uac00\uc2b4\uc0b4 200g\uacfc \uc300\ubc25 200g\uc744 \uba39\uc5c8\uc2b5\ub2c8\ub2e4."))
+
+    parsed = ParsedDailyLog.model_validate(payload)
+    assert len(parsed.diet_logs) == 2
+    chicken = next(item for item in parsed.diet_logs if item.food_name == "\ub2ed\uac00\uc2b4\uc0b4")
+    rice = next(item for item in parsed.diet_logs if item.food_name == "\uc300\ubc25")
+    assert chicken.protein_g > 0
+    assert rice.carbs_g > 0
+    assert sum(item.estimated_calories for item in parsed.diet_logs) > 0
 
 
 def test_quicklog_deterministic_korean_workout_and_diet(monkeypatch):

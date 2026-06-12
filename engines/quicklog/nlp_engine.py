@@ -41,6 +41,127 @@ _FALLBACK_SUMMARY = "기록을 저장했어요. 세부 분석은 잠시 후 다�
 _EMPTY_SUMMARY = "기록할 내용이 비어 있어요. 식단이나 운동 내용을 입력하면 저장할 수 있어요."
 _TRUE_VALUES = {"true", "1", "yes", "on"}
 
+_COMMON_FOOD_NUTRITION_PER_100G = {
+    "\ub2ed\uac00\uc2b4\uc0b4": {"kcal": 165, "protein_g": 31.0, "carbs_g": 0.0, "fat_g": 3.6},
+    "\uc300\ubc25": {"kcal": 130, "protein_g": 2.4, "carbs_g": 28.6, "fat_g": 0.3},
+    "\ubc25": {"kcal": 130, "protein_g": 2.4, "carbs_g": 28.6, "fat_g": 0.3},
+    "\uacc4\ub780": {"kcal": 143, "protein_g": 12.6, "carbs_g": 0.7, "fat_g": 9.5},
+    "\uace0\uad6c\ub9c8": {"kcal": 86, "protein_g": 1.6, "carbs_g": 20.1, "fat_g": 0.1},
+    "\ubc14\ub098\ub098": {"kcal": 89, "protein_g": 1.1, "carbs_g": 22.8, "fat_g": 0.3},
+    "\uc6b0\uc720": {"kcal": 61, "protein_g": 3.2, "carbs_g": 4.8, "fat_g": 3.3},
+    "\ub450\ubd80": {"kcal": 76, "protein_g": 8.1, "carbs_g": 1.9, "fat_g": 4.8},
+    "\uc624\ud2b8\ubc00": {"kcal": 389, "protein_g": 16.9, "carbs_g": 66.3, "fat_g": 6.9},
+    "\ud604\ubbf8\ubc25": {"kcal": 112, "protein_g": 2.6, "carbs_g": 23.5, "fat_g": 0.9},
+}
+
+_COMMON_FOOD_ALIASES = {
+    "\ub2ed\uac00\uc2b4\uc0b4": "\ub2ed\uac00\uc2b4\uc0b4",
+    "\ub2ed \uac00\uc2b4\uc0b4": "\ub2ed\uac00\uc2b4\uc0b4",
+    "chicken breast": "\ub2ed\uac00\uc2b4\uc0b4",
+    "\uc300\ubc25": "\uc300\ubc25",
+    "\ubc25": "\ubc25",
+    "\uacf5\uae30\ubc25": "\uc300\ubc25",
+    "\ud770\ubc25": "\uc300\ubc25",
+    "\uacc4\ub780": "\uacc4\ub780",
+    "\ub2ec\uac40": "\uacc4\ub780",
+    "\uace0\uad6c\ub9c8": "\uace0\uad6c\ub9c8",
+    "\ubc14\ub098\ub098": "\ubc14\ub098\ub098",
+    "\uc6b0\uc720": "\uc6b0\uc720",
+    "\ub450\ubd80": "\ub450\ubd80",
+    "\uc624\ud2b8\ubc00": "\uc624\ud2b8\ubc00",
+    "\ud604\ubbf8\ubc25": "\ud604\ubbf8\ubc25",
+}
+
+_GRAM_UNITS = {"g", "gram", "grams", "\uadf8\ub7a8"}
+
+
+def _normalize_food_key(food_name: str) -> str:
+    normalized = re.sub(r"\s+", " ", food_name or "").strip().lower()
+    compact = normalized.replace(" ", "")
+    return _COMMON_FOOD_ALIASES.get(normalized) or _COMMON_FOOD_ALIASES.get(compact) or ""
+
+
+def _amount_to_grams(amount: float | None, unit: str | None) -> float | None:
+    if amount is None:
+        return None
+    unit_value = (unit or "").strip().lower()
+    if unit_value in _GRAM_UNITS:
+        return amount
+    return None
+
+
+def _estimate_common_food(food_name: str, amount: float | None, unit: str | None) -> DietItem | None:
+    canonical = _normalize_food_key(food_name)
+    amount_g = _amount_to_grams(amount, unit)
+    if not canonical or amount_g is None:
+        return None
+
+    per_100g = _COMMON_FOOD_NUTRITION_PER_100G[canonical]
+    factor = amount_g / 100
+    return DietItem(
+        food_name=canonical,
+        amount=amount,
+        unit=unit,
+        estimated_calories=round(per_100g["kcal"] * factor),
+        protein_g=round(per_100g["protein_g"] * factor),
+        carbs_g=round(per_100g["carbs_g"] * factor),
+        fat_g=round(per_100g["fat_g"] * factor),
+    )
+
+
+def _needs_known_food_fill(item: DietItem) -> bool:
+    return (
+        _normalize_food_key(item.food_name) != ""
+        and _amount_to_grams(item.amount, item.unit) is not None
+        and (
+            item.estimated_calories <= 0
+            or (item.protein_g <= 0 and item.carbs_g <= 0 and item.fat_g <= 0)
+        )
+    )
+
+
+def _fill_known_food_nutrition(parsed: ParsedDailyLog) -> ParsedDailyLog:
+    if not parsed.diet_logs:
+        return parsed
+
+    filled_logs: list[DietItem] = []
+    changed = False
+    for item in parsed.diet_logs:
+        if _needs_known_food_fill(item):
+            estimated = _estimate_common_food(item.food_name, item.amount, item.unit)
+            if estimated is not None:
+                filled_logs.append(estimated)
+                changed = True
+                continue
+        filled_logs.append(item)
+
+    if not changed:
+        return parsed
+
+    return ParsedDailyLog(
+        diet_logs=filled_logs,
+        workout_logs=parsed.workout_logs,
+        overall_summary=parsed.overall_summary,
+    )
+
+
+def _diet_item_key(item: DietItem) -> tuple[str, float | None, str]:
+    food_key = _normalize_food_key(item.food_name) or re.sub(r"\s+", " ", item.food_name).strip().lower()
+    unit_key = (item.unit or "").strip().lower()
+    return (food_key, item.amount, unit_key)
+
+
+def _same_common_food_nutrition(left: DietItem, right: DietItem) -> bool:
+    left_key = _normalize_food_key(left.food_name)
+    right_key = _normalize_food_key(right.food_name)
+    return (
+        left_key != ""
+        and right_key != ""
+        and left.amount == right.amount
+        and (left.unit or "").strip().lower() == (right.unit or "").strip().lower()
+        and _COMMON_FOOD_NUTRITION_PER_100G[left_key] == _COMMON_FOOD_NUTRITION_PER_100G[right_key]
+    )
+
 
 def _quicklog_summary(workout_logs: list[WorkoutItem], diet_logs: list[DietItem]) -> str:
     parts: list[str] = []
@@ -65,6 +186,10 @@ def _quicklog_summary(workout_logs: list[WorkoutItem], diet_logs: list[DietItem]
 
 def _estimate_diet_item(food_name: str, amount: float | None, unit: str | None) -> DietItem:
     normalized = food_name.strip()
+    common_estimate = _estimate_common_food(normalized, amount, unit)
+    if common_estimate is not None:
+        return common_estimate
+
     amount_value = amount or 1
     unit_value = unit or "serving"
     if "닭가슴살" in normalized:
@@ -175,6 +300,27 @@ def _deterministic_parse(user_text: str | None, *, summary: str | None = None) -
             )
         )
 
+    common_diet_pattern = re.compile(
+        r"(?P<food>\ub2ed\s*\uac00\uc2b4\uc0b4|\ub2ed\uac00\uc2b4\uc0b4|\ud604\ubbf8\ubc25|\uc300\ubc25|\uacf5\uae30\ubc25|\ud770\ubc25|\ubc25|\uacc4\ub780|\ub2ec\uac40|\uace0\uad6c\ub9c8|\ubc14\ub098\ub098|\uc6b0\uc720|\ub450\ubd80|\uc624\ud2b8\ubc00)\s*"
+        r"(?P<amount>\d+(?:\.\d+)?)\s*"
+        r"(?P<unit>g|\uadf8\ub7a8)",
+        flags=re.IGNORECASE,
+    )
+    for match in common_diet_pattern.finditer(text):
+        candidate = _estimate_diet_item(
+            match.group("food"),
+            float(match.group("amount")),
+            "g",
+        )
+        duplicate_index = next(
+            (index for index, item in enumerate(diet_logs) if _same_common_food_nutrition(candidate, item)),
+            None,
+        )
+        if duplicate_index is not None:
+            diet_logs[duplicate_index] = candidate
+        elif _diet_item_key(candidate) not in {_diet_item_key(item) for item in diet_logs}:
+            diet_logs.append(candidate)
+
     return ParsedDailyLog(
         diet_logs=diet_logs,
         workout_logs=workout_logs,
@@ -242,7 +388,7 @@ def parse_natural_language_log(user_text: str) -> str:
                 parsed_result = _parse_llm_payload((_build_prompt() | structured_llm).invoke({"text": user_text}))
             else:
                 parsed_result = _parse_llm_payload(structured_llm.invoke({"text": user_text}))
-        return parsed_result.model_dump_json()
+        return _fill_known_food_nutrition(parsed_result).model_dump_json()
     except Exception as exc:
         print("[LLM quicklog parsing fallback]", sanitize_exception_for_log(exc))
         return _deterministic_parse(user_text).model_dump_json()
