@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from engines.llm_router import get_llm
 from engines.log_redaction import sanitize_exception_for_log
 from engines.supplement.query_understanding import EntityType, IntentType, ParsedSupplementQuery, parse_supplement_query
+from engines.supplement.response_composer import compose_supplement_response
 
 load_dotenv()
 
@@ -681,12 +682,23 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         if "sourceFormatting" not in timing_ms:
             timing_ms["sourceFormatting"] = 0
 
-        payload = {"answer": answer, "sources": sources, "mode": "full"}
+        composed = compose_supplement_response(
+            question=normalized_question,
+            parsed_query=parsed_query,
+            generated_answer=answer,
+            generated_caution=None,
+            selected_docs=final_docs,
+        )
+        payload = {"answer": composed.answer, "sources": sources, "mode": "full"}
+        if composed.caution:
+            payload["caution"] = composed.caution
+        if composed.used_kb_fallback:
+            counts["answerRecoveredFromKbDocs"] = True
         timing_payload = self._answer_from_timing_doc(priority_timing_docs[0]) if priority_timing_docs else None
-        if _is_unusable_generated_answer(answer) and timing_payload:
+        if _is_unusable_generated_answer(payload.get("answer")) and timing_payload:
             payload.update(timing_payload)
             counts["answerRecoveredFromTimingDoc"] = True
-        elif timing_payload and "caution" in timing_payload:
+        elif timing_payload and "caution" in timing_payload and "caution" not in payload:
             payload["caution"] = timing_payload["caution"]
             counts["cautionRecoveredFromTimingDoc"] = True
         result = _normalize_answer_payload(payload)
