@@ -104,6 +104,21 @@ _ENTITY_EQUIVALENTS = {
     "thyroid medication": {"thyroid medication", "levothyroxine"},
     "levothyroxine": {"levothyroxine", "thyroid medication"},
 }
+_EMBEDDING_MODEL_ID = "dragonkue/BGE-m3-ko"
+_RERANKER_MODEL_ID = "BAAI/bge-reranker-v2-m3"
+
+
+def _cached_hf_model_path(model_id: str, required_file: str) -> str:
+    """Resolve a local HuggingFace snapshot path to avoid startup network probes."""
+    try:
+        from huggingface_hub import try_to_load_from_cache
+    except Exception:
+        return model_id
+
+    cached_file = try_to_load_from_cache(model_id, required_file)
+    if not cached_file or not isinstance(cached_file, str):
+        raise RuntimeError(f"huggingface_model_cache_missing:{model_id}:{required_file}")
+    return str(Path(cached_file).parent)
 
 
 def _normalize_answer_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -236,9 +251,12 @@ class SupplementRAGEngine:
         self.query_optimizer = get_llm("supplement", temperature=0.0)
         self.web_search = DuckDuckGoSearchRun()
 
+        embedding_model_path = _cached_hf_model_path(_EMBEDDING_MODEL_ID, "modules.json")
+        reranker_model_path = _cached_hf_model_path(_RERANKER_MODEL_ID, "config.json")
+
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="dragonkue/BGE-m3-ko",
-            model_kwargs={"device": self.device},
+            model_name=embedding_model_path,
+            model_kwargs={"device": self.device, "local_files_only": True},
             encode_kwargs={"normalize_embeddings": True},
         )
 
@@ -256,7 +274,7 @@ class SupplementRAGEngine:
         clean_texts = [(doc.page_content or "").strip() for doc in self.original_docs]
         tokenized_corpus = [self._tokenize_kiwi(text) for text in clean_texts]
         self.bm25 = BM25Okapi(tokenized_corpus)
-        self.reranker = CrossEncoder("BAAI/bge-reranker-v2-m3", device=self.device, max_length=512)
+        self.reranker = CrossEncoder(reranker_model_path, device=self.device, max_length=512, local_files_only=True)
 
         self.local_prompt = ChatPromptTemplate.from_messages(
             [
