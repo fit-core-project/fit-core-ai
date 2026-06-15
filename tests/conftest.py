@@ -14,6 +14,11 @@ from engines.schemas import (
 )
 
 
+@pytest.fixture(autouse=True)
+def disable_local_raw_json_invoke_by_default(monkeypatch):
+    monkeypatch.delenv("ENABLE_LOCAL_RAW_JSON_INVOKE", raising=False)
+
+
 @pytest.fixture
 def sample_request():
     return RoutineRequest(
