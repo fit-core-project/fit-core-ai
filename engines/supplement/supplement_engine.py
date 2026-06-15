@@ -26,6 +26,46 @@ _DEGRADED_ANSWER = (
 )
 _TRUE_VALUES = {"true", "1", "yes", "y", "on"}
 _KEYWORD_MAP = {
+    "마그네슘": [
+        "마그네슘",
+        "magnesium",
+        "Magnesium",
+        "Mg",
+        "마그네슘 복용 시간",
+        "마그네슘 복용 타이밍",
+        "마그네슘 식후",
+        "마그네슘 저녁",
+        "마그네슘 신장질환",
+        "복용 시간",
+        "복용 타이밍",
+        "저녁",
+        "식후",
+        "수면",
+        "근육",
+        "설사",
+        "신장질환",
+        "간격",
+    ],
+    "magnesium": [
+        "마그네슘",
+        "magnesium",
+        "Magnesium",
+        "Mg",
+        "마그네슘 복용 시간",
+        "마그네슘 복용 타이밍",
+        "마그네슘 식후",
+        "마그네슘 저녁",
+        "마그네슘 신장질환",
+        "복용 시간",
+        "복용 타이밍",
+        "저녁",
+        "식후",
+        "수면",
+        "근육",
+        "설사",
+        "신장질환",
+        "간격",
+    ],
     "크레아틴": ["크레아틴", "creatine", "복용", "섭취", "타이밍", "운동 전", "운동 후", "로딩", "용량"],
     "creatine": ["크레아틴", "creatine", "복용", "섭취", "타이밍", "운동 전", "운동 후", "로딩", "용량"],
     "카페인": ["카페인", "caffeine", "부스터", "프리워크아웃", "저녁", "수면", "심박", "불면"],
@@ -34,10 +74,24 @@ _KEYWORD_MAP = {
     "프로틴": ["단백질", "프로틴", "protein", "whey", "섭취량", "운동 후"],
     "protein": ["단백질", "프로틴", "protein", "whey", "섭취량", "운동 후"],
     "오메가3": ["오메가3", "omega-3", "EPA", "DHA"],
+    "오메가-3": ["오메가3", "오메가-3", "omega3", "omega-3", "EPA", "DHA"],
+    "omega3": ["오메가3", "오메가-3", "omega3", "omega-3", "EPA", "DHA"],
     "omega": ["오메가3", "omega-3", "EPA", "DHA"],
     "비타민d": ["비타민D", "vitamin D"],
+    "비타민 d": ["비타민D", "비타민 D", "vitamin D"],
     "vitamin d": ["비타민D", "vitamin D"],
+    "철분": ["철분", "iron", "Fe", "커피", "카페인", "칼슘", "흡수 방해", "공복", "비타민C", "복용 간격", "변비", "갑상선약"],
+    "iron": ["철분", "iron", "Fe", "커피", "카페인", "칼슘", "흡수 방해", "공복", "비타민C", "복용 간격", "변비", "갑상선약"],
 }
+_TIMING_INTENT_NEEDLES = ("언제", "먹는 시간", "복용 시간", "복용 타이밍", "타이밍", "식전", "식후", "공복", "자기 전", "저녁", "간격")
+_TIMING_INTENT_KEYWORDS = ["복용", "섭취", "복용 시간", "복용 타이밍", "식전", "식후", "공복", "자기 전", "저녁", "간격"]
+_TIMING_DOC_RULES = (
+    (("마그네슘", "magnesium"), "SUPP_TIMING_MAGNESIUM"),
+    (("철분", "iron"), "SUPP_TIMING_IRON"),
+    (("크레아틴", "creatine"), "SUPP_TIMING_CREATINE"),
+    (("비타민d", "비타민 d", "vitamin d"), "SUPP_TIMING_VITAMIN_D"),
+    (("오메가3", "오메가-3", "omega3", "omega-3", "omega"), "SUPP_TIMING_OMEGA3"),
+)
 
 
 def _normalize_answer_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -68,6 +122,22 @@ def _normalize_answer_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def _env_flag_enabled(name: str) -> bool:
     return os.getenv(name, "").strip().lower() in _TRUE_VALUES
+
+
+def _is_unusable_generated_answer(answer: Any) -> bool:
+    if not isinstance(answer, str):
+        return True
+    stripped = answer.strip()
+    if not stripped or stripped in {"{}", "[]", "null"}:
+        return True
+    try:
+        parsed = json.loads(stripped)
+    except (TypeError, json.JSONDecodeError):
+        return False
+    if isinstance(parsed, dict):
+        parsed_answer = parsed.get("answer")
+        return not (isinstance(parsed_answer, str) and parsed_answer.strip())
+    return True
 
 
 class SupplementRAGEngine:
@@ -194,6 +264,8 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         for needle, mapped_keywords in _KEYWORD_MAP.items():
             if needle in lowered or needle in normalized:
                 keywords.extend(mapped_keywords)
+        if any(needle in normalized for needle in _TIMING_INTENT_NEEDLES):
+            keywords.extend(_TIMING_INTENT_KEYWORDS)
         deduped = list(dict.fromkeys([normalized, *keywords]))
         return " ".join(item for item in deduped if item)
 
@@ -211,6 +283,50 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
     def _doc_key(self, doc: Any) -> Any:
         meta = doc.metadata or {}
         return meta.get("id") or meta.get("_source_file") or hash(doc.page_content)
+
+    def _priority_timing_docs(self, query: str) -> list[Any]:
+        normalized = (query or "").strip()
+        lowered = normalized.lower()
+        wanted_ids = {
+            doc_id
+            for needles, doc_id in _TIMING_DOC_RULES
+            if any(needle in lowered or needle in normalized for needle in needles)
+        }
+        if not wanted_ids:
+            return []
+        original_docs = getattr(self, "original_docs", [])
+        return [
+            doc
+            for doc in original_docs
+            if (doc.metadata or {}).get("_source_file") == "supplement_timing_guide.json"
+            and (doc.metadata or {}).get("id") in wanted_ids
+        ]
+
+    def _answer_from_timing_doc(self, doc: Any) -> Dict[str, str] | None:
+        lines = (doc.page_content or "").splitlines()
+        timing = ""
+        spacing = ""
+        cautions: list[str] = []
+        in_cautions = False
+
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("Timing:"):
+                timing = stripped.removeprefix("Timing:").strip()
+                in_cautions = False
+            elif stripped.startswith("Spacing:"):
+                spacing = stripped.removeprefix("Spacing:").strip()
+                in_cautions = False
+            elif stripped == "Cautions:":
+                in_cautions = True
+            elif in_cautions and stripped.startswith("- "):
+                cautions.append(stripped.removeprefix("- ").strip())
+
+        answer = " ".join(part for part in [timing, spacing] if part).strip()
+        if not answer:
+            return None
+        caution = " ".join(cautions).strip()
+        return {"answer": answer, "caution": caution} if caution else {"answer": answer}
 
     def _answer_degraded(self, reason: str | None = None) -> Dict[str, Any]:
         return {
@@ -280,6 +396,9 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         counts["bm25Docs"] = len(bm25_docs)
         counts["queryTokenCount"] = len(q_tokens)
 
+        priority_timing_docs = self._priority_timing_docs(search_query)
+        counts["priorityTimingDocs"] = len(priority_timing_docs)
+
         stage_start = time.perf_counter()
         rrf_k = 60
         fused_scores: dict[Any, float] = {}
@@ -295,6 +414,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
 
         add_to_rrf(bm25_docs, 0.6)
         add_to_rrf(vector_docs, 0.4)
+        add_to_rrf(priority_timing_docs, 1.0)
         ranked_keys = sorted(fused_scores, key=lambda key: fused_scores[key], reverse=True)[:15]
         candidate_docs = [doc_map[key] for key in ranked_keys]
         mark("fusion", stage_start)
@@ -307,7 +427,25 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         pairs = [[question, doc.page_content] for doc in candidate_docs]
         rerank_scores = self.reranker.predict(pairs)
         reranked_results = sorted(zip(rerank_scores, candidate_docs), key=lambda item: item[0], reverse=True)
-        final_docs = [doc for _score, doc in reranked_results[:8]]
+        reranked_docs = [doc for _score, doc in reranked_results]
+        final_docs = []
+        seen_final_keys = set()
+        priority_timing_keys = {self._doc_key(doc) for doc in priority_timing_docs}
+        for doc in [*priority_timing_docs, *reranked_docs]:
+            meta = doc.metadata or {}
+            if (
+                priority_timing_keys
+                and meta.get("_source_file") == "supplement_timing_guide.json"
+                and self._doc_key(doc) not in priority_timing_keys
+            ):
+                continue
+            key = self._doc_key(doc)
+            if key in seen_final_keys:
+                continue
+            final_docs.append(doc)
+            seen_final_keys.add(key)
+            if len(final_docs) >= 8:
+                break
         mark("rerank", stage_start)
         counts["rerankPairs"] = len(pairs)
         counts["finalDocs"] = len(final_docs)
@@ -373,7 +511,15 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         if "sourceFormatting" not in timing_ms:
             timing_ms["sourceFormatting"] = 0
 
-        result = _normalize_answer_payload({"answer": answer, "sources": sources, "mode": "full"})
+        payload = {"answer": answer, "sources": sources, "mode": "full"}
+        timing_payload = self._answer_from_timing_doc(priority_timing_docs[0]) if priority_timing_docs else None
+        if _is_unusable_generated_answer(answer) and timing_payload:
+            payload.update(timing_payload)
+            counts["answerRecoveredFromTimingDoc"] = True
+        elif timing_payload and "caution" in timing_payload:
+            payload["caution"] = timing_payload["caution"]
+            counts["cautionRecoveredFromTimingDoc"] = True
+        result = _normalize_answer_payload(payload)
         timing_ms["total"] = round((time.perf_counter() - start_time) * 1000)
         print(
             "[Supplement RAG completed] elapsed_sec={:.2f} web_search_used={} sources_count={}".format(
