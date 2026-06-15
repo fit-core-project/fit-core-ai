@@ -77,11 +77,11 @@ def _local_ollama_options_from_env() -> dict[str, int]:
 
 
 def resolve_llm_provider() -> LlmProviderConfig:
-    requested_provider = os.getenv("LLM_PROVIDER", "gemini").strip().lower() or "gemini"
+    requested_provider = os.getenv("LLM_PROVIDER", "local").strip().lower() or "local"
     app_env = os.getenv("APP_ENV", "").strip().lower()
     is_production = app_env == "production"
     local_allowed = _env_flag_enabled(os.getenv("ALLOW_LOCAL_LLM_IN_PRODUCTION"))
-    model_name = _sanitize_model_name(os.getenv("LOCAL_LLM_MODEL"), "gemma4")
+    model_name = _sanitize_model_name(os.getenv("LOCAL_LLM_MODEL"), "gemma4:latest")
 
     if is_production and requested_provider == "local" and not local_allowed:
         return LlmProviderConfig(

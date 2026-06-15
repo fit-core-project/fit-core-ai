@@ -55,7 +55,7 @@ class TestGetLlm:
 
         llm = get_llm("routine", temperature=0.2)
 
-        assert llm.model == "gemma4"
+        assert llm.model == "gemma4:latest"
         assert llm.format == "json"
         assert llm.temperature == 0.2
         assert llm.base_url == "http://localhost:11434"

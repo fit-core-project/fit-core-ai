@@ -105,13 +105,14 @@ def test_production_local_allow_flag_false_or_invalid_values_block(monkeypatch, 
     assert config.blocked_reason == "production_local_not_allowed"
 
 
-def test_default_provider_behavior_is_unchanged(monkeypatch):
+def test_default_provider_uses_local_ollama(monkeypatch):
     _clear_provider_env(monkeypatch)
 
     config = llm_router.resolve_llm_provider()
 
-    assert config.requested_provider == "gemini"
-    assert config.effective_provider == "gemini"
+    assert config.requested_provider == "local"
+    assert config.effective_provider == "local"
+    assert config.model_name == "gemma4:latest"
 
 
 def test_blocked_production_log_has_no_raw_env_or_api_key(monkeypatch, capsys, dummy_provider_modules):
@@ -181,6 +182,7 @@ def test_invalid_local_generation_budget_env_is_ignored(monkeypatch, dummy_provi
 
 def test_gemini_path_ignores_local_generation_budget(monkeypatch, dummy_provider_modules):
     _clear_provider_env(monkeypatch)
+    monkeypatch.setenv("LLM_PROVIDER", "gemini")
     monkeypatch.setenv("LOCAL_LLM_NUM_PREDICT", "4096")
     monkeypatch.setenv("LOCAL_LLM_NUM_CTX", "8192")
 
