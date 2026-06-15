@@ -233,3 +233,50 @@ def test_supplement_ingredient_profile_corpus_validates_against_schema():
     assert all(profile.aliases for profile in profiles)
     assert all(profile.timing.general for profile in profiles)
     assert all(profile.cautions for profile in profiles)
+
+
+def test_supplement_interaction_rule_corpus_validates_against_schema():
+    corpus_path = Path("data/documents/supplement_interaction_rules.json")
+    data = json.loads(corpus_path.read_text(encoding="utf-8"))
+
+    rules = [InteractionRule.model_validate(item) for item in data]
+
+    assert [rule.id for rule in rules] == [
+        "INT_IRON_CAFFEINE",
+        "INT_IRON_CALCIUM",
+        "INT_IRON_ANTIBIOTICS",
+        "INT_MAGNESIUM_THYROID_MEDICATION",
+        "INT_MAGNESIUM_ANTIBIOTICS",
+        "INT_ZINC_ANTIBIOTICS",
+        "INT_CALCIUM_IRON",
+        "INT_OMEGA3_ANTICOAGULANTS",
+    ]
+    assert {rule.type for rule in rules} == {"interaction_rule"}
+    assert all(rule.entity_a.canonical for rule in rules)
+    assert all(rule.entity_b.canonical for rule in rules)
+    assert all(rule.mechanism for rule in rules)
+    assert all(rule.recommendation for rule in rules)
+    assert all(rule.caution_level in CautionLevel for rule in rules)
+
+
+def test_supplement_safety_rule_corpus_validates_against_schema():
+    corpus_path = Path("data/documents/supplement_safety_rules.json")
+    data = json.loads(corpus_path.read_text(encoding="utf-8"))
+
+    rules = [SafetyRule.model_validate(item) for item in data]
+
+    assert [rule.id for rule in rules] == [
+        "SAFE_KIDNEY_MAGNESIUM",
+        "SAFE_KIDNEY_CREATINE",
+        "SAFE_PREGNANCY_HIGH_DOSE_VITAMIN_D",
+        "SAFE_OMEGA3_SURGERY",
+        "SAFE_ACETAMINOPHEN_LIVER_ALCOHOL",
+        "SAFE_CAFFEINE_SLEEP",
+        "SAFE_CAFFEINE_HYPERTENSION",
+    ]
+    assert {rule.type for rule in rules} == {"safety_rule"}
+    assert all(rule.trigger_conditions for rule in rules)
+    assert all(rule.affected_entities for rule in rules)
+    assert all(rule.risk for rule in rules)
+    assert all(rule.recommendation for rule in rules)
+    assert all(rule.caution_level in CautionLevel for rule in rules)

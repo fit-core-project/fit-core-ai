@@ -101,6 +101,8 @@ FILE_14 = Path(f"{JSON_SOURCE_DIR}/rag_data_5_SAFE.json")
 FILE_15 = Path(f"{JSON_SOURCE_DIR}/rag_data_5_SUPP.json")
 FILE_16 = Path(f"{JSON_SOURCE_DIR}/supplement_timing_guide.json")
 FILE_17 = Path(f"{JSON_SOURCE_DIR}/supplement_ingredient_profiles.json")
+FILE_18 = Path(f"{JSON_SOURCE_DIR}/supplement_interaction_rules.json")
+FILE_19 = Path(f"{JSON_SOURCE_DIR}/supplement_safety_rules.json")
 
 def drugs_metadata(record, metadata):
     return {"id": record.get("id"), "source": "drugs", "_source_file": record.get("_source_file")}
@@ -176,12 +178,40 @@ def ingredient_profile_metadata(record, metadata):
     }
 documents_ingredient_profiles = JSONLoader(file_path=FILE_17, jq_schema=".[]", content_key=None, metadata_func=ingredient_profile_metadata, text_content=False).load()
 
+def interaction_rule_metadata(record, metadata):
+    entity_a = record.get("entity_a") or {}
+    entity_b = record.get("entity_b") or {}
+    return {
+        "id": record.get("id"),
+        "source": "interaction_rule",
+        "_source_file": record.get("_source_file") or metadata.get("source") or "supplement_interaction_rules.json",
+        "type": record.get("type"),
+        "entity_a_canonical": entity_a.get("canonical"),
+        "entity_b_canonical": entity_b.get("canonical"),
+        "interaction_type": record.get("interaction_type"),
+        "caution_level": record.get("caution_level"),
+    }
+documents_interaction_rules = JSONLoader(file_path=FILE_18, jq_schema=".[]", content_key=None, metadata_func=interaction_rule_metadata, text_content=False).load()
+
+def safety_rule_metadata(record, metadata):
+    affected_entities = record.get("affected_entities") or []
+    return {
+        "id": record.get("id"),
+        "source": "safety_rule",
+        "_source_file": record.get("_source_file") or metadata.get("source") or "supplement_safety_rules.json",
+        "type": record.get("type"),
+        "affected_entities": ", ".join(affected_entities) if isinstance(affected_entities, list) else affected_entities,
+        "caution_level": record.get("caution_level"),
+    }
+documents_safety_rules = JSONLoader(file_path=FILE_19, jq_schema=".[]", content_key=None, metadata_func=safety_rule_metadata, text_content=False).load()
+
 all_documents = (
         documents_drugs_1 + documents_drugs_2 + documents_drugs_3 + documents_drugs_4 +
         documents_disease + documents_faq + documents_interaction + documents_interactions +
         documents_pregnancy + documents_symptom + documents_ing + documents_massive_int +
         documents_otc_group + documents_raw_ing + documents_safety + documents_supp +
-        documents_supp_timing + documents_ingredient_profiles
+        documents_supp_timing + documents_ingredient_profiles + documents_interaction_rules +
+        documents_safety_rules
 )
 print(f"총 문서 수: {len(all_documents)}")
 
@@ -428,6 +458,45 @@ def format_supplement_timing_guide_text(payload: Union[str, Dict[str, Any], List
     if content.get("cautions"): lines.append("Cautions:\n" + _bullet(content.get("cautions")))
     return "\n".join(lines).strip()
 
+def format_interaction_rule_text(payload: Union[str, Dict[str, Any], List[Any]]) -> str:
+    data = json.loads(payload) if isinstance(payload, str) else payload
+    if isinstance(data, list): data = data[0] if data else {}
+    entity_a = data.get("entity_a") or {}
+    entity_b = data.get("entity_b") or {}
+
+    lines = ["[Interaction rule]"]
+    if _norm(data.get("id")): lines.append(f"ID: {_norm(data.get('id'))}")
+    if isinstance(entity_a, dict):
+        entity = " / ".join([v for v in [_norm(entity_a.get("label")), _norm(entity_a.get("canonical")), _norm(entity_a.get("type"))] if v])
+        if entity: lines.append(f"Entity A: {entity}")
+    if isinstance(entity_b, dict):
+        entity = " / ".join([v for v in [_norm(entity_b.get("label")), _norm(entity_b.get("canonical")), _norm(entity_b.get("type"))] if v])
+        if entity: lines.append(f"Entity B: {entity}")
+    if _norm(data.get("interaction_type")): lines.append(f"Interaction type: {_norm(data.get('interaction_type'))}")
+    if _norm(data.get("mechanism")): lines.append(f"Mechanism: {_norm(data.get('mechanism'))}")
+    if _norm(data.get("recommendation")): lines.append(f"Recommendation: {_norm(data.get('recommendation'))}")
+    if _norm(data.get("spacing_guidance")): lines.append(f"Spacing guidance: {_norm(data.get('spacing_guidance'))}")
+    if _norm(data.get("caution_level")): lines.append(f"Caution level: {_norm(data.get('caution_level'))}")
+    if data.get("consultation_required_when"):
+        lines.append("Consultation required when:\n" + _bullet(data.get("consultation_required_when")))
+    return "\n".join(lines).strip()
+
+def format_safety_rule_text(payload: Union[str, Dict[str, Any], List[Any]]) -> str:
+    data = json.loads(payload) if isinstance(payload, str) else payload
+    if isinstance(data, list): data = data[0] if data else {}
+
+    lines = ["[Safety rule]"]
+    if _norm(data.get("id")): lines.append(f"ID: {_norm(data.get('id'))}")
+    if data.get("trigger_conditions"): lines.append("Trigger conditions:\n" + _bullet(data.get("trigger_conditions")))
+    if data.get("affected_entities"): lines.append("Affected entities:\n" + _bullet(data.get("affected_entities")))
+    if _norm(data.get("risk")): lines.append(f"Risk: {_norm(data.get('risk'))}")
+    if _norm(data.get("recommendation")): lines.append(f"Recommendation: {_norm(data.get('recommendation'))}")
+    if _norm(data.get("when_to_consult")): lines.append(f"When to consult: {_norm(data.get('when_to_consult'))}")
+    if _norm(data.get("caution_level")): lines.append(f"Caution level: {_norm(data.get('caution_level'))}")
+    if _norm(data.get("evidence_summary")): lines.append(f"Evidence summary: {_norm(data.get('evidence_summary'))}")
+    if data.get("source_refs"): lines.append("Source refs:\n" + _bullet(data.get("source_refs")))
+    return "\n".join(lines).strip()
+
 def format_ingredient_profile_text(payload: Union[str, Dict[str, Any], List[Any]]) -> str:
     data = json.loads(payload) if isinstance(payload, str) else payload
     if isinstance(data, list): data = data[0] if data else {}
@@ -474,6 +543,8 @@ for doc in all_documents:
     elif source == "supp": doc.page_content = format_supplement_ingredient_guide_text(doc.page_content)
     elif source == "supp_timing": doc.page_content = format_supplement_timing_guide_text(doc.page_content)
     elif source == "ingredient_profile": doc.page_content = format_ingredient_profile_text(doc.page_content)
+    elif source == "interaction_rule": doc.page_content = format_interaction_rule_text(doc.page_content)
+    elif source == "safety_rule": doc.page_content = format_safety_rule_text(doc.page_content)
 
 
 # ==========================================

@@ -1,0 +1,202 @@
+[
+  {
+    "type": "interaction_rule",
+    "id": "INT_IRON_CAFFEINE",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "iron",
+      "label": "철분"
+    },
+    "entity_b": {
+      "type": "food_or_compound",
+      "canonical": "caffeine",
+      "label": "카페인"
+    },
+    "interaction_type": "absorption_interference",
+    "mechanism": "커피나 카페인 음료는 철분 흡수에 영향을 줄 수 있어 철분 보충제와 동시에 섭취하는 것은 피하는 편이 안전합니다.",
+    "recommendation": "철분 보충제를 복용하는 경우 커피나 카페인 음료와는 시간 간격을 두는 방식을 고려하세요.",
+    "spacing_guidance": "정확한 간격은 개인 상태와 제품에 따라 다를 수 있으므로 치료 목적의 철분 복용 중이라면 의사 또는 약사에게 확인하세요.",
+    "caution_level": "moderate",
+    "consultation_required_when": [
+      "빈혈 치료 중",
+      "처방약 복용 중",
+      "임신 또는 수유 중",
+      "고용량 철분 복용 중"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_IRON_CALCIUM",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "iron",
+      "label": "철분"
+    },
+    "entity_b": {
+      "type": "supplement_ingredient",
+      "canonical": "calcium",
+      "label": "칼슘"
+    },
+    "interaction_type": "absorption_interference",
+    "mechanism": "칼슘은 철분 흡수에 영향을 줄 수 있어 두 보충제를 같은 시간에 복용하면 기대한 섭취량과 실제 흡수량이 달라질 수 있습니다.",
+    "recommendation": "철분과 칼슘 보충제를 함께 복용해야 한다면 시간 간격을 두는 방식을 고려하세요.",
+    "spacing_guidance": "치료 목적의 철분 또는 칼슘 복용 중이라면 적절한 간격과 용량은 의사 또는 약사에게 확인하세요.",
+    "caution_level": "moderate",
+    "consultation_required_when": [
+      "빈혈 치료 중",
+      "골다공증 치료 중",
+      "임신 또는 수유 중",
+      "처방약 복용 중"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_IRON_ANTIBIOTICS",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "iron",
+      "label": "철분"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "antibiotics",
+      "label": "항생제"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "일부 항생제는 철분 같은 미네랄 보충제와 함께 복용할 때 흡수나 효과에 영향을 받을 수 있습니다.",
+    "recommendation": "항생제 복용 중에는 철분 보충제를 임의로 함께 복용하지 말고 처방한 의료진이나 약사에게 복용 간격을 확인하세요.",
+    "spacing_guidance": "항생제 종류에 따라 권장 간격이 달라질 수 있으므로 특정 시간을 임의로 정하지 않는 것이 안전합니다.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "항생제 처방 중",
+      "감염 치료 중",
+      "빈혈 치료 중",
+      "임신 또는 수유 중"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_MAGNESIUM_THYROID_MEDICATION",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "magnesium",
+      "label": "마그네슘"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "thyroid medication",
+      "label": "갑상선약"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "마그네슘 같은 미네랄 보충제는 일부 갑상선약의 흡수에 영향을 줄 수 있어 같은 시간대 복용은 주의가 필요합니다.",
+    "recommendation": "갑상선약을 복용 중이라면 마그네슘 보충제의 복용 여부와 간격을 의사 또는 약사에게 확인하세요.",
+    "spacing_guidance": "갑상선약은 복용법이 개인별로 중요하므로 제품 임의 조합보다 처방 지시에 따르는 것이 안전합니다.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "갑상선약 복용 중",
+      "갑상선 질환 치료 중",
+      "처방약 복용 중",
+      "고용량 마그네슘 복용 고려 중"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_MAGNESIUM_ANTIBIOTICS",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "magnesium",
+      "label": "마그네슘"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "antibiotics",
+      "label": "항생제"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "일부 항생제는 마그네슘 같은 미네랄과 함께 복용할 때 흡수에 영향을 받을 수 있습니다.",
+    "recommendation": "항생제 치료 중에는 마그네슘 보충제 병용 여부와 복용 간격을 의료진 또는 약사에게 확인하세요.",
+    "spacing_guidance": "항생제 종류에 따라 간격 지침이 달라질 수 있으므로 임의로 판단하지 않는 것이 안전합니다.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "항생제 처방 중",
+      "감염 치료 중",
+      "신장질환이 있는 경우",
+      "처방약 복용 중"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_ZINC_ANTIBIOTICS",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "zinc",
+      "label": "아연"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "antibiotics",
+      "label": "항생제"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "일부 항생제는 아연 같은 미네랄 보충제와 함께 복용할 때 흡수에 영향을 받을 수 있습니다.",
+    "recommendation": "항생제 복용 중 아연 보충제를 먹고 있다면 복용 간격과 지속 여부를 의사 또는 약사에게 확인하세요.",
+    "spacing_guidance": "항생제 종류별 지침이 다를 수 있으므로 특정 간격을 일반화하지 않는 것이 안전합니다.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "항생제 처방 중",
+      "감염 치료 중",
+      "고용량 아연 복용 중",
+      "임신 또는 수유 중"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_CALCIUM_IRON",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "calcium",
+      "label": "칼슘"
+    },
+    "entity_b": {
+      "type": "supplement_ingredient",
+      "canonical": "iron",
+      "label": "철분"
+    },
+    "interaction_type": "absorption_interference",
+    "mechanism": "칼슘과 철분을 같은 시간에 복용하면 철분 흡수에 영향을 줄 수 있습니다.",
+    "recommendation": "두 보충제를 모두 복용해야 한다면 같은 시간대에 몰아서 먹기보다 시간 간격을 두는 방식을 고려하세요.",
+    "spacing_guidance": "치료 목적의 복용이나 처방약이 함께 있는 경우 구체적인 간격은 의사 또는 약사에게 확인하세요.",
+    "caution_level": "moderate",
+    "consultation_required_when": [
+      "빈혈 치료 중",
+      "골다공증 치료 중",
+      "처방약 복용 중",
+      "임신 또는 수유 중"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_OMEGA3_ANTICOAGULANTS",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "omega3",
+      "label": "오메가3"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "anticoagulant",
+      "label": "항응고제"
+    },
+    "interaction_type": "bleeding_risk",
+    "mechanism": "오메가3 보충제는 항응고제 복용자나 출혈 위험이 있는 상황에서 보수적으로 확인해야 합니다.",
+    "recommendation": "항응고제나 와파린을 복용 중이면 오메가3 보충제를 임의로 시작하거나 고용량으로 늘리지 말고 의료진과 상담하세요.",
+    "spacing_guidance": "복용 간격만으로 위험이 해결된다고 단정하기 어렵기 때문에 약물 복용 여부와 용량을 함께 확인해야 합니다.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "항응고제 복용 중",
+      "와파린 복용 중",
+      "수술 예정",
+      "출혈 질환 또는 멍이 잘 드는 경우"
+    ]
+  }
+]

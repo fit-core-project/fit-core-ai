@@ -1,0 +1,86 @@
+[
+  {
+    "type": "safety_rule",
+    "id": "SAFE_KIDNEY_MAGNESIUM",
+    "trigger_conditions": ["신장질환", "kidney disease", "renal impairment", "투석"],
+    "affected_entities": ["magnesium", "마그네슘"],
+    "risk": "신장 기능이 저하된 경우 마그네슘 배출이 원활하지 않을 수 있어 보충제 복용에 주의가 필요합니다.",
+    "recommendation": "신장질환이 있거나 관련 치료를 받고 있다면 마그네슘 보충제를 임의로 시작하지 말고 의료진과 상담하세요.",
+    "when_to_consult": "신장질환, 신장 기능 저하, 투석, 처방약 복용, 고용량 복용을 고려하는 경우",
+    "caution_level": "high",
+    "evidence_summary": "신장 기능 저하 상태에서는 미네랄 보충제 복용을 보수적으로 판단해야 합니다.",
+    "source_refs": ["supplement_timing_guide.json#SUPP_TIMING_MAGNESIUM"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_KIDNEY_CREATINE",
+    "trigger_conditions": ["신장질환", "kidney disease", "renal impairment", "신장 기능 저하"],
+    "affected_entities": ["creatine", "크레아틴"],
+    "risk": "신장질환이 있거나 신장 기능을 추적 중인 경우 크레아틴 보충제 사용은 개인 상태에 따라 주의가 필요합니다.",
+    "recommendation": "신장질환이 있거나 관련 검사 이상이 있다면 크레아틴을 임의로 시작하지 말고 의료진과 상담하세요.",
+    "when_to_consult": "신장질환, 신장 기능 저하, 단백뇨, 처방약 복용, 고용량 복용을 고려하는 경우",
+    "caution_level": "high",
+    "evidence_summary": "신장 관련 위험군에서는 크레아틴 복용 전 개인 상태 확인이 필요합니다.",
+    "source_refs": ["supplement_timing_guide.json#SUPP_TIMING_CREATINE"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_PREGNANCY_HIGH_DOSE_VITAMIN_D",
+    "trigger_conditions": ["임신", "pregnancy", "수유", "breastfeeding", "고용량", "high dose"],
+    "affected_entities": ["vitamin d", "비타민D", "비타민 D"],
+    "risk": "임신 또는 수유 중 고용량 비타민D 복용은 개인 상태와 기존 섭취량에 따라 주의가 필요합니다.",
+    "recommendation": "임신 또는 수유 중이거나 고용량 복용을 고려한다면 제품 라벨만으로 판단하지 말고 의사 또는 약사와 상담하세요.",
+    "when_to_consult": "임신, 수유, 고용량 복용, 칼슘 수치 이상, 처방약 복용, 기존 질환이 있는 경우",
+    "caution_level": "high",
+    "evidence_summary": "지용성 비타민은 과량 섭취를 피하고 개인 상태에 맞춰 복용해야 합니다.",
+    "source_refs": ["supplement_timing_guide.json#SUPP_TIMING_VITAMIN_D"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_OMEGA3_SURGERY",
+    "trigger_conditions": ["수술", "surgery", "시술", "출혈", "bleeding"],
+    "affected_entities": ["omega3", "오메가3", "fish oil"],
+    "risk": "수술이나 시술을 앞둔 경우 오메가3 보충제는 출혈 위험 평가와 함께 보수적으로 확인해야 합니다.",
+    "recommendation": "수술 또는 시술 예정이 있다면 오메가3 복용 여부를 의료진에게 알리고 중단 여부를 임의로 결정하지 마세요.",
+    "when_to_consult": "수술 예정, 시술 예정, 항응고제 복용, 출혈 질환, 고용량 복용 중인 경우",
+    "caution_level": "high",
+    "evidence_summary": "출혈 위험이 중요한 상황에서는 보충제 복용도 의료진에게 공유해야 합니다.",
+    "source_refs": ["supplement_timing_guide.json#SUPP_TIMING_OMEGA3"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_ACETAMINOPHEN_LIVER_ALCOHOL",
+    "trigger_conditions": ["간질환", "liver disease", "술", "알코올", "alcohol", "음주", "고용량", "high dose"],
+    "affected_entities": ["acetaminophen", "paracetamol", "타이레놀"],
+    "risk": "아세트아미노펜 성분은 간질환, 잦은 음주, 고용량 사용 상황에서 간 손상 위험을 보수적으로 확인해야 합니다.",
+    "recommendation": "타이레놀이나 아세트아미노펜 제품을 자주 복용하고 음주도 한다면 추가 복용이나 다른 제품 병용 전 의사 또는 약사와 상담하세요.",
+    "when_to_consult": "간질환, 잦은 음주, 고용량 또는 장기 복용, 여러 감기약이나 진통제를 함께 복용하는 경우",
+    "caution_level": "high",
+    "evidence_summary": "아세트아미노펜은 보충제는 아니지만 supplement chat 안전 guardrail에서 약물 안전 맥락으로 다뤄야 합니다.",
+    "source_refs": []
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_CAFFEINE_SLEEP",
+    "trigger_conditions": ["불면", "insomnia", "수면", "sleep", "자기 전", "밤"],
+    "affected_entities": ["caffeine", "카페인", "커피"],
+    "risk": "카페인은 수면에 영향을 줄 수 있어 불면이나 수면 문제가 있는 경우 섭취 시간과 양을 보수적으로 조절해야 합니다.",
+    "recommendation": "불면이 있거나 수면이 불안정하다면 늦은 시간 카페인 보충제나 고카페인 음료 섭취를 피하는 방향을 고려하세요.",
+    "when_to_consult": "불면이 지속되거나 심박 두근거림, 불안, 처방약 복용, 고용량 카페인 섭취가 있는 경우",
+    "caution_level": "moderate",
+    "evidence_summary": "카페인은 각성 효과가 있어 개인에 따라 수면 질에 영향을 줄 수 있습니다.",
+    "source_refs": []
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_CAFFEINE_HYPERTENSION",
+    "trigger_conditions": ["고혈압", "hypertension", "혈압", "blood pressure"],
+    "affected_entities": ["caffeine", "카페인", "커피"],
+    "risk": "카페인은 개인에 따라 혈압이나 두근거림에 영향을 줄 수 있어 고혈압이 있으면 섭취량을 주의해야 합니다.",
+    "recommendation": "고혈압이 있거나 혈압약을 복용 중이라면 카페인 보충제나 고카페인 제품 사용 전 의료진과 상담하세요.",
+    "when_to_consult": "고혈압, 혈압약 복용, 심혈관 질환, 두근거림, 고용량 카페인 섭취를 고려하는 경우",
+    "caution_level": "moderate",
+    "evidence_summary": "카페인 반응은 개인차가 크므로 심혈관 위험군에서는 보수적 접근이 필요합니다.",
+    "source_refs": []
+  }
+]
