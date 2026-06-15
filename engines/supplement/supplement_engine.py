@@ -24,6 +24,10 @@ _DEGRADED_ANSWER = (
     "복용 중인 약, 질환, 임신 여부가 있거나 이상 증상이 있다면 영양제 복용 전 약사나 의사와 상담하세요. "
     "제품 라벨의 1일 섭취량을 넘기지 말고, 여러 제품을 함께 복용할 때는 중복 성분을 확인하세요."
 )
+_DEFAULT_CAUTION = (
+    "복용 중인 약, 질환, 임신/수유 여부가 있거나 고용량 복용을 고려 중이라면 "
+    "의사 또는 약사와 상담하세요."
+)
 _TRUE_VALUES = {"true", "1", "yes", "y", "on"}
 _KEYWORD_MAP = {
     "크레아틴": ["크레아틴", "creatine", "복용", "섭취", "타이밍", "운동 전", "운동 후", "로딩", "용량"],
@@ -38,6 +42,42 @@ _KEYWORD_MAP = {
     "비타민d": ["비타민D", "vitamin D"],
     "vitamin d": ["비타민D", "vitamin D"],
 }
+
+
+_KEYWORD_MAP.update({
+    "마그네슘": ["마그네슘", "magnesium", "복용 시간", "식후", "저녁", "신장질환", "항생제", "갑상선약", "간격"],
+    "magnesium": ["마그네슘", "magnesium", "복용 시간", "식후", "저녁", "kidney disease", "antibiotics", "thyroid medication"],
+    "아연": ["아연", "zinc", "공복", "식후", "속쓰림", "항생제", "철분", "구리", "간격"],
+    "zinc": ["아연", "zinc", "empty stomach", "with food", "nausea", "antibiotics", "iron", "copper"],
+    "철분": ["철분", "iron", "공복", "비타민C", "칼슘", "카페인", "커피", "갑상선약", "간격"],
+    "iron": ["철분", "iron", "vitamin c", "calcium", "caffeine", "coffee", "thyroid medication", "spacing"],
+    "비타민b": ["비타민B", "비타민B군", "vitamin b", "b-complex", "식후", "아침", "소변색"],
+    "비타민b군": ["비타민B", "비타민B군", "vitamin b", "b-complex", "식후", "아침"],
+    "vitamin b": ["비타민B", "비타민B군", "vitamin b", "b-complex", "with food", "morning"],
+    "b-complex": ["비타민B", "비타민B군", "vitamin b", "b-complex", "with food", "morning"],
+    "비타민d": ["비타민D", "vitamin d", "지용성", "식후", "지방", "칼슘", "고용량", "임신"],
+    "vitamin d": ["비타민D", "vitamin d", "fat soluble", "with meal", "calcium", "high dose", "pregnancy"],
+    "오메가3": ["오메가3", "omega-3", "fish oil", "EPA", "DHA", "식후", "출혈", "항응고제", "와파린"],
+    "omega": ["오메가3", "omega-3", "fish oil", "EPA", "DHA", "with meal", "bleeding", "warfarin"],
+    "fish oil": ["오메가3", "omega-3", "fish oil", "EPA", "DHA", "with meal", "bleeding", "warfarin"],
+    "크레아틴": ["크레아틴", "creatine", "운동 전", "운동 후", "꾸준히", "수분", "로딩", "근력"],
+    "creatine": ["크레아틴", "creatine", "pre workout", "post workout", "daily", "hydration", "loading", "strength"],
+    "칼슘": ["칼슘", "calcium", "식후", "마그네슘", "철분", "갑상선약", "간격", "결석"],
+    "calcium": ["칼슘", "calcium", "with food", "magnesium", "iron", "thyroid medication", "spacing", "kidney stone"],
+    "유산균": ["유산균", "probiotics", "프로바이오틱스", "공복", "식전", "식후", "항생제", "간격"],
+    "프로바이오틱스": ["유산균", "probiotics", "프로바이오틱스", "공복", "식전", "식후", "항생제", "간격"],
+    "probiotics": ["유산균", "probiotics", "프로바이오틱스", "empty stomach", "with food", "antibiotics", "spacing"],
+    "밀크씨슬": ["밀크씨슬", "milk thistle", "실리마린", "silymarin", "간", "간질환", "약물상호작용"],
+    "milk thistle": ["밀크씨슬", "milk thistle", "실리마린", "silymarin", "liver", "interaction"],
+    "루테인": ["루테인", "lutein", "지용성", "식후", "눈 건강", "카로티노이드"],
+    "lutein": ["루테인", "lutein", "fat soluble", "with meal", "eye health", "carotenoid"],
+    "프로틴": ["프로틴", "단백질 보충제", "protein", "whey protein", "운동 전", "운동 후", "총 단백질"],
+    "단백질 보충제": ["프로틴", "단백질 보충제", "protein", "whey protein", "운동 전", "운동 후", "총 단백질"],
+    "protein": ["프로틴", "단백질 보충제", "protein", "whey protein", "pre workout", "post workout", "daily protein"],
+    "whey protein": ["프로틴", "단백질 보충제", "protein", "whey protein", "pre workout", "post workout", "daily protein"],
+    "카페인": ["카페인", "caffeine", "부스터", "프리워크아웃", "운동 전", "수면", "두근거림", "불면", "혈압"],
+    "caffeine": ["카페인", "caffeine", "pre workout", "stimulant", "sleep", "palpitation", "insomnia", "blood pressure"],
+})
 
 
 def _normalize_answer_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -63,6 +103,14 @@ def _normalize_answer_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(parsed_caution, str) and parsed_caution.strip():
         normalized["caution"] = parsed_caution
 
+    return normalized
+
+
+def _ensure_full_answer_caution(payload: Dict[str, Any]) -> Dict[str, Any]:
+    if payload.get("mode") != "full" or payload.get("caution"):
+        return payload
+    normalized = dict(payload)
+    normalized["caution"] = _DEFAULT_CAUTION
     return normalized
 
 
@@ -151,6 +199,9 @@ class SupplementRAGEngine:
                     "system",
                     """You are a cautious supplement information assistant.
 Use only the verified documents below. If the documents are not enough, output WEB_SEARCH_REQUIRED.
+Give practical, general timing guidance when the documents support it.
+Do not diagnose, treat, or guarantee effects. Keep drug, disease, pregnancy, lactation, kidney, liver, bleeding, and high-dose risks conservative.
+Return a plain text answer, not a JSON object or markdown code block.
 
 [Verified documents]
 {context}""",
@@ -211,6 +262,26 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
     def _doc_key(self, doc: Any) -> Any:
         meta = doc.metadata or {}
         return meta.get("id") or meta.get("_source_file") or hash(doc.page_content)
+
+    def _supplement_timing_docs_for_query(self, query: str) -> list[Any]:
+        query_text = (query or "").lower()
+        expanded_query = self._deterministic_query(query).lower()
+        matched_docs: list[Any] = []
+
+        for doc in getattr(self, "original_docs", []):
+            meta = doc.metadata or {}
+            if meta.get("source") != "supp_timing":
+                continue
+            content = (doc.page_content or "").lower()
+            if any(term in content for term in (query_text, expanded_query) if term):
+                matched_docs.append(doc)
+                continue
+            for keyword in expanded_query.split():
+                if len(keyword) >= 3 and keyword in content:
+                    matched_docs.append(doc)
+                    break
+
+        return matched_docs
 
     def _answer_degraded(self, reason: str | None = None) -> Dict[str, Any]:
         return {
@@ -297,9 +368,15 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         add_to_rrf(vector_docs, 0.4)
         ranked_keys = sorted(fused_scores, key=lambda key: fused_scores[key], reverse=True)[:15]
         candidate_docs = [doc_map[key] for key in ranked_keys]
+        timing_docs = self._supplement_timing_docs_for_query(question)
+        if timing_docs:
+            seen_candidate_keys = {self._doc_key(doc) for doc in candidate_docs}
+            promoted_docs = [doc for doc in timing_docs if self._doc_key(doc) not in seen_candidate_keys]
+            candidate_docs = promoted_docs + candidate_docs
         mark("fusion", stage_start)
         counts["candidateDocs"] = len(candidate_docs)
         counts["fusedDocs"] = len(fused_scores)
+        counts["timingDocsPromoted"] = len(timing_docs)
         if not candidate_docs:
             return self._answer_degraded("no_documents")
 
@@ -308,6 +385,10 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         rerank_scores = self.reranker.predict(pairs)
         reranked_results = sorted(zip(rerank_scores, candidate_docs), key=lambda item: item[0], reverse=True)
         final_docs = [doc for _score, doc in reranked_results[:8]]
+        if timing_docs:
+            timing_keys = {self._doc_key(doc) for doc in timing_docs}
+            final_docs = timing_docs + [doc for doc in final_docs if self._doc_key(doc) not in timing_keys]
+            final_docs = final_docs[:8]
         mark("rerank", stage_start)
         counts["rerankPairs"] = len(pairs)
         counts["finalDocs"] = len(final_docs)
@@ -373,7 +454,9 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         if "sourceFormatting" not in timing_ms:
             timing_ms["sourceFormatting"] = 0
 
-        result = _normalize_answer_payload({"answer": answer, "sources": sources, "mode": "full"})
+        result = _ensure_full_answer_caution(
+            _normalize_answer_payload({"answer": answer, "sources": sources, "mode": "full"})
+        )
         timing_ms["total"] = round((time.perf_counter() - start_time) * 1000)
         print(
             "[Supplement RAG completed] elapsed_sec={:.2f} web_search_used={} sources_count={}".format(

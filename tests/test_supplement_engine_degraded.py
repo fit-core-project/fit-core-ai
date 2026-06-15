@@ -1,4 +1,8 @@
-from engines.supplement.supplement_engine import SupplementRAGEngine, _normalize_answer_payload
+from engines.supplement.supplement_engine import (
+    SupplementRAGEngine,
+    _ensure_full_answer_caution,
+    _normalize_answer_payload,
+)
 
 
 def test_supplement_ready_engine_uses_full_path(monkeypatch):
@@ -163,3 +167,20 @@ def test_supplement_degraded_response_shape_is_unchanged():
     assert result == payload
     assert result["mode"] == "degraded"
     assert "caution" not in result
+
+
+def test_supplement_full_answer_gets_default_top_level_caution():
+    payload = {"answer": "Plain text answer.", "sources": [], "mode": "full"}
+
+    result = _ensure_full_answer_caution(payload)
+
+    assert result["answer"] == "Plain text answer."
+    assert result["caution"]
+
+
+def test_supplement_existing_top_level_caution_is_preserved():
+    payload = {"answer": "Plain text answer.", "caution": "Specific caution.", "sources": [], "mode": "full"}
+
+    result = _ensure_full_answer_caution(payload)
+
+    assert result["caution"] == "Specific caution."

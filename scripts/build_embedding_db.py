@@ -99,6 +99,7 @@ FILE_12 = Path(f"{JSON_SOURCE_DIR}/rag_data_5_OTH.json")
 FILE_13 = Path(f"{JSON_SOURCE_DIR}/rag_data_5_RAW.json")
 FILE_14 = Path(f"{JSON_SOURCE_DIR}/rag_data_5_SAFE.json")
 FILE_15 = Path(f"{JSON_SOURCE_DIR}/rag_data_5_SUPP.json")
+FILE_16 = Path(f"{JSON_SOURCE_DIR}/rag_data_supplement_timing.json")
 
 def drugs_metadata(record, metadata):
     return {"id": record.get("id"), "source": "drugs", "_source_file": record.get("_source_file")}
@@ -157,11 +158,16 @@ def supplements_metadata(record, metadata):
     return {"id": record.get("id"), "source": "supp", "_source_file": record.get("_source_file") or metadata.get("source")}
 documents_supp = JSONLoader(file_path=FILE_15, jq_schema=".[]", content_key=None, metadata_func=supplements_metadata, text_content=False).load()
 
+def supplement_timing_metadata(record, metadata):
+    return {"id": record.get("id"), "source": "supp_timing", "_source_file": record.get("_source_file") or metadata.get("source")}
+documents_supp_timing = JSONLoader(file_path=FILE_16, jq_schema=".[]", content_key=None, metadata_func=supplement_timing_metadata, text_content=False).load()
+
 all_documents = (
         documents_drugs_1 + documents_drugs_2 + documents_drugs_3 + documents_drugs_4 +
         documents_disease + documents_faq + documents_interaction + documents_interactions +
         documents_pregnancy + documents_symptom + documents_ing + documents_massive_int +
-        documents_otc_group + documents_raw_ing + documents_safety + documents_supp
+        documents_otc_group + documents_raw_ing + documents_safety + documents_supp +
+        documents_supp_timing
 )
 print(f"총 문서 수: {len(all_documents)}")
 
