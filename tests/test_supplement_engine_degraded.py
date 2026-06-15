@@ -1,4 +1,4 @@
-from engines.supplement.supplement_engine import SupplementRAGEngine
+from engines.supplement.supplement_engine import SupplementRAGEngine, _normalize_answer_payload
 
 
 def test_supplement_ready_engine_uses_full_path(monkeypatch):
@@ -121,3 +121,45 @@ def test_old_supplement_import_shim_still_works():
     from engines.supplement_engine import SupplementRAGEngine as ShimSupplementRAGEngine
 
     assert ShimSupplementRAGEngine is SupplementRAGEngine
+
+
+def test_supplement_json_string_answer_is_promoted_to_top_level_fields():
+    payload = {
+        "answer": '{"answer":"Take magnesium with food or in the evening.","caution":"Ask a clinician if you have kidney disease."}',
+        "sources": [{"id": "doc-1"}],
+        "mode": "full",
+    }
+
+    result = _normalize_answer_payload(payload)
+
+    assert result["answer"] == "Take magnesium with food or in the evening."
+    assert result["caution"] == "Ask a clinician if you have kidney disease."
+    assert result["sources"] == [{"id": "doc-1"}]
+    assert result["mode"] == "full"
+
+
+def test_supplement_plain_text_answer_is_unchanged():
+    payload = {"answer": "Plain text answer.", "sources": [], "mode": "full"}
+
+    result = _normalize_answer_payload(payload)
+
+    assert result == payload
+
+
+def test_supplement_invalid_json_answer_is_kept_as_text():
+    payload = {"answer": '{"answer": "missing end"', "sources": [], "mode": "full"}
+
+    result = _normalize_answer_payload(payload)
+
+    assert result == payload
+
+
+def test_supplement_degraded_response_shape_is_unchanged():
+    engine = SupplementRAGEngine.degraded("test")
+    payload = engine.answer_question("magnesium")
+
+    result = _normalize_answer_payload(payload)
+
+    assert result == payload
+    assert result["mode"] == "degraded"
+    assert "caution" not in result

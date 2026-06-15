@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import time
 import os
 from pathlib import Path
@@ -37,6 +38,32 @@ _KEYWORD_MAP = {
     "비타민d": ["비타민D", "vitamin D"],
     "vitamin d": ["비타민D", "vitamin D"],
 }
+
+
+def _normalize_answer_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Promote JSON-string answer/caution fields without changing fallback shape."""
+    answer = payload.get("answer")
+    if not isinstance(answer, str):
+        return payload
+
+    try:
+        parsed = json.loads(answer)
+    except (TypeError, json.JSONDecodeError):
+        return payload
+
+    if not isinstance(parsed, dict):
+        return payload
+
+    normalized = dict(payload)
+    parsed_answer = parsed.get("answer")
+    parsed_caution = parsed.get("caution")
+
+    if isinstance(parsed_answer, str) and parsed_answer.strip():
+        normalized["answer"] = parsed_answer
+    if isinstance(parsed_caution, str) and parsed_caution.strip():
+        normalized["caution"] = parsed_caution
+
+    return normalized
 
 
 def _env_flag_enabled(name: str) -> bool:
@@ -346,7 +373,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         if "sourceFormatting" not in timing_ms:
             timing_ms["sourceFormatting"] = 0
 
-        result = {"answer": answer, "sources": sources, "mode": "full"}
+        result = _normalize_answer_payload({"answer": answer, "sources": sources, "mode": "full"})
         timing_ms["total"] = round((time.perf_counter() - start_time) * 1000)
         print(
             "[Supplement RAG completed] elapsed_sec={:.2f} web_search_used={} sources_count={}".format(
