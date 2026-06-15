@@ -1,3 +1,4 @@
+from engines.supplement.query_understanding import parse_supplement_query
 from engines.supplement.supplement_engine import SupplementRAGEngine, _is_unusable_generated_answer, _normalize_answer_payload
 
 
@@ -250,6 +251,33 @@ def test_supplement_invalid_json_answer_is_kept_as_text():
     assert result == payload
 
 
+def test_supplement_safety_check_json_answer_is_promoted_to_plain_text():
+    payload = {
+        "answer": '{"safety_check":{"summary":"Acetaminophen with alcohol needs caution.","recommendation":"Ask a pharmacist or physician before additional use.","risk":"Liver risk may be higher."}}',
+        "sources": [{"id": "SAFE_ACETAMINOPHEN_LIVER_ALCOHOL"}],
+        "mode": "full",
+    }
+
+    result = _normalize_answer_payload(payload)
+
+    assert result["answer"] == "Acetaminophen with alcohol needs caution. Ask a pharmacist or physician before additional use."
+    assert result["caution"] == "Liver risk may be higher."
+    assert result["sources"] == [{"id": "SAFE_ACETAMINOPHEN_LIVER_ALCOHOL"}]
+
+
+def test_supplement_unexpected_json_object_answer_is_flattened_to_plain_text():
+    payload = {
+        "answer": '{"Safety rule says":"Ask a clinician before using acetaminophen with alcohol."}',
+        "sources": [{"id": "SAFE_ACETAMINOPHEN_LIVER_ALCOHOL"}],
+        "mode": "full",
+    }
+
+    result = _normalize_answer_payload(payload)
+
+    assert result["answer"] == "Safety rule says: Ask a clinician before using acetaminophen with alcohol."
+    assert result["caution"] == "복용 중인 약, 질환, 음주 등 위험 요인이 있으면 의사 또는 약사와 상담하세요."
+
+
 def test_supplement_degraded_response_shape_is_unchanged():
     engine = SupplementRAGEngine.degraded("test")
     payload = engine.answer_question("magnesium")
@@ -259,3 +287,99 @@ def test_supplement_degraded_response_shape_is_unchanged():
     assert result == payload
     assert result["mode"] == "degraded"
     assert "caution" not in result
+
+
+def test_supplement_priority_kb_docs_route_risk_queries_by_entity_and_intent():
+    engine = SupplementRAGEngine.degraded("test")
+
+    class Doc:
+        def __init__(self, doc_id, source, page_content="", **metadata):
+            self.metadata = {"id": doc_id, "source": source, **metadata}
+            self.page_content = page_content
+
+    engine.original_docs = [
+        Doc(
+            "INT_OMEGA3_ANTICOAGULANTS",
+            "interaction_rule",
+            entity_a_canonical="omega3",
+            entity_b_canonical="anticoagulant",
+            interaction_type="bleeding_risk",
+            caution_level="high",
+        ),
+        Doc(
+            "SAFE_KIDNEY_MAGNESIUM",
+            "safety_rule",
+            "Trigger conditions: 신장질환 kidney disease\nAffected entities: magnesium 마그네슘",
+            affected_entities="magnesium, 마그네슘",
+            caution_level="high",
+        ),
+        Doc(
+            "SAFE_ACETAMINOPHEN_LIVER_ALCOHOL",
+            "safety_rule",
+            "Trigger conditions: 간질환 liver disease 술 알코올 alcohol 음주\nAffected entities: acetaminophen paracetamol 타이레놀",
+            affected_entities="acetaminophen, paracetamol, 타이레놀",
+            caution_level="high",
+        ),
+        Doc(
+            "ING_OMEGA3",
+            "ingredient_profile",
+            canonical="omega3",
+            name="오메가3",
+            category="fatty_acid",
+        ),
+    ]
+
+    omega3_docs = engine._priority_kb_docs(parse_supplement_query("와파린 먹는데 오메가3 먹어도 돼?"))
+    magnesium_docs = engine._priority_kb_docs(parse_supplement_query("신장질환 있는데 마그네슘 먹어도 돼?"))
+    acetaminophen_docs = engine._priority_kb_docs(parse_supplement_query("타이레놀 자주 먹고 술도 마시는데 괜찮아?"))
+
+    assert omega3_docs[0].metadata["id"] == "INT_OMEGA3_ANTICOAGULANTS"
+    assert magnesium_docs[0].metadata["id"] == "SAFE_KIDNEY_MAGNESIUM"
+    assert acetaminophen_docs[0].metadata["id"] == "SAFE_ACETAMINOPHEN_LIVER_ALCOHOL"
+
+
+def test_supplement_priority_kb_docs_keep_existing_interaction_and_timing_sources():
+    engine = SupplementRAGEngine.degraded("test")
+
+    class Doc:
+        def __init__(self, doc_id, source, page_content="", **metadata):
+            self.metadata = {"id": doc_id, "source": source, **metadata}
+            self.page_content = page_content or doc_id
+
+    engine.original_docs = [
+        Doc(
+            "INT_IRON_CAFFEINE",
+            "interaction_rule",
+            entity_a_canonical="iron",
+            entity_b_canonical="caffeine",
+            interaction_type="absorption_interference",
+            caution_level="moderate",
+        ),
+        Doc(
+            "INT_IRON_ANTIBIOTICS",
+            "interaction_rule",
+            entity_a_canonical="iron",
+            entity_b_canonical="antibiotics",
+            interaction_type="medication_timing_interference",
+            caution_level="high",
+        ),
+        Doc(
+            "INT_MAGNESIUM_THYROID_MEDICATION",
+            "interaction_rule",
+            entity_a_canonical="magnesium",
+            entity_b_canonical="thyroid medication",
+            interaction_type="medication_timing_interference",
+            caution_level="high",
+        ),
+        Doc("ING_MAGNESIUM", "ingredient_profile", canonical="magnesium"),
+        Doc("ING_CREATINE", "ingredient_profile", canonical="creatine"),
+    ]
+
+    assert engine._priority_kb_docs(parse_supplement_query("철분은 커피랑 같이 먹어도 돼?"))[0].metadata["id"] == "INT_IRON_CAFFEINE"
+    assert engine._priority_kb_docs(parse_supplement_query("항생제 먹는데 철분 먹어도 돼?"))[0].metadata["id"] == "INT_IRON_ANTIBIOTICS"
+    assert (
+        engine._priority_kb_docs(parse_supplement_query("갑상선약 먹는데 마그네슘 같이 먹어도 돼?"))[0].metadata["id"]
+        == "INT_MAGNESIUM_THYROID_MEDICATION"
+    )
+    assert engine._priority_kb_docs(parse_supplement_query("마그네슘은 언제 먹는 게 좋아?"))[0].metadata["id"] == "ING_MAGNESIUM"
+    assert engine._priority_kb_docs(parse_supplement_query("크레아틴은 언제 먹는 게 좋아?"))[0].metadata["id"] == "ING_CREATINE"

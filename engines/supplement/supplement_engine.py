@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 from engines.llm_router import get_llm
 from engines.log_redaction import sanitize_exception_for_log
+from engines.supplement.query_understanding import EntityType, IntentType, ParsedSupplementQuery, parse_supplement_query
 
 load_dotenv()
 
@@ -92,6 +93,17 @@ _TIMING_DOC_RULES = (
     (("비타민d", "비타민 d", "vitamin d"), "SUPP_TIMING_VITAMIN_D"),
     (("오메가3", "오메가-3", "omega3", "omega-3", "omega"), "SUPP_TIMING_OMEGA3"),
 )
+_ENTITY_EQUIVALENTS = {
+    "anticoagulant": {"anticoagulant", "warfarin"},
+    "warfarin": {"warfarin", "anticoagulant"},
+    "caffeine": {"caffeine", "coffee"},
+    "coffee": {"coffee", "caffeine"},
+    "alcohol": {"alcohol", "alcohol use"},
+    "alcohol use": {"alcohol use", "alcohol"},
+    "vitamin d": {"vitamin d", "vitamind"},
+    "thyroid medication": {"thyroid medication", "levothyroxine"},
+    "levothyroxine": {"levothyroxine", "thyroid medication"},
+}
 
 
 def _normalize_answer_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -111,6 +123,37 @@ def _normalize_answer_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     normalized = dict(payload)
     parsed_answer = parsed.get("answer")
     parsed_caution = parsed.get("caution")
+    if not isinstance(parsed_answer, str) or not parsed_answer.strip():
+        safety_check = parsed.get("safety_check")
+        if isinstance(safety_check, dict):
+            answer_parts = [
+                safety_check.get("summary"),
+                safety_check.get("recommendation"),
+            ]
+            parsed_answer = " ".join(
+                part.strip()
+                for part in answer_parts
+                if isinstance(part, str) and part.strip()
+            )
+            parsed_caution = parsed_caution or safety_check.get("caution") or safety_check.get("risk")
+    if not isinstance(parsed_answer, str) or not parsed_answer.strip():
+        flattened_parts = []
+        for key, value in parsed.items():
+            if key in {"caution", "warning"}:
+                continue
+            if isinstance(value, str) and value.strip():
+                flattened_parts.append(f"{key}: {value}".strip())
+            elif isinstance(value, (dict, list)):
+                try:
+                    flattened_parts.append(f"{key}: {json.dumps(value, ensure_ascii=False)}")
+                except TypeError:
+                    flattened_parts.append(f"{key}: {value}")
+            elif value is not None:
+                flattened_parts.append(f"{key}: {value}")
+        parsed_answer = " ".join(part for part in flattened_parts if part).strip()
+        parsed_caution = parsed_caution or parsed.get("warning")
+        if parsed_answer and not parsed_caution:
+            parsed_caution = "복용 중인 약, 질환, 음주 등 위험 요인이 있으면 의사 또는 약사와 상담하세요."
 
     if isinstance(parsed_answer, str) and parsed_answer.strip():
         normalized["answer"] = parsed_answer
@@ -302,6 +345,109 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             and (doc.metadata or {}).get("id") in wanted_ids
         ]
 
+    def _expanded_canonicals(self, canonical: str) -> set[str]:
+        normalized = (canonical or "").strip().lower()
+        if not normalized:
+            return set()
+        return {normalized, *_ENTITY_EQUIVALENTS.get(normalized, set())}
+
+    def _parsed_entities_by_type(self, parsed_query: ParsedSupplementQuery, entity_type: EntityType) -> set[str]:
+        values: set[str] = set()
+        for entity in parsed_query.entities:
+            if entity.type != entity_type:
+                continue
+            values.update(self._expanded_canonicals(entity.canonical))
+        return values
+
+    def _all_parsed_entity_values(self, parsed_query: ParsedSupplementQuery) -> set[str]:
+        values: set[str] = set()
+        for entity in parsed_query.entities:
+            values.update(self._expanded_canonicals(entity.canonical))
+        return values
+
+    def _metadata_values(self, value: Any) -> set[str]:
+        if value is None:
+            return set()
+        if isinstance(value, str):
+            parts = [part.strip().lower() for part in value.split(",")]
+            return {part for part in parts if part}
+        if isinstance(value, list):
+            values: set[str] = set()
+            for item in value:
+                values.update(self._metadata_values(item))
+            return values
+        return {str(value).strip().lower()}
+
+    def _doc_text_contains_any(self, doc: Any, values: set[str]) -> bool:
+        text = (doc.page_content or "").lower()
+        return any(value and value in text for value in values)
+
+    def _priority_kb_docs(self, parsed_query: ParsedSupplementQuery) -> list[Any]:
+        intents = set(parsed_query.intents)
+        supplement_entities = self._parsed_entities_by_type(parsed_query, EntityType.SUPPLEMENT_INGREDIENT)
+        drug_entities = self._parsed_entities_by_type(parsed_query, EntityType.DRUG_OR_DRUG_CLASS)
+        food_entities = self._parsed_entities_by_type(parsed_query, EntityType.FOOD_OR_COMPOUND)
+        condition_entities = self._parsed_entities_by_type(parsed_query, EntityType.CONDITION)
+        risk_entities = self._parsed_entities_by_type(parsed_query, EntityType.RISK_CONTEXT)
+        all_entities = self._all_parsed_entity_values(parsed_query)
+
+        scored_docs: list[tuple[float, Any]] = []
+        for doc in getattr(self, "original_docs", []):
+            meta = doc.metadata or {}
+            source = meta.get("source")
+            score = 0.0
+
+            if source == "interaction_rule":
+                entity_a = self._expanded_canonicals(str(meta.get("entity_a_canonical") or ""))
+                entity_b = self._expanded_canonicals(str(meta.get("entity_b_canonical") or ""))
+                a_match = bool(entity_a & all_entities)
+                b_match = bool(entity_b & all_entities)
+                supplement_match = bool((entity_a | entity_b) & supplement_entities)
+                risk_match = bool((entity_a | entity_b) & (drug_entities | food_entities | risk_entities))
+                if a_match and b_match:
+                    score += 120.0
+                elif supplement_match and risk_match:
+                    score += 90.0
+                elif supplement_match:
+                    score += 35.0
+                if score > 0 and intents & {IntentType.DRUG_INTERACTION, IntentType.FOOD_COMPOUND_INTERACTION, IntentType.SUPPLEMENT_INTERACTION}:
+                    score += 30.0
+                if score > 0 and str(meta.get("caution_level") or "").lower() in {"high", "critical"}:
+                    score += 5.0
+
+            elif source == "safety_rule":
+                affected = set()
+                for value in self._metadata_values(meta.get("affected_entities")):
+                    affected.update(self._expanded_canonicals(value))
+                affected_match = bool(affected & (supplement_entities | drug_entities | food_entities | all_entities))
+                trigger_match = self._doc_text_contains_any(doc, condition_entities | risk_entities | drug_entities | food_entities)
+                if affected_match and trigger_match:
+                    score += 125.0
+                elif affected_match:
+                    score += 70.0
+                if score > 0 and intents & {
+                    IntentType.CONDITION_SAFETY,
+                    IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY,
+                    IntentType.MEDICATION_SAFETY,
+                    IntentType.DRUG_INTERACTION,
+                }:
+                    score += 35.0
+                if score > 0 and str(meta.get("caution_level") or "").lower() in {"high", "critical"}:
+                    score += 8.0
+
+            elif source == "ingredient_profile":
+                canonical = self._expanded_canonicals(str(meta.get("canonical") or ""))
+                if canonical & supplement_entities:
+                    score += 60.0
+                    if IntentType.TIMING in intents:
+                        score += 35.0
+
+            if score > 0:
+                scored_docs.append((score, doc))
+
+        scored_docs.sort(key=lambda item: item[0], reverse=True)
+        return [doc for _score, doc in scored_docs[:8]]
+
     def _answer_from_timing_doc(self, doc: Any) -> Dict[str, str] | None:
         lines = (doc.page_content or "").splitlines()
         timing = ""
@@ -366,7 +512,10 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
 
         stage_start = time.perf_counter()
         normalized_question = (question or "").strip()
+        parsed_query = parse_supplement_query(normalized_question)
         mark("inputNormalization", stage_start)
+        counts["parsedEntityCount"] = len(parsed_query.entities)
+        counts["parsedIntents"] = [intent.value for intent in parsed_query.intents]
 
         stage_start = time.perf_counter()
         search_query = self._expand_query(question)
@@ -398,6 +547,8 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
 
         priority_timing_docs = self._priority_timing_docs(search_query)
         counts["priorityTimingDocs"] = len(priority_timing_docs)
+        priority_kb_docs = self._priority_kb_docs(parsed_query)
+        counts["priorityKbDocs"] = len(priority_kb_docs)
 
         stage_start = time.perf_counter()
         rrf_k = 60
@@ -415,6 +566,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         add_to_rrf(bm25_docs, 0.6)
         add_to_rrf(vector_docs, 0.4)
         add_to_rrf(priority_timing_docs, 1.0)
+        add_to_rrf(priority_kb_docs, 1.2)
         ranked_keys = sorted(fused_scores, key=lambda key: fused_scores[key], reverse=True)[:15]
         candidate_docs = [doc_map[key] for key in ranked_keys]
         mark("fusion", stage_start)
@@ -431,7 +583,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         final_docs = []
         seen_final_keys = set()
         priority_timing_keys = {self._doc_key(doc) for doc in priority_timing_docs}
-        for doc in [*priority_timing_docs, *reranked_docs]:
+        for doc in [*priority_kb_docs, *priority_timing_docs, *reranked_docs]:
             meta = doc.metadata or {}
             if (
                 priority_timing_keys
