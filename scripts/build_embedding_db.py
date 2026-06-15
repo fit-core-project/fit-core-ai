@@ -100,6 +100,7 @@ FILE_13 = Path(f"{JSON_SOURCE_DIR}/rag_data_5_RAW.json")
 FILE_14 = Path(f"{JSON_SOURCE_DIR}/rag_data_5_SAFE.json")
 FILE_15 = Path(f"{JSON_SOURCE_DIR}/rag_data_5_SUPP.json")
 FILE_16 = Path(f"{JSON_SOURCE_DIR}/supplement_timing_guide.json")
+FILE_17 = Path(f"{JSON_SOURCE_DIR}/supplement_ingredient_profiles.json")
 
 def drugs_metadata(record, metadata):
     return {"id": record.get("id"), "source": "drugs", "_source_file": record.get("_source_file")}
@@ -162,12 +163,25 @@ def supplement_timing_metadata(record, metadata):
     return {"id": record.get("id"), "source": "supp_timing", "_source_file": record.get("_source_file") or metadata.get("source")}
 documents_supp_timing = JSONLoader(file_path=FILE_16, jq_schema=".[]", content_key=None, metadata_func=supplement_timing_metadata, text_content=False).load()
 
+def ingredient_profile_metadata(record, metadata):
+    canonical = (record.get("id") or "").removeprefix("ING_").lower().replace("_", " ")
+    return {
+        "id": record.get("id"),
+        "source": "ingredient_profile",
+        "_source_file": record.get("_source_file") or metadata.get("source") or "supplement_ingredient_profiles.json",
+        "type": record.get("type"),
+        "name": record.get("name"),
+        "category": record.get("category"),
+        "canonical": canonical,
+    }
+documents_ingredient_profiles = JSONLoader(file_path=FILE_17, jq_schema=".[]", content_key=None, metadata_func=ingredient_profile_metadata, text_content=False).load()
+
 all_documents = (
         documents_drugs_1 + documents_drugs_2 + documents_drugs_3 + documents_drugs_4 +
         documents_disease + documents_faq + documents_interaction + documents_interactions +
         documents_pregnancy + documents_symptom + documents_ing + documents_massive_int +
         documents_otc_group + documents_raw_ing + documents_safety + documents_supp +
-        documents_supp_timing
+        documents_supp_timing + documents_ingredient_profiles
 )
 print(f"총 문서 수: {len(all_documents)}")
 
@@ -414,6 +428,34 @@ def format_supplement_timing_guide_text(payload: Union[str, Dict[str, Any], List
     if content.get("cautions"): lines.append("Cautions:\n" + _bullet(content.get("cautions")))
     return "\n".join(lines).strip()
 
+def format_ingredient_profile_text(payload: Union[str, Dict[str, Any], List[Any]]) -> str:
+    data = json.loads(payload) if isinstance(payload, str) else payload
+    if isinstance(data, list): data = data[0] if data else {}
+    timing = data.get("timing") or {}
+
+    lines = ["[Ingredient profile]"]
+    if _norm(data.get("id")): lines.append(f"ID: {_norm(data.get('id'))}")
+    if _norm(data.get("name")): lines.append(f"Name: {_norm(data.get('name'))}")
+    if _norm(data.get("category")): lines.append(f"Category: {_norm(data.get('category'))}")
+    if data.get("aliases"): lines.append("Aliases:\n" + _bullet(data.get("aliases")))
+    if data.get("common_uses"): lines.append("Common uses:\n" + _bullet(data.get("common_uses")))
+    if isinstance(timing, dict):
+        timing_lines = []
+        for key, label in [
+            ("general", "General"),
+            ("with_food", "With food"),
+            ("before_bed", "Before bed"),
+            ("exercise_related", "Exercise related"),
+        ]:
+            value = _norm(timing.get(key))
+            if value: timing_lines.append(f"  - {label}: {value}")
+        if timing_lines: lines.append("Timing:\n" + "\n".join(timing_lines))
+    if data.get("spacing"): lines.append("Spacing:\n" + _bullet(data.get("spacing")))
+    if data.get("cautions"): lines.append("Cautions:\n" + _bullet(data.get("cautions")))
+    if data.get("high_risk_groups"): lines.append("High risk groups:\n" + _bullet(data.get("high_risk_groups")))
+    if data.get("related_interactions"): lines.append("Related interactions:\n" + _bullet(data.get("related_interactions")))
+    return "\n".join(lines).strip()
+
 # 전체 문서 포맷팅 적용
 print("텍스트 포맷팅 변환 중...")
 for doc in all_documents:
@@ -431,6 +473,7 @@ for doc in all_documents:
     elif source == "safety": doc.page_content = format_population_safety_text(doc.page_content)
     elif source == "supp": doc.page_content = format_supplement_ingredient_guide_text(doc.page_content)
     elif source == "supp_timing": doc.page_content = format_supplement_timing_guide_text(doc.page_content)
+    elif source == "ingredient_profile": doc.page_content = format_ingredient_profile_text(doc.page_content)
 
 
 # ==========================================

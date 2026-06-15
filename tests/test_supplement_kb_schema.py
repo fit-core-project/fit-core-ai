@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -211,3 +214,22 @@ def test_entity_ref_requires_type_canonical_and_label():
                 "caution_level": "moderate",
             }
         )
+
+
+def test_supplement_ingredient_profile_corpus_validates_against_schema():
+    corpus_path = Path("data/documents/supplement_ingredient_profiles.json")
+    data = json.loads(corpus_path.read_text(encoding="utf-8"))
+
+    profiles = [IngredientProfile.model_validate(item) for item in data]
+
+    assert [profile.id for profile in profiles] == [
+        "ING_MAGNESIUM",
+        "ING_CREATINE",
+        "ING_VITAMIN_D",
+        "ING_OMEGA3",
+        "ING_IRON",
+    ]
+    assert {profile.type for profile in profiles} == {"ingredient_profile"}
+    assert all(profile.aliases for profile in profiles)
+    assert all(profile.timing.general for profile in profiles)
+    assert all(profile.cautions for profile in profiles)
