@@ -147,6 +147,70 @@ def test_json_answer_is_not_exposed_and_kb_fallback_is_used():
     assert "상담" in result.caution
 
 
+def test_invalid_json_like_answer_uses_kb_fallback():
+    doc = Doc(
+        "SAFE_KIDNEY_MAGNESIUM",
+        "safety_rule",
+        "\n".join(
+            [
+                "[Safety rule]",
+                "Risk: kidney disease requires caution",
+                "Recommendation: consult a clinician before magnesium supplementation",
+                "Caution level: high",
+            ]
+        ),
+    )
+
+    result = compose_supplement_response(
+        question="신장질환 있는데 마그네슘 먹어도 돼?",
+        parsed_query=parse_supplement_query("신장질환 있는데 마그네슘 먹어도 돼?"),
+        generated_answer='{"**consult before use** this is not valid json',
+        generated_caution=None,
+        selected_docs=[doc],
+    )
+
+    assert result.used_kb_fallback is True
+    assert not result.answer.strip().startswith("{")
+    assert result.caution
+
+
+def test_condition_safety_fallback_prefers_safety_rule_over_interaction_rule():
+    safety = Doc(
+        "SAFE_KIDNEY_MAGNESIUM",
+        "safety_rule",
+        "\n".join(
+            [
+                "[Safety rule]",
+                "Risk: kidney disease requires caution",
+                "Recommendation: consult a clinician before magnesium supplementation",
+                "Caution level: high",
+            ]
+        ),
+    )
+    interaction = Doc(
+        "INT_MAGNESIUM_ANTIBIOTICS",
+        "interaction_rule",
+        "\n".join(
+            [
+                "[Interaction rule]",
+                "Recommendation: separate dosing from antibiotics",
+                "Caution level: high",
+            ]
+        ),
+    )
+
+    result = compose_supplement_response(
+        question="신장질환 있는데 마그네슘 먹어도 돼?",
+        parsed_query=parse_supplement_query("신장질환 있는데 마그네슘 먹어도 돼?"),
+        generated_answer="{}",
+        generated_caution=None,
+        selected_docs=[interaction, safety],
+    )
+
+    assert "검색된 안전 규칙" in result.answer
+    assert "검색된 상호작용 규칙" not in result.answer
+
+
 def test_recommendation_json_answer_is_promoted_without_key_flattening():
     result = compose_supplement_response(
         question="신장질환 있는데 마그네슘 먹어도 돼?",
@@ -190,6 +254,23 @@ def test_risk_caution_is_softened():
     assert _u("\\uba39\\uc5b4\\ub3c4 \\ub429\\ub2c8\\ub2e4") not in result.caution
     assert _u("\\uc548\\uc804\\ud569\\ub2c8\\ub2e4") not in result.caution
     assert _u("\\uc0c1\\ub2f4") in result.caution
+
+
+def test_food_interaction_caution_is_softened():
+    query = "철분은 커피랑 같이 먹어도 돼?"
+
+    result = compose_supplement_response(
+        question=query,
+        parsed_query=parse_supplement_query(query),
+        generated_answer="시간 간격을 두는 것이 좋습니다.",
+        generated_caution="같이 먹어도 됩니다. 안전합니다.",
+        selected_docs=[],
+    )
+
+    assert result.caution
+    assert "먹어도 됩니다" not in result.caution
+    assert "안전합니다" not in result.caution
+    assert "상담" in result.caution
 
 
 def test_timing_fallback_prefers_profile_over_safety_rule_for_answer():

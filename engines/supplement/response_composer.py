@@ -10,6 +10,8 @@ from engines.supplement.query_understanding import IntentType, ParsedSupplementQ
 
 _RISK_INTENTS = {
     IntentType.DRUG_INTERACTION,
+    IntentType.FOOD_COMPOUND_INTERACTION,
+    IntentType.SUPPLEMENT_INTERACTION,
     IntentType.CONDITION_SAFETY,
     IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY,
     IntentType.MEDICATION_SAFETY,
@@ -86,6 +88,8 @@ def _normalize_answer(value: str | dict | None) -> tuple[str, str | None]:
     try:
         parsed = json.loads(stripped)
     except (TypeError, json.JSONDecodeError):
+        if stripped.startswith(("{", "[")):
+            return "", None
         return stripped, None
     if isinstance(parsed, dict):
         return _answer_from_dict(parsed)
@@ -180,6 +184,15 @@ def _fallback_answer_from_docs(docs: list[Any], parsed_query: ParsedSupplementQu
         return (
             "일반적인 복용 타이밍은 성분과 목적에 따라 달라질 수 있습니다. 검색된 성분 프로필의 복용 가이드와 "
             "주의사항을 기준으로 식사 여부, 운동 전후, 다른 약물과의 간격을 함께 확인하는 것이 좋습니다."
+        )
+    if source_types & {"safety_rule"} and intents & {
+        IntentType.CONDITION_SAFETY,
+        IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY,
+        IntentType.MEDICATION_SAFETY,
+    }:
+        return (
+            "해당 조건에서는 보충제나 약 복용을 임의로 결정하지 않는 것이 좋습니다. 검색된 안전 규칙에 따르면 질환, "
+            "임신/수유, 수술 전후, 고용량 복용 같은 조건에서는 전문가 상담이 필요할 수 있습니다."
         )
     if "interaction_rule" in source_types:
         return (

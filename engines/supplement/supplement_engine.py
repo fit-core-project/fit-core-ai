@@ -87,13 +87,6 @@ _KEYWORD_MAP = {
 }
 _TIMING_INTENT_NEEDLES = ("언제", "먹는 시간", "복용 시간", "복용 타이밍", "타이밍", "식전", "식후", "공복", "자기 전", "저녁", "간격")
 _TIMING_INTENT_KEYWORDS = ["복용", "섭취", "복용 시간", "복용 타이밍", "식전", "식후", "공복", "자기 전", "저녁", "간격"]
-_TIMING_DOC_RULES = (
-    (("마그네슘", "magnesium"), "SUPP_TIMING_MAGNESIUM"),
-    (("철분", "iron"), "SUPP_TIMING_IRON"),
-    (("크레아틴", "creatine"), "SUPP_TIMING_CREATINE"),
-    (("비타민d", "비타민 d", "vitamin d"), "SUPP_TIMING_VITAMIN_D"),
-    (("오메가3", "오메가-3", "omega3", "omega-3", "omega"), "SUPP_TIMING_OMEGA3"),
-)
 _ENTITY_EQUIVALENTS = {
     "anticoagulant": {"anticoagulant", "warfarin"},
     "warfarin": {"warfarin", "anticoagulant"},
@@ -102,6 +95,7 @@ _ENTITY_EQUIVALENTS = {
     "alcohol": {"alcohol", "alcohol use"},
     "alcohol use": {"alcohol use", "alcohol"},
     "vitamin d": {"vitamin d", "vitamind"},
+    "omega3": {"omega3", "omega-3", "omega", "fish oil"},
     "thyroid medication": {"thyroid medication", "levothyroxine"},
     "levothyroxine": {"levothyroxine", "thyroid medication"},
 }
@@ -346,24 +340,6 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         meta = doc.metadata or {}
         return meta.get("id") or meta.get("_source_file") or hash(doc.page_content)
 
-    def _priority_timing_docs(self, query: str) -> list[Any]:
-        normalized = (query or "").strip()
-        lowered = normalized.lower()
-        wanted_ids = {
-            doc_id
-            for needles, doc_id in _TIMING_DOC_RULES
-            if any(needle in lowered or needle in normalized for needle in needles)
-        }
-        if not wanted_ids:
-            return []
-        original_docs = getattr(self, "original_docs", [])
-        return [
-            doc
-            for doc in original_docs
-            if (doc.metadata or {}).get("_source_file") == "supplement_timing_guide.json"
-            and (doc.metadata or {}).get("id") in wanted_ids
-        ]
-
     def _expanded_canonicals(self, canonical: str) -> set[str]:
         normalized = (canonical or "").strip().lower()
         if not normalized:
@@ -400,6 +376,15 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
     def _doc_text_contains_any(self, doc: Any, values: set[str]) -> bool:
         text = (doc.page_content or "").lower()
         return any(value and value in text for value in values)
+
+    def _is_unrelated_supp_timing_doc(self, parsed_query: ParsedSupplementQuery, doc: Any) -> bool:
+        meta = doc.metadata or {}
+        if meta.get("source") != "supp_timing" and meta.get("_source_file") != "supplement_timing_guide.json":
+            return False
+        supplement_entities = self._parsed_entities_by_type(parsed_query, EntityType.SUPPLEMENT_INGREDIENT)
+        if not supplement_entities:
+            return False
+        return not self._doc_text_contains_any(doc, supplement_entities)
 
     def _priority_kb_docs(self, parsed_query: ParsedSupplementQuery) -> list[Any]:
         intents = set(parsed_query.intents)
@@ -564,8 +549,6 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         counts["bm25Docs"] = len(bm25_docs)
         counts["queryTokenCount"] = len(q_tokens)
 
-        priority_timing_docs = self._priority_timing_docs(search_query)
-        counts["priorityTimingDocs"] = len(priority_timing_docs)
         priority_kb_docs = self._priority_kb_docs(parsed_query)
         counts["priorityKbDocs"] = len(priority_kb_docs)
 
@@ -584,7 +567,6 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
 
         add_to_rrf(bm25_docs, 0.6)
         add_to_rrf(vector_docs, 0.4)
-        add_to_rrf(priority_timing_docs, 1.0)
         add_to_rrf(priority_kb_docs, 1.2)
         ranked_keys = sorted(fused_scores, key=lambda key: fused_scores[key], reverse=True)[:15]
         candidate_docs = [doc_map[key] for key in ranked_keys]
@@ -601,14 +583,8 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         reranked_docs = [doc for _score, doc in reranked_results]
         final_docs = []
         seen_final_keys = set()
-        priority_timing_keys = {self._doc_key(doc) for doc in priority_timing_docs}
-        for doc in [*priority_kb_docs, *priority_timing_docs, *reranked_docs]:
-            meta = doc.metadata or {}
-            if (
-                priority_timing_keys
-                and meta.get("_source_file") == "supplement_timing_guide.json"
-                and self._doc_key(doc) not in priority_timing_keys
-            ):
+        for doc in [*priority_kb_docs, *reranked_docs]:
+            if self._is_unrelated_supp_timing_doc(parsed_query, doc):
                 continue
             key = self._doc_key(doc)
             if key in seen_final_keys:
