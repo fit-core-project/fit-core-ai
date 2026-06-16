@@ -373,6 +373,10 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             return values
         return {str(value).strip().lower()}
 
+    def _doc_source_type(self, doc: Any) -> str:
+        meta = doc.metadata or {}
+        return str(meta.get("source") or meta.get("type") or "").strip()
+
     def _doc_text_contains_any(self, doc: Any, values: set[str]) -> bool:
         text = (doc.page_content or "").lower()
         return any(value and value in text for value in values)
@@ -389,7 +393,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         scored_docs: list[tuple[float, Any]] = []
         for doc in getattr(self, "original_docs", []):
             meta = doc.metadata or {}
-            source = meta.get("source")
+            source = self._doc_source_type(doc)
             score = 0.0
 
             if source == "interaction_rule":
@@ -635,7 +639,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                     {
                         "file": meta.get("_source_file", "unknown"),
                         "id": str(meta.get("id", "N/A")),
-                        "type": str(meta.get("source", "DOC")),
+                        "type": str(meta.get("source") or meta.get("type") or "DOC"),
                     }
                 )
                 seen_keys.add(source_key)

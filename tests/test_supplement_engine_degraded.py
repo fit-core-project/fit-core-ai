@@ -298,6 +298,49 @@ def test_supplement_degraded_response_shape_is_unchanged():
     assert "caution" not in result
 
 
+def test_supplement_priority_kb_docs_accept_type_metadata_for_compact_timing_query():
+    engine = SupplementRAGEngine.degraded("test")
+
+    class Doc:
+        def __init__(self, doc_id, doc_type, **metadata):
+            self.metadata = {"id": doc_id, "type": doc_type, **metadata}
+            self.page_content = doc_id
+
+    engine.original_docs = [
+        Doc("FAQ-01042", "faq"),
+        Doc("ING_MAGNESIUM", "ingredient_profile", canonical="magnesium"),
+    ]
+
+    docs = engine._priority_kb_docs(parse_supplement_query("\ub9c8\uadf8\ub124\uc298\uc740 \uc5b8\uc81c\uba39\ub294 \uac8c \uc88b\uc544?"))
+
+    assert docs[0].metadata["id"] == "ING_MAGNESIUM"
+
+
+def test_supplement_priority_kb_docs_accept_type_metadata_for_drug_interaction():
+    engine = SupplementRAGEngine.degraded("test")
+
+    class Doc:
+        def __init__(self, doc_id, doc_type, **metadata):
+            self.metadata = {"id": doc_id, "type": doc_type, **metadata}
+            self.page_content = doc_id
+
+    engine.original_docs = [
+        Doc("FAQ-01060", "faq"),
+        Doc(
+            "INT_OMEGA3_ANTICOAGULANTS",
+            "interaction_rule",
+            entity_a_canonical="omega3",
+            entity_b_canonical="anticoagulant",
+            interaction_type="bleeding_risk",
+            caution_level="high",
+        ),
+    ]
+
+    docs = engine._priority_kb_docs(parse_supplement_query("\uc640\ud30c\ub9b0 \uba39\ub294\ub370 \uc624\uba54\uac003 \uba39\uc5b4\ub3c4 \ub3fc?"))
+
+    assert docs[0].metadata["id"] == "INT_OMEGA3_ANTICOAGULANTS"
+
+
 def test_supplement_priority_kb_docs_route_risk_queries_by_entity_and_intent():
     engine = SupplementRAGEngine.degraded("test")
 

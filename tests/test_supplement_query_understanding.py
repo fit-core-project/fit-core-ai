@@ -9,6 +9,13 @@ def _entity_types(parsed):
     return {(entity.type, entity.canonical) for entity in parsed.entities}
 
 
+def test_parse_compact_magnesium_timing_question():
+    parsed = parse_supplement_query("\ub9c8\uadf8\ub124\uc298\uc740 \uc5b8\uc81c\uba39\ub294 \uac8c \uc88b\uc544?")
+
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "magnesium") in _entity_types(parsed)
+    assert IntentType.TIMING in parsed.intents
+
+
 def test_parse_antibiotics_and_iron_as_drug_interaction():
     parsed = parse_supplement_query("항생제 먹는데 철분 먹어도 돼?")
 
