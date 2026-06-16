@@ -21,6 +21,7 @@ from engines.db_queries import get_recent_sets, get_user_profile_context
 from engines.log_redaction import sanitize_exception_for_log, summarize_text_for_log
 from engines.llm_router import resolve_llm_provider
 from engines.quicklog.nlp_engine import parse_natural_language_log
+from engines.quicklog.diet_parser import parse_diet_log
 from engines.routine_pipeline import generate_smart_routine
 from engines.schemas import RoutineDraftResponse, RoutineFeedbackRequest, RoutineFeedbackResponse, RoutineRequest
 from engines.supplement.supplement_engine import SupplementRAGEngine
@@ -203,6 +204,18 @@ def api_parse_log(req: LogRequest):
     except Exception as exc:
         print("[NLP Error]", sanitize_exception_for_log(exc))
         fallback = parse_natural_language_log("")
+        return json.loads(fallback)
+
+
+@app.post("/api/ai/parse-diet")
+def api_parse_diet(req: LogRequest):
+    try:
+        print("[diet parse request]", summarize_text_for_log(req.text))
+        result_json_str = parse_diet_log(req.text)
+        return json.loads(result_json_str)
+    except Exception as exc:
+        print("[Diet NLP Error]", sanitize_exception_for_log(exc))
+        fallback = parse_diet_log("")
         return json.loads(fallback)
 
 
