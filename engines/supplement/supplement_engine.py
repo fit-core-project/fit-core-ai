@@ -694,13 +694,6 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             payload["caution"] = composed.caution
         if composed.used_kb_fallback:
             counts["answerRecoveredFromKbDocs"] = True
-        timing_payload = self._answer_from_timing_doc(priority_timing_docs[0]) if priority_timing_docs else None
-        if _is_unusable_generated_answer(payload.get("answer")) and timing_payload:
-            payload.update(timing_payload)
-            counts["answerRecoveredFromTimingDoc"] = True
-        elif timing_payload and "caution" in timing_payload and "caution" not in payload:
-            payload["caution"] = timing_payload["caution"]
-            counts["cautionRecoveredFromTimingDoc"] = True
         result = _normalize_answer_payload(payload)
         timing_ms["total"] = round((time.perf_counter() - start_time) * 1000)
         print(

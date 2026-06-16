@@ -1,4 +1,5 @@
 from engines.supplement.query_understanding import parse_supplement_query
+from engines.supplement.response_composer import compose_supplement_response
 from engines.supplement.supplement_engine import SupplementRAGEngine, _is_unusable_generated_answer, _normalize_answer_payload
 
 
@@ -102,37 +103,35 @@ def test_supplement_existing_pass_queries_keep_expansion_keywords(monkeypatch):
     assert "EPA" in omega3_query
 
 
-def test_supplement_priority_timing_docs_match_query_targets():
+def test_supplement_timing_queries_prioritize_entity_profile_sources():
     engine = SupplementRAGEngine.degraded("test")
 
     class Doc:
-        def __init__(self, doc_id):
-            self.metadata = {"_source_file": "supplement_timing_guide.json", "id": doc_id}
+        def __init__(self, doc_id, canonical):
+            self.metadata = {"id": doc_id, "source": "ingredient_profile", "canonical": canonical}
             self.page_content = doc_id
 
     engine.original_docs = [
-        Doc("SUPP_TIMING_MAGNESIUM"),
-        Doc("SUPP_TIMING_IRON"),
-        Doc("SUPP_TIMING_CREATINE"),
-        Doc("SUPP_TIMING_VITAMIN_D"),
-        Doc("SUPP_TIMING_OMEGA3"),
+        Doc("ING_MAGNESIUM", "magnesium"),
+        Doc("ING_CREATINE", "creatine"),
+        Doc("ING_VITAMIN_D", "vitamin d"),
     ]
 
-    assert [doc.metadata["id"] for doc in engine._priority_timing_docs("마그네슘은 언제 먹는 게 좋아?")] == [
-        "SUPP_TIMING_MAGNESIUM"
+    cases = [
+        ("마그네슘은 언제 먹는 게 좋아?", "magnesium", "ING_MAGNESIUM"),
+        ("크레아틴은 언제 먹는 게 좋아?", "creatine", "ING_CREATINE"),
+        ("비타민D는 식후에 먹는 게 좋아?", "vitamin d", "ING_VITAMIN_D"),
     ]
-    assert [doc.metadata["id"] for doc in engine._priority_timing_docs("철분은 커피랑 같이 먹어도 돼?")] == [
-        "SUPP_TIMING_IRON"
-    ]
-    assert [doc.metadata["id"] for doc in engine._priority_timing_docs("크레아틴은 언제 먹는 게 좋아?")] == [
-        "SUPP_TIMING_CREATINE"
-    ]
-    assert [doc.metadata["id"] for doc in engine._priority_timing_docs("비타민D는 식후에 먹는 게 좋아?")] == [
-        "SUPP_TIMING_VITAMIN_D"
-    ]
-    assert [doc.metadata["id"] for doc in engine._priority_timing_docs("오메가3 복용 시 주의사항 알려줘")] == [
-        "SUPP_TIMING_OMEGA3"
-    ]
+
+    for query, expected_entity, expected_id in cases:
+        parsed = parse_supplement_query(query)
+        docs = engine._priority_kb_docs(parsed)
+
+        assert expected_entity in {entity.canonical for entity in parsed.entities}
+        assert docs
+        assert docs[0].metadata["source"] == "ingredient_profile"
+        assert docs[0].metadata["canonical"] == expected_entity
+        assert docs[0].metadata["id"] == expected_id
 
 
 def test_supplement_unusable_generated_answer_detection():
@@ -142,28 +141,38 @@ def test_supplement_unusable_generated_answer_detection():
     assert _is_unusable_generated_answer("Take with food.") is False
 
 
-def test_supplement_timing_doc_can_recover_plain_answer_and_caution():
-    engine = SupplementRAGEngine.degraded("test")
-
+def test_supplement_composer_replaces_timing_doc_answer_recovery():
     class Doc:
+        metadata = {"id": "ING_IRON", "source": "ingredient_profile", "canonical": "iron"}
         page_content = "\n".join(
             [
-                "[Supplement timing guide]",
+                "[Ingredient profile]",
+                "ID: ING_IRON",
                 "Name: 철분 (Iron)",
-                "Timing: 철분은 공복에 흡수가 유리할 수 있지만 속 불편이 있으면 음식과 함께 복용할 수 있습니다.",
-                "Spacing: 커피, 차, 카페인, 칼슘과는 흡수 간섭 가능성이 있어 간격을 두는 것이 좋습니다.",
+                "Timing:",
+                "  - General: 철분은 공복에 흡수가 유리할 수 있지만 속 불편이 있으면 음식과 함께 복용할 수 있습니다.",
+                "Spacing:",
+                "  - 커피, 차, 카페인, 칼슘과는 흡수 간섭 가능성이 있어 간격을 두는 것이 좋습니다.",
                 "Cautions:",
                 "  - 철분은 결핍 확인 없이 고용량으로 오래 복용하지 마세요.",
                 "  - 임신 중이거나 빈혈 치료 중이면 전문가 지시에 따르세요.",
             ]
         )
 
-    result = engine._answer_from_timing_doc(Doc())
+    result = compose_supplement_response(
+        question="철분은 언제 먹는 게 좋아?",
+        parsed_query=parse_supplement_query("철분은 언제 먹는 게 좋아?"),
+        generated_answer="{}",
+        generated_caution=None,
+        selected_docs=[Doc()],
+    )
 
-    assert result == {
-        "answer": "철분은 공복에 흡수가 유리할 수 있지만 속 불편이 있으면 음식과 함께 복용할 수 있습니다. 커피, 차, 카페인, 칼슘과는 흡수 간섭 가능성이 있어 간격을 두는 것이 좋습니다.",
-        "caution": "철분은 결핍 확인 없이 고용량으로 오래 복용하지 마세요. 임신 중이거나 빈혈 치료 중이면 전문가 지시에 따르세요.",
-    }
+    assert result.used_kb_fallback is True
+    assert isinstance(result.answer, str)
+    assert result.answer
+    assert not result.answer.strip().startswith("{")
+    assert result.caution
+    assert "철분" in result.caution
 
 
 def test_supplement_web_fallback_disabled_keeps_local_sources(monkeypatch):

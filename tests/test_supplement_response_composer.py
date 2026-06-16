@@ -160,6 +160,20 @@ def test_recommendation_json_answer_is_promoted_without_key_flattening():
     assert not result.answer.startswith("caution_level")
 
 
+def test_interaction_summary_json_answer_is_promoted_without_key_flattening():
+    result = compose_supplement_response(
+        question="와파린 먹는데 오메가3 먹어도 돼?",
+        parsed_query=parse_supplement_query("와파린 먹는데 오메가3 먹어도 돼?"),
+        generated_answer='{"Interaction_Summary":"와파린 복용 중이면 오메가3는 의료진과 상담하세요.","Detailed_Advice":[{"Risk":"bleeding"}]}',
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.answer == "와파린 복용 중이면 오메가3는 의료진과 상담하세요."
+    assert not result.answer.startswith("Interaction_Summary")
+    assert "Detailed_Advice" not in result.answer
+
+
 def test_risk_caution_is_softened():
     query = _u("\\uc640\\ud30c\\ub9b0 \\uba39\\ub294\\ub370 \\uc624\\uba54\\uac003 \\uba39\\uc5b4\\ub3c4 \\ub3fc?")
     unsafe_caution = _u("\\uac19\\uc774 \\uba39\\uc5b4\\ub3c4 \\ub429\\ub2c8\\ub2e4. \\uc548\\uc804\\ud569\\ub2c8\\ub2e4.")
@@ -176,6 +190,47 @@ def test_risk_caution_is_softened():
     assert _u("\\uba39\\uc5b4\\ub3c4 \\ub429\\ub2c8\\ub2e4") not in result.caution
     assert _u("\\uc548\\uc804\\ud569\\ub2c8\\ub2e4") not in result.caution
     assert _u("\\uc0c1\\ub2f4") in result.caution
+
+
+def test_timing_fallback_prefers_profile_over_safety_rule_for_answer():
+    profile = Doc(
+        "ING_VITAMIN_D",
+        "ingredient_profile",
+        "\n".join(
+            [
+                "[Ingredient profile]",
+                "ID: ING_VITAMIN_D",
+                "Name: vitamin d",
+                "Cautions:",
+                "  - high dose requires consultation",
+            ]
+        ),
+    )
+    safety = Doc(
+        "SAFE_PREGNANCY_HIGH_DOSE_VITAMIN_D",
+        "safety_rule",
+        "\n".join(
+            [
+                "[Safety rule]",
+                "Risk: high dose risk",
+                "Recommendation: consult a clinician",
+                "Caution level: high",
+            ]
+        ),
+    )
+    query = _u("\\ube44\\ud0c0\\ubbfcD\\ub294 \\uc2dd\\ud6c4\\uc5d0 \\uba39\\ub294 \\uac8c \\uc88b\\uc544?")
+
+    result = compose_supplement_response(
+        question=query,
+        parsed_query=parse_supplement_query(query),
+        generated_answer="{}",
+        generated_caution=None,
+        selected_docs=[safety, profile],
+    )
+
+    assert result.used_kb_fallback is True
+    assert _u("\\ubcf5\\uc6a9 \\ud0c0\\uc774\\ubc0d") in result.answer
+    assert _u("\\uc9c8\\ud658, \\uc784\\uc2e0/\\uc218\\uc720") not in result.answer
 
 
 def test_timing_answer_keeps_plain_text_and_profile_caution():

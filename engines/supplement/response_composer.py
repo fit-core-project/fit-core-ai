@@ -51,7 +51,7 @@ def compose_supplement_response(
 
     used_kb_fallback = False
     if _is_weak_answer(answer):
-        answer = _fallback_answer_from_docs(selected_docs)
+        answer = _fallback_answer_from_docs(selected_docs, parsed_query)
         used_kb_fallback = True
 
     risk_query = bool(set(parsed_query.intents) & _RISK_INTENTS)
@@ -66,7 +66,7 @@ def compose_supplement_response(
         caution = _CONSULT_TEXT
 
     return ComposedSupplementResponse(
-        answer=answer or _fallback_answer_from_docs(selected_docs),
+        answer=answer or _fallback_answer_from_docs(selected_docs, parsed_query),
         caution=caution or None,
         used_kb_fallback=used_kb_fallback,
     )
@@ -104,7 +104,7 @@ def _answer_from_dict(data: dict[str, Any]) -> tuple[str, str | None]:
 
     direct_answer = _dedupe_join(
         [
-            _dict_get(data, "summary", "Summary"),
+            _dict_get(data, "summary", "Summary", "interaction_summary", "Interaction_Summary", "Interaction Summary"),
             _dict_get(data, "recommendation", "Recommendation"),
         ],
         max_chars=700,
@@ -171,8 +171,16 @@ def _caution_parts_from_docs(docs: list[Any]) -> list[str]:
     return [part for part in parts if part]
 
 
-def _fallback_answer_from_docs(docs: list[Any]) -> str:
+def _fallback_answer_from_docs(docs: list[Any], parsed_query: ParsedSupplementQuery | None = None) -> str:
     source_types = {(getattr(doc, "metadata", {}) or {}).get("source") for doc in docs}
+    intents = set(parsed_query.intents) if parsed_query else set()
+    if IntentType.TIMING in intents and not (intents & _RISK_INTENTS) and (
+        "ingredient_profile" in source_types or "supp_timing" in source_types
+    ):
+        return (
+            "일반적인 복용 타이밍은 성분과 목적에 따라 달라질 수 있습니다. 검색된 성분 프로필의 복용 가이드와 "
+            "주의사항을 기준으로 식사 여부, 운동 전후, 다른 약물과의 간격을 함께 확인하는 것이 좋습니다."
+        )
     if "interaction_rule" in source_types:
         return (
             "해당 조합은 함께 복용할 때 주의가 필요합니다. 검색된 상호작용 규칙에 따르면 복용 간격, 약물 병용, "
