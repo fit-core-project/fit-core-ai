@@ -177,6 +177,19 @@ def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
     return ParsedDietLog(items=items)
 
 
+# ---------- Macro enrichment ----------
+
+def _enrich_macros(parsed: ParsedDietLog) -> ParsedDietLog:
+    """Fill null macros from food table for items where ALL macros are null (LLM fallback)."""
+    enriched = []
+    for item in parsed.items:
+        if item.protein_g is None and item.carbs_g is None and item.fat_g is None:
+            macros = _macros_from_table(item.food_name, item.amount, item.unit)
+            item = item.model_copy(update=macros)
+        enriched.append(item)
+    return ParsedDietLog(items=enriched)
+
+
 # ---------- LLM path ----------
 
 def _build_diet_prompt() -> ChatPromptTemplate:
@@ -187,7 +200,7 @@ def _build_diet_prompt() -> ChatPromptTemplate:
 Return JSON only. No markdown fences. No explanations.
 Korean meal keywords: 아침/조식=breakfast, 점심/중식=lunch, 저녁/석식=dinner, 간식/야식=snack.
 For time_of_day: extract ONLY if the user explicitly states a time (e.g. "7시", "19:00", "오후 7시"). Do NOT guess or infer.
-Macros (protein_g, carbs_g, fat_g) must be floats with 1 decimal place (e.g. 31.0) or null if unknown.
+Macros (protein_g, carbs_g, fat_g) MUST be estimated floats with 1 decimal place using your nutritional knowledge (e.g. 닭가슴살 100g → protein_g 31.0, carbs_g 0.0, fat_g 3.6). NEVER return null — use 0.0 only if you have absolutely no data for the food.
 Do NOT include an estimated_calories field.
 Use this exact JSON shape:
 {{"items":[{{"food_name":"string","amount":200.0,"unit":"g","protein_g":31.0,"carbs_g":0.0,"fat_g":3.6,"meal_type":"breakfast","time_of_day":null}}]}}
@@ -239,7 +252,7 @@ def parse_diet_log(user_text: str) -> str:
             else:
                 parsed = _parse_payload(structured_llm.invoke({"text": user_text}))
 
-        return parsed.model_dump_json()
+        return _enrich_macros(parsed).model_dump_json()
     except Exception as exc:
         print("[LLM diet parsing fallback]", sanitize_exception_for_log(exc))
         return _deterministic_diet_parse(user_text).model_dump_json()
