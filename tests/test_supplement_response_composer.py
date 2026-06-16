@@ -341,3 +341,159 @@ def test_timing_answer_keeps_plain_text_and_profile_caution():
 
     assert "마그네슘" in result.answer
     assert result.caution is None or "신장질환" in result.caution
+
+def test_warfarin_omega3_caution_is_compacted():
+    query = _u("\\uc640\\ud30c\\ub9b0 \\uba39\\ub294\\ub370 \\uc624\\uba54\\uac003 \\uba39\\uc5b4\\ub3c4 \\ub3fc?")
+    interaction = Doc(
+        "INT_OMEGA3_ANTICOAGULANTS",
+        "interaction_rule",
+        "\n".join(
+            [
+                "[Interaction rule]",
+                "Recommendation: "
+                + _u("\\uc640\\ud30c\\ub9b0 \\ub4f1 \\ud56d\\uc751\\uace0\\uc81c\\ub97c \\ubcf5\\uc6a9 \\uc911\\uc774\\uba74 \\uc624\\uba54\\uac003 \\ubcf4\\ucda9\\uc81c\\ub97c \\uc784\\uc758\\ub85c \\uc2dc\\uc791\\ud558\\uac70\\ub098 \\uace0\\uc6a9\\ub7c9\\uc73c\\ub85c \\ub298\\ub9ac\\uc9c0 \\ub9c8\\uc138\\uc694."),
+                "Spacing guidance: "
+                + _u("\\ucd9c\\ud608 \\uc704\\ud5d8\\uc774 \\uac1c\\uc778 \\uc0c1\\ud0dc\\uc640 \\uc57d\\ubb3c \\uc6a9\\ub7c9\\uc5d0 \\ub530\\ub77c \\ub2ec\\ub77c\\uc9c8 \\uc218 \\uc788\\uc73c\\ubbc0\\ub85c \\ubcf5\\uc6a9 \\uc804 \\uc758\\uc0ac \\ub610\\ub294 \\uc57d\\uc0ac\\uc640 \\uc0c1\\ub2f4\\ud558\\uc138\\uc694."),
+                "Consultation required when:",
+                "  - " + _u("\\uc218\\uc220 \\ub610\\ub294 \\uc2dc\\uc220 \\uc608\\uc815"),
+                "  - " + _u("\\uba4d\\uc774\\ub098 \\ucd9c\\ud608\\uc774 \\uc798 \\uc0dd\\uae40"),
+            ]
+        ),
+    )
+    safety = Doc(
+        "SAFE_OMEGA3_SURGERY",
+        "safety_rule",
+        "\n".join(
+            [
+                "[Safety rule]",
+                "Risk: " + _u("\\uc218\\uc220\\u00b7\\uc2dc\\uc220 \\uc804\\ud6c4\\uc5d0\\ub294 \\ucd9c\\ud608 \\uc704\\ud5d8\\uc744 \\uc758\\ub8cc\\uc9c4\\uc5d0\\uac8c \\uc54c\\ub824\\uc57c \\ud569\\ub2c8\\ub2e4."),
+                "Recommendation: " + _u("\\uc758\\ub8cc\\uc9c4\\uacfc \\uc0c1\\ub2f4\\ud558\\uc138\\uc694."),
+            ]
+        ),
+    )
+    profile = Doc(
+        "ING_OMEGA3",
+        "ingredient_profile",
+        "\n".join(
+            [
+                "[Ingredient profile]",
+                "Cautions:",
+                "  - " + _u("\\ubcf5\\uc6a9 \\uc911\\uc778 \\uc57d\\uc774 \\uc788\\uc73c\\uba74 \\uc758\\uc0ac \\ub610\\ub294 \\uc57d\\uc0ac\\uc640 \\uc0c1\\ub2f4\\ud558\\uc138\\uc694."),
+            ]
+        ),
+    )
+
+    result = compose_supplement_response(
+        question=query,
+        parsed_query=parse_supplement_query(query),
+        generated_answer=_u("\\uac1c\\uc778 \\uc0c1\\ud0dc\\uc5d0 \\ub530\\ub77c \\ub2ec\\ub77c\\uc9c8 \\uc218 \\uc788\\uc2b5\\ub2c8\\ub2e4."),
+        generated_caution=_u("\\uc758\\ub8cc\\uc9c4\\uacfc \\uc0c1\\ub2f4\\ud558\\uc138\\uc694. \\uc758\\uc0ac \\ub610\\ub294 \\uc57d\\uc0ac\\uc640 \\uc0c1\\ub2f4\\ud558\\uc138\\uc694."),
+        selected_docs=[interaction, safety, profile],
+    )
+
+    assert result.caution
+    assert len(result.caution) <= 520
+    assert _u("\\uc640\\ud30c\\ub9b0") in result.caution or _u("\\ud56d\\uc751\\uace0") in result.caution
+    assert _u("\\ucd9c\\ud608") in result.caution
+    assert _u("\\uc0c1\\ub2f4") in result.caution or _u("\\uc758\\ub8cc\\uc9c4") in result.caution
+    assert _u("\\uc784\\uc758") in result.caution or _u("\\uace0\\uc6a9\\ub7c9") in result.caution
+    assert result.caution.count(_u("\\uc0c1\\ub2f4")) <= 2
+
+
+def test_magnesium_timing_caution_is_compacted():
+    query = _u("\\ub9c8\\uadf8\\ub124\\uc298\\uc740 \\uc5b8\\uc81c\\uba39\\ub294 \\uac8c \\uc88b\\uc544?")
+    profile = Doc(
+        "ING_MAGNESIUM",
+        "ingredient_profile",
+        "\n".join(
+            [
+                "[Ingredient profile]",
+                "Cautions:",
+                "  - " + _u("\\uc784\\uc2e0 \\uc911\\uc774\\uac70\\ub098 \\ub2e4\\ub978 \\uc57d\\uc744 \\ubcf5\\uc6a9 \\uc911\\uc774\\uba74 \\uac1c\\uc778 \\uc0c1\\ud0dc\\uc5d0 \\ub9de\\ucdb0 \\ud655\\uc778\\ud558\\ub294 \\uac83\\uc774 \\uc548\\uc804\\ud569\\ub2c8\\ub2e4."),
+            ]
+        ),
+    )
+    kidney = Doc(
+        "SAFE_KIDNEY_MAGNESIUM",
+        "safety_rule",
+        "\n".join(
+            [
+                "[Safety rule]",
+                "Risk: " + _u("\\uc2e0\\uc7a5\\uc9c8\\ud658\\uc774\\ub098 \\uc2e0\\uc7a5 \\uae30\\ub2a5 \\uc800\\ud558\\uac00 \\uc788\\uc73c\\uba74 \\ub9c8\\uadf8\\ub124\\uc298 \\ubcf5\\uc6a9 \\uc804 \\uc758\\ub8cc\\uc9c4\\uacfc \\uc0c1\\ub2f4\\ud558\\uc138\\uc694."),
+                "Recommendation: " + _u("\\uc2e0\\uc7a5\\uc9c8\\ud658\\uc774 \\uc788\\uc73c\\uba74 \\uc784\\uc758 \\ubcf5\\uc6a9\\uc744 \\ud53c\\ud558\\uc138\\uc694."),
+            ]
+        ),
+    )
+    thyroid = Doc(
+        "INT_MAGNESIUM_THYROID_MEDICATION",
+        "interaction_rule",
+        "Recommendation: " + _u("\\uac11\\uc0c1\\uc120\\uc57d\\uc744 \\ubcf5\\uc6a9 \\uc911\\uc778 \\uacbd\\uc6b0 \\ud761\\uc218\\uc5d0 \\uc601\\ud5a5\\uc744 \\uc904 \\uc218 \\uc788\\uc73c\\ubbc0\\ub85c \\ubcf5\\uc6a9 \\uac04\\uaca9\\uc744 \\uc758\\uc0ac \\ub610\\ub294 \\uc57d\\uc0ac\\uc5d0\\uac8c \\ud655\\uc778\\ud558\\uc138\\uc694."),
+    )
+    antibiotics = Doc(
+        "INT_MAGNESIUM_ANTIBIOTICS",
+        "interaction_rule",
+        "Recommendation: " + _u("\\uc77c\\ubd80 \\ud56d\\uc0dd\\uc81c\\ub294 \\ub9c8\\uadf8\\ub124\\uc298\\uacfc \\ubcf5\\uc6a9 \\uac04\\uaca9\\uc774 \\ud544\\uc694\\ud560 \\uc218 \\uc788\\uc2b5\\ub2c8\\ub2e4."),
+    )
+
+    result = compose_supplement_response(
+        question=query,
+        parsed_query=parse_supplement_query(query),
+        generated_answer=_u("\\ub9c8\\uadf8\\ub124\\uc298\\uc740 \\uc2dd\\ud6c4\\ub098 \\uc800\\ub141 \\uc2dc\\uac04\\ub300\\uac00 \\ubb34\\ub09c\\ud569\\ub2c8\\ub2e4."),
+        generated_caution=None,
+        selected_docs=[profile, kidney, thyroid, antibiotics],
+    )
+
+    assert result.caution
+    assert len(result.caution) <= 520
+    assert _u("\\uc2e0\\uc7a5") in result.caution
+    assert _u("\\uac11\\uc0c1\\uc120") in result.caution or _u("\\ud56d\\uc0dd\\uc81c") in result.caution
+    assert _u("\\uac04\\uaca9") in result.caution or _u("\\uc0c1\\ub2f4") in result.caution
+
+
+def test_kidney_magnesium_caution_prioritizes_high_risk_sentence():
+    query = _u("\\uc2e0\\uc7a5\\uc9c8\\ud658 \\uc788\\ub294\\ub370 \\ub9c8\\uadf8\\ub124\\uc298 \\uba39\\uc5b4\\ub3c4 \\ub3fc?")
+    interaction = Doc(
+        "INT_MAGNESIUM_ANTIBIOTICS",
+        "interaction_rule",
+        "Recommendation: " + _u("\\ud56d\\uc0dd\\uc81c\\ub294 \\ubcf5\\uc6a9 \\uac04\\uaca9\\uc744 \\ud655\\uc778\\ud558\\uc138\\uc694."),
+    )
+    safety = Doc(
+        "SAFE_KIDNEY_MAGNESIUM",
+        "safety_rule",
+        "\n".join(
+            [
+                "[Safety rule]",
+                "Risk: " + _u("\\uc2e0\\uc7a5\\uc9c8\\ud658\\uc774\\ub098 \\uc2e0\\uc7a5 \\uae30\\ub2a5 \\uc800\\ud558\\uac00 \\uc788\\uc73c\\uba74 \\ub9c8\\uadf8\\ub124\\uc298 \\ubc30\\ucd9c\\uc774 \\uc5b4\\ub824\\uc6cc\\uc9c8 \\uc218 \\uc788\\uc2b5\\ub2c8\\ub2e4."),
+                "Recommendation: " + _u("\\uc784\\uc758 \\ubcf5\\uc6a9\\uc744 \\ud53c\\ud558\\uace0 \\uc758\\ub8cc\\uc9c4\\uacfc \\uc0c1\\ub2f4\\ud558\\uc138\\uc694."),
+            ]
+        ),
+    )
+
+    result = compose_supplement_response(
+        question=query,
+        parsed_query=parse_supplement_query(query),
+        generated_answer=_u("\\uac1c\\uc778 \\uc0c1\\ud0dc\\uc5d0 \\ub530\\ub77c \\ud655\\uc778\\uc774 \\ud544\\uc694\\ud569\\ub2c8\\ub2e4."),
+        generated_caution=None,
+        selected_docs=[interaction, safety],
+    )
+
+    assert result.caution
+    first_sentence = result.caution.split(".")[0]
+    assert _u("\\uc2e0\\uc7a5") in first_sentence
+    assert _u("\\uba39\\uc5b4\\ub3c4 \\ub429\\ub2c8\\ub2e4") not in result.caution
+    assert _u("\\uc548\\uc804\\ud569\\ub2c8\\ub2e4") not in result.caution
+
+
+def test_compact_caution_keeps_none_when_no_caution_sources():
+    query = _u("\\ud06c\\ub808\\uc544\\ud2f4\\uc740 \\uc5b8\\uc81c \\uba39\\ub294 \\uac8c \\uc88b\\uc544?")
+
+    result = compose_supplement_response(
+        question=query,
+        parsed_query=parse_supplement_query(query),
+        generated_answer=_u("\\ud06c\\ub808\\uc544\\ud2f4\\uc740 \\uafb8\\uc900\\ud55c \\ubcf5\\uc6a9\\uc774 \\uc911\\uc694\\ud569\\ub2c8\\ub2e4."),
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert isinstance(result.answer, str)
+    assert result.caution is None

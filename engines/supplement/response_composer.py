@@ -33,6 +33,11 @@ _UNSAFE_PHRASES = (
 _CONSULT_TEXT = "개인 상태, 복용 중인 약, 용량에 따라 달라질 수 있으므로 의사 또는 약사와 상담하세요."
 
 
+_COMPACT_CONSULT_TEXT = "개인 상태, 복용 중인 약, 용량에 따라 달라질 수 있으므로 복용 전 의사 또는 약사와 상담하세요."
+_MAX_CAUTION_SENTENCES = 3
+_MAX_CAUTION_CHARS = 520
+
+
 @dataclass(frozen=True)
 class ComposedSupplementResponse:
     answer: str
@@ -61,11 +66,11 @@ def compose_supplement_response(
         answer = _soften_unsafe_answer(answer)
         caution_parts.append(_CONSULT_TEXT)
 
-    caution = _dedupe_join(caution_parts, max_chars=900)
-    if risk_query and caution:
-        caution = _soften_unsafe_answer(caution)
+    caution = _compact_caution(caution_parts, parsed_query, selected_docs, risk_query=risk_query)
+    if caution:
+        caution = _soften_unsafe_caution(caution)
     if risk_query and not caution:
-        caution = _CONSULT_TEXT
+        caution = _COMPACT_CONSULT_TEXT
 
     return ComposedSupplementResponse(
         answer=answer or _fallback_answer_from_docs(selected_docs, parsed_query),
@@ -144,14 +149,13 @@ def _caution_parts_from_docs(docs: list[Any]) -> list[str]:
     parts: list[str] = []
     for doc in docs:
         meta = getattr(doc, "metadata", {}) or {}
-        source = meta.get("source")
+        source = meta.get("source") or meta.get("type")
         text = getattr(doc, "page_content", "") or ""
         if source == "interaction_rule":
             parts.extend(
                 [
                     _field(text, "Recommendation"),
                     _field(text, "Spacing guidance"),
-                    _field(text, "Caution level"),
                     _list_after(text, "Consultation required when"),
                 ]
             )
@@ -161,7 +165,6 @@ def _caution_parts_from_docs(docs: list[Any]) -> list[str]:
                     _field(text, "Risk"),
                     _field(text, "Recommendation"),
                     _field(text, "When to consult"),
-                    _field(text, "Caution level"),
                 ]
             )
         elif source == "ingredient_profile":
@@ -173,6 +176,168 @@ def _caution_parts_from_docs(docs: list[Any]) -> list[str]:
                 ]
             )
     return [part for part in parts if part]
+
+
+def _compact_caution(
+    values: list[Any],
+    parsed_query: ParsedSupplementQuery,
+    docs: list[Any],
+    *,
+    risk_query: bool,
+) -> str:
+    sentences = _dedupe_caution_sentences(_split_caution_sentences(values))
+    if not sentences:
+        return ""
+
+    ranked = sorted(
+        enumerate(sentences),
+        key=lambda item: (-_rank_caution_sentence(item[1], parsed_query, docs, risk_query=risk_query), item[0]),
+    )
+
+    selected: list[str] = []
+    selected_categories: set[str] = set()
+    for _idx, sentence in ranked:
+        category = _caution_category(sentence)
+        if category != "general" and category in selected_categories:
+            continue
+        candidate = " ".join([*selected, sentence]).strip()
+        if selected and len(candidate) > _MAX_CAUTION_CHARS:
+            continue
+        selected.append(sentence)
+        selected_categories.add(category)
+        if len(selected) >= _MAX_CAUTION_SENTENCES:
+            break
+
+    if risk_query and not any(_contains_any(sentence, {"\uc0c1\ub2f4", "\uc758\ub8cc\uc9c4", "\uc758\uc0ac", "\uc57d\uc0ac", "consult"}) for sentence in selected):
+        if len(selected) >= _MAX_CAUTION_SENTENCES:
+            selected[-1] = _COMPACT_CONSULT_TEXT
+        else:
+            selected.append(_COMPACT_CONSULT_TEXT)
+
+    compacted = " ".join(selected).strip()
+    if len(compacted) <= _MAX_CAUTION_CHARS:
+        return compacted
+    return _truncate_by_sentence(compacted, _MAX_CAUTION_CHARS)
+
+
+def _split_caution_sentences(values: list[Any]) -> list[str]:
+    sentences: list[str] = []
+    for value in values:
+        text = _string_or_none(value)
+        if not text:
+            continue
+        normalized = _normalize_caution_text(text)
+        for part in re.split(r"(?<=[.!?。！？])\s+|\s{2,}", normalized):
+            sentence = part.strip(" .;；")
+            if not sentence or len(sentence) < 3:
+                continue
+            if sentence.lower() in {"low", "moderate", "high", "critical"}:
+                continue
+            if sentence[-1] not in ".!?。！？":
+                sentence = f"{sentence}."
+            sentences.append(sentence)
+    return sentences
+
+
+def _normalize_caution_text(text: str) -> str:
+    normalized = text.replace("•", ". ").replace("- ", ". ")
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return normalized
+
+
+def _dedupe_caution_sentences(sentences: list[str]) -> list[str]:
+    seen_exact: set[str] = set()
+    seen_categories: set[str] = set()
+    deduped: list[str] = []
+    for sentence in sentences:
+        normalized = re.sub(r"\s+", " ", sentence).strip()
+        if not normalized:
+            continue
+        lowered = normalized.lower()
+        if lowered in seen_exact:
+            continue
+        category = _caution_category(normalized)
+        if category in {"consult", "kidney"} and category in seen_categories:
+            continue
+        seen_exact.add(lowered)
+        seen_categories.add(category)
+        deduped.append(normalized)
+    return deduped
+
+
+def _rank_caution_sentence(
+    sentence: str,
+    parsed_query: ParsedSupplementQuery,
+    docs: list[Any],
+    *,
+    risk_query: bool,
+) -> int:
+    score = 0
+    text = sentence.lower()
+    intents = set(parsed_query.intents)
+    doc_types = {(getattr(doc, "metadata", {}) or {}).get("source") or (getattr(doc, "metadata", {}) or {}).get("type") for doc in docs}
+
+    if risk_query:
+        score += 20
+    if "safety_rule" in doc_types and _contains_any(text, {"\uc2e0\uc7a5", "kidney", "renal", "\uac04\uc9c8\ud658", "liver", "\uc784\uc2e0", "pregnancy"}):
+        score += 30
+    if "interaction_rule" in doc_types and _contains_any(text, {"\uc640\ud30c\ub9b0", "warfarin", "\ud56d\uc751\uace0", "anticoagulant", "\ucd9c\ud608", "bleeding", "\uac11\uc0c1\uc120", "thyroid", "\ud56d\uc0dd\uc81c", "antibiotic", "\ud761\uc218", "\uac04\uaca9"}):
+        score += 28
+    if IntentType.CONDITION_SAFETY in intents and _contains_any(text, {"\uc2e0\uc7a5", "kidney", "renal", "\uac04\uc9c8\ud658", "liver"}):
+        score += 25
+    if IntentType.DRUG_INTERACTION in intents and _contains_any(text, {"\uc640\ud30c\ub9b0", "warfarin", "\ud56d\uc751\uace0", "anticoagulant", "\uac11\uc0c1\uc120", "thyroid", "\ud56d\uc0dd\uc81c", "antibiotic"}):
+        score += 24
+    if IntentType.FOOD_COMPOUND_INTERACTION in intents and _contains_any(text, {"\ucee4\ud53c", "coffee", "\uce74\ud398\uc778", "caffeine", "\uce7c\uc298", "calcium", "\ud761\uc218"}):
+        score += 22
+    if _contains_any(text, {"\ucd9c\ud608", "bleeding", "\uace0\uc6a9\ub7c9", "high dose", "\uc784\uc758", "\uc2dc\uc791", "\ub298\ub9ac\uc9c0", "\ud53c\ud558", "\uc8fc\uc758"}):
+        score += 12
+    if _contains_any(text, {"\uc0c1\ub2f4", "\uc758\ub8cc\uc9c4", "\uc758\uc0ac", "\uc57d\uc0ac", "consult"}):
+        score += 8
+    if _contains_any(text, {"\uc218\uc220", "\uc2dc\uc220", "surgery", "procedure", "\uba4d"}):
+        score += 6
+    return score
+
+
+def _caution_category(sentence: str) -> str:
+    text = sentence.lower()
+    if _contains_any(text, {"\uc640\ud30c\ub9b0", "warfarin", "\ud56d\uc751\uace0", "anticoagulant"}):
+        return "anticoagulant"
+    if _contains_any(text, {"\ucd9c\ud608", "bleeding"}):
+        return "bleeding"
+    if _contains_any(text, {"\uc2e0\uc7a5", "kidney", "renal"}):
+        return "kidney"
+    if _contains_any(text, {"\uac11\uc0c1\uc120", "thyroid", "\ud56d\uc0dd\uc81c", "antibiotic", "\ud761\uc218", "\uac04\uaca9", "spacing"}):
+        return "spacing"
+    if _contains_any(text, {"\ucee4\ud53c", "coffee", "\uce74\ud398\uc778", "caffeine", "\uce7c\uc298", "calcium", "\ucca0\ubd84", "iron"}):
+        return "absorption"
+    if _contains_any(text, {"\uc218\uc220", "\uc2dc\uc220", "surgery", "procedure"}):
+        return "surgery"
+    if _contains_any(text, {"\uac04\uc9c8\ud658", "liver", "\uc74c\uc8fc", "alcohol"}):
+        return "liver_alcohol"
+    if _contains_any(text, {"\uc784\uc2e0", "pregnancy", "\uc218\uc720", "breastfeeding", "\uace0\uc6a9\ub7c9", "high dose"}):
+        return "pregnancy_high_dose"
+    if _contains_any(text, {"\uc0c1\ub2f4", "\uc758\ub8cc\uc9c4", "\uc758\uc0ac", "\uc57d\uc0ac", "consult"}):
+        return "consult"
+    return "general"
+
+
+def _contains_any(text: str, needles: set[str]) -> bool:
+    lowered = text.lower()
+    return any(needle.lower() in lowered for needle in needles)
+
+
+def _truncate_by_sentence(text: str, max_chars: int) -> str:
+    if len(text) <= max_chars:
+        return text
+    kept: list[str] = []
+    for sentence in _split_caution_sentences([text]):
+        candidate = " ".join([*kept, sentence]).strip()
+        if kept and len(candidate) > max_chars:
+            break
+        kept.append(sentence)
+    if kept:
+        return " ".join(kept).strip()
+    return text[:max_chars].rsplit(" ", 1)[0].strip()
 
 
 def _fallback_answer_from_docs(docs: list[Any], parsed_query: ParsedSupplementQuery | None = None) -> str:
@@ -220,6 +385,27 @@ def _soften_unsafe_answer(answer: str) -> str:
     if found and _CONSULT_TEXT not in softened:
         softened = f"{softened.strip()} {_CONSULT_TEXT}"
     return softened
+
+
+def _soften_unsafe_caution(caution: str) -> str:
+    sentences = _split_caution_sentences([caution])
+    softened_sentences: list[str] = []
+    for sentence in sentences:
+        if not any(phrase in sentence for phrase in _UNSAFE_PHRASES):
+            softened_sentences.append(sentence)
+            continue
+        category = _caution_category(sentence)
+        if category == "spacing":
+            softened_sentences.append(
+                "\uac11\uc0c1\uc120\uc57d\uc774\ub098 \uc77c\ubd80 \ud56d\uc0dd\uc81c\ub97c \ubcf5\uc6a9 \uc911\uc774\uba74 \ud761\uc218\uc5d0 \uc601\ud5a5\uc744 \uc904 \uc218 \uc788\uc73c\ubbc0\ub85c \ubcf5\uc6a9 \uac04\uaca9\uc744 \uc758\uc0ac \ub610\ub294 \uc57d\uc0ac\uc5d0\uac8c \ud655\uc778\ud558\uc138\uc694."
+            )
+        elif category in {"anticoagulant", "bleeding"}:
+            softened_sentences.append(
+                "\ud56d\uc751\uace0\uc81c\ub098 \uc640\ud30c\ub9b0\uc744 \ubcf5\uc6a9 \uc911\uc774\uba74 \ucd9c\ud608 \uc704\ud5d8\uc774 \ub2ec\ub77c\uc9c8 \uc218 \uc788\uc73c\ubbc0\ub85c \ubcf5\uc6a9 \uc804 \uc758\uc0ac \ub610\ub294 \uc57d\uc0ac\uc640 \uc0c1\ub2f4\ud558\uc138\uc694."
+            )
+        else:
+            softened_sentences.append(_COMPACT_CONSULT_TEXT)
+    return _truncate_by_sentence(" ".join(_dedupe_caution_sentences(softened_sentences)).strip(), _MAX_CAUTION_CHARS)
 
 
 def _is_weak_answer(answer: str | None) -> bool:
