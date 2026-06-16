@@ -134,22 +134,6 @@ def test_supplement_timing_queries_prioritize_entity_profile_sources():
         assert docs[0].metadata["id"] == expected_id
 
 
-def test_supplement_timing_source_filter_keeps_only_entity_matched_timing_docs():
-    engine = SupplementRAGEngine.degraded("test")
-    parsed = parse_supplement_query("magnesium 언제 먹는 게 좋아?")
-
-    class Doc:
-        def __init__(self, doc_id, page_content):
-            self.metadata = {"id": doc_id, "source": "supp_timing", "_source_file": "supplement_timing_guide.json"}
-            self.page_content = page_content
-
-    matched = Doc("SUPP_TIMING_MAGNESIUM", "Name: Magnesium\nTiming: take with food or in the evening.")
-    unrelated = Doc("SUPP_TIMING_CREATINE", "Name: Creatine\nTiming: take consistently.")
-
-    assert engine._is_unrelated_supp_timing_doc(parsed, matched) is False
-    assert engine._is_unrelated_supp_timing_doc(parsed, unrelated) is True
-
-
 def test_supplement_unusable_generated_answer_detection():
     assert _is_unusable_generated_answer("{}") is True
     assert _is_unusable_generated_answer('{"cautions":["ask a clinician"]}') is True

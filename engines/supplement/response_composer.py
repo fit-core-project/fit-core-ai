@@ -178,9 +178,7 @@ def _caution_parts_from_docs(docs: list[Any]) -> list[str]:
 def _fallback_answer_from_docs(docs: list[Any], parsed_query: ParsedSupplementQuery | None = None) -> str:
     source_types = {(getattr(doc, "metadata", {}) or {}).get("source") for doc in docs}
     intents = set(parsed_query.intents) if parsed_query else set()
-    if IntentType.TIMING in intents and not (intents & _RISK_INTENTS) and (
-        "ingredient_profile" in source_types or "supp_timing" in source_types
-    ):
+    if IntentType.TIMING in intents and not (intents & _RISK_INTENTS) and "ingredient_profile" in source_types:
         return (
             "일반적인 복용 타이밍은 성분과 목적에 따라 달라질 수 있습니다. 검색된 성분 프로필의 복용 가이드와 "
             "주의사항을 기준으로 식사 여부, 운동 전후, 다른 약물과의 간격을 함께 확인하는 것이 좋습니다."
@@ -204,7 +202,7 @@ def _fallback_answer_from_docs(docs: list[Any], parsed_query: ParsedSupplementQu
             "해당 조건에서는 보충제나 약 복용을 임의로 결정하지 않는 것이 좋습니다. 검색된 안전 규칙에 따르면 질환, "
             "임신/수유, 수술 전후, 고용량 복용 같은 조건에서는 전문가 상담이 필요할 수 있습니다."
         )
-    if "ingredient_profile" in source_types or "supp_timing" in source_types:
+    if "ingredient_profile" in source_types:
         return (
             "일반적인 복용 타이밍은 성분과 목적에 따라 달라질 수 있습니다. 검색된 성분 프로필의 복용 가이드와 "
             "주의사항을 기준으로 식사 여부, 운동 전후, 다른 약물과의 간격을 함께 확인하는 것이 좋습니다."

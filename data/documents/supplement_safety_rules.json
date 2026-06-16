@@ -9,7 +9,7 @@
     "when_to_consult": "신장질환, 신장 기능 저하, 투석, 처방약 복용, 고용량 복용을 고려하는 경우",
     "caution_level": "high",
     "evidence_summary": "신장 기능 저하 상태에서는 미네랄 보충제 복용을 보수적으로 판단해야 합니다.",
-    "source_refs": ["supplement_timing_guide.json#SUPP_TIMING_MAGNESIUM"]
+    "source_refs": ["supplement_ingredient_profiles.json#ING_MAGNESIUM"]
   },
   {
     "type": "safety_rule",
@@ -21,7 +21,7 @@
     "when_to_consult": "신장질환, 신장 기능 저하, 단백뇨, 처방약 복용, 고용량 복용을 고려하는 경우",
     "caution_level": "high",
     "evidence_summary": "신장 관련 위험군에서는 크레아틴 복용 전 개인 상태 확인이 필요합니다.",
-    "source_refs": ["supplement_timing_guide.json#SUPP_TIMING_CREATINE"]
+    "source_refs": ["supplement_ingredient_profiles.json#ING_CREATINE"]
   },
   {
     "type": "safety_rule",
@@ -33,7 +33,7 @@
     "when_to_consult": "임신, 수유, 고용량 복용, 칼슘 수치 이상, 처방약 복용, 기존 질환이 있는 경우",
     "caution_level": "high",
     "evidence_summary": "지용성 비타민은 과량 섭취를 피하고 개인 상태에 맞춰 복용해야 합니다.",
-    "source_refs": ["supplement_timing_guide.json#SUPP_TIMING_VITAMIN_D"]
+    "source_refs": ["supplement_ingredient_profiles.json#ING_VITAMIN_D"]
   },
   {
     "type": "safety_rule",
@@ -45,7 +45,7 @@
     "when_to_consult": "수술 예정, 시술 예정, 항응고제 복용, 출혈 질환, 고용량 복용 중인 경우",
     "caution_level": "high",
     "evidence_summary": "출혈 위험이 중요한 상황에서는 보충제 복용도 의료진에게 공유해야 합니다.",
-    "source_refs": ["supplement_timing_guide.json#SUPP_TIMING_OMEGA3"]
+    "source_refs": ["supplement_ingredient_profiles.json#ING_OMEGA3"]
   },
   {
     "type": "safety_rule",

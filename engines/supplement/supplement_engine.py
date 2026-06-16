@@ -377,15 +377,6 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         text = (doc.page_content or "").lower()
         return any(value and value in text for value in values)
 
-    def _is_unrelated_supp_timing_doc(self, parsed_query: ParsedSupplementQuery, doc: Any) -> bool:
-        meta = doc.metadata or {}
-        if meta.get("source") != "supp_timing" and meta.get("_source_file") != "supplement_timing_guide.json":
-            return False
-        supplement_entities = self._parsed_entities_by_type(parsed_query, EntityType.SUPPLEMENT_INGREDIENT)
-        if not supplement_entities:
-            return False
-        return not self._doc_text_contains_any(doc, supplement_entities)
-
     def _priority_kb_docs(self, parsed_query: ParsedSupplementQuery) -> list[Any]:
         intents = set(parsed_query.intents)
         supplement_entities = self._parsed_entities_by_type(parsed_query, EntityType.SUPPLEMENT_INGREDIENT)
@@ -584,8 +575,6 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         final_docs = []
         seen_final_keys = set()
         for doc in [*priority_kb_docs, *reranked_docs]:
-            if self._is_unrelated_supp_timing_doc(parsed_query, doc):
-                continue
             key = self._doc_key(doc)
             if key in seen_final_keys:
                 continue

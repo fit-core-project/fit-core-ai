@@ -120,7 +120,7 @@ def test_safety_rule_kidney_disease_magnesium_fixture_roundtrips():
             "when_to_consult": "신장질환이 있거나 신장 기능 관련 진단을 받은 경우",
             "caution_level": "high",
             "evidence_summary": "일반 안전 guardrail 문서 기반",
-            "source_refs": ["supplement_timing_guide.json#SUPP_TIMING_MAGNESIUM"],
+            "source_refs": ["supplement_ingredient_profiles.json#ING_MAGNESIUM"],
         }
     )
 
