@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import tempfile
+import urllib.request
 from contextlib import asynccontextmanager, redirect_stderr
 
 import uvicorn
@@ -106,8 +107,20 @@ def api_dev_logs(limit: int = 120):
 def api_health():
     rag_ready = bool(getattr(supplement_rag, "ready", False)) if supplement_rag is not None else False
     provider_config = resolve_llm_provider()
+
+    llm_status = "down"
+    try:
+        ollama_url = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+        req = urllib.request.Request(f"{ollama_url}/api/version")
+        with urllib.request.urlopen(req, timeout=1.5) as resp:
+            if resp.status == 200:
+                llm_status = "up"
+    except Exception:
+        llm_status = "down"
+
     return {
         "ai": "up",
+        "llm": llm_status,
         "appEnv": os.environ.get("APP_ENV", "local"),
         "llmProvider": provider_config.requested_provider,
         "llmProviderConfigured": provider_config.requested_provider,
