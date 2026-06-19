@@ -85,3 +85,49 @@ def test_parse_unknown_when_no_known_entity_or_intent():
     assert parsed.raw_query == "오늘 컨디션 어때?"
     assert parsed.entities == ()
     assert parsed.intents == (IntentType.UNKNOWN,)
+
+
+def test_parse_multivitamin_omega3_silymarin_combination():
+    parsed = parse_supplement_query("종합비타민 오메가3 실리마린 같이 먹어도 돼?")
+
+    assert {"multivitamin", "omega3", "silymarin"} <= _canonicals(parsed)
+    assert IntentType.SUPPLEMENT_INTERACTION in parsed.intents
+
+
+def test_parse_probiotic_antibiotics_as_drug_timing_interaction():
+    parsed = parse_supplement_query("유산균 항생제랑 같이 먹어도 돼?")
+
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "probiotics") in _entity_types(parsed)
+    assert (EntityType.DRUG_OR_DRUG_CLASS, "antibiotics") in _entity_types(parsed)
+    assert IntentType.DRUG_INTERACTION in parsed.intents
+
+
+def test_parse_zinc_iron_as_absorption_interaction():
+    parsed = parse_supplement_query("아연이랑 철분 같이 먹어도 돼?")
+
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "zinc") in _entity_types(parsed)
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "iron") in _entity_types(parsed)
+    assert IntentType.SUPPLEMENT_INTERACTION in parsed.intents
+
+
+def test_parse_kidney_disease_and_protein_condition_safety():
+    parsed = parse_supplement_query("신장질환 있는데 프로틴 먹어도 돼?")
+
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "protein") in _entity_types(parsed)
+    assert (EntityType.CONDITION, "kidney disease") in _entity_types(parsed)
+    assert IntentType.CONDITION_SAFETY in parsed.intents
+
+
+def test_parse_pregnancy_and_multivitamin_context():
+    parsed = parse_supplement_query("임산부 종합비타민 먹어도 돼?")
+
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "multivitamin") in _entity_types(parsed)
+    assert (EntityType.RISK_CONTEXT, "pregnancy") in _entity_types(parsed)
+    assert IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY in parsed.intents
+
+
+def test_parse_symptom_after_intake_question():
+    parsed = parse_supplement_query("먹고 속이 안 좋은데 계속 먹어도 돼?")
+
+    assert IntentType.SYMPTOM_AFTER_INTAKE in parsed.intents
+    assert IntentType.SIDE_EFFECT in parsed.intents

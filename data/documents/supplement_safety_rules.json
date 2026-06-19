@@ -82,5 +82,65 @@
     "caution_level": "moderate",
     "evidence_summary": "카페인 반응은 개인차가 크므로 심혈관 위험군에서는 보수적 접근이 필요합니다.",
     "source_refs": []
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_KIDNEY_PROTEIN",
+    "trigger_conditions": ["신장질환", "신장 기능 저하", "kidney disease", "renal impairment", "단백뇨"],
+    "affected_entities": ["protein", "프로틴", "단백질 보충제", "whey protein"],
+    "risk": "신장질환이 있으면 단백질 보충제 복용량과 하루 총 단백질 섭취량을 개인 상태에 맞춰 확인해야 합니다.",
+    "recommendation": "신장질환이 있거나 신장 기능 관련 검사 이상이 있다면 프로틴을 임의로 시작하거나 증량하지 말고 의료진과 총량을 상담하세요.",
+    "when_to_consult": "신장질환, 신장 기능 저하, 단백뇨, 투석, 처방약 복용, 고단백 식단을 고려하는 경우",
+    "caution_level": "high",
+    "evidence_summary": "신장 관련 위험군에서는 단백질 보충제 총량을 보수적으로 판단해야 합니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_PROTEIN"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_IMMUNOCOMPROMISED_PROBIOTIC",
+    "trigger_conditions": ["면역저하", "면역 저하", "항암", "중증질환", "중심정맥관", "immunocompromised", "severe illness"],
+    "affected_entities": ["probiotics", "probiotic", "유산균", "프로바이오틱스"],
+    "risk": "면역저하자, 중증 질환자, 중심정맥관 보유자는 유산균 복용 전 감염 관련 위험을 보수적으로 확인해야 합니다.",
+    "recommendation": "면역저하 상태이거나 중증 질환 치료 중이면 유산균을 임의로 시작하지 말고 의료진과 상담하세요.",
+    "when_to_consult": "면역저하, 항암 치료, 중증 질환, 중심정맥관 보유, 감염 치료 중인 경우",
+    "caution_level": "high",
+    "evidence_summary": "고위험군에서는 유산균도 의료진 확인 후 복용하는 것이 안전합니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_PROBIOTIC"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_HIGH_DOSE_ZINC",
+    "trigger_conditions": ["고용량", "장기복용", "장기 복용", "high dose", "long-term use"],
+    "affected_entities": ["zinc", "아연"],
+    "risk": "아연을 고용량으로 장기간 복용하면 구리 결핍이나 위장 불편 가능성이 있습니다.",
+    "recommendation": "아연은 제품 라벨을 확인하고 고용량 장기 복용을 고려한다면 의사 또는 약사와 상담하세요.",
+    "when_to_consult": "고용량, 장기 복용, 메스꺼움이나 복통, 다른 미네랄 보충제 병용, 임신 또는 수유 중인 경우",
+    "caution_level": "moderate",
+    "evidence_summary": "미네랄 보충제는 과량 또는 장기 복용 시 균형 문제가 생길 수 있습니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_ZINC"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_LIVER_SILYMARIN",
+    "trigger_conditions": ["간질환", "간수치", "간 기능", "liver disease", "처방약", "medication use"],
+    "affected_entities": ["silymarin", "실리마린", "밀크씨슬", "milk thistle"],
+    "risk": "간질환이 있거나 처방약을 복용 중이면 실리마린을 치료 목적으로 임의 사용하지 않아야 합니다.",
+    "recommendation": "간수치 이상, 간질환, 처방약 복용이 있으면 실리마린 복용 전 의료진 또는 약사와 상담하세요.",
+    "when_to_consult": "간질환, 간수치 이상, 처방약 복용, 임신 또는 수유, 여러 보충제 병용 중인 경우",
+    "caution_level": "moderate",
+    "evidence_summary": "간 관련 상태와 약물 대사 가능성은 개인별 확인이 필요합니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_SILYMARIN"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_PREGNANCY_MULTIVITAMIN",
+    "trigger_conditions": ["임신", "임산부", "pregnancy", "비타민A", "vitamin a", "고용량", "high dose"],
+    "affected_entities": ["multivitamin", "종합비타민", "멀티비타민"],
+    "risk": "임신 중에는 비타민A 등 고함량 성분과 기존 섭취량을 확인해야 합니다.",
+    "recommendation": "임신 중 종합비타민은 임산부용 제품인지, 비타민A 등 고함량 성분이 있는지 확인하고 의료진 또는 약사와 상담하세요.",
+    "when_to_consult": "임신 중, 임신 준비 중, 고함량 비타민A 제품, 처방약 복용, 기존 질환이 있는 경우",
+    "caution_level": "high",
+    "evidence_summary": "임신 중 지용성 비타민과 미네랄 중복 섭취는 보수적으로 확인해야 합니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_MULTIVITAMIN"]
   }
 ]

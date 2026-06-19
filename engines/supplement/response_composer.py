@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from engines.supplement.query_understanding import IntentType, ParsedSupplementQuery
+from engines.supplement.query_understanding import EntityType, IntentType, ParsedSupplementQuery
 
 
 _RISK_INTENTS = {
@@ -15,6 +15,9 @@ _RISK_INTENTS = {
     IntentType.CONDITION_SAFETY,
     IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY,
     IntentType.MEDICATION_SAFETY,
+    IntentType.SIDE_EFFECT,
+    IntentType.LONG_TERM_USE,
+    IntentType.SYMPTOM_AFTER_INTAKE,
 }
 _UNUSABLE_ANSWERS = {"", "{}", "[]", "null", "none"}
 _WEAK_ANSWER_NEEDLES = (
@@ -57,6 +60,9 @@ def compose_supplement_response(
     caution_parts.extend(_caution_parts_from_docs(selected_docs))
 
     used_kb_fallback = False
+    preferred_answer = _direct_answer_from_query_and_docs(parsed_query, selected_docs)
+    if preferred_answer and _should_prefer_deterministic_answer(parsed_query, selected_docs):
+        answer = preferred_answer
     if _is_weak_answer(answer):
         answer = _fallback_answer_from_docs(selected_docs, parsed_query)
         used_kb_fallback = True
@@ -72,8 +78,16 @@ def compose_supplement_response(
     if risk_query and not caution:
         caution = _COMPACT_CONSULT_TEXT
 
+    answer = _enhance_answer(
+        answer or _fallback_answer_from_docs(selected_docs, parsed_query),
+        question,
+        parsed_query,
+        selected_docs,
+        allow_follow_up=used_kb_fallback,
+    )
+
     return ComposedSupplementResponse(
-        answer=answer or _fallback_answer_from_docs(selected_docs, parsed_query),
+        answer=answer,
         caution=caution or None,
         used_kb_fallback=used_kb_fallback,
     )
@@ -343,6 +357,10 @@ def _truncate_by_sentence(text: str, max_chars: int) -> str:
 def _fallback_answer_from_docs(docs: list[Any], parsed_query: ParsedSupplementQuery | None = None) -> str:
     source_types = {(getattr(doc, "metadata", {}) or {}).get("source") for doc in docs}
     intents = set(parsed_query.intents) if parsed_query else set()
+    if parsed_query:
+        direct = _direct_answer_from_query_and_docs(parsed_query, docs)
+        if direct:
+            return direct
     if IntentType.TIMING in intents and not (intents & _RISK_INTENTS) and "ingredient_profile" in source_types:
         return (
             "일반적인 복용 타이밍은 성분과 목적에 따라 달라질 수 있습니다. 검색된 성분 프로필의 복용 가이드와 "
@@ -372,7 +390,196 @@ def _fallback_answer_from_docs(docs: list[Any], parsed_query: ParsedSupplementQu
             "일반적인 복용 타이밍은 성분과 목적에 따라 달라질 수 있습니다. 검색된 성분 프로필의 복용 가이드와 "
             "주의사항을 기준으로 식사 여부, 운동 전후, 다른 약물과의 간격을 함께 확인하는 것이 좋습니다."
         )
-    return "검색된 근거만으로는 충분하지 않습니다. 복용 중인 약이나 질환이 있다면 의사 또는 약사와 상담하세요."
+    return "검색된 근거만으로는 충분하지 않습니다. 확인 가능한 제품명, 성분표, 함량, 복용 중인 약과 질환 정보를 알려주면 범위를 좁혀 안내할 수 있습니다."
+
+
+def _enhance_answer(
+    answer: str,
+    question: str,
+    parsed_query: ParsedSupplementQuery,
+    docs: list[Any],
+    *,
+    allow_follow_up: bool,
+) -> str:
+    enhanced = (answer or "").strip()
+    if not enhanced:
+        enhanced = _direct_answer_from_query_and_docs(parsed_query, docs)
+    if _has_unknown_or_partial_known(question, parsed_query) and not _contains_any(
+        enhanced,
+        {"성분표", "제품명", "함량", "알려"},
+    ):
+        enhanced = (
+            f"{enhanced} 확인되지 않은 제품이나 성분이 함께 있다면 안전하다고 단정하기 어렵습니다. "
+            "제품명, 성분표, 함량, 복용량을 알려주면 확인 가능한 성분과 나눠서 볼 수 있습니다."
+        ).strip()
+    if allow_follow_up and _needs_follow_up(parsed_query, docs) and not _contains_any(enhanced, {"복용 중인 약", "질환", "제품명", "성분표"}):
+        enhanced = (
+            f"{enhanced} 복용 중인 약, 진단받은 질환, 제품명과 함량을 알려주면 더 안전하게 판단할 수 있습니다."
+        ).strip()
+    return enhanced
+
+
+def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs: list[Any]) -> str:
+    entities = _supplement_entities(parsed_query)
+    doc_ids = _doc_ids(docs)
+    intents = set(parsed_query.intents)
+
+    if IntentType.SYMPTOM_AFTER_INTAKE in intents:
+        return (
+            "먹고 속이 안 좋다면 계속 복용해도 된다고 단정하기 어렵습니다. 일단 제품명, 성분, 함량, 복용 시점과 증상 지속 시간을 확인해야 하며, "
+            "증상이 심하거나 지속되거나 알레르기 의심 증상이 있으면 복용을 중단하고 의료진과 상담하세요."
+        )
+
+    if "SAFE_KIDNEY_PROTEIN" in doc_ids:
+        return (
+            "신장질환이 있다면 프로틴은 임의로 시작하거나 늘리기보다 하루 총 단백질 섭취량을 의료진과 확인하는 것이 안전합니다. "
+            "식사 단백질, 보충제 1회 함량, 신장 기능 상태를 함께 봐야 합니다."
+        )
+
+    if len(entities) >= 2:
+        checks = _component_checks(entities, doc_ids)
+        if checks:
+            labels = ", ".join(_entity_label(entity.canonical) for entity in entities)
+            return (
+                f"확인된 성분은 {labels}입니다. 함께 복용 가능 여부는 제품 함량과 개인 상태에 따라 달라질 수 있어 안전하다고 단정하지 않습니다. "
+                + " ".join(checks)
+                + " 복용 중인 약, 질환, 수술 예정 여부가 있으면 먼저 확인하세요."
+            )
+
+    if "SAFE_PREGNANCY_MULTIVITAMIN" in doc_ids:
+        return (
+            "임산부의 종합비타민 복용은 제품에 따라 달라집니다. 임산부용 제품인지, 비타민A 등 고함량 지용성 비타민과 미네랄 중복이 없는지 확인하고 "
+            "의료진 또는 약사와 상담하는 것이 좋습니다."
+        )
+
+    if "INT_PROBIOTIC_ANTIBIOTICS" in doc_ids:
+        return (
+            "유산균은 항생제와 동시에 먹으면 효과가 줄 수 있어 복용 간격을 확인하는 편이 좋습니다. 항생제 치료를 대체하지 않으며, "
+            "처방받은 항생제 종류와 유산균 제품 지침에 따라 의사 또는 약사에게 간격을 확인하세요."
+        )
+
+    if "INT_ZINC_IRON_CALCIUM" in doc_ids:
+        return (
+            "아연과 철분 또는 칼슘은 미네랄끼리 흡수 경쟁이 생길 수 있어 같은 시간에 고함량으로 몰아 먹는 것은 피하는 편이 좋습니다. "
+            "둘 다 필요하면 제품 함량과 복용 목적을 확인해 간격을 두는 방식을 의사 또는 약사에게 확인하세요."
+        )
+
+    if IntentType.GOAL_BASED_RECOMMENDATION in intents:
+        return (
+            "목적 기반 보충제 추천은 현재 확인된 corpus 범위 안에서만 조심스럽게 볼 수 있습니다. 운동 전인지 운동 후인지, 수면 목적이면 카페인 민감도와 "
+            "복용 중인 약, 질환, 현재 먹는 제품을 알려주면 안전 범위 안에서 후보를 좁혀볼 수 있습니다."
+        )
+
+    return ""
+
+
+def _should_prefer_deterministic_answer(parsed_query: ParsedSupplementQuery, docs: list[Any]) -> bool:
+    entities = _supplement_entities(parsed_query)
+    doc_ids = _doc_ids(docs)
+    if len(entities) >= 2:
+        return True
+    return bool(
+        doc_ids
+        & {
+            "INT_PROBIOTIC_ANTIBIOTICS",
+            "INT_ZINC_IRON_CALCIUM",
+            "SAFE_KIDNEY_PROTEIN",
+            "SAFE_PREGNANCY_MULTIVITAMIN",
+        }
+    )
+
+
+def _component_checks(entities: list[Any], doc_ids: set[str]) -> list[str]:
+    checks: list[str] = []
+    canonicals = {entity.canonical for entity in entities}
+    if "multivitamin" in canonicals:
+        checks.append("종합비타민은 비타민A, 비타민D, 철분, 아연 등 성분 중복과 고함량 여부를 확인하세요.")
+    if "omega3" in canonicals:
+        checks.append("오메가3는 항응고제 복용, 출혈 위험, 수술 예정 여부를 확인하세요.")
+    if "silymarin" in canonicals:
+        checks.append("실리마린은 간질환이나 처방약 복용 여부를 확인하세요.")
+    if "probiotics" in canonicals or "INT_PROBIOTIC_ANTIBIOTICS" in doc_ids:
+        checks.append("유산균은 항생제와 동시에 복용하면 효과가 줄 수 있어 간격 확인이 필요합니다.")
+    if "zinc" in canonicals:
+        checks.append("아연은 철분, 칼슘, 일부 항생제와 흡수 경쟁이나 간섭 가능성이 있어 복용 간격을 확인하세요.")
+    if "protein" in canonicals:
+        checks.append("프로틴은 식사 단백질까지 합친 하루 총량과 신장질환 여부를 확인하세요.")
+    return checks
+
+
+def _doc_answer_summaries(docs: list[Any]) -> list[str]:
+    summaries: list[str] = []
+    for doc in docs:
+        text = getattr(doc, "page_content", "") or ""
+        meta = getattr(doc, "metadata", {}) or {}
+        source = meta.get("source") or meta.get("type")
+        if source == "interaction_rule":
+            summary = _field(text, "Recommendation") or _field(text, "Mechanism")
+        elif source == "safety_rule":
+            summary = _field(text, "Recommendation") or _field(text, "Risk")
+        elif source == "ingredient_profile":
+            summary = _field(text, "Name")
+            timing = _list_after(text, "Timing")
+            if timing:
+                summary = f"{summary or '해당 성분'}: {timing}"
+        else:
+            summary = None
+        if summary:
+            summaries.append(summary)
+        if len(summaries) >= 3:
+            break
+    return summaries
+
+
+def _supplement_entities(parsed_query: ParsedSupplementQuery) -> list[Any]:
+    return [entity for entity in parsed_query.entities if entity.type == EntityType.SUPPLEMENT_INGREDIENT]
+
+
+def _doc_ids(docs: list[Any]) -> set[str]:
+    return {str((getattr(doc, "metadata", {}) or {}).get("id") or "") for doc in docs}
+
+
+def _entity_label(canonical: str) -> str:
+    return {
+        "multivitamin": "종합비타민",
+        "omega3": "오메가3",
+        "silymarin": "실리마린",
+        "probiotics": "유산균",
+        "zinc": "아연",
+        "iron": "철분",
+        "calcium": "칼슘",
+        "protein": "프로틴",
+        "magnesium": "마그네슘",
+        "creatine": "크레아틴",
+        "vitamin d": "비타민D",
+    }.get(canonical, canonical)
+
+
+def _has_unknown_or_partial_known(question: str, parsed_query: ParsedSupplementQuery) -> bool:
+    if not question:
+        return False
+    if not parsed_query.entities:
+        return True
+    known_text = question
+    for entity in parsed_query.entities:
+        known_text = known_text.replace(entity.text, " ")
+    unknown_markers = ("처음 보는", "모르는", "새로 산", "제품", "보충제", "영양제")
+    connectors = ("랑", "이랑", "와", "과", "+", ",")
+    return any(marker in known_text for marker in unknown_markers) and any(connector in question for connector in connectors)
+
+
+def _needs_follow_up(parsed_query: ParsedSupplementQuery, docs: list[Any]) -> bool:
+    intents = set(parsed_query.intents)
+    if intents & {
+        IntentType.SUPPLEMENT_INTERACTION,
+        IntentType.DRUG_INTERACTION,
+        IntentType.CONDITION_SAFETY,
+        IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY,
+        IntentType.GOAL_BASED_RECOMMENDATION,
+        IntentType.SYMPTOM_AFTER_INTAKE,
+    }:
+        return True
+    return not docs
 
 
 def _soften_unsafe_answer(answer: str) -> str:
@@ -437,7 +644,7 @@ def _list_after(text: str, label: str) -> str | None:
                 continue
             if stripped and not line.startswith(" "):
                 break
-    return " ".join(collected).strip() or None
+    return ". ".join(collected).strip() or None
 
 
 def _dedupe_join(values: list[Any], max_chars: int) -> str:

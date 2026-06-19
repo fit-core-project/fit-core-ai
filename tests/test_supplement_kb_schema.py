@@ -228,6 +228,11 @@ def test_supplement_ingredient_profile_corpus_validates_against_schema():
         "ING_VITAMIN_D",
         "ING_OMEGA3",
         "ING_IRON",
+        "ING_MULTIVITAMIN",
+        "ING_SILYMARIN",
+        "ING_PROBIOTIC",
+        "ING_ZINC",
+        "ING_PROTEIN",
     ]
     assert {profile.type for profile in profiles} == {"ingredient_profile"}
     assert all(profile.aliases for profile in profiles)
@@ -250,6 +255,10 @@ def test_supplement_interaction_rule_corpus_validates_against_schema():
         "INT_ZINC_ANTIBIOTICS",
         "INT_CALCIUM_IRON",
         "INT_OMEGA3_ANTICOAGULANTS",
+        "INT_PROBIOTIC_ANTIBIOTICS",
+        "INT_ZINC_IRON_CALCIUM",
+        "INT_MULTIVITAMIN_MINERAL_OVERLAP",
+        "INT_SILYMARIN_MEDICATIONS",
     ]
     assert {rule.type for rule in rules} == {"interaction_rule"}
     assert all(rule.entity_a.canonical for rule in rules)
@@ -273,6 +282,11 @@ def test_supplement_safety_rule_corpus_validates_against_schema():
         "SAFE_ACETAMINOPHEN_LIVER_ALCOHOL",
         "SAFE_CAFFEINE_SLEEP",
         "SAFE_CAFFEINE_HYPERTENSION",
+        "SAFE_KIDNEY_PROTEIN",
+        "SAFE_IMMUNOCOMPROMISED_PROBIOTIC",
+        "SAFE_HIGH_DOSE_ZINC",
+        "SAFE_LIVER_SILYMARIN",
+        "SAFE_PREGNANCY_MULTIVITAMIN",
     ]
     assert {rule.type for rule in rules} == {"safety_rule"}
     assert all(rule.trigger_conditions for rule in rules)

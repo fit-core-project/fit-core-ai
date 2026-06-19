@@ -75,6 +75,8 @@ _KEYWORD_MAP = {
     "단백질": ["단백질", "프로틴", "protein", "whey", "섭취량", "운동 후"],
     "프로틴": ["단백질", "프로틴", "protein", "whey", "섭취량", "운동 후"],
     "protein": ["단백질", "프로틴", "protein", "whey", "섭취량", "운동 후"],
+    "웨이": ["단백질", "프로틴", "웨이", "whey", "protein powder", "신장질환", "총 단백질", "유당불내증"],
+    "protein powder": ["단백질", "프로틴", "whey", "protein powder", "kidney disease", "total protein"],
     "오메가3": ["오메가3", "omega-3", "EPA", "DHA"],
     "오메가-3": ["오메가3", "오메가-3", "omega3", "omega-3", "EPA", "DHA"],
     "omega3": ["오메가3", "오메가-3", "omega3", "omega-3", "EPA", "DHA"],
@@ -84,6 +86,17 @@ _KEYWORD_MAP = {
     "vitamin d": ["비타민D", "vitamin D"],
     "철분": ["철분", "iron", "Fe", "커피", "카페인", "칼슘", "흡수 방해", "공복", "비타민C", "복용 간격", "변비", "갑상선약"],
     "iron": ["철분", "iron", "Fe", "커피", "카페인", "칼슘", "흡수 방해", "공복", "비타민C", "복용 간격", "변비", "갑상선약"],
+    "종합비타민": ["종합비타민", "멀티비타민", "multivitamin", "비타민A", "비타민D", "철분", "아연", "성분 중복", "고함량"],
+    "멀티비타민": ["종합비타민", "멀티비타민", "multivitamin", "비타민A", "비타민D", "철분", "아연", "성분 중복", "고함량"],
+    "multivitamin": ["종합비타민", "멀티비타민", "multivitamin", "vitamin A", "vitamin D", "iron", "zinc", "nutrient overlap"],
+    "실리마린": ["실리마린", "밀크씨슬", "silymarin", "milk thistle", "간질환", "간수치", "처방약", "약물 대사"],
+    "밀크씨슬": ["실리마린", "밀크씨슬", "silymarin", "milk thistle", "간질환", "간수치", "처방약", "약물 대사"],
+    "silymarin": ["실리마린", "밀크씨슬", "silymarin", "milk thistle", "liver disease", "medication"],
+    "유산균": ["유산균", "프로바이오틱스", "probiotic", "probiotics", "항생제", "복용 간격", "면역저하"],
+    "프로바이오틱스": ["유산균", "프로바이오틱스", "probiotic", "probiotics", "항생제", "복용 간격", "면역저하"],
+    "probiotic": ["유산균", "프로바이오틱스", "probiotic", "probiotics", "antibiotics", "spacing", "immunocompromised"],
+    "아연": ["아연", "zinc", "철분", "칼슘", "항생제", "흡수 간섭", "구리 결핍", "위장 불편"],
+    "zinc": ["아연", "zinc", "iron", "calcium", "antibiotics", "absorption interference", "high dose"],
 }
 _TIMING_INTENT_NEEDLES = ("언제", "먹는 시간", "복용 시간", "복용 타이밍", "타이밍", "식전", "식후", "공복", "자기 전", "저녁", "간격")
 _TIMING_INTENT_KEYWORDS = ["복용", "섭취", "복용 시간", "복용 타이밍", "식전", "식후", "공복", "자기 전", "저녁", "간격"]
@@ -98,6 +111,14 @@ _ENTITY_EQUIVALENTS = {
     "omega3": {"omega3", "omega-3", "omega", "fish oil"},
     "thyroid medication": {"thyroid medication", "levothyroxine"},
     "levothyroxine": {"levothyroxine", "thyroid medication"},
+    "probiotics": {"probiotics", "probiotic"},
+    "probiotic": {"probiotics", "probiotic"},
+    "silymarin": {"silymarin", "milk thistle"},
+    "milk thistle": {"silymarin", "milk thistle"},
+    "multivitamin": {"multivitamin", "multi vitamin"},
+    "protein": {"protein", "whey protein", "protein powder"},
+    "whey protein": {"protein", "whey protein", "protein powder"},
+    "nutrient_overlap": {"nutrient_overlap", "iron", "calcium", "zinc", "vitamin d", "vitamin a"},
 }
 _EMBEDDING_MODEL_ID = "dragonkue/BGE-m3-ko"
 _RERANKER_MODEL_ID = "BAAI/bge-reranker-v2-m3"
@@ -413,6 +434,10 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                     score += 30.0
                 if score > 0 and str(meta.get("caution_level") or "").lower() in {"high", "critical"}:
                     score += 5.0
+                if meta.get("id") == "INT_MULTIVITAMIN_MINERAL_OVERLAP" and "multivitamin" in supplement_entities:
+                    score += 95.0
+                if meta.get("id") == "INT_ZINC_IRON_CALCIUM" and "zinc" in supplement_entities and {"iron", "calcium"} & supplement_entities:
+                    score += 110.0
 
             elif source == "safety_rule":
                 affected = set()

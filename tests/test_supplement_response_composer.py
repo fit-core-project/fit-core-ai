@@ -497,3 +497,128 @@ def test_compact_caution_keeps_none_when_no_caution_sources():
 
     assert isinstance(result.answer, str)
     assert result.caution is None
+
+
+def test_multi_supplement_combination_answer_includes_component_checks():
+    docs = [
+        Doc("ING_MULTIVITAMIN", "ingredient_profile", "[Ingredient profile]\nName: 종합비타민\nCautions:\n  - 성분 중복 확인"),
+        Doc("ING_OMEGA3", "ingredient_profile", "[Ingredient profile]\nName: 오메가3\nCautions:\n  - 항응고제 확인"),
+        Doc("ING_SILYMARIN", "ingredient_profile", "[Ingredient profile]\nName: 실리마린\nCautions:\n  - 간질환 확인"),
+    ]
+
+    result = compose_supplement_response(
+        question="종합비타민, 오메가3, 실리마린을 한번에 섭취해도 괜찮아?",
+        parsed_query=parse_supplement_query("종합비타민, 오메가3, 실리마린을 한번에 섭취해도 괜찮아?"),
+        generated_answer="{}",
+        generated_caution=None,
+        selected_docs=docs,
+    )
+
+    assert "종합비타민" in result.answer
+    assert "오메가3" in result.answer
+    assert "실리마린" in result.answer
+    assert "성분 중복" in result.answer
+    assert "항응고제" in result.answer
+    assert "간질환" in result.answer
+    assert "단정" in result.answer
+
+
+def test_unknown_ingredient_asks_for_product_name_and_label():
+    result = compose_supplement_response(
+        question="처음 보는 보충제랑 오메가3 같이 먹어도 돼?",
+        parsed_query=parse_supplement_query("처음 보는 보충제랑 오메가3 같이 먹어도 돼?"),
+        generated_answer="오메가3는 식후 복용이 일반적으로 무난합니다.",
+        generated_caution=None,
+        selected_docs=[Doc("ING_OMEGA3", "ingredient_profile", "[Ingredient profile]\nName: 오메가3")],
+    )
+
+    assert "제품명" in result.answer
+    assert "성분표" in result.answer
+    assert "함량" in result.answer
+    assert "단정" in result.answer
+
+
+def test_probiotic_antibiotics_answer_mentions_spacing_and_no_replacement():
+    doc = Doc(
+        "INT_PROBIOTIC_ANTIBIOTICS",
+        "interaction_rule",
+        "\n".join(
+            [
+                "[Interaction rule]",
+                "Recommendation: 항생제 복용 중 유산균을 함께 먹으려면 제품 지침과 처방 지침에 따라 복용 간격을 확인하세요.",
+                "Spacing guidance: 항생제 치료를 대체하지 않습니다.",
+            ]
+        ),
+    )
+
+    result = compose_supplement_response(
+        question="유산균 항생제랑 같이 먹어도 돼?",
+        parsed_query=parse_supplement_query("유산균 항생제랑 같이 먹어도 돼?"),
+        generated_answer="{}",
+        generated_caution=None,
+        selected_docs=[doc],
+    )
+
+    assert "간격" in result.answer
+    assert "대체하지" in result.answer
+    assert result.caution
+    assert "간격" in result.caution
+
+
+def test_zinc_iron_calcium_answer_mentions_absorption_competition():
+    doc = Doc(
+        "INT_ZINC_IRON_CALCIUM",
+        "interaction_rule",
+        "Recommendation: 아연과 철분 또는 칼슘은 흡수 경쟁이 생길 수 있어 간격 확인을 고려하세요.",
+    )
+
+    result = compose_supplement_response(
+        question="아연이랑 철분 같이 먹어도 돼?",
+        parsed_query=parse_supplement_query("아연이랑 철분 같이 먹어도 돼?"),
+        generated_answer="{}",
+        generated_caution=None,
+        selected_docs=[doc],
+    )
+
+    assert "흡수 경쟁" in result.answer
+    assert "간격" in result.answer
+
+
+def test_kidney_protein_prioritizes_kidney_safety():
+    doc = Doc(
+        "SAFE_KIDNEY_PROTEIN",
+        "safety_rule",
+        "Risk: 신장질환이 있으면 단백질 보충제 총량 확인이 필요합니다.\nRecommendation: 의료진과 상담하세요.",
+    )
+
+    result = compose_supplement_response(
+        question="신장질환 있는데 프로틴 먹어도 돼?",
+        parsed_query=parse_supplement_query("신장질환 있는데 프로틴 먹어도 돼?"),
+        generated_answer="{}",
+        generated_caution=None,
+        selected_docs=[doc],
+    )
+
+    assert "신장질환" in result.answer
+    assert "총 단백질" in result.answer
+    assert "의료진" in result.answer
+
+
+def test_pregnancy_multivitamin_mentions_vitamin_a_high_dose_caution():
+    doc = Doc(
+        "SAFE_PREGNANCY_MULTIVITAMIN",
+        "safety_rule",
+        "Risk: 임신 중에는 비타민A 등 고함량 성분 주의가 필요합니다.\nRecommendation: 임산부용 제품인지 확인하고 상담하세요.",
+    )
+
+    result = compose_supplement_response(
+        question="임산부 종합비타민 먹어도 돼?",
+        parsed_query=parse_supplement_query("임산부 종합비타민 먹어도 돼?"),
+        generated_answer="{}",
+        generated_caution=None,
+        selected_docs=[doc],
+    )
+
+    assert "임산부" in result.answer
+    assert "비타민A" in result.answer
+    assert "고함량" in result.answer

@@ -435,3 +435,60 @@ def test_supplement_priority_kb_docs_keep_existing_interaction_and_timing_source
     )
     assert engine._priority_kb_docs(parse_supplement_query("마그네슘은 언제 먹는 게 좋아?"))[0].metadata["id"] == "ING_MAGNESIUM"
     assert engine._priority_kb_docs(parse_supplement_query("크레아틴은 언제 먹는 게 좋아?"))[0].metadata["id"] == "ING_CREATINE"
+
+
+def test_supplement_priority_kb_docs_route_new_supplement_coverage():
+    engine = SupplementRAGEngine.degraded("test")
+
+    class Doc:
+        def __init__(self, doc_id, source, page_content="", **metadata):
+            self.metadata = {"id": doc_id, "source": source, **metadata}
+            self.page_content = page_content or doc_id
+
+    engine.original_docs = [
+        Doc("ING_MULTIVITAMIN", "ingredient_profile", canonical="multivitamin"),
+        Doc("ING_OMEGA3", "ingredient_profile", canonical="omega3"),
+        Doc("ING_SILYMARIN", "ingredient_profile", canonical="silymarin"),
+        Doc(
+            "INT_PROBIOTIC_ANTIBIOTICS",
+            "interaction_rule",
+            entity_a_canonical="probiotics",
+            entity_b_canonical="antibiotics",
+            interaction_type="medication_timing_interference",
+            caution_level="moderate",
+        ),
+        Doc(
+            "INT_ZINC_IRON_CALCIUM",
+            "interaction_rule",
+            entity_a_canonical="zinc",
+            entity_b_canonical="iron",
+            interaction_type="absorption_interference",
+            caution_level="moderate",
+        ),
+        Doc(
+            "SAFE_KIDNEY_PROTEIN",
+            "safety_rule",
+            "Trigger conditions: 신장질환 kidney disease\nAffected entities: protein 프로틴",
+            affected_entities="protein, 프로틴",
+            caution_level="high",
+        ),
+        Doc(
+            "SAFE_PREGNANCY_MULTIVITAMIN",
+            "safety_rule",
+            "Trigger conditions: 임신 임산부 pregnancy\nAffected entities: multivitamin 종합비타민",
+            affected_entities="multivitamin, 종합비타민",
+            caution_level="high",
+        ),
+    ]
+
+    combo_docs = engine._priority_kb_docs(parse_supplement_query("종합비타민 오메가3 실리마린 같이 먹어도 돼?"))
+    probiotic_docs = engine._priority_kb_docs(parse_supplement_query("유산균 항생제랑 같이 먹어도 돼?"))
+    zinc_docs = engine._priority_kb_docs(parse_supplement_query("아연이랑 철분 같이 먹어도 돼?"))
+    protein_docs = engine._priority_kb_docs(parse_supplement_query("신장질환 있는데 프로틴 먹어도 돼?"))
+    pregnancy_docs = engine._priority_kb_docs(parse_supplement_query("임산부 종합비타민 먹어도 돼?"))
+
+    assert {"ING_MULTIVITAMIN", "ING_OMEGA3", "ING_SILYMARIN"} <= {doc.metadata["id"] for doc in combo_docs}
+    assert probiotic_docs[0].metadata["id"] == "INT_PROBIOTIC_ANTIBIOTICS"
+    assert zinc_docs[0].metadata["id"] == "INT_ZINC_IRON_CALCIUM"
+    assert protein_docs[0].metadata["id"] == "SAFE_KIDNEY_PROTEIN"
+    assert pregnancy_docs[0].metadata["id"] == "SAFE_PREGNANCY_MULTIVITAMIN"

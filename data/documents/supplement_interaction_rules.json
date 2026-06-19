@@ -198,5 +198,105 @@
       "수술 예정",
       "출혈 질환 또는 멍이 잘 드는 경우"
     ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_PROBIOTIC_ANTIBIOTICS",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "probiotics",
+      "label": "유산균"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "antibiotics",
+      "label": "항생제"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "항생제와 유산균을 동시에 복용하면 유산균 효과가 줄 수 있습니다.",
+    "recommendation": "항생제 복용 중 유산균을 함께 먹으려면 제품 지침과 처방 지침에 따라 복용 간격을 확인하세요.",
+    "spacing_guidance": "항생제 종류와 제품별 지침이 다르므로 특정 간격을 임의로 일반화하지 말고 의료진 또는 약사에게 확인하세요.",
+    "caution_level": "moderate",
+    "consultation_required_when": [
+      "항생제 처방 중",
+      "감염 치료 중",
+      "면역저하 상태",
+      "중증 질환 또는 중심정맥관 보유"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_ZINC_IRON_CALCIUM",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "zinc",
+      "label": "아연"
+    },
+    "entity_b": {
+      "type": "supplement_ingredient",
+      "canonical": "iron",
+      "label": "철분/칼슘"
+    },
+    "interaction_type": "absorption_interference",
+    "mechanism": "아연, 철분, 칼슘 같은 미네랄은 같은 시간대 고함량으로 복용할 때 흡수 경쟁이 생길 수 있습니다.",
+    "recommendation": "아연과 철분 또는 칼슘을 모두 복용해야 한다면 같은 시간에 몰아 먹기보다 간격 확인을 고려하세요.",
+    "spacing_guidance": "치료 목적 복용, 임신, 빈혈 치료, 고용량 제품을 쓰는 경우 구체적인 간격은 의사 또는 약사에게 확인하세요.",
+    "caution_level": "moderate",
+    "consultation_required_when": [
+      "빈혈 치료 중",
+      "고용량 미네랄 복용 중",
+      "임신 또는 수유 중",
+      "처방약 복용 중"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_MULTIVITAMIN_MINERAL_OVERLAP",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "multivitamin",
+      "label": "종합비타민"
+    },
+    "entity_b": {
+      "type": "supplement_ingredient",
+      "canonical": "nutrient_overlap",
+      "label": "철분/칼슘/아연/비타민D/비타민A"
+    },
+    "interaction_type": "duplicate_or_overlap_risk",
+    "mechanism": "종합비타민에는 이미 미네랄이나 지용성 비타민이 들어 있을 수 있어 다른 제품과 함께 먹으면 성분 중복이 생길 수 있습니다.",
+    "recommendation": "종합비타민을 다른 보충제와 함께 복용할 때는 비타민A, 비타민D, 철분, 아연, 칼슘 함량이 중복되는지 제품 라벨을 확인하세요.",
+    "spacing_guidance": "중복 섭취는 간격만으로 해결되지 않을 수 있으므로 총 함량을 먼저 확인하세요.",
+    "caution_level": "moderate",
+    "consultation_required_when": [
+      "임신 또는 수유 중",
+      "간질환 또는 신장질환",
+      "처방약 복용 중",
+      "고함량 제품을 여러 개 복용 중"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_SILYMARIN_MEDICATIONS",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "silymarin",
+      "label": "실리마린"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "medication",
+      "label": "처방약"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "실리마린은 처방약 복용 중 약물 대사 관련 상호작용 가능성을 보수적으로 확인해야 합니다.",
+    "recommendation": "처방약을 복용 중이거나 간질환이 있다면 실리마린을 치료 목적으로 임의 사용하지 말고 의료진 또는 약사와 상담하세요.",
+    "spacing_guidance": "복용 간격만으로 상호작용 가능성이 해결된다고 단정하지 말고 복용 중인 약과 간 상태를 함께 확인하세요.",
+    "caution_level": "moderate",
+    "consultation_required_when": [
+      "처방약 복용 중",
+      "간질환 또는 간수치 이상",
+      "임신 또는 수유 중",
+      "여러 보충제를 함께 복용 중"
+    ]
   }
 ]
