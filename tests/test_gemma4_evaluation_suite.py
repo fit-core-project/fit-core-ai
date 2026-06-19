@@ -629,6 +629,8 @@ def test_provider_check_production_without_opt_in_blocks_local(monkeypatch):
     assert report["blocked_reason"] == "production_local_not_allowed"
 
 
+@pytest.mark.slow
+@pytest.mark.integration
 def test_cli_help_works():
     result = subprocess.run(
         [sys.executable, "scripts/run_gemma4_evaluation_suite.py", "--help"],

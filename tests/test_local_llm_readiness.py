@@ -177,6 +177,8 @@ def test_default_model_and_base_url_env_behavior(monkeypatch):
     assert seen["probe"] is False
 
 
+@pytest.mark.slow
+@pytest.mark.integration
 def test_script_help_works():
     result = subprocess.run(
         [sys.executable, "scripts/check_local_llm_readiness.py", "--help"],

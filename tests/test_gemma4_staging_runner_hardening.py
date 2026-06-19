@@ -85,6 +85,8 @@ def _compare(tmp_path: Path, raw_a: dict, raw_b: dict) -> dict:
     return json.loads(out.read_text(encoding="utf-8"))
 
 
+@pytest.mark.slow
+@pytest.mark.integration
 def test_run_help_includes_request_timeout():
     result = subprocess.run(
         [sys.executable, "scripts/run_feedback_ranking_staging_test.py", "run", "--help"],

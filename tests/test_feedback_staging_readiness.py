@@ -273,6 +273,8 @@ def test_verify_seed_fails_if_seed_row_has_user_note(ready_engine, monkeypatch):
 
 
 @pytest.mark.parametrize("command", ["check-db", "verify-seed"])
+@pytest.mark.slow
+@pytest.mark.integration
 def test_new_help_commands_work(command):
     result = subprocess.run(
         [sys.executable, "scripts/run_feedback_ranking_staging_test.py", command, "--help"],
@@ -285,6 +287,8 @@ def test_new_help_commands_work(command):
     assert "usage:" in result.stdout
 
 
+@pytest.mark.slow
+@pytest.mark.integration
 def test_seed_help_includes_readiness_options():
     result = subprocess.run(
         [sys.executable, "scripts/run_feedback_ranking_staging_test.py", "seed", "--help"],
@@ -298,6 +302,8 @@ def test_seed_help_includes_readiness_options():
         assert option in result.stdout
 
 
+@pytest.mark.slow
+@pytest.mark.integration
 def test_check_db_help_includes_create_dry_run_output_options():
     result = subprocess.run(
         [sys.executable, "scripts/run_feedback_ranking_staging_test.py", "check-db", "--help"],

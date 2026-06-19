@@ -3,6 +3,8 @@ from __future__ import annotations
 import subprocess
 import sys
 
+import pytest
+
 from engines.feedback_aggregation import FeedbackAdjustment
 from engines.routine_pipeline import _compute_feedback_stats
 from engines.routine_telemetry import build_routine_quality_telemetry_payload
@@ -142,6 +144,8 @@ def test_compute_feedback_stats_empty():
     }
 
 
+@pytest.mark.slow
+@pytest.mark.integration
 def test_staging_script_help_commands():
     script = "scripts/run_feedback_ranking_staging_test.py"
     for command in ["check-db", "seed", "verify-seed", "run", "compare"]:
