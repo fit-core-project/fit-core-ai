@@ -167,6 +167,14 @@ def get_llm(engine_type: str, temperature: float = 0):
 
         model_name = config.model_name
         base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip() or "http://localhost:11434"
+        if engine_type == "supplement":
+            print(f"[LLM Router] local -> ChatOllama(model={model_name}, format=text, engine={engine_type})")
+            return ChatOllama(
+                model=model_name,
+                base_url=base_url,
+                temperature=temperature,
+                **_local_ollama_options_from_env(),
+            )
         print(f"[LLM Router] local -> ChatOllama(model={model_name}, format=json, engine={engine_type})")
         llm = ChatOllama(
             model=model_name,

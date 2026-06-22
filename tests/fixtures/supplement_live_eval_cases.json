@@ -466,5 +466,50 @@
     "expected_behavior": ["식후/성분 중복/철분 확인", "지속 시 상담"],
     "must_not_include": ["무조건 안전", "완치"],
     "risk_level": "moderate"
+  },
+  {
+    "id": "natural_muscle_gain_recommendation",
+    "category": "llm_naturalness",
+    "question": "근육량 증가 목표인데 영양제 및 보충제 추천해줘",
+    "expected_entities": ["protein", "creatine"],
+    "expected_behavior": ["후보 우선순위", "운동/식사 조건", "관련 없는 오메가3 주의 없음"],
+    "must_not_include": ["확인된 성분은", "오메가3는 항응고제", "수술 예정 여부"],
+    "risk_level": "low"
+  },
+  {
+    "id": "natural_preworkout_recommendation",
+    "category": "llm_naturalness",
+    "question": "운동 전 보충제로 뭐가 좋아?",
+    "expected_entities": ["caffeine", "creatine"],
+    "expected_behavior": ["운동 전 후보 비교", "카페인 민감도 확인"],
+    "must_not_include": ["확인된 성분은", "오메가3는 항응고제", "수술 예정 여부"],
+    "risk_level": "low"
+  },
+  {
+    "id": "natural_sleep_options",
+    "category": "llm_naturalness",
+    "question": "잠을 잘 못 자는데 마그네슘, 테아닌, 멜라토닌 중 뭐가 나아?",
+    "expected_entities": ["magnesium", "theanine", "melatonin"],
+    "expected_behavior": ["후보 비교", "수면 문제 지속시 상담"],
+    "must_not_include": ["확인된 성분은", "오메가3는 항응고제", "수술 예정 여부"],
+    "risk_level": "moderate"
+  },
+  {
+    "id": "natural_fatigue_focus_options",
+    "category": "llm_naturalness",
+    "question": "피곤하고 집중이 안 되는데 철분, 비타민B, 카페인 중 뭘 봐야 해?",
+    "expected_entities": ["iron", "vitamin b", "caffeine"],
+    "expected_behavior": ["원인 확인", "후보 비교", "철분은 결핍 확인"],
+    "must_not_include": ["확인된 성분은", "오메가3는 항응고제", "수술 예정 여부"],
+    "risk_level": "moderate"
+  },
+  {
+    "id": "natural_protein_creatine_eaa_glutamine",
+    "category": "llm_naturalness",
+    "question": "프로틴, 크레아틴, EAA, 글루타민 다 먹어야 해?",
+    "expected_entities": ["protein", "creatine", "eaa", "glutamine"],
+    "expected_behavior": ["필수 여부 우선순위", "프로틴/크레아틴 중심", "EAA/글루타민 조건부"],
+    "must_not_include": ["확인된 성분은", "오메가3는 항응고제", "수술 예정 여부"],
+    "risk_level": "low"
   }
 ]

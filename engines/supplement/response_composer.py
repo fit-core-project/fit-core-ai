@@ -57,12 +57,9 @@ def compose_supplement_response(
 ) -> ComposedSupplementResponse:
     answer, parsed_caution = _normalize_answer(generated_answer)
     caution_parts = [generated_caution, parsed_caution]
-    caution_parts.extend(_caution_parts_from_docs(selected_docs))
+    caution_parts.extend(_caution_parts_from_docs(selected_docs, parsed_query, answer))
 
     used_kb_fallback = False
-    preferred_answer = _direct_answer_from_query_and_docs(parsed_query, selected_docs)
-    if preferred_answer and _should_prefer_deterministic_answer(parsed_query, selected_docs):
-        answer = preferred_answer
     if _is_weak_answer(answer):
         answer = _fallback_answer_from_docs(selected_docs, parsed_query)
         used_kb_fallback = True
@@ -159,9 +156,11 @@ def _answer_from_dict(data: dict[str, Any]) -> tuple[str, str | None]:
     return _dedupe_join(flattened, max_chars=700), caution
 
 
-def _caution_parts_from_docs(docs: list[Any]) -> list[str]:
+def _caution_parts_from_docs(docs: list[Any], parsed_query: ParsedSupplementQuery, answer: str) -> list[str]:
     parts: list[str] = []
     for doc in docs:
+        if not _doc_is_relevant_for_caution(doc, parsed_query, answer):
+            continue
         meta = getattr(doc, "metadata", {}) or {}
         source = meta.get("source") or meta.get("type")
         text = getattr(doc, "page_content", "") or ""
@@ -190,6 +189,33 @@ def _caution_parts_from_docs(docs: list[Any]) -> list[str]:
                 ]
             )
     return [part for part in parts if part]
+
+
+def _doc_is_relevant_for_caution(doc: Any, parsed_query: ParsedSupplementQuery, answer: str) -> bool:
+    meta = getattr(doc, "metadata", {}) or {}
+    source = meta.get("source") or meta.get("type")
+    if source not in {"interaction_rule", "safety_rule", "ingredient_profile"}:
+        return False
+
+    query_values = {entity.canonical.lower() for entity in parsed_query.entities}
+    answer_text = (answer or "").lower()
+    doc_values: set[str] = set()
+    doc_id = meta.get("id")
+    if doc_id:
+        doc_values.update(part for part in str(doc_id).lower().replace("-", "_").split("_") if part)
+    for key in ("canonical", "entity_a_canonical", "entity_b_canonical", "affected_entities"):
+        value = meta.get(key)
+        if isinstance(value, str):
+            doc_values.update(part.strip().lower() for part in value.split(",") if part.strip())
+        elif isinstance(value, list):
+            doc_values.update(str(part).strip().lower() for part in value if str(part).strip())
+
+    if query_values and doc_values & query_values:
+        return True
+    doc_text = (getattr(doc, "page_content", "") or "").lower()
+    if query_values and any(value and value in doc_text for value in query_values):
+        return True
+    return any(value and value in answer_text for value in doc_values)
 
 
 def _compact_caution(

@@ -116,6 +116,21 @@ $multiComponentNeedles = @(
     [regex]::Unescape("\uC2E0\uC7A5"),
     [regex]::Unescape("\uCD1D\uB7C9")
 )
+$scriptedAnswerNeedles = @(
+    [regex]::Unescape("\uD655\uC778\uB41C \uC131\uBD84\uC740"), # 확인된 성분은
+    [regex]::Unescape("\uD568\uAED8 \uBCF5\uC6A9 \uAC00\uB2A5 \uC5EC\uBD80\uB294 \uC81C\uD488 \uD568\uB7C9\uACFC \uAC1C\uC778 \uC0C1\uD0DC\uC5D0 \uB530\uB77C"), # 함께 복용 가능 여부는...
+    [regex]::Unescape("\uBCF5\uC6A9 \uC911\uC778 \uC57D, \uC9C8\uD658, \uC218\uC220 \uC608\uC815 \uC5EC\uBD80") # 복용 중인 약, 질환, 수술 예정 여부
+)
+$naturalAnswerNeedles = @(
+    [regex]::Unescape("\uCD94\uCC9C"),
+    [regex]::Unescape("\uC6B0\uC120"),
+    [regex]::Unescape("\uBE44\uAD50"),
+    [regex]::Unescape("\uBAA9\uD45C"),
+    [regex]::Unescape("\uD6C4\uBCF4"),
+    "protein",
+    "creatine",
+    "caffeine"
+)
 
 foreach ($case in $cases) {
     Write-Host ("[{0}] {1}" -f $case.id, $case.question)
@@ -191,6 +206,17 @@ foreach ($case in $cases) {
                 Add-FailureType "multi-supplement decomposition failure"
             }
         }
+        if ($case.category -eq "llm_naturalness") {
+            $combined = "$answer $caution"
+            if (Has-Any $answer $scriptedAnswerNeedles) {
+                $failReasons.Add("naturalness answer looks like deterministic template")
+                Add-FailureType "scripted answer failure"
+            }
+            if (-not (Has-Any $combined $naturalAnswerNeedles)) {
+                $failReasons.Add("naturalness answer does not compare or prioritize candidates")
+                Add-FailureType "answer directness failure"
+            }
+        }
     }
 
     $status = if ($failReasons.Count -eq 0) { "pass" } else { "fail" }
@@ -202,7 +228,7 @@ foreach ($case in $cases) {
     }
     if ($warnReasons.Count -gt 0) { $warnCount += 1 }
 
-    if ($case.id -in @("multi_multivitamin_omega3_silymarin", "drug_warfarin_omega3", "unknown_nmn", "symptom_magnesium_diarrhea", "condition_pregnancy_multivitamin")) {
+    if ($case.id -in @("multi_multivitamin_omega3_silymarin", "drug_warfarin_omega3", "unknown_nmn", "symptom_magnesium_diarrhea", "condition_pregnancy_multivitamin", "natural_muscle_gain_recommendation")) {
         $samples[$case.id] = [ordered]@{
             answer = $answer
             caution = $caution

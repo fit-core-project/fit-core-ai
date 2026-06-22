@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import time
 import os
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from pathlib import Path
 from typing import Any, Dict
 
@@ -120,6 +121,12 @@ _ENTITY_EQUIVALENTS = {
     "whey protein": {"protein", "whey protein", "protein powder"},
     "nutrient_overlap": {"nutrient_overlap", "iron", "calcium", "zinc", "vitamin d", "vitamin a"},
 }
+_GOAL_CONTEXT_ENTITY_HINTS = {
+    "muscle_gain": {"protein", "whey protein", "protein powder", "creatine", "eaa", "glutamine"},
+    "pre_workout": {"caffeine", "creatine"},
+    "sleep": {"magnesium", "theanine", "melatonin"},
+    "fatigue_focus": {"iron", "caffeine", "vitamin b"},
+}
 _EMBEDDING_MODEL_ID = "dragonkue/BGE-m3-ko"
 _RERANKER_MODEL_ID = "BAAI/bge-reranker-v2-m3"
 
@@ -198,6 +205,17 @@ def _env_flag_enabled(name: str) -> bool:
     return os.getenv(name, "").strip().lower() in _TRUE_VALUES
 
 
+def _positive_float_env(name: str, default: float) -> float:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        value = float(raw)
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
 def _is_unusable_generated_answer(answer: Any) -> bool:
     if not isinstance(answer, str):
         return True
@@ -212,6 +230,18 @@ def _is_unusable_generated_answer(answer: Any) -> bool:
         parsed_answer = parsed.get("answer")
         return not (isinstance(parsed_answer, str) and parsed_answer.strip())
     return True
+
+
+def _invoke_with_timeout(runnable: Any, payload: dict[str, Any], timeout_sec: float) -> Any:
+    executor = ThreadPoolExecutor(max_workers=1)
+    future = executor.submit(runnable.invoke, payload)
+    try:
+        return future.result(timeout=timeout_sec)
+    except FutureTimeoutError as exc:
+        future.cancel()
+        raise TimeoutError("supplement_llm_generation_timeout") from exc
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
 
 
 class SupplementRAGEngine:
@@ -297,7 +327,15 @@ class SupplementRAGEngine:
                 (
                     "system",
                     """You are a cautious supplement information assistant.
-Use only the verified documents below. If the documents are not enough, output WEB_SEARCH_REQUIRED.
+Answer in natural Korean, directly addressing the user's question.
+Use the verified documents below as evidence and constraints, not as a script.
+Do not output JSON.
+Do not claim that a supplement treats, prevents, or cures disease.
+Do not recommend a specific dose unless the documents explicitly support it.
+For goal-based recommendation questions, compare likely options and give practical priorities when the documents support the ingredients.
+Only include cautions that are directly related to the user's stated ingredient, medication, condition, symptom, or risk context.
+If the documents are not enough for the specific ingredient or product, ask for the product name, ingredient label, amount, and dose instead of pretending to know.
+If the documents are not enough to answer safely, output WEB_SEARCH_REQUIRED.
 
 [Verified documents]
 {context}""",
@@ -341,6 +379,14 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         for needle, mapped_keywords in _KEYWORD_MAP.items():
             if needle in lowered or needle in normalized:
                 keywords.extend(mapped_keywords)
+        if any(needle in lowered or needle in normalized for needle in ("근육량", "근비대", "muscle gain", "근육 증가")):
+            keywords.extend(["protein", "whey protein", "creatine", "EAA", "glutamine", "total protein", "strength training"])
+        if any(needle in lowered or needle in normalized for needle in ("운동 전", "프리워크아웃", "pre workout", "pre-workout")):
+            keywords.extend(["caffeine", "creatine", "pre-workout", "sleep", "heart rate", "stimulant"])
+        if any(needle in lowered or needle in normalized for needle in ("잠", "수면", "sleep", "melatonin", "theanine", "테아닌", "멜라토닌")):
+            keywords.extend(["magnesium", "sleep", "insomnia", "theanine", "melatonin", "medication"])
+        if any(needle in lowered or needle in normalized for needle in ("피곤", "집중", "fatigue", "focus", "비타민b", "비타민 B")):
+            keywords.extend(["iron", "caffeine", "vitamin B", "fatigue", "deficiency", "blood test"])
         if any(needle in normalized for needle in _TIMING_INTENT_NEEDLES):
             keywords.extend(_TIMING_INTENT_KEYWORDS)
         deduped = list(dict.fromkeys([normalized, *keywords]))
@@ -393,6 +439,64 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                 values.update(self._metadata_values(item))
             return values
         return {str(value).strip().lower()}
+
+    def _doc_metadata_entity_values(self, doc: Any) -> set[str]:
+        meta = doc.metadata or {}
+        values: set[str] = set()
+        for key in (
+            "canonical",
+            "entity_a_canonical",
+            "entity_b_canonical",
+            "affected_entities",
+            "ingredient",
+            "ingredient_canonical",
+        ):
+            for value in self._metadata_values(meta.get(key)):
+                values.update(self._expanded_canonicals(value))
+        doc_id = str(meta.get("id") or "").lower()
+        for hint_values in _GOAL_CONTEXT_ENTITY_HINTS.values():
+            for value in hint_values:
+                if value and value.replace(" ", "_") in doc_id:
+                    values.add(value)
+        return values
+
+    def _goal_context_allowed_entities(self, question: str, parsed_query: ParsedSupplementQuery) -> set[str]:
+        if IntentType.GOAL_BASED_RECOMMENDATION not in set(parsed_query.intents):
+            return set()
+        lowered = (question or "").lower()
+        normalized = question or ""
+        allowed: set[str] = set()
+        if any(needle in lowered or needle in normalized for needle in ("muscle gain", "근육", "근비대")):
+            allowed.update(_GOAL_CONTEXT_ENTITY_HINTS["muscle_gain"])
+        if any(needle in lowered or needle in normalized for needle in ("pre workout", "pre-workout", "운동 전", "프리워크아웃")):
+            allowed.update(_GOAL_CONTEXT_ENTITY_HINTS["pre_workout"])
+        if any(needle in lowered or needle in normalized for needle in ("sleep", "잠", "수면", "theanine", "melatonin", "테아닌", "멜라토닌")):
+            allowed.update(_GOAL_CONTEXT_ENTITY_HINTS["sleep"])
+        if any(needle in lowered or needle in normalized for needle in ("fatigue", "focus", "피곤", "집중", "비타민b", "비타민 b")):
+            allowed.update(_GOAL_CONTEXT_ENTITY_HINTS["fatigue_focus"])
+        for entity in parsed_query.entities:
+            if entity.type == EntityType.SUPPLEMENT_INGREDIENT:
+                allowed.update(self._expanded_canonicals(entity.canonical))
+        expanded: set[str] = set()
+        for value in allowed:
+            expanded.update(self._expanded_canonicals(value))
+        return expanded
+
+    def _limit_goal_context_docs(
+        self,
+        docs: list[Any],
+        parsed_query: ParsedSupplementQuery,
+        question: str,
+    ) -> list[Any]:
+        allowed = self._goal_context_allowed_entities(question, parsed_query)
+        if not allowed:
+            return docs
+        limited = [
+            doc
+            for doc in docs
+            if self._doc_metadata_entity_values(doc) & allowed or self._doc_text_contains_any(doc, allowed)
+        ]
+        return limited[:8] if limited else docs
 
     def _doc_source_type(self, doc: Any) -> str:
         meta = doc.metadata or {}
@@ -611,6 +715,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             seen_final_keys.add(key)
             if len(final_docs) >= 8:
                 break
+        final_docs = self._limit_goal_context_docs(final_docs, parsed_query, normalized_question)
         mark("rerank", stage_start)
         counts["rerankPairs"] = len(pairs)
         counts["finalDocs"] = len(final_docs)
@@ -633,40 +738,6 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             seen_keys.add(source_key)
         mark("sourceFormatting", stage_start)
 
-        if not _env_flag_enabled("SUPPLEMENT_ENABLE_LLM_ANSWER"):
-            composed = compose_supplement_response(
-                question=normalized_question,
-                parsed_query=parsed_query,
-                generated_answer="",
-                generated_caution=None,
-                selected_docs=final_docs,
-            )
-            counts["webSearchUsed"] = False
-            counts["sourcesCount"] = len(sources)
-            counts["questionCharCount"] = len(normalized_question)
-            counts["answerRecoveredFromKbDocs"] = composed.used_kb_fallback
-            counts["llmAnswerEnabled"] = False
-            timing_ms["promptBuild"] = 0
-            timing_ms["llmGeneration"] = 0
-            timing_ms["webSearch"] = 0
-            timing_ms["webLlmGeneration"] = 0
-            payload = {"answer": composed.answer, "sources": sources, "mode": "full"}
-            if composed.caution:
-                payload["caution"] = composed.caution
-            result = _normalize_answer_payload(payload)
-            timing_ms["total"] = round((time.perf_counter() - start_time) * 1000)
-            print(
-                "[Supplement RAG completed] elapsed_sec={:.2f} web_search_used={} sources_count={}".format(
-                    timing_ms["total"] / 1000,
-                    False,
-                    len(sources),
-                )
-            )
-            if os.getenv("APP_ENV", "").strip().lower() == "local":
-                result["debugTimingMs"] = timing_ms
-                result["debugCounts"] = counts
-            return result
-
         stage_start = time.perf_counter()
         context_text = "\n\n---\n\n".join([doc.page_content for doc in final_docs])
         mark("promptBuild", stage_start)
@@ -674,7 +745,18 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
 
         stage_start = time.perf_counter()
         local_chain = self.local_prompt | self.llm | self.StrOutputParser()
-        answer = local_chain.invoke({"context": context_text, "question": question})
+        try:
+            answer = _invoke_with_timeout(
+                local_chain,
+                {"context": context_text, "question": question},
+                _positive_float_env("SUPPLEMENT_LLM_TIMEOUT_SEC", 45.0),
+            )
+            counts["llmAnswerEnabled"] = True
+        except Exception as exc:
+            print("[Supplement LLM answer fallback]", sanitize_exception_for_log(exc))
+            answer = ""
+            counts["llmAnswerEnabled"] = True
+            counts["llmAnswerFallbackReason"] = "generation_error"
         mark("llmGeneration", stage_start)
         counts["answerCharCount"] = len(answer or "")
 
