@@ -616,6 +616,58 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         counts["finalDocs"] = len(final_docs)
 
         stage_start = time.perf_counter()
+        sources = []
+        seen_keys = set()
+        for doc in final_docs:
+            meta = doc.metadata or {}
+            source_key = f"{meta.get('_source_file')}_{meta.get('id')}"
+            if source_key in seen_keys:
+                continue
+            sources.append(
+                {
+                    "file": meta.get("_source_file", "unknown"),
+                    "id": str(meta.get("id", "N/A")),
+                    "type": str(meta.get("source") or meta.get("type") or "DOC"),
+                }
+            )
+            seen_keys.add(source_key)
+        mark("sourceFormatting", stage_start)
+
+        if not _env_flag_enabled("SUPPLEMENT_ENABLE_LLM_ANSWER"):
+            composed = compose_supplement_response(
+                question=normalized_question,
+                parsed_query=parsed_query,
+                generated_answer="",
+                generated_caution=None,
+                selected_docs=final_docs,
+            )
+            counts["webSearchUsed"] = False
+            counts["sourcesCount"] = len(sources)
+            counts["questionCharCount"] = len(normalized_question)
+            counts["answerRecoveredFromKbDocs"] = composed.used_kb_fallback
+            counts["llmAnswerEnabled"] = False
+            timing_ms["promptBuild"] = 0
+            timing_ms["llmGeneration"] = 0
+            timing_ms["webSearch"] = 0
+            timing_ms["webLlmGeneration"] = 0
+            payload = {"answer": composed.answer, "sources": sources, "mode": "full"}
+            if composed.caution:
+                payload["caution"] = composed.caution
+            result = _normalize_answer_payload(payload)
+            timing_ms["total"] = round((time.perf_counter() - start_time) * 1000)
+            print(
+                "[Supplement RAG completed] elapsed_sec={:.2f} web_search_used={} sources_count={}".format(
+                    timing_ms["total"] / 1000,
+                    False,
+                    len(sources),
+                )
+            )
+            if os.getenv("APP_ENV", "").strip().lower() == "local":
+                result["debugTimingMs"] = timing_ms
+                result["debugCounts"] = counts
+            return result
+
+        stage_start = time.perf_counter()
         context_text = "\n\n---\n\n".join([doc.page_content for doc in final_docs])
         mark("promptBuild", stage_start)
         counts["contextCharCount"] = len(context_text)

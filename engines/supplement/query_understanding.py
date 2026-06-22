@@ -51,7 +51,10 @@ class ParsedSupplementQuery:
 ALIAS_REGISTRY: tuple[AliasEntry, ...] = (
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "magnesium", ("마그네슘", "magnesium", "Mg")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "iron", ("철분", "iron", "Fe")),
+    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin a", ("비타민A", "비타민 A", "vitamin a")),
+    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin c", ("비타민C", "비타민 C", "vitamin c")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin d", ("비타민D", "비타민 D", "vitamin d")),
+    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin e", ("비타민E", "비타민 E", "vitamin e")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "omega3", ("오메가3", "오메가-3", "omega3", "omega-3", "fish oil")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "creatine", ("크레아틴", "creatine")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "multivitamin", ("종합비타민", "멀티비타민", "multivitamin", "multi vitamin")),
@@ -70,6 +73,7 @@ ALIAS_REGISTRY: tuple[AliasEntry, ...] = (
     ),
     AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "anticoagulant", ("항응고제", "anticoagulant")),
     AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "warfarin", ("와파린", "warfarin")),
+    AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "aspirin", ("아스피린", "aspirin")),
     AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "acetaminophen", ("타이레놀", "acetaminophen", "paracetamol")),
     AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "pain reliever", ("진통제", "pain reliever")),
     AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "blood pressure medication", ("혈압약", "blood pressure medication")),

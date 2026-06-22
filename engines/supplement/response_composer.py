@@ -404,10 +404,7 @@ def _enhance_answer(
     enhanced = (answer or "").strip()
     if not enhanced:
         enhanced = _direct_answer_from_query_and_docs(parsed_query, docs)
-    if _has_unknown_or_partial_known(question, parsed_query) and not _contains_any(
-        enhanced,
-        {"성분표", "제품명", "함량", "알려"},
-    ):
+    if _has_unknown_or_partial_known(question, parsed_query) and not _has_product_detail_request(enhanced):
         enhanced = (
             f"{enhanced} 확인되지 않은 제품이나 성분이 함께 있다면 안전하다고 단정하기 어렵습니다. "
             "제품명, 성분표, 함량, 복용량을 알려주면 확인 가능한 성분과 나눠서 볼 수 있습니다."
@@ -504,6 +501,8 @@ def _component_checks(entities: list[Any], doc_ids: set[str]) -> list[str]:
         checks.append("아연은 철분, 칼슘, 일부 항생제와 흡수 경쟁이나 간섭 가능성이 있어 복용 간격을 확인하세요.")
     if "protein" in canonicals:
         checks.append("프로틴은 식사 단백질까지 합친 하루 총량과 신장질환 여부를 확인하세요.")
+    if "creatine" in canonicals:
+        checks.append("크레아틴은 신장 기능 이상 여부, 충분한 수분 섭취, 제품 권장량을 확인하세요.")
     return checks
 
 
@@ -551,7 +550,10 @@ def _entity_label(canonical: str) -> str:
         "protein": "프로틴",
         "magnesium": "마그네슘",
         "creatine": "크레아틴",
+        "vitamin a": "비타민A",
+        "vitamin c": "비타민C",
         "vitamin d": "비타민D",
+        "vitamin e": "비타민E",
     }.get(canonical, canonical)
 
 
@@ -564,8 +566,21 @@ def _has_unknown_or_partial_known(question: str, parsed_query: ParsedSupplementQ
     for entity in parsed_query.entities:
         known_text = known_text.replace(entity.text, " ")
     unknown_markers = ("처음 보는", "모르는", "새로 산", "제품", "보충제", "영양제")
+    unsupported_ingredient_markers = ("nmn", "nac", "퀘르세틴", "quercetin", "베르베린", "berberine")
     connectors = ("랑", "이랑", "와", "과", "+", ",")
-    return any(marker in known_text for marker in unknown_markers) and any(connector in question for connector in connectors)
+    known_text_lower = known_text.lower()
+    has_unknown_marker = any(marker in known_text for marker in unknown_markers) or any(
+        marker in known_text_lower for marker in unsupported_ingredient_markers
+    )
+    return has_unknown_marker and any(connector in question for connector in connectors)
+
+
+def _has_product_detail_request(text: str) -> bool:
+    if not text:
+        return False
+    if _contains_any(text, {"성분표", "함량", "복용량", "용량"}):
+        return True
+    return _contains_any(text, {"제품명"}) and _contains_any(text, {"성분", "함량", "복용량", "용량"})
 
 
 def _needs_follow_up(parsed_query: ParsedSupplementQuery, docs: list[Any]) -> bool:

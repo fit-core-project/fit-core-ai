@@ -538,6 +538,50 @@ def test_unknown_ingredient_asks_for_product_name_and_label():
     assert "단정" in result.answer
 
 
+def test_unknown_product_question_asks_for_label_and_dose_details():
+    result = compose_supplement_response(
+        question="이 제품 먹어도 돼?",
+        parsed_query=parse_supplement_query("이 제품 먹어도 돼?"),
+        generated_answer="어떤 제품인지 알려주시면 확인해 드리겠습니다.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert "제품명" in result.answer
+    assert "성분표" in result.answer
+    assert "함량" in result.answer
+    assert "복용량" in result.answer
+
+
+def test_partial_known_nmn_and_magnesium_requests_unknown_details():
+    result = compose_supplement_response(
+        question="NMN이랑 마그네슘 같이 먹어도 돼?",
+        parsed_query=parse_supplement_query("NMN이랑 마그네슘 같이 먹어도 돼?"),
+        generated_answer="마그네슘은 개인 상태와 복용 중인 약에 따라 주의가 필요합니다.",
+        generated_caution=None,
+        selected_docs=[Doc("ING_MAGNESIUM", "ingredient_profile", "[Ingredient profile]\nName: 마그네슘")],
+    )
+
+    assert "제품명" in result.answer
+    assert "성분표" in result.answer
+    assert "함량" in result.answer
+
+
+def test_protein_creatine_combination_mentions_both_component_checks():
+    result = compose_supplement_response(
+        question="프로틴이랑 크레아틴 같이 먹어도 돼?",
+        parsed_query=parse_supplement_query("프로틴이랑 크레아틴 같이 먹어도 돼?"),
+        generated_answer="{}",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert "프로틴" in result.answer
+    assert "크레아틴" in result.answer
+    assert "총량" in result.answer
+    assert "수분" in result.answer
+
+
 def test_probiotic_antibiotics_answer_mentions_spacing_and_no_replacement():
     doc = Doc(
         "INT_PROBIOTIC_ANTIBIOTICS",

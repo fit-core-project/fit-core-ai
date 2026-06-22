@@ -56,6 +56,22 @@ def test_parse_pregnancy_and_high_dose_vitamin_d_as_safety():
     assert IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY in parsed.intents
 
 
+def test_parse_liver_disease_and_vitamin_a_as_condition_safety():
+    parsed = parse_supplement_query("간질환 있는데 비타민A 먹어도 돼?")
+
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "vitamin a") in _entity_types(parsed)
+    assert (EntityType.CONDITION, "liver disease") in _entity_types(parsed)
+    assert IntentType.CONDITION_SAFETY in parsed.intents
+
+
+def test_parse_aspirin_and_omega3_as_drug_interaction():
+    parsed = parse_supplement_query("아스피린 먹는데 오메가3 먹어도 돼?")
+
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "omega3") in _entity_types(parsed)
+    assert (EntityType.DRUG_OR_DRUG_CLASS, "aspirin") in _entity_types(parsed)
+    assert IntentType.DRUG_INTERACTION in parsed.intents
+
+
 def test_parse_warfarin_and_omega3_as_drug_interaction():
     parsed = parse_supplement_query("와파린 먹는데 오메가3 먹어도 돼?")
 
