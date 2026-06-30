@@ -1,0 +1,289 @@
+{
+  "_note": "expected의 kcal_ref는 공개 영양DB 기준 추정값(P×4+C×4+F×9). 절대 정답 아님. macros_expected=llm_only 표기 항목은 diet_parser 식품표 미등록 → fallback 경로에서 macro 채점 제외.",
+  "scenarios": [
+    {
+      "id": "QL-A1",
+      "category": "기본식단",
+      "input": "닭가슴살 200g 먹었어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["닭가슴살"],
+        "amount": 200,
+        "unit": "g",
+        "kcal_ref": 313,
+        "kcal_tol_pct": 15,
+        "protein_g_ref": 62.0,
+        "carbs_g_ref": 0.0,
+        "fat_g_ref": 7.2,
+        "macro_tol_g_known": 5,
+        "macros_expected": "both"
+      },
+      "note": "대표 known food(diet_parser 식품표 등록). 기준 정확도 측정용."
+    },
+    {
+      "id": "QL-A2",
+      "category": "기본식단",
+      "input": "쌀밥 한 공기 먹었어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["쌀밥", "밥"],
+        "kcal_ref": 253,
+        "kcal_tol_pct": 20,
+        "protein_g_ref": 4.8,
+        "carbs_g_ref": 57.2,
+        "fat_g_ref": 0.6,
+        "macro_tol_g_known": 8,
+        "macros_expected": "llm_only",
+        "unit_hint": "한 공기≈200g — fallback regex는 gram 단위만 처리하므로 macro 채점은 LLM 경로만"
+      },
+      "note": "비그램 단위 '한 공기'. LLM이 ~200g로 추정해야 macro 산출 가능."
+    },
+    {
+      "id": "QL-A3",
+      "category": "기본식단",
+      "input": "계란 2개 먹음",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["계란", "달걀"],
+        "amount": 2,
+        "unit": "개",
+        "kcal_ref": 166,
+        "kcal_tol_pct": 20,
+        "protein_g_ref": 15.1,
+        "carbs_g_ref": 0.8,
+        "fat_g_ref": 11.4,
+        "macro_tol_g_known": 5,
+        "macros_expected": "llm_only",
+        "unit_hint": "'개' 단위 — fallback 식품표는 gram만 처리. LLM이 개당 ~60g 추정해야 함."
+      },
+      "note": "'개' 단위 → macro 산출은 LLM 경로 기대."
+    },
+    {
+      "id": "QL-A4",
+      "category": "기본식단",
+      "input": "바나나 1개 먹었어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["바나나"],
+        "amount": 1,
+        "unit": "개",
+        "kcal_ref": 117,
+        "kcal_tol_pct": 25,
+        "protein_g_ref": 1.3,
+        "carbs_g_ref": 27.0,
+        "fat_g_ref": 0.4,
+        "macro_tol_g_llm": 10,
+        "macros_expected": "llm_only"
+      },
+      "note": "diet_parser 식품표 미등록. LLM만 macro 추정 가능."
+    },
+    {
+      "id": "QL-A5",
+      "category": "기본식단",
+      "input": "고구마 150g 먹었어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["고구마"],
+        "amount": 150,
+        "unit": "g",
+        "kcal_ref": 132,
+        "kcal_tol_pct": 15,
+        "protein_g_ref": 2.4,
+        "carbs_g_ref": 30.2,
+        "fat_g_ref": 0.15,
+        "macro_tol_g_known": 5,
+        "macros_expected": "both"
+      },
+      "note": "diet_parser 식품표 등록 known food."
+    },
+    {
+      "id": "QL-B1",
+      "category": "비정형단위",
+      "input": "김치찌개 한 그릇 먹었어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["김치찌개"],
+        "macros_expected": "llm_only",
+        "amount_required": false
+      },
+      "note": "'한 그릇' — 비정형 단위. food_name 추출이 핵심. diet_parser 미등록."
+    },
+    {
+      "id": "QL-B2",
+      "category": "비정형단위",
+      "input": "밥 반 공기 먹었어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["밥", "쌀밥"],
+        "kcal_ref": 127,
+        "kcal_tol_pct": 25,
+        "macros_expected": "llm_only",
+        "amount_required": false,
+        "unit_hint": "반 공기≈100g. LLM이 0.5공기 or 100g 추정해야 함."
+      },
+      "note": "'반 공기' — 분수 단위. LLM 추정 필요."
+    },
+    {
+      "id": "QL-B3",
+      "category": "비정형단위",
+      "input": "삼겹살 2인분 먹었어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["삼겹살"],
+        "macros_expected": "llm_only",
+        "amount_required": false
+      },
+      "note": "'인분' 단위 — 표준화 어려움. food_name 추출 평가."
+    },
+    {
+      "id": "QL-C1",
+      "category": "운동식단혼합",
+      "input": "벤치프레스 60kg 10회 3세트 하고 닭가슴살 200g 먹었어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["닭가슴살"],
+        "amount": 200,
+        "unit": "g",
+        "kcal_ref": 313,
+        "kcal_tol_pct": 15,
+        "macros_expected": "both",
+        "workout_noise": true,
+        "diet_only_check": "벤치프레스가 items에 포함되지 않아야 함"
+      },
+      "note": "운동 노이즈 속 식단 추출. diet-only 파서 검증."
+    },
+    {
+      "id": "QL-C2",
+      "category": "운동식단혼합",
+      "input": "스쿼트 하고 쌀밥 200g 먹었어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["쌀밥", "밥"],
+        "amount": 200,
+        "unit": "g",
+        "kcal_ref": 253,
+        "kcal_tol_pct": 20,
+        "macros_expected": "both",
+        "workout_noise": true
+      },
+      "note": "운동 단어 앞에 오는 식단 추출."
+    },
+    {
+      "id": "QL-C3",
+      "category": "운동식단혼합",
+      "input": "오늘 운동하고 계란 2개랑 바나나 먹었어",
+      "expected": {
+        "items_min": 2,
+        "food_names_include": ["계란", "바나나"],
+        "macros_expected": "llm_only",
+        "workout_noise": true
+      },
+      "note": "운동 노이즈 + 복수 식품 + 비정형 단위."
+    },
+    {
+      "id": "QL-D1",
+      "category": "모호불완전",
+      "input": "오늘 점심 잘 먹었어",
+      "expected": {
+        "items_min": 0,
+        "graceful": true,
+        "macros_expected": "none",
+        "note": "구체 식품 없음. items=[] or 최선 추정 허용. 예외 미발생 필수."
+      },
+      "note": "의미 있는 식품명 없는 입력. graceful 처리 검증."
+    },
+    {
+      "id": "QL-D2",
+      "category": "모호불완전",
+      "input": "프로틴 한 스쿱 마셨어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["프로틴"],
+        "macros_expected": "llm_only",
+        "amount_required": false
+      },
+      "note": "'한 스쿱' 비정형 단위. diet_parser 미등록. LLM이 ~30g 추정 기대."
+    },
+    {
+      "id": "QL-D3",
+      "category": "모호불완전",
+      "input": "라면 먹음",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["라면"],
+        "macros_expected": "llm_only",
+        "amount_required": false
+      },
+      "note": "양 정보 없는 식품명만. diet_parser 미등록."
+    },
+    {
+      "id": "QL-E1",
+      "category": "invalid",
+      "input": "",
+      "expected": {
+        "items_min": 0,
+        "graceful": true,
+        "no_exception": true
+      },
+      "note": "빈 문자열. items=[] + 예외 미발생."
+    },
+    {
+      "id": "QL-E2",
+      "category": "invalid",
+      "input": "asdfjkl",
+      "expected": {
+        "items_min": 0,
+        "graceful": true,
+        "no_exception": true
+      },
+      "note": "무의미 텍스트. graceful 처리 검증."
+    },
+    {
+      "id": "QL-E3",
+      "category": "invalid",
+      "input": "내일 날씨 어때",
+      "expected": {
+        "items_min": 0,
+        "graceful": true,
+        "no_exception": true
+      },
+      "note": "식단과 무관한 내용. 예외 미발생 + 빈 items 기대."
+    },
+    {
+      "id": "QL-F1",
+      "category": "구어체혼합언어",
+      "input": "banana 1개랑 egg 2개 먹었어",
+      "expected": {
+        "items_min": 1,
+        "food_names_include": ["banana", "바나나", "egg", "계란"],
+        "macros_expected": "llm_only"
+      },
+      "note": "영어·한국어 혼합 식품명. 추출 정확도."
+    },
+    {
+      "id": "QL-F2",
+      "category": "구어체혼합언어",
+      "input": "아 오늘 점심에 아 닭가슴살이랑 아 고구마 먹었는데",
+      "expected": {
+        "items_min": 2,
+        "food_names_include": ["닭가슴살", "고구마"],
+        "meal_type_expected": "lunch",
+        "macros_expected": "llm_only"
+      },
+      "note": "STT 구어체 시뮬. 필러('아') 속 식품 추출 + meal_type=lunch 기대."
+    },
+    {
+      "id": "QL-F3",
+      "category": "구어체혼합언어",
+      "input": "저녁에 현미밥에 두부 한 모 먹었어",
+      "expected": {
+        "items_min": 2,
+        "food_names_include": ["현미밥", "두부"],
+        "meal_type_expected": "dinner",
+        "macros_expected": "llm_only",
+        "unit_hint": "한 모≈300g. LLM이 양 추정해야 함."
+      },
+      "note": "저녁 식사 + 복수 식품 + 비정형 단위 + meal_type=dinner."
+    }
+  ]
+}

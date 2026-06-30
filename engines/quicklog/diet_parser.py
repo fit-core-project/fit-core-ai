@@ -55,6 +55,42 @@ _FOOD_PER_100G: dict[str, dict[str, float]] = {
 
 _GRAM_UNITS = {"g", "gram", "grams", "그램"}
 
+# ---------- Unit → gram conversion tables ----------
+# 모든 값은 추정 기본값. 식품/조리법에 따라 편차 존재. 추후 보정 가능.
+
+# 식품 무관 단위 기본값 (편차 허용 범위 내 단위만 포함)
+_UNIT_DEFAULT_GRAMS: dict[str, float] = {
+    "공기": 210.0,   # 쌀밥 1공기 (한국 표준 계량)
+    "그릇": 400.0,   # 국/찌개류 1그릇 평균
+    "인분": 200.0,   # 고기류 1인분 평균
+    "스쿱": 30.0,    # 단백질 파우더 1스쿱 평균
+    "모": 300.0,     # 두부 1모 기준
+    "컵": 200.0,     # 200ml 기준
+}
+
+# 식품별 단위 override ('개'처럼 식품마다 편차가 큰 단위)
+_FOOD_UNIT_GRAMS: dict[str, dict[str, float]] = {
+    "계란":      {"개": 50.0},   # 중란 기준
+    "달걀":      {"개": 50.0},
+    "삶은 달걀": {"개": 50.0},
+    "바나나":    {"개": 120.0},  # 중간 크기
+    "사과":      {"개": 200.0},
+    "고구마":    {"개": 150.0},
+    "감자":      {"개": 130.0},
+    "오렌지":    {"개": 180.0},
+}
+
+
+def _unit_to_grams(food_name: str, unit: str | None) -> float | None:
+    """비그램 단위를 gram으로 환산. 변환 불가면 None 반환."""
+    if unit is None:
+        return None
+    u = unit.lower().strip()
+    overrides = _FOOD_UNIT_GRAMS.get(food_name.strip(), {})
+    if u in overrides:
+        return overrides[u]
+    return _UNIT_DEFAULT_GRAMS.get(u)
+
 # ---------- Regex patterns ----------
 
 _MEAL_PATTERNS = [
@@ -108,14 +144,22 @@ def _r1(v: float) -> float:
 
 def _macros_from_table(food_name: str, amount: float | None, unit: str | None) -> dict[str, float | None]:
     nutrition = _FOOD_PER_100G.get(food_name.strip())
-    if nutrition and amount and unit and unit.lower() in _GRAM_UNITS:
-        factor = amount / 100
-        return {
-            "protein_g": _r1(nutrition["protein_g"] * factor),
-            "carbs_g":   _r1(nutrition["carbs_g"]   * factor),
-            "fat_g":     _r1(nutrition["fat_g"]      * factor),
-        }
-    return {"protein_g": None, "carbs_g": None, "fat_g": None}
+    if not nutrition or not amount:
+        return {"protein_g": None, "carbs_g": None, "fat_g": None}
+    unit_lower = (unit or "").lower().strip()
+    if unit_lower in _GRAM_UNITS:
+        grams = amount
+    else:
+        per_unit = _unit_to_grams(food_name.strip(), unit)
+        if per_unit is None:
+            return {"protein_g": None, "carbs_g": None, "fat_g": None}
+        grams = amount * per_unit
+    factor = grams / 100
+    return {
+        "protein_g": _r1(nutrition["protein_g"] * factor),
+        "carbs_g":   _r1(nutrition["carbs_g"]   * factor),
+        "fat_g":     _r1(nutrition["fat_g"]      * factor),
+    }
 
 
 # ---------- Deterministic fallback ----------
@@ -180,11 +224,24 @@ def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
 # ---------- Macro enrichment ----------
 
 def _enrich_macros(parsed: ParsedDietLog) -> ParsedDietLog:
-    """Fill null macros from food table for items where ALL macros are null (LLM fallback)."""
+    """Enrich macros from food table.
+
+    Policy:
+    - known food (in _FOOD_PER_100G) + computable weight → always prefer table (overrides LLM)
+    - unknown food, all macros null → try table (won't match, safe)
+    - unknown food, macros present → keep LLM values
+    """
     enriched = []
     for item in parsed.items:
-        if item.protein_g is None and item.carbs_g is None and item.fat_g is None:
-            macros = _macros_from_table(item.food_name, item.amount, item.unit)
+        food_key = item.food_name.strip()
+        is_known = food_key in _FOOD_PER_100G
+        all_null = item.protein_g is None and item.carbs_g is None and item.fat_g is None
+        if is_known:
+            macros = _macros_from_table(food_key, item.amount, item.unit)
+            if macros["protein_g"] is not None:
+                item = item.model_copy(update=macros)
+        elif all_null:
+            macros = _macros_from_table(food_key, item.amount, item.unit)
             item = item.model_copy(update=macros)
         enriched.append(item)
     return ParsedDietLog(items=enriched)
