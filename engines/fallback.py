@@ -116,16 +116,39 @@ def _build_prescription(
     ]
 
 
+def _candidate_by_id(ranked_candidates: Optional[List[dict]]) -> Dict[str, dict]:
+    return {
+        str(candidate.get("id") or "").strip().lower(): candidate
+        for candidate in (ranked_candidates or [])
+        if str(candidate.get("id") or "").strip()
+    }
+
+
+def _candidate_score_context(candidate: Optional[dict]) -> Dict[str, List[Any]]:
+    if not candidate:
+        return {"reasons": [], "boosts": [], "penalties": []}
+    return {
+        "reasons": list(candidate.get("score_display_reasons") or []),
+        "boosts": list(candidate.get("score_boosts") or []),
+        "penalties": list(candidate.get("score_penalties") or []),
+    }
+
+
 def build_routine_draft(
     llm_output: LLMRoutineOutput,
     generation_status: GenerationStatus,
     status_reason_code: StatusReasonCode,
     is_fallback: bool,
+    ranked_candidates: Optional[List[dict]] = None,
 ) -> RoutineDraftResponse:
     blocks = []
+    ranked_by_id = _candidate_by_id(ranked_candidates)
     llm_output = enforce_korean_user_text_on_output(llm_output)
     ordered_exercises = _order_exercises_for_training(llm_output.exercises)
     for order, ex in enumerate(ordered_exercises, start=1):
+        score_context = _candidate_score_context(
+            ranked_by_id.get(str(ex.exercise_id or "").strip().lower())
+        )
         blocks.append(RoutineBlock(
             order=order,
             exercise_id=ex.exercise_id,
@@ -150,6 +173,9 @@ def build_routine_draft(
                 )
                 for s in ex.substitution_candidates
             ],
+            reasons=score_context["reasons"],
+            boosts=score_context["boosts"],
+            penalties=score_context["penalties"],
         ))
 
     return enforce_korean_user_text_on_response(RoutineDraftResponse(
@@ -280,6 +306,7 @@ def generate_fallback_routine(
 
     blocks: List[RoutineBlock] = []
     fallback_plans: List[LLMExercisePlan] = []
+    ranked_by_id = _candidate_by_id(candidates)
     remaining_sets = max_total_sets
     order = 1
 
@@ -330,6 +357,9 @@ def generate_fallback_routine(
         plan.target_weight_kg = _resolve_target_weight(plan, goal, recent_sets, profile)
         sets = plan.sets
         remaining_sets -= sets
+        score_context = _candidate_score_context(
+            ranked_by_id.get(str(plan.exercise_id or "").strip().lower())
+        )
 
         blocks.append(RoutineBlock(
             order=order,
@@ -348,6 +378,9 @@ def generate_fallback_routine(
             ),
             exercise_rationale=plan.exercise_rationale,
             substitution_candidates=[],
+            reasons=score_context["reasons"],
+            boosts=score_context["boosts"],
+            penalties=score_context["penalties"],
         ))
         fallback_plans.append(plan)
         order += 1

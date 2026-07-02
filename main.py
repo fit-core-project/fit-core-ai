@@ -19,7 +19,12 @@ from starlette.responses import JSONResponse
 
 from database import get_db
 from dev_logs import dev_log_buffer, install_stdout_capture
-from engines.db_queries import get_recent_sets, get_user_profile_context
+from engines.db_queries import (
+    get_exercise_details_from_sqlite,
+    get_exercise_substitution_map_from_sqlite,
+    get_recent_sets,
+    get_user_profile_context,
+)
 from engines.log_redaction import sanitize_exception_for_log, summarize_text_for_log
 from engines.llm_router import resolve_llm_provider
 from engines.quicklog.nlp_engine import parse_natural_language_log
@@ -28,6 +33,7 @@ from engines.routine_pipeline import generate_smart_routine
 from engines.schemas import RoutineDraftResponse, RoutineFeedbackRequest, RoutineFeedbackResponse, RoutineRequest
 from engines.supplement.supplement_engine import SupplementRAGEngine
 from models.routine_feedback import RoutineFeedback
+from scripts.check_local_llm_readiness import build_readiness_report
 
 load_dotenv()
 install_stdout_capture()
@@ -139,6 +145,57 @@ def api_health():
         "supplementRag": "ready" if rag_ready else "degraded_or_not_loaded",
         "whisperPreload": os.environ.get("WHISPER_PRELOAD", "false").strip().lower() == "true",
     }
+
+
+@app.get("/api/ai/local-llm/readiness")
+def api_local_llm_readiness(probe: bool = True, timeout_sec: float = 5.0):
+    """Return a sanitized Ollama/local Gemma readiness report for demo and ops screens."""
+    safe_timeout = max(1.0, min(float(timeout_sec or 5.0), 30.0))
+    return build_readiness_report(
+        base_url=os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
+        model=os.environ.get("LOCAL_LLM_MODEL", "gemma4:latest"),
+        timeout_sec=safe_timeout,
+        probe=probe,
+    )
+
+
+@app.get("/api/ai/exercises/details")
+def api_get_exercise_details(ids: str = ""):
+    """로컬 운동 백과 상세 메타데이터 조회.
+
+    루틴 생성용 운영 DB가 아니라, 운동 DB 고도화 산출물인 `fit_core.sqlite`를
+    읽어 프론트 운동 백과 화면에 가동성/부하/효과/난이도/체형 민감도 필드를 제공한다.
+    """
+    requested_ids = [item.strip() for item in ids.split(",") if item.strip()]
+    try:
+        return get_exercise_details_from_sqlite(requested_ids)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        print("[Exercise Details Error]", sanitize_exception_for_log(exc))
+        raise HTTPException(status_code=500, detail="Failed to load exercise details") from exc
+
+
+@app.get("/api/ai/exercises/substitution-map")
+def api_get_substitution_map(
+    source_exercise_id: str | None = None,
+    relation_type: str | None = None,
+    constraint_code: str | None = None,
+    limit: int = 5000,
+):
+    """운동 대체/회귀/변형 관계 맵 조회."""
+    try:
+        return get_exercise_substitution_map_from_sqlite(
+            source_exercise_id=source_exercise_id,
+            relation_type=relation_type,
+            constraint_code=constraint_code,
+            limit=limit,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        print("[Substitution Map Error]", sanitize_exception_for_log(exc))
+        raise HTTPException(status_code=500, detail="Failed to load substitution map") from exc
 
 
 @app.exception_handler(RequestValidationError)

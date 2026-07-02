@@ -87,6 +87,43 @@ def test_scoring_prefers_loadable_equipment_over_bodyweight():
     assert "bodyweight deprioritized" in ranked[1]["score_reasons"]
 
 
+def test_scoring_exposes_structured_boosts_and_penalties():
+    candidates = [
+        {
+            "id": "high_efficiency_pushup",
+            "name_kr": "Push-up",
+            "name_en": "Push-up",
+            "primary_muscle": "chest",
+            "secondary_muscle": "triceps",
+            "equipment_req": "BODYWEIGHT",
+            "efficiency_tier": 5,
+            "movement_type": "COMPOUND",
+            "pain_triggers": None,
+        },
+        {
+            "id": "dumbbell_bench_press",
+            "name_kr": "Dumbbell Bench Press",
+            "name_en": "Dumbbell Bench Press",
+            "primary_muscle": "chest",
+            "secondary_muscle": "triceps",
+            "equipment_req": "DUMBBELL",
+            "efficiency_tier": 4,
+            "movement_type": "COMPOUND",
+            "pain_triggers": None,
+        },
+    ]
+
+    ranked = score_candidate_exercises(candidates, ["chest"], doms_db={"chest": 1})
+    dumbbell = next(candidate for candidate in ranked if candidate["id"] == "dumbbell_bench_press")
+    pushup = next(candidate for candidate in ranked if candidate["id"] == "high_efficiency_pushup")
+
+    assert dumbbell["score_breakdown_version"] == "v1"
+    assert any(item["rule_code"] == "primary_target_match" and item["score"] == 20 for item in dumbbell["score_boosts"])
+    assert any(item["rule_code"] == "doms_penalty" and item["profile_signal_code"] == "doms" for item in dumbbell["score_penalties"])
+    assert any(item["rule_code"] == "bodyweight_deprioritized" and item["score"] == -18 for item in pushup["score_penalties"])
+    assert all("priority" not in item["reason"] for item in dumbbell["score_boosts"])
+
+
 def test_prompt_v2_mentions_hard_constraints_and_ranked_candidates():
     prompt = _build_system_prompt(profile=None, recent_sets=None)
     assert "[ROLE]" in prompt

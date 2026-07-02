@@ -1,10 +1,153 @@
 """DB 조회 함수 — user_profiles, workout_sets, exercise_tier."""
+import os
+import sqlite3
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from .schemas import UserProfileContext, RecentSetRecord, PainAreaEntry
+
+
+SQLITE_DB_PATH = Path(
+    os.getenv(
+        "FITCORE_SQLITE_DB_PATH",
+        str(Path(__file__).resolve().parents[1] / "fit_core.sqlite"),
+    )
+)
+
+
+def _connect_local_catalog_db() -> sqlite3.Connection:
+    if not SQLITE_DB_PATH.exists():
+        raise FileNotFoundError(f"Local exercise catalog DB not found: {SQLITE_DB_PATH}")
+    conn = sqlite3.connect(SQLITE_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def get_exercise_details_from_sqlite(ids: List[str]) -> List[dict]:
+    """운동 백과 상세 필드 조회.
+
+    운영 루틴 DB와 별개로, 로컬 고도화 카탈로그(`fit_core.sqlite`)의
+    가동성/관절부하/효과/난이도/체형 민감도 정보를 프론트 백과 API에 제공한다.
+    """
+    normalized_ids = [str(item).strip() for item in ids if str(item).strip()]
+    if not normalized_ids:
+        return []
+
+    placeholders = ", ".join(["?"] * len(normalized_ids))
+    query = f"""
+        SELECT
+            et.id,
+            et.name_kr,
+            et.name_en,
+            et.primary_muscle,
+            mr.ankle_dorsiflexion_demand,
+            mr.hip_flexion_demand,
+            mr.shoulder_flexion_demand,
+            mr.wrist_extension_demand,
+            mr.overhead_position_required,
+            jl.lumbar_load,
+            jl.axial_load,
+            jl.knee_shear_load,
+            jl.shoulder_impingement_risk,
+            jl.wrist_stress,
+            ep.hypertrophy_effect,
+            ep.strength_effect,
+            ep.power_effect,
+            ep.rehab_utility,
+            ep.loadability,
+            ep.progression_ceiling,
+            ep.mobility_effect,
+            ep.uniqueness,
+            ep.stimulus_to_fatigue,
+            dp.technical_difficulty,
+            dp.balance_requirement,
+            dp.failure_penalty,
+            ap.limb_length_sensitivity,
+            ap.long_femur_sensitivity,
+            ap.long_arm_sensitivity,
+            ap.torso_angle_demand,
+            ap.machine_adjustability,
+            ap.setup_modification_available
+        FROM exercise_tier et
+        LEFT JOIN exercise_mobility_requirement mr
+            ON mr.exercise_id = et.id
+        LEFT JOIN exercise_joint_load_profile jl
+            ON jl.exercise_id = et.id
+        LEFT JOIN exercise_effect_profile ep
+            ON ep.exercise_id = et.id
+        LEFT JOIN exercise_difficulty_profile dp
+            ON dp.exercise_id = et.id
+        LEFT JOIN exercise_anthropometry_sensitivity_profile ap
+            ON ap.exercise_id = et.id
+        WHERE et.id IN ({placeholders})
+    """
+
+    with _connect_local_catalog_db() as conn:
+        rows = conn.execute(query, normalized_ids).fetchall()
+
+    by_id = {str(row["id"]): dict(row) for row in rows}
+    return [by_id[item] for item in normalized_ids if item in by_id]
+
+
+def get_exercise_substitution_map_from_sqlite(
+    source_exercise_id: Optional[str] = None,
+    relation_type: Optional[str] = None,
+    constraint_code: Optional[str] = None,
+    limit: int = 5000,
+) -> List[dict]:
+    """운동 대체/회귀 관계 맵 조회.
+
+    프론트 백과 화면은 이 값을 relation_type별로 묶어 대체 운동,
+    장비 대체, 재활 후보, 변형 운동 후보로 표시한다.
+    """
+    where_clauses: List[str] = []
+    params: List[Any] = []
+
+    if source_exercise_id:
+        where_clauses.append("m.source_exercise_id = ?")
+        params.append(source_exercise_id)
+    if relation_type:
+        where_clauses.append("m.relation_type = ?")
+        params.append(relation_type)
+    if constraint_code:
+        where_clauses.append("m.constraint_code = ?")
+        params.append(constraint_code)
+
+    where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+    safe_limit = max(1, min(int(limit or 5000), 5000))
+
+    query = f"""
+        SELECT
+            m.source_exercise_id,
+            src.name_kr AS source_name_kr,
+            src.name_en AS source_name_en,
+            m.target_exercise_id,
+            tgt.name_kr AS target_name_kr,
+            tgt.name_en AS target_name_en,
+            m.relation_type,
+            m.constraint_code,
+            m.reason,
+            m.source_type,
+            m.confidence,
+            m.review_required
+        FROM exercise_regression_progression_map m
+        LEFT JOIN exercise_tier src
+            ON src.id = m.source_exercise_id
+        LEFT JOIN exercise_tier tgt
+            ON tgt.id = m.target_exercise_id
+        {where_sql}
+        ORDER BY m.source_exercise_id, m.relation_type, m.target_exercise_id
+        LIMIT ?
+    """
+    params.append(safe_limit)
+
+    with _connect_local_catalog_db() as conn:
+        rows = conn.execute(query, params).fetchall()
+
+    return [dict(row) for row in rows]
 
 
 def get_user_profile_context(db: Session, user_id: str) -> Optional[UserProfileContext]:

@@ -125,6 +125,15 @@ class SubstitutionCandidate(BaseModel):
     reason: str
 
 
+class ScoreBreakdownItem(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+    constraint_code: Optional[str] = None
+    rule_code: Optional[str] = None
+    profile_signal_code: Optional[str] = None
+    score: int
+    reason: str
+
+
 class RoutineBlock(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
     order: int
@@ -137,6 +146,9 @@ class RoutineBlock(BaseModel):
     prescription: List[SetPrescription]
     exercise_rationale: str
     substitution_candidates: List[SubstitutionCandidate] = Field(default_factory=list)
+    reasons: List[str] = Field(default_factory=list)
+    boosts: List[ScoreBreakdownItem] = Field(default_factory=list)
+    penalties: List[ScoreBreakdownItem] = Field(default_factory=list)
 
 
 class RoutineDraftResponse(BaseModel):

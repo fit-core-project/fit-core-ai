@@ -313,8 +313,9 @@ def _compute_feedback_stats(
 def _finalize_success(
     output: LLMRoutineOutput,
     label: str,
+    ranked_candidates: Optional[List[dict]] = None,
 ) -> RoutineDraftResponse:
-    draft = build_routine_draft(output, "success", "none", False)
+    draft = build_routine_draft(output, "success", "none", False, ranked_candidates=ranked_candidates)
     _debug_print_draft(label, draft)
     return draft
 
@@ -362,7 +363,7 @@ def _deterministic_or_fallback(
                 recent_sets,
                 profile,
             )
-    return _finalize_success(deterministic, draft_label)
+    return _finalize_success(deterministic, draft_label, ranked_candidates)
 
 
 def _validate_or_fallback(

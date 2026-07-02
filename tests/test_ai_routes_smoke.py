@@ -35,6 +35,35 @@ def test_health_exposes_sanitized_provider_state(monkeypatch):
     assert "GOOGLE_API_KEY" not in payload
 
 
+def test_local_llm_readiness_endpoint_exposes_sanitized_report(monkeypatch):
+    def fake_report(**kwargs):
+        return {
+            "ollama_reachable": False,
+            "model_installed": False,
+            "model": kwargs["model"],
+            "base_url_host": "127.0.0.1",
+            "probe_enabled": kwargs["probe"],
+            "readiness_status": "failed_ollama_unreachable",
+            "error_category": "ollama_unreachable",
+        }
+
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://user:pass@127.0.0.1:11434/private?token=secret")
+    monkeypatch.setenv("LOCAL_LLM_MODEL", "gemma4:latest")
+    monkeypatch.setattr(main, "build_readiness_report", fake_report)
+    client = TestClient(main.app)
+
+    response = client.get("/api/ai/local-llm/readiness?probe=false&timeout_sec=2")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["readiness_status"] == "failed_ollama_unreachable"
+    assert payload["model"] == "gemma4:latest"
+    assert payload["probe_enabled"] is False
+    serialized = str(payload)
+    assert "user:pass" not in serialized
+    assert "secret" not in serialized
+
+
 def test_supplement_endpoint_returns_degraded_200(monkeypatch):
     monkeypatch.setattr(main, "supplement_rag", SupplementRAGEngine.degraded("test"))
     client = TestClient(main.app)

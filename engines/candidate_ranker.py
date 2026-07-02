@@ -35,6 +35,58 @@ def _candidate_is_safe(
     return not any(token in candidate_pain for token in pain_tokens)
 
 
+def _breakdown_item(
+    *,
+    score: int,
+    reason: str,
+    rule_code: str,
+    constraint_code: Optional[str] = None,
+    profile_signal_code: Optional[str] = None,
+) -> dict:
+    item = {
+        "score": score,
+        "reason": reason,
+        "rule_code": rule_code,
+    }
+    if constraint_code:
+        item["constraint_code"] = constraint_code
+    if profile_signal_code:
+        item["profile_signal_code"] = profile_signal_code
+    return item
+
+
+def _record_score_delta(
+    *,
+    delta: int,
+    internal_reason: str,
+    public_reason: str,
+    rule_code: str,
+    score_reasons: List[str],
+    display_reasons: List[str],
+    boosts: List[dict],
+    penalties: List[dict],
+    constraint_code: Optional[str] = None,
+    profile_signal_code: Optional[str] = None,
+) -> int:
+    score_reasons.append(internal_reason)
+    if delta == 0:
+        return 0
+
+    display_reasons.append(public_reason)
+    item = _breakdown_item(
+        score=delta,
+        reason=public_reason,
+        rule_code=rule_code,
+        constraint_code=constraint_code,
+        profile_signal_code=profile_signal_code,
+    )
+    if delta > 0:
+        boosts.append(item)
+    else:
+        penalties.append(item)
+    return delta
+
+
 def score_candidate_exercises(
     candidates: List[dict],
     target_muscles: List[str],
@@ -84,28 +136,82 @@ def score_candidate_exercises(
 
         score = 0
         reasons: List[str] = list(candidate.get("score_reasons") or [])
+        display_reasons: List[str] = []
+        boosts: List[dict] = []
+        penalties: List[dict] = []
         if "mapped substitute for unavailable equipment" in reasons:
-            score += 12
+            score += _record_score_delta(
+                delta=12,
+                internal_reason="mapped substitute for unavailable equipment",
+                public_reason="사용 가능한 장비 조건에 맞춘 대체 후보입니다.",
+                rule_code="mapped_substitute",
+                constraint_code="equipment_alternative",
+                score_reasons=[],
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
 
         efficiency = int(candidate.get("efficiency_tier") or 7)
-        score += max(0, 8 - efficiency) * 10
-        reasons.append(f"efficiency {efficiency}")
+        efficiency_delta = max(0, 8 - efficiency) * 10
+        score += _record_score_delta(
+            delta=efficiency_delta,
+            internal_reason=f"efficiency {efficiency}",
+            public_reason=f"운동 효율 등급 {efficiency}이 추천 점수에 반영되었습니다.",
+            rule_code="efficiency_tier",
+            score_reasons=reasons,
+            display_reasons=display_reasons,
+            boosts=boosts,
+            penalties=penalties,
+        )
 
         movement_type = str(candidate.get("movement_type") or "").upper()
         if movement_type == "COMPOUND":
-            score += 30
-            reasons.append("compound priority")
+            score += _record_score_delta(
+                delta=30,
+                internal_reason="compound priority",
+                public_reason="복합 운동이라 메인 운동 우선순위가 올라갔습니다.",
+                rule_code="movement_type_compound",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
         elif movement_type == "ISOLATION":
-            score += 5
-            reasons.append("isolation support")
+            score += _record_score_delta(
+                delta=5,
+                internal_reason="isolation support",
+                public_reason="보조 볼륨을 채우는 고립 운동으로 반영되었습니다.",
+                rule_code="movement_type_isolation",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
 
         equipment_req = candidate.get("equipment_req")
         if _is_loadable_equipment(equipment_req):
-            score += 18
-            reasons.append("loadable equipment priority")
+            score += _record_score_delta(
+                delta=18,
+                internal_reason="loadable equipment priority",
+                public_reason="중량 조절이 가능한 장비 운동이라 우선순위가 올라갔습니다.",
+                rule_code="loadable_equipment",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
         elif _is_bodyweight_only(equipment_req):
-            score -= 18
-            reasons.append("bodyweight deprioritized")
+            score += _record_score_delta(
+                delta=-18,
+                internal_reason="bodyweight deprioritized",
+                public_reason="중량 증량이 제한적인 맨몸 운동이라 우선순위가 낮아졌습니다.",
+                rule_code="bodyweight_deprioritized",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
 
         primary = str(candidate.get("primary_muscle") or "").strip()
         secondary = {
@@ -114,27 +220,77 @@ def score_candidate_exercises(
             if part.strip()
         }
         if primary and primary in target_set:
-            score += 20
-            reasons.append("primary target match")
+            score += _record_score_delta(
+                delta=20,
+                internal_reason="primary target match",
+                public_reason="오늘 목표 주동근과 직접 일치합니다.",
+                rule_code="primary_target_match",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
         if secondary & target_set:
-            score += 8
-            reasons.append("secondary target match")
+            score += _record_score_delta(
+                delta=8,
+                internal_reason="secondary target match",
+                public_reason="보조 자극 부위가 오늘 목표와 겹칩니다.",
+                rule_code="secondary_target_match",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
         if primary in LARGE_MUSCLE_SLUGS:
-            score += 10
-            reasons.append("large muscle priority")
+            score += _record_score_delta(
+                delta=10,
+                internal_reason="large muscle priority",
+                public_reason="대근육 주동근 운동이라 메인 볼륨으로 우선 반영되었습니다.",
+                rule_code="large_muscle_priority",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
         elif primary in ACCESSORY_MUSCLE_SLUGS:
-            score -= 4
-            reasons.append("accessory volume guard")
+            score += _record_score_delta(
+                delta=-4,
+                internal_reason="accessory volume guard",
+                public_reason="소근육 보조 운동이라 메인 볼륨보다 낮게 배치되었습니다.",
+                rule_code="accessory_volume_guard",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
 
         doms_level = doms.get(primary, 0)
         if doms_level >= 3:
             continue
         if doms_level == 2:
-            score -= 25
-            reasons.append("doms moderate penalty")
+            score += _record_score_delta(
+                delta=-25,
+                internal_reason="doms moderate penalty",
+                public_reason="해당 주동근의 근육통이 강해 볼륨 우선순위가 낮아졌습니다.",
+                rule_code="doms_penalty",
+                profile_signal_code="doms",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
         elif doms_level == 1:
-            score -= 10
-            reasons.append("doms mild penalty")
+            score += _record_score_delta(
+                delta=-10,
+                internal_reason="doms mild penalty",
+                public_reason="해당 주동근의 가벼운 근육통이 반영되어 우선순위가 조금 낮아졌습니다.",
+                rule_code="doms_penalty",
+                profile_signal_code="doms",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
 
         recent_key_candidates = {
             str(candidate.get("name_kr") or "").strip().lower(),
@@ -142,24 +298,56 @@ def score_candidate_exercises(
             str(candidate.get("id") or "").strip().lower(),
         }
         if recent_key_candidates & recent_names:
-            score -= 6
-            reasons.append("recent repetition penalty")
+            score += _record_score_delta(
+                delta=-6,
+                internal_reason="recent repetition penalty",
+                public_reason="최근 수행한 운동과 겹쳐 반복 노출을 줄였습니다.",
+                rule_code="recent_repetition_penalty",
+                profile_signal_code="recent_sets",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
 
         if candidate_keys & preferred_set:
-            score += 20
-            reasons.append("user preferred exercise")
+            score += _record_score_delta(
+                delta=20,
+                internal_reason="user preferred exercise",
+                public_reason="사용자가 선호한 운동이라 우선순위가 올라갔습니다.",
+                rule_code="user_preference_boost",
+                profile_signal_code="user_preference",
+                score_reasons=reasons,
+                display_reasons=display_reasons,
+                boosts=boosts,
+                penalties=penalties,
+            )
 
         if feedback_adjustments is not None:
             candidate_id = str(candidate.get("id") or "").strip().lower()
             feedback_score = _resolve_feedback_score(feedback_adjustments.get(candidate_id))
             if feedback_score != 0.0:
-                score += int(round(feedback_score))
-                reasons.append(f"feedback adj {feedback_score:+.1f}")
+                feedback_delta = int(round(feedback_score))
+                score += _record_score_delta(
+                    delta=feedback_delta,
+                    internal_reason=f"feedback adj {feedback_score:+.1f}",
+                    public_reason=f"과거 피드백 점수({feedback_score:+.1f})가 추천 순위에 반영되었습니다.",
+                    rule_code="feedback_adjustment",
+                    profile_signal_code="user_feedback",
+                    score_reasons=reasons,
+                    display_reasons=display_reasons,
+                    boosts=boosts,
+                    penalties=penalties,
+                )
 
         scored.append({
             **candidate,
             "score": score,
             "score_reasons": reasons,
+            "score_display_reasons": display_reasons,
+            "score_boosts": boosts,
+            "score_penalties": penalties,
+            "score_breakdown_version": "v1",
         })
 
     return sorted(
