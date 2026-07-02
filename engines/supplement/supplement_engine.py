@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 import os
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
@@ -15,6 +16,8 @@ from engines.supplement.query_understanding import EntityType, IntentType, Parse
 from engines.supplement.response_composer import compose_supplement_response
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 os.environ.setdefault(
     "NUMBA_CACHE_DIR",
@@ -254,10 +257,10 @@ class SupplementRAGEngine:
             self.ready = True
         except ImportError as exc:
             self.degraded_reason = "missing_dependency"
-            print("[Supplement RAG degraded]", sanitize_exception_for_log(exc))
+            logger.warning("[Supplement RAG degraded] %s", sanitize_exception_for_log(exc))
         except Exception as exc:
             self.degraded_reason = "rag_init_failed"
-            print("[Supplement RAG degraded]", sanitize_exception_for_log(exc))
+            logger.warning("[Supplement RAG degraded] %s", sanitize_exception_for_log(exc))
 
     @classmethod
     def degraded(cls, reason: str = "unavailable") -> "SupplementRAGEngine":
@@ -618,7 +621,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         try:
             return self._answer_full(question)
         except Exception as exc:
-            print("[Supplement RAG runtime fallback]", sanitize_exception_for_log(exc))
+            logger.warning("[Supplement RAG runtime fallback] %s", sanitize_exception_for_log(exc))
             return self._answer_degraded("runtime_error")
 
     def _answer_full(self, question: str) -> Dict[str, Any]:
@@ -730,7 +733,6 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                 continue
             sources.append(
                 {
-                    "file": meta.get("_source_file", "unknown"),
                     "id": str(meta.get("id", "N/A")),
                     "type": str(meta.get("source") or meta.get("type") or "DOC"),
                 }
@@ -753,7 +755,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             )
             counts["llmAnswerEnabled"] = True
         except Exception as exc:
-            print("[Supplement LLM answer fallback]", sanitize_exception_for_log(exc))
+            logger.warning("[Supplement LLM answer fallback] %s", sanitize_exception_for_log(exc))
             answer = ""
             counts["llmAnswerEnabled"] = True
             counts["llmAnswerFallbackReason"] = "generation_error"
@@ -778,7 +780,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                 counts["answerCharCount"] = len(answer or "")
                 sources: list[Any] = ["DuckDuckGo web search summary"]
             except Exception as exc:
-                print("[Supplement web fallback unavailable]", sanitize_exception_for_log(exc))
+                logger.warning("[Supplement web fallback unavailable] %s", sanitize_exception_for_log(exc))
                 return self._answer_degraded("web_search_failed")
         else:
             stage_start = time.perf_counter()
@@ -796,7 +798,6 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                     continue
                 sources.append(
                     {
-                        "file": meta.get("_source_file", "unknown"),
                         "id": str(meta.get("id", "N/A")),
                         "type": str(meta.get("source") or meta.get("type") or "DOC"),
                     }
@@ -824,12 +825,11 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             counts["answerRecoveredFromKbDocs"] = True
         result = _normalize_answer_payload(payload)
         timing_ms["total"] = round((time.perf_counter() - start_time) * 1000)
-        print(
-            "[Supplement RAG completed] elapsed_sec={:.2f} web_search_used={} sources_count={}".format(
-                timing_ms["total"] / 1000,
-                web_search_used,
-                len(sources),
-            )
+        logger.info(
+            "[Supplement RAG completed] elapsed_sec=%.2f web_search_used=%s sources_count=%s",
+            timing_ms["total"] / 1000,
+            web_search_used,
+            len(sources),
         )
         if os.getenv("APP_ENV", "").strip().lower() == "local":
             result["debugTimingMs"] = timing_ms

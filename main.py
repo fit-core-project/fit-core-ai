@@ -1,6 +1,7 @@
 import io
 import importlib.util
 import json
+import logging
 import os
 import shutil
 import tempfile
@@ -31,6 +32,13 @@ from models.routine_feedback import RoutineFeedback
 load_dotenv()
 install_stdout_capture()
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
 whisper_model = None
 supplement_rag = None
 
@@ -46,39 +54,39 @@ def get_supplement_engine() -> SupplementRAGEngine:
 async def lifespan(app: FastAPI):
     global whisper_model, supplement_rag
 
-    print("\n" + "=" * 40)
-    print("[server startup] loading optional AI engines")
+    logger.info("\n" + "=" * 40)
+    logger.info("[server startup] loading optional AI engines")
 
     if whisper_model is None and os.environ.get("WHISPER_PRELOAD", "false").strip().lower() == "true":
-        print("[STT] loading Whisper model")
+        logger.info("[STT] loading Whisper model")
         from faster_whisper import WhisperModel
 
         whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
-        print("[STT] Whisper model loaded")
+        logger.info("[STT] Whisper model loaded")
     elif os.environ.get("WHISPER_PRELOAD", "false").strip().lower() != "true":
-        print("[STT] startup preload skipped")
+        logger.info("[STT] startup preload skipped")
 
     if supplement_rag is None:
-        print("[Supplement RAG] startup load")
+        logger.info("[Supplement RAG] startup load")
         try:
             with redirect_stderr(io.StringIO()):
                 supplement_rag = SupplementRAGEngine(db_path=os.environ.get("SUPPLEMENT_RAG_DB_PATH", "./data/chroma_db"))
             if getattr(supplement_rag, "ready", False):
-                print("[Supplement RAG] full mode ready")
+                logger.info("[Supplement RAG] full mode ready")
             else:
-                print("[Supplement RAG] degraded mode", getattr(supplement_rag, "degraded_reason", "unavailable"))
+                logger.warning(f"[Supplement RAG] degraded mode {getattr(supplement_rag, 'degraded_reason', 'unavailable')}")
         except Exception as exc:
-            print("[Supplement RAG] startup fallback", sanitize_exception_for_log(exc))
+            logger.warning(f"[Supplement RAG] startup fallback {sanitize_exception_for_log(exc)}")
             supplement_rag = SupplementRAGEngine(db_path=os.environ.get("SUPPLEMENT_RAG_DB_PATH", "./data/chroma_db"))
 
-    print("[server startup] ready")
-    print("=" * 40 + "\n")
+    logger.info("[server startup] ready")
+    logger.info("=" * 40 + "\n")
 
     yield
 
     whisper_model = None
     supplement_rag = None
-    print("\n[server shutdown] optional AI engines cleared")
+    logger.info("\n[server shutdown] optional AI engines cleared")
 
 
 app = FastAPI(title="Fit-Core AI Server", lifespan=lifespan)
@@ -154,19 +162,19 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         return sanitized
 
     sanitized_errors = [sanitize_error(error) for error in exc.errors()]
-    print("[validation error]", sanitized_errors)
+    logger.warning(f"[validation error] {sanitized_errors}")
     return JSONResponse(status_code=422, content={"detail": sanitized_errors})
 
 
 @app.post("/api/ai/generate-routine", response_model=RoutineDraftResponse, response_model_by_alias=True)
 def api_generate_routine(req: RoutineRequest, db: Session = Depends(get_db)):
     try:
-        print("[routine generation request]")
+        logger.info("[routine generation request]")
         profile = get_user_profile_context(db, req.user_id)
         recent_sets = get_recent_sets(db, req.user_id)
         return generate_smart_routine(req, db, profile=profile, recent_sets=recent_sets)
     except Exception as exc:
-        print("[Routine Error]", sanitize_exception_for_log(exc))
+        logger.error(f"[Routine Error] {sanitize_exception_for_log(exc)}")
         raise HTTPException(status_code=500, detail=str(exc))
 
 
@@ -211,11 +219,11 @@ class LogRequest(BaseModel):
 @app.post("/api/ai/parse-log")
 def api_parse_log(req: LogRequest):
     try:
-        print("[quicklog parse request]", summarize_text_for_log(req.text))
+        logger.info(f"[quicklog parse request] {summarize_text_for_log(req.text)}")
         result_json_str = parse_natural_language_log(req.text)
         return json.loads(result_json_str)
     except Exception as exc:
-        print("[NLP Error]", sanitize_exception_for_log(exc))
+        logger.error(f"[NLP Error] {sanitize_exception_for_log(exc)}")
         fallback = parse_natural_language_log("")
         return json.loads(fallback)
 
@@ -223,11 +231,11 @@ def api_parse_log(req: LogRequest):
 @app.post("/api/ai/parse-diet")
 def api_parse_diet(req: LogRequest):
     try:
-        print("[diet parse request]", summarize_text_for_log(req.text))
+        logger.info(f"[diet parse request] {summarize_text_for_log(req.text)}")
         result_json_str = parse_diet_log(req.text)
         return json.loads(result_json_str)
     except Exception as exc:
-        print("[Diet NLP Error]", sanitize_exception_for_log(exc))
+        logger.error(f"[Diet NLP Error] {sanitize_exception_for_log(exc)}")
         fallback = parse_diet_log("")
         return json.loads(fallback)
 
@@ -236,7 +244,7 @@ def api_parse_diet(req: LogRequest):
 async def api_speech_to_text(audio_file: UploadFile = File(...)):
     temp_file_path = ""
     try:
-        print("[STT request]", summarize_text_for_log(audio_file.filename or ""))
+        logger.info(f"[STT request] {summarize_text_for_log(audio_file.filename or '')}")
         if importlib.util.find_spec("faster_whisper") is None or shutil.which("ffmpeg") is None:
             return {
                 "text": "",
@@ -252,17 +260,17 @@ async def api_speech_to_text(audio_file: UploadFile = File(...)):
 
         global whisper_model
         if whisper_model is None:
-            print("[STT] lazy loading Whisper model")
+            logger.info("[STT] lazy loading Whisper model")
             from faster_whisper import WhisperModel
 
             whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
-            print("[STT] Whisper model loaded")
+            logger.info("[STT] Whisper model loaded")
         segments, info = whisper_model.transcribe(temp_file_path, beam_size=5, language="ko")
         transcript = " ".join([segment.text for segment in segments])
-        print("[STT result]", summarize_text_for_log(transcript))
+        logger.info(f"[STT result] {summarize_text_for_log(transcript)}")
         return {"text": transcript, "status": "success"}
     except Exception as exc:
-        print("[STT Error]", sanitize_exception_for_log(exc))
+        logger.warning(f"[STT Error] {sanitize_exception_for_log(exc)}")
         return {
             "text": "",
             "status": "unavailable",
@@ -280,10 +288,10 @@ class SupplementChatRequest(BaseModel):
 @app.post("/api/ai/supplement-chat")
 def api_supplement_chat(req: SupplementChatRequest):
     try:
-        print("[supplement question]", summarize_text_for_log(req.question))
+        logger.info(f"[supplement question] {summarize_text_for_log(req.question)}")
         return get_supplement_engine().answer_question(req.question)
     except Exception as exc:
-        print("[Supplement Error]", sanitize_exception_for_log(exc))
+        logger.error(f"[Supplement Error] {sanitize_exception_for_log(exc)}")
         return SupplementRAGEngine.degraded("endpoint_runtime_error").answer_question(req.question)
 
 

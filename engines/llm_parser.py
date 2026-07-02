@@ -1,5 +1,6 @@
 """Normalize raw LLM output into LLMRoutineOutput."""
 import json
+import logging
 import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
@@ -11,6 +12,8 @@ from .llm_router import StatusReasonCode
 from .post_validation_guard import audit_routine_output, log_guard_report
 from .prescription.estimator import estimate_routine_time_min
 from .schemas import LLMExercisePlan, LLMRoutineOutput, PainAreaEntry
+
+logger = logging.getLogger(__name__)
 
 _MARKDOWN_FENCE_RE = re.compile(r"```(?:json)?\s*|\s*```")
 _ALLOWED_VALIDATION_FIELDS = {
@@ -510,7 +513,7 @@ def normalize_llm_response(raw_text: str, llm=None) -> LLMRoutineOutput:
     parse_result = parse_json_candidate(raw_text)
     if not parse_result.success:
         if llm is not None:
-            print("[LLM parser] retrying with OutputFixingParser")
+            logger.warning("[LLM parser] retrying with OutputFixingParser")
             cleaned, _had_fence = _strip_markdown_fence(str(raw_text or ""))
             try:
                 from langchain.output_parsers import OutputFixingParser
@@ -658,7 +661,7 @@ def validate_and_repair_routine_output(
         else:
             violations += 1
             if violations > repair_limit:
-                print(f"[Guard] repair attempt limit exceeded ({violations} > {repair_limit}) -> fallback")
+                logger.warning("[Guard] repair attempt limit exceeded (%s > %s) -> fallback", violations, repair_limit)
                 return None, "emptyCandidate"
 
             replacement = next(
@@ -666,7 +669,7 @@ def validate_and_repair_routine_output(
                 None,
             )
             if replacement is None:
-                print("[Guard] safe candidate exhausted -> fallback")
+                logger.warning("[Guard] safe candidate exhausted -> fallback")
                 return None, "emptyCandidate"
 
             original_id = exercise.exercise_id
@@ -681,10 +684,10 @@ def validate_and_repair_routine_output(
         primary = str(candidate.get("primary_muscle") or "").strip()
         doms_level = doms.get(primary, 0)
         if doms_level >= 3:
-            print(f"[Guard] DOMS level 3 detected: {primary} -> fallback")
+            logger.warning("[Guard] DOMS level 3 detected: %s -> fallback", primary)
             return None, "schemaError"
         if exercise.sets < 1 or exercise.target_reps < 1 or exercise.rest_time_sec < 0:
-            print(f"[Guard] invalid set/reps/rest value: {exercise.exercise_id} -> fallback")
+            logger.warning("[Guard] invalid set/reps/rest value: %s -> fallback", exercise.exercise_id)
             return None, "schemaError"
         if doms_level == 2:
             exercise.sets = min(exercise.sets, 2)
@@ -703,7 +706,7 @@ def validate_and_repair_routine_output(
                 if overflow == 0:
                     break
             if overflow > 0:
-                print("[Guard] set budget overflow cannot be reduced -> fallback")
+                logger.warning("[Guard] set budget overflow cannot be reduced -> fallback")
                 return None, "schemaError"
 
     pre_time_trim_exercise_count = len(repaired.exercises)
@@ -712,13 +715,13 @@ def validate_and_repair_routine_output(
     if time_available_min is not None:
         if estimate_routine_time_min(repaired.exercises) > time_available_min:
             time_trim_attempted = True
-            print("[Guard] time budget exceeded -> trying set/exercise trim")
+            logger.warning("[Guard] time budget exceeded -> trying set/exercise trim")
             if not trim_routine_to_time_budget(repaired, time_available_min):
-                print("[Guard] time budget trim failed -> fallback")
+                logger.warning("[Guard] time budget trim failed -> fallback")
                 return None, "schemaError"
 
     if not _has_minimum_success_quality(repaired):
-        print("[Guard] trimmed/repaired routine below minimum quality -> fallback")
+        logger.warning("[Guard] trimmed/repaired routine below minimum quality -> fallback")
         return None, "schemaError"
 
     final_exercise_count = len(repaired.exercises)
@@ -726,10 +729,11 @@ def validate_and_repair_routine_output(
     trimmed_sets = max(0, pre_time_trim_set_count - final_set_count)
     removed_exercises = max(0, pre_time_trim_exercise_count - final_exercise_count)
     if violations or time_trim_attempted:
-        print(
-            "[Guard diagnostics] "
-            f"repair_count={violations} trimmed_set_count={trimmed_sets} "
-            f"removed_exercise_count={removed_exercises}"
+        logger.info(
+            "[Guard diagnostics] repair_count=%s trimmed_set_count=%s removed_exercise_count=%s",
+            violations,
+            trimmed_sets,
+            removed_exercises,
         )
         repaired.warnings = [
             *repaired.warnings,

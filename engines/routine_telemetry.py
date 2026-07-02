@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import math
 import os
 from datetime import datetime, timezone
 from typing import Any, Optional
 
 from .schemas import RecentSetRecord, RoutineDraftResponse, RoutineRequest
+
+logger = logging.getLogger(__name__)
 
 ENV_RULE_CRITIC_TELEMETRY = "ENABLE_RULE_CRITIC_TELEMETRY"
 _TRUE_VALUES = {"true", "1", "yes", "on"}
@@ -249,7 +252,7 @@ def build_routine_quality_telemetry_payload(
 
 def emit_routine_quality_telemetry(payload: dict[str, Any]) -> None:
     try:
-        print("[Telemetry] " + json.dumps(payload, ensure_ascii=False, sort_keys=True))
+        logger.info("[Telemetry] %s", json.dumps(payload, ensure_ascii=False, sort_keys=True))
     except Exception:
         pass
 
@@ -385,5 +388,5 @@ def observe_routine_quality(
         )
         emit_routine_quality_telemetry(payload)
     except Exception as exc:
-        print(f"[Telemetry] emit skipped: {type(exc).__name__}")
+        logger.warning("[Telemetry] emit skipped: %s", type(exc).__name__)
     return response

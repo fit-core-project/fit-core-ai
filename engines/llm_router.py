@@ -1,6 +1,7 @@
 """LLM provider factory and provider-neutral error mapping."""
 
 import asyncio
+import logging
 import os
 import json
 import re
@@ -14,6 +15,8 @@ from langchain_core.runnables import Runnable
 from pydantic import ValidationError
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 StatusReasonCode = Literal["none", "llmTimeout", "schemaError", "networkError", "emptyCandidate"]
 
@@ -155,12 +158,12 @@ def get_llm(engine_type: str, temperature: float = 0):
 
     app_env = os.getenv("APP_ENV", "").strip().lower()
     if config.blocked_reason == "production_local_not_allowed":
-        print(
+        logger.warning(
             "[LLM Router] WARNING: local provider blocked in production; "
             "set ALLOW_LOCAL_LLM_IN_PRODUCTION=true to enable"
         )
     elif app_env == "production" and config.requested_provider == "local" and config.local_allowed_in_production:
-        print("[LLM Router] production local provider enabled via explicit opt-in")
+        logger.info("[LLM Router] production local provider enabled via explicit opt-in")
 
     if provider == "local":
         from langchain_ollama import ChatOllama
@@ -168,14 +171,14 @@ def get_llm(engine_type: str, temperature: float = 0):
         model_name = config.model_name
         base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip() or "http://localhost:11434"
         if engine_type == "supplement":
-            print(f"[LLM Router] local -> ChatOllama(model={model_name}, format=text, engine={engine_type})")
+            logger.info("[LLM Router] local -> ChatOllama(model=%s, format=text, engine=%s)", model_name, engine_type)
             return ChatOllama(
                 model=model_name,
                 base_url=base_url,
                 temperature=temperature,
                 **_local_ollama_options_from_env(),
             )
-        print(f"[LLM Router] local -> ChatOllama(model={model_name}, format=json, engine={engine_type})")
+        logger.info("[LLM Router] local -> ChatOllama(model=%s, format=json, engine=%s)", model_name, engine_type)
         llm = ChatOllama(
             model=model_name,
             base_url=base_url,
@@ -187,7 +190,7 @@ def get_llm(engine_type: str, temperature: float = 0):
 
     from langchain_google_genai import ChatGoogleGenerativeAI
 
-    print("[LLM Router] gemini -> ChatGoogleGenerativeAI(gemini-2.5-flash)")
+    logger.info("[LLM Router] gemini -> ChatGoogleGenerativeAI(gemini-2.5-flash)")
     return ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=temperature)
 
 

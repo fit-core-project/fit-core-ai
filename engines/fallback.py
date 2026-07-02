@@ -1,4 +1,5 @@
 """규칙 기반 Fallback 루틴 생성 + 루틴 빌드·디버그 유틸리티."""
+import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -30,6 +31,8 @@ from .log_redaction import (
 from .muscle_mapping import get_mapped_targets, split_label_to_muscles
 from .llm_parser import trim_routine_to_time_budget
 from .korean_text_guard import enforce_korean_user_text_on_output, enforce_korean_user_text_on_response
+
+logger = logging.getLogger(__name__)
 
 # ==========================================
 # 9. Fallback 루틴 (규칙 기반)  →  fallback.py 로 이동됨
@@ -166,8 +169,8 @@ def _debug_print_prompt(prompt: ChatPromptTemplate, invoke_kwargs: Dict[str, Any
         rendered = prompt.format(**invoke_kwargs)
     except Exception as exc:
         error = sanitize_exception_for_log(exc)
-        print(
-            "[AI DEBUG][PROMPT]",
+        logger.debug(
+            "[AI DEBUG][PROMPT] %s",
             sanitize_dev_log_payload(
                 {
                     "event": "routine_prompt_render_failed",
@@ -180,8 +183,8 @@ def _debug_print_prompt(prompt: ChatPromptTemplate, invoke_kwargs: Dict[str, Any
         return
 
     summary = summarize_text_for_log(rendered)
-    print(
-        "[AI DEBUG][PROMPT]",
+    logger.debug(
+        "[AI DEBUG][PROMPT] %s",
         sanitize_dev_log_payload(
             {
                 "event": "routine_prompt_rendered",
@@ -196,8 +199,9 @@ def _debug_print_prompt(prompt: ChatPromptTemplate, invoke_kwargs: Dict[str, Any
 def _debug_print_llm_output(label: str, output: LLMRoutineOutput) -> None:
     serialized = output.model_dump_json()
     summary = summarize_text_for_log(serialized)
-    print(
-        f"[AI DEBUG][{label}]",
+    logger.debug(
+        "[AI DEBUG][%s] %s",
+        label,
         sanitize_dev_log_payload(
             {
                 "event": "routine_llm_output_parsed",
@@ -211,22 +215,29 @@ def _debug_print_llm_output(label: str, output: LLMRoutineOutput) -> None:
 
 
 def _debug_print_draft(label: str, draft: RoutineDraftResponse) -> None:
-    print(f"\n========== [AI DEBUG] {label} ==========")
-    print(
-        f"status={draft.generation_status} reason={draft.status_reason_code} "
-        f"is_fallback={draft.is_fallback} total_estimated_time={draft.total_estimated_time}"
+    logger.debug("\n========== [AI DEBUG] %s ==========", label)
+    logger.debug(
+        "status=%s reason=%s is_fallback=%s total_estimated_time=%s",
+        draft.generation_status,
+        draft.status_reason_code,
+        draft.is_fallback,
+        draft.total_estimated_time,
     )
     for block in draft.routine_blocks:
         first_set = block.prescription[0] if block.prescription else None
-        print(
-            f"{block.order}. id={block.exercise_id} name={block.exercise_name} "
-            f"primary={block.primary_muscles} sets={len(block.prescription)} "
-            f"reps={first_set.target_reps if first_set else None} "
-            f"weight={first_set.target_weight_kg if first_set else None}kg "
-            f"rir={first_set.target_rir if first_set else None} "
-            f"rest={first_set.target_rest_sec if first_set else None}s"
+        logger.debug(
+            "%s. id=%s name=%s primary=%s sets=%s reps=%s weight=%skg rir=%s rest=%ss",
+            block.order,
+            block.exercise_id,
+            block.exercise_name,
+            block.primary_muscles,
+            len(block.prescription),
+            first_set.target_reps if first_set else None,
+            first_set.target_weight_kg if first_set else None,
+            first_set.target_rir if first_set else None,
+            first_set.target_rest_sec if first_set else None,
         )
-    print(f"========== [AI DEBUG] END {label} ==========\n")
+    logger.debug("========== [AI DEBUG] END %s ==========\n", label)
 
 
 def generate_fallback_routine(
@@ -239,7 +250,7 @@ def generate_fallback_routine(
     recent_sets: Optional[List[RecentSetRecord]] = None,
     profile: Optional[UserProfileContext] = None,
 ) -> RoutineDraftResponse:
-    print("[Fallback] 규칙 기반 루틴 생성 시작")
+    logger.info("[Fallback] 규칙 기반 루틴 생성 시작")
 
     if not candidates:
         return enforce_korean_user_text_on_response(RoutineDraftResponse(

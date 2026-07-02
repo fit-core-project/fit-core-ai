@@ -15,11 +15,14 @@ Three hard constraints audited:
 Policy #4: when no safe replacement exists for a violation, the caller must
 return generation_status="failed" with status_reason_code="emptyCandidate".
 """
+import logging
 from dataclasses import dataclass, field
 from typing import List
 
 from .candidate_ranker import _candidate_is_safe
 from .schemas import LLMRoutineOutput, PainAreaEntry
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -114,8 +117,8 @@ def audit_routine_output(
 def log_guard_report(report: GuardReport) -> None:
     """Emit structured guard audit log to stdout."""
     if not report.has_violations:
-        print("[Guard] ✓ 제약 위반 없음 (clean)")
+        logger.info("[Guard] ✓ 제약 위반 없음 (clean)")
         return
-    print(f"[Guard] ⚠ 위반 감지 — level={report.level}, count={len(report.violations)}")
+    logger.warning("[Guard] ⚠ 위반 감지 — level=%s, count=%s", report.level, len(report.violations))
     for v in report.violations:
-        print(f"  [{v.constraint.upper()}] {v.exercise_id} ({v.exercise_name}): {v.detail}")
+        logger.warning("  [%s] %s (%s): %s", v.constraint.upper(), v.exercise_id, v.exercise_name, v.detail)

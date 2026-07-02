@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import re
 from typing import List, Optional
@@ -12,6 +13,8 @@ from engines.llm_router import _parse_json_content, get_llm, resolve_llm_provide
 from engines.log_redaction import sanitize_exception_for_log, summarize_text_for_log
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 class DietItem(BaseModel):
@@ -379,7 +382,7 @@ def parse_natural_language_log(user_text: str) -> str:
 
     try:
         llm = get_llm("nlp", temperature=0.1)
-        print("[LLM quicklog parsing start]", summarize_text_for_log(user_text))
+        logger.info("[LLM quicklog parsing start] %s", summarize_text_for_log(user_text))
         if resolve_llm_provider().effective_provider == "local" and _local_raw_json_enabled():
             parsed_result = _parse_llm_payload((_build_prompt() | llm).invoke({"text": user_text}))
         else:
@@ -390,5 +393,5 @@ def parse_natural_language_log(user_text: str) -> str:
                 parsed_result = _parse_llm_payload(structured_llm.invoke({"text": user_text}))
         return _fill_known_food_nutrition(parsed_result).model_dump_json()
     except Exception as exc:
-        print("[LLM quicklog parsing fallback]", sanitize_exception_for_log(exc))
+        logger.warning("[LLM quicklog parsing fallback] %s", sanitize_exception_for_log(exc))
         return _deterministic_parse(user_text).model_dump_json()

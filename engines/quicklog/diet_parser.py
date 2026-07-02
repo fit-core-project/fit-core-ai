@@ -7,6 +7,7 @@ Macros are floats with 1 decimal place, or null when unknown.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from typing import List, Optional
@@ -16,6 +17,8 @@ from pydantic import BaseModel, Field
 
 from engines.llm_router import _parse_json_content, get_llm, resolve_llm_provider
 from engines.log_redaction import sanitize_exception_for_log, summarize_text_for_log
+
+logger = logging.getLogger(__name__)
 
 _TRUE_VALUES = {"true", "1", "yes", "on"}
 
@@ -298,7 +301,7 @@ def parse_diet_log(user_text: str) -> str:
 
     try:
         llm = get_llm("diet", temperature=0.1)
-        print("[LLM diet parsing start]", summarize_text_for_log(user_text))
+        logger.info("[LLM diet parsing start] %s", summarize_text_for_log(user_text))
 
         if resolve_llm_provider().effective_provider == "local" and _local_raw_json_enabled():
             parsed = _parse_payload((_build_diet_prompt() | llm).invoke({"text": user_text}))
@@ -311,5 +314,5 @@ def parse_diet_log(user_text: str) -> str:
 
         return _enrich_macros(parsed).model_dump_json()
     except Exception as exc:
-        print("[LLM diet parsing fallback]", sanitize_exception_for_log(exc))
+        logger.warning("[LLM diet parsing fallback] %s", sanitize_exception_for_log(exc))
         return _deterministic_diet_parse(user_text).model_dump_json()

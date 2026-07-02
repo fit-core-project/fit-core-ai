@@ -5,11 +5,14 @@ without changing pipeline behavior or triggering rebuild/fallback.
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 from engines.prescription.adjustments import _calculate_max_total_sets
 from engines.schemas import PainAreaEntry, RecentSetRecord, RoutineDraftResponse, RoutineRequest
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -401,15 +404,18 @@ def evaluate_routine_quality(
 
 
 def log_critic_result(result: RuleCriticResult) -> None:
-    prefix = "[Critic]" if result.grade != "FAIL" else "[Critic][FAIL]"
-    print(
-        f"{prefix} grade={result.grade} score={result.score} "
-        f"hard_violations={len(result.hard_violations)} "
-        f"should_rebuild={result.should_rebuild} should_fallback={result.should_fallback}"
+    log_fn = logger.warning if result.grade == "FAIL" else logger.info
+    log_fn(
+        "[Critic] grade=%s score=%s hard_violations=%s should_rebuild=%s should_fallback=%s",
+        result.grade,
+        result.score,
+        len(result.hard_violations),
+        result.should_rebuild,
+        result.should_fallback,
     )
     metrics = " ".join(f"{key}={value}" for key, value in result.metric_scores.items())
-    print(f"[Critic] metrics: {metrics}")
+    logger.info("[Critic] metrics: %s", metrics)
     for violation in result.hard_violations:
-        print(f"[Critic][GUARD_BYPASS] {violation}")
+        logger.warning("[Critic][GUARD_BYPASS] %s", violation)
     for warning in result.warnings:
-        print(f"[Critic] warning: {warning}")
+        logger.warning("[Critic] warning: %s", warning)

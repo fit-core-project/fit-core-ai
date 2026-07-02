@@ -20,6 +20,7 @@ complex or takes on a separate responsibility, consider splitting it into
 pipeline_llm.py.
 """
 import asyncio
+import logging
 import os
 import time
 from typing import Any, Callable, Dict, List, Optional
@@ -59,6 +60,7 @@ from .schemas import LLMRoutineOutput, RecentSetRecord, RoutineDraftResponse, Ro
 from .temperature_policy import resolve_generation_temperature
 from .routine_telemetry import classify_fallback_reason, observe_routine_quality
 
+logger = logging.getLogger(__name__)
 
 _TRUE_VALUES = {"true", "1", "yes", "on"}
 
@@ -266,9 +268,10 @@ def _get_feedback_adjustments_with_status(
         ), False, None
     except Exception as exc:
         err = sanitize_exception_for_log(exc)
-        print(
-            f"[FeedbackRanker] adjustment fetch failed "
-            f"type={err['type']} category={err['category']}"
+        logger.warning(
+            "[FeedbackRanker] adjustment fetch failed type=%s category=%s",
+            err['type'],
+            err['category'],
         )
         return None, True, err["category"]
 
@@ -344,9 +347,9 @@ def _deterministic_or_fallback(
     )
     _debug_print_llm_output(output_label, deterministic)
     if estimate_routine_time_min(deterministic.exercises) > req.time_available_min:
-        print("[AI post-deterministic] routine exceeds time budget -> trying trim")
+        logger.warning("[AI post-deterministic] routine exceeds time budget -> trying trim")
         if not trim_routine_to_time_budget(deterministic, req.time_available_min):
-            print("[AI post-deterministic] trim failed -> fallback")
+            logger.warning("[AI post-deterministic] trim failed -> fallback")
             if on_time_budget_exceeded is not None:
                 on_time_budget_exceeded()
             return _fallback(
@@ -390,7 +393,7 @@ def _validate_or_fallback(
     if validated is None:
         if on_validation_failed is not None:
             on_validation_failed()
-        print(f"[AI post-validation] output unrecoverable (reason={repair_reason}) -> fallback")
+        logger.warning("[AI post-validation] output unrecoverable (reason=%s) -> fallback", repair_reason)
         return _fallback(req, ranked_candidates, max_total_sets, doms_db, goal, repair_reason, recent_sets, profile)
     return _deterministic_or_fallback(
         validated,
@@ -416,18 +419,18 @@ def generate_smart_routine(
 ) -> RoutineDraftResponse:
     if req.target_split_label:
         db_target_muscles = split_label_to_muscles(req.target_split_label)
-        print(f"[매핑] split_label={req.target_split_label} -> {db_target_muscles}")
+        logger.info("[매핑] split_label=%s -> %s", req.target_split_label, db_target_muscles)
     elif req.target_muscles:
         _, db_target_muscles = get_mapped_targets(req.target_muscles)
-        print(f"[매핑] DB 타겟 -> {db_target_muscles}")
+        logger.info("[매핑] DB 타겟 -> %s", db_target_muscles)
     else:
         db_target_muscles = []
-        print("[매핑] 타겟 근육 없음 -> 빈 후보 리스트로 진행")
+        logger.info("[매핑] 타겟 근육 없음 -> 빈 후보 리스트로 진행")
 
     doms_db = req.doms_data
     goal = req.goal or (profile.goal_type if profile else "hypertrophy")
     pain_areas = req.pain_areas
-    print(f"[매핑] doms -> {doms_db}")
+    logger.info("[매핑] doms -> %s", doms_db)
 
     candidates = get_candidate_exercises(db, db_target_muscles, req.equipment, pain_areas)
     candidate_pool_size = get_candidate_pool_size()
@@ -676,7 +679,7 @@ def generate_smart_routine(
     except (asyncio.TimeoutError, httpx.TimeoutException) as e:
         llm_error_type = classify_llm_error(e)
         reason = map_llm_error(e)
-        print("[AI 실패 - TIMEOUT]", sanitize_exception_for_log(e), "-> fallback 루틴으로 전환")
+        logger.warning("[AI 실패 - TIMEOUT] %s -> fallback 루틴으로 전환", sanitize_exception_for_log(e))
     except (OutputParserException, ValidationError) as e:
         llm_error_type = classify_llm_error(e)
         schema_repair_attempted = True
@@ -686,7 +689,7 @@ def generate_smart_routine(
         elif parse_failure_subtype is None:
             original_raw_text, _original_source = extract_raw_llm_output_from_exception(e)
             parse_failure_subtype = parse_json_candidate(original_raw_text or "").subtype
-        print(f"[AI - SCHEMA 오류] 정제 어댑터로 복구 시도... ({type(e).__name__})")
+        logger.warning("[AI - SCHEMA 오류] 정제 어댑터로 복구 시도... (%s)", type(e).__name__)
         try:
             repair_llm = get_llm("routine", temperature=0)
             raw_output_recovery_attempted = True
@@ -695,7 +698,7 @@ def generate_smart_routine(
                 raw_output_recovery_succeeded = True
             else:
                 raw_output_recovery_failed_reason = "no_raw_content"
-                print("[정제 어댑터] raw 텍스트 없음 -> LLM 비구조화 재호출")
+                logger.warning("[정제 어댑터] raw 텍스트 없음 -> LLM 비구조화 재호출")
                 raw_resp = (prompt | repair_llm).invoke(invoke_kwargs)
                 raw_text = raw_resp.content if hasattr(raw_resp, "content") else str(raw_resp)
                 if raw_text and raw_text.strip():
@@ -706,8 +709,8 @@ def generate_smart_routine(
                     raw_output_recovery_source = "none"
                     raw_output_recovery_failed_reason = "no_raw_content"
                 raw_summary = summarize_text_for_log(raw_text)
-                print(
-                    "[정제 어댑터] raw LLM output 수신",
+                logger.info(
+                    "[정제 어댑터] raw LLM output 수신 %s",
                     {
                         "redacted": True,
                         "llm_output_char_count": raw_summary["char_count"],
@@ -762,11 +765,11 @@ def generate_smart_routine(
                 json_decode_recovery_strategy = norm_e.json_decode_recovery_strategy or json_decode_recovery_strategy
             else:
                 repair_failure_reason = type(norm_e).__name__
-            print("[정제 어댑터] 복구 실패:", sanitize_exception_for_log(norm_e), "-> fallback 루틴으로 전환")
+            logger.warning("[정제 어댑터] 복구 실패: %s -> fallback 루틴으로 전환", sanitize_exception_for_log(norm_e))
     except Exception as e:
         llm_error_type = classify_llm_error(e)
         reason = map_llm_error(e)
-        print(f"[AI 실패 - {reason.upper()}]", sanitize_exception_for_log(e), "-> fallback 루틴으로 전환")
+        logger.warning("[AI 실패 - %s] %s -> fallback 루틴으로 전환", reason.upper(), sanitize_exception_for_log(e))
 
     draft = _fallback(req, ranked_candidates, max_total_sets, doms_db, goal, reason, recent_sets, profile)
     return _observe(draft)
