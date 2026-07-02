@@ -38,9 +38,13 @@ class RoutineRequest(BaseModel):
     doms_data: Dict[str, int] = Field(default_factory=dict)   # Java가 매핑한 {spreadsheet_slug: level(1~3)}
     equipment: List[str] = Field(default_factory=list)         # 사용 불가 장비 블랙리스트
     goal: Optional[str] = None                                 # 미전달 시 프로필의 goal_type 사용
+    experience_level: Optional[str] = None                     # beginner | intermediate | advanced
     user_note: Optional[str] = None
     preferred_exercise_ids: List[str] = Field(default_factory=list)
     unpreferred_exercise_ids: List[str] = Field(default_factory=list)
+    mobility_limits: List[str] = Field(default_factory=list)   # 예: limited_ankle_dorsiflexion
+    condition_policies: List[Dict[str, Any]] = Field(default_factory=list)  # 질환/수술/재활 정책 입력
+    anthropometry_signals: Dict[str, Any] = Field(default_factory=dict)     # 체형 민감도 입력
 
 
 # ==========================================

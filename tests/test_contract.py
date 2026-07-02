@@ -59,6 +59,35 @@ class TestRoutineRequestParsing:
         assert req.pain_areas == []
         assert req.doms_data == {}
         assert req.equipment == []
+        assert req.experience_level is None
+        assert req.mobility_limits == []
+        assert req.condition_policies == []
+        assert req.anthropometry_signals == {}
+
+    def test_routine_quality_inputs_parse_camel_case(self):
+        payload = {
+            "timeAvailableMin": 60,
+            "experienceLevel": "beginner",
+            "mobilityLimits": ["limited_ankle_dorsiflexion"],
+            "conditionPolicies": [
+                {
+                    "conditionCode": "lumbar_herniation",
+                    "bodyPart": "lower-back",
+                    "phase": "rehab",
+                    "professionalClearance": False,
+                }
+            ],
+            "anthropometrySignals": {
+                "femurLengthLevel": "long",
+                "armLengthLevel": "average",
+            },
+        }
+        req = RoutineRequest.model_validate(payload)
+
+        assert req.mobility_limits == ["limited_ankle_dorsiflexion"]
+        assert req.experience_level == "beginner"
+        assert req.condition_policies[0]["conditionCode"] == "lumbar_herniation"
+        assert req.anthropometry_signals["femurLengthLevel"] == "long"
 
 
 class TestRoutineDraftResponseSerialization:

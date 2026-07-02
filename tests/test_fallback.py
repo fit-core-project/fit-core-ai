@@ -2,7 +2,8 @@
 import pytest
 
 from engines.fallback import generate_fallback_routine
-from engines.schemas import RecentSetRecord, RoutineRequest
+from engines.prescription.estimator import estimate_routine_time_min
+from engines.schemas import LLMExercisePlan, RecentSetRecord, RoutineRequest
 
 
 @pytest.fixture
@@ -77,6 +78,61 @@ class TestFallbackMaxSets:
         )
         total = sum(len(b.prescription) for b in result.routine_blocks)
         assert total <= max_sets
+
+    def test_short_time_fallback_caps_exercise_count_even_when_doms_splits_sets(self):
+        request = RoutineRequest(
+            user_id="short-pull",
+            target_split_label="pull",
+            time_available_min=30,
+            pain_areas=[],
+            doms_data={"upper-back": 2, "biceps": 2},
+            equipment=[],
+        )
+        candidates = [
+            {
+                "id": f"pull_{idx}",
+                "name_kr": f"풀 운동 {idx}",
+                "name_en": f"Pull {idx}",
+                "primary_muscle": "upper-back" if idx % 2 else "biceps",
+                "secondary_muscle": None,
+                "equipment_req": "MACHINE",
+                "difficulty_tier": 2,
+                "efficiency_tier": idx,
+                "pain_triggers": None,
+                "movement_type": "ISOLATION",
+            }
+            for idx in range(1, 11)
+        ]
+
+        result = generate_fallback_routine(
+            request,
+            candidates=candidates,
+            max_total_sets=10,
+            doms_db=request.doms_data,
+            goal="hypertrophy",
+            status_reason_code="llmTimeout",
+        )
+
+        assert result.is_fallback is True
+        assert len(result.routine_blocks) <= 3
+        assert result.total_estimated_time <= request.time_available_min
+        fallback_plans = [
+            LLMExercisePlan(
+                exercise_id=block.exercise_id,
+                exercise_name=block.exercise_name,
+                movement_pattern=block.movement_pattern,
+                primary_muscles=block.primary_muscles,
+                equipment_type=block.equipment_type,
+                target_reps=block.prescription[0].target_reps,
+                sets=len(block.prescription),
+                rest_time_sec=block.default_rest_sec,
+                target_rir=block.prescription[0].target_rir,
+                exercise_rationale=block.exercise_rationale,
+            )
+            for block in result.routine_blocks
+            if block.prescription
+        ]
+        assert estimate_routine_time_min(fallback_plans) <= request.time_available_min
 
 
 class TestFallbackGoalParams:
@@ -156,4 +212,3 @@ class TestFallbackStatusReasonCode:
             first_id = result.routine_blocks[0].exercise_id
             compound_ids = {"barbell_bench_press", "pushup"}
             assert first_id in compound_ids
-

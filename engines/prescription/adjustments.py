@@ -69,7 +69,7 @@ def _calculate_max_total_sets(time_available_min: int, goal: str) -> int:
 
 def _target_exercise_count(time_available_min: int) -> int:
     if time_available_min <= 30:
-        return 4
+        return 3
     if time_available_min <= 45:
         return 5
     if time_available_min <= 60:
