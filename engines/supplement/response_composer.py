@@ -25,6 +25,11 @@ _WEAK_ANSWER_NEEDLES = (
     "자료 없음",
     "답변할 수 없습니다",
     "WEB_SEARCH_REQUIRED",
+    "의학적 조언을 제공할 수 없습니다",
+    "의료 조언을 제공할 수 없습니다",
+    "전문적인 의학적 조언",
+    "진단할 수 없습니다",
+    "처방할 수 없습니다",
 )
 _UNSAFE_PHRASES = (
     "먹어도 됩니다",
@@ -37,6 +42,42 @@ _CONSULT_TEXT = "개인 상태, 복용 중인 약, 용량에 따라 달라질 �
 
 
 _COMPACT_CONSULT_TEXT = "개인 상태, 복용 중인 약, 용량에 따라 달라질 수 있으므로 복용 전 의사 또는 약사와 상담하세요."
+_CONSULT_MARKERS = ("상담", "문의", "의료진", "의사", "약사", "전문가")
+_ACTIONABLE_MARKERS = (
+    "간격",
+    "흡수",
+    "출혈",
+    "신장",
+    "간질환",
+    "고용량",
+    "임신",
+    "수유",
+    "항생제",
+    "와파린",
+    "항응고제",
+    "성분",
+    "함량",
+    "식후",
+    "공복",
+    "운동 전",
+    "운동 후",
+    "권장량",
+    "복용량",
+    "총량",
+    "수분",
+    "중복",
+    "증상",
+    "중단",
+    "제품",
+    "프로틴",
+    "크레아틴",
+    "오메가3",
+    "마그네슘",
+    "철분",
+    "아연",
+    "칼슘",
+    "유산균",
+)
 _MAX_CAUTION_SENTENCES = 3
 _MAX_CAUTION_CHARS = 520
 
@@ -63,6 +104,11 @@ def compose_supplement_response(
     if _is_weak_answer(answer):
         answer = _fallback_answer_from_docs(selected_docs, parsed_query)
         used_kb_fallback = True
+    elif _should_prefer_deterministic_answer(parsed_query, selected_docs) and _is_low_specificity_answer(answer):
+        deterministic_answer = _direct_answer_from_query_and_docs(parsed_query, selected_docs)
+        if deterministic_answer:
+            answer = deterministic_answer
+            used_kb_fallback = True
 
     risk_query = bool(set(parsed_query.intents) & _RISK_INTENTS)
     if risk_query:
@@ -397,21 +443,45 @@ def _fallback_answer_from_docs(docs: list[Any], parsed_query: ParsedSupplementQu
         IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY,
         IntentType.MEDICATION_SAFETY,
     }:
+        summary = _source_summary(docs, "safety_rule")
+        if summary:
+            return (
+                f"검색된 안전 규칙에 따르면 {summary} "
+                "개인 질환, 임신/수유, 수술 전후, 고용량 복용 같은 조건에서는 임의로 복용을 결정하지 않는 것이 좋습니다."
+            )
         return (
             "해당 조건에서는 보충제나 약 복용을 임의로 결정하지 않는 것이 좋습니다. 검색된 안전 규칙에 따르면 질환, "
             "임신/수유, 수술 전후, 고용량 복용 같은 조건에서는 전문가 상담이 필요할 수 있습니다."
         )
     if "interaction_rule" in source_types:
+        summary = _source_summary(docs, "interaction_rule")
+        if summary:
+            return (
+                f"검색된 상호작용 규칙에 따르면 {summary} "
+                "복용 간격만으로 해결되는 문제인지, 병용 자체를 피해야 하는 상황인지는 복용 중인 약과 용량에 따라 확인이 필요합니다."
+            )
         return (
             "해당 조합은 함께 복용할 때 주의가 필요합니다. 검색된 상호작용 규칙에 따르면 복용 간격, 약물 병용, "
             "출혈 위험 등 확인이 필요한 요소가 있을 수 있으므로 임의로 병용하지 말고 의사 또는 약사에게 안전성을 확인하는 것이 좋습니다."
         )
     if "safety_rule" in source_types:
+        summary = _source_summary(docs, "safety_rule")
+        if summary:
+            return (
+                f"검색된 안전 규칙에 따르면 {summary} "
+                "개인 질환, 복용 중인 약, 임신/수유, 수술 전후 여부에 따라 판단이 달라질 수 있습니다."
+            )
         return (
             "해당 조건에서는 보충제나 약 복용을 임의로 결정하지 않는 것이 좋습니다. 검색된 안전 규칙에 따르면 질환, "
             "임신/수유, 수술 전후, 고용량 복용 같은 조건에서는 전문가 상담이 필요할 수 있습니다."
         )
     if "ingredient_profile" in source_types:
+        summary = _source_summary(docs, "ingredient_profile")
+        if summary:
+            return (
+                f"검색된 성분 프로필 기준으로는 {summary} "
+                "식사 여부, 운동 전후, 다른 약물과의 간격, 개인 질환 여부를 함께 확인하는 것이 좋습니다."
+            )
         return (
             "일반적인 복용 타이밍은 성분과 목적에 따라 달라질 수 있습니다. 검색된 성분 프로필의 복용 가이드와 "
             "주의사항을 기준으로 식사 여부, 운동 전후, 다른 약물과의 간격을 함께 확인하는 것이 좋습니다."
@@ -556,6 +626,16 @@ def _doc_answer_summaries(docs: list[Any]) -> list[str]:
     return summaries
 
 
+def _source_summary(docs: list[Any], source_type: str) -> str:
+    filtered = [
+        doc
+        for doc in docs
+        if ((getattr(doc, "metadata", {}) or {}).get("source") or (getattr(doc, "metadata", {}) or {}).get("type"))
+        == source_type
+    ]
+    return _dedupe_join(_doc_answer_summaries(filtered), max_chars=520)
+
+
 def _supplement_entities(parsed_query: ParsedSupplementQuery) -> list[Any]:
     return [entity for entity in parsed_query.entities if entity.type == EntityType.SUPPLEMENT_INGREDIENT]
 
@@ -662,7 +742,24 @@ def _is_weak_answer(answer: str | None) -> bool:
     normalized = answer.strip()
     if normalized.lower() in _UNUSABLE_ANSWERS:
         return True
+    if _is_low_specificity_answer(normalized):
+        return True
     return any(needle in normalized for needle in _WEAK_ANSWER_NEEDLES)
+
+
+def _is_low_specificity_answer(answer: str | None) -> bool:
+    if not isinstance(answer, str):
+        return True
+    normalized = re.sub(r"\s+", " ", answer).strip()
+    if not normalized:
+        return True
+    has_consult_marker = any(marker in normalized for marker in _CONSULT_MARKERS)
+    has_actionable_marker = any(marker in normalized for marker in _ACTIONABLE_MARKERS)
+    if has_consult_marker and not has_actionable_marker:
+        return True
+    if len(normalized) <= 90 and _contains_any(normalized, {"개인 상태에 따라", "상황에 따라", "전문가와 상담", "전문가에게 문의"}):
+        return not has_actionable_marker
+    return False
 
 
 def _field(text: str, label: str) -> str | None:

@@ -50,6 +50,39 @@ def test_interaction_rule_caution_is_merged_and_answer_is_softened():
     assert "상담" in result.caution
 
 
+def test_refusal_only_answer_recovers_from_interaction_doc():
+    doc = Doc(
+        "INT_OMEGA3_ANTICOAGULANTS",
+        "interaction_rule",
+        "\n".join(
+            [
+                "[Interaction rule]",
+                "ID: INT_OMEGA3_ANTICOAGULANTS",
+                "Entity A: 오메가3 / omega3 / supplement_ingredient",
+                "Entity B: 와파린 / warfarin / drug_or_drug_class",
+                "Mechanism: 오메가3 보충제는 와파린 복용자에서 출혈 위험을 보수적으로 확인해야 합니다.",
+                "Recommendation: 와파린을 복용 중이면 오메가3 보충제를 임의로 시작하지 말고 의료진과 상담하세요.",
+                "Caution level: high",
+            ]
+        ),
+    )
+
+    result = compose_supplement_response(
+        question="와파린 먹는데 오메가3 먹어도 돼?",
+        parsed_query=parse_supplement_query("와파린 먹는데 오메가3 먹어도 돼?"),
+        generated_answer="의학적 조언을 제공할 수 없습니다. 의료 전문가와 상담하세요.",
+        generated_caution=None,
+        selected_docs=[doc],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "의학적 조언을 제공할 수 없습니다" not in result.answer
+    assert "검색된 상호작용 규칙" in result.answer
+    assert "와파린" in result.answer
+    assert "오메가3" in result.answer
+    assert "출혈" in result.answer or "임의로 시작" in result.answer
+
+
 def test_safety_rule_caution_is_merged_for_kidney_magnesium():
     doc = Doc(
         "SAFE_KIDNEY_MAGNESIUM",
@@ -521,6 +554,22 @@ def test_multi_supplement_combination_answer_includes_component_checks():
     assert "항응고제" in result.answer
     assert "간질환" in result.answer
     assert "단정" in result.answer
+
+
+def test_low_specificity_multi_supplement_answer_uses_component_checks():
+    result = compose_supplement_response(
+        question="프로틴이랑 크레아틴 같이 먹어도 돼?",
+        parsed_query=parse_supplement_query("프로틴이랑 크레아틴 같이 먹어도 돼?"),
+        generated_answer="개인 상태에 따라 달라질 수 있으므로 전문가와 상담하세요.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "프로틴" in result.answer
+    assert "크레아틴" in result.answer
+    assert "총량" in result.answer
+    assert "수분" in result.answer
 
 
 def test_unknown_ingredient_asks_for_product_name_and_label():

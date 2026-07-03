@@ -733,6 +733,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                 continue
             sources.append(
                 {
+                    "file": str(meta.get("_source_file", "N/A")),
                     "id": str(meta.get("id", "N/A")),
                     "type": str(meta.get("source") or meta.get("type") or "DOC"),
                 }
@@ -798,6 +799,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                     continue
                 sources.append(
                     {
+                        "file": str(meta.get("_source_file", "N/A")),
                         "id": str(meta.get("id", "N/A")),
                         "type": str(meta.get("source") or meta.get("type") or "DOC"),
                     }
