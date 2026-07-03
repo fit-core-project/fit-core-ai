@@ -457,6 +457,16 @@ def test_prompt_requires_korean_user_facing_text():
     assert "Natural-language explanation text must not expose raw schema keys" in language_policy
 
 
+def test_prompt_requires_cautious_pain_and_medical_language():
+    prompt = _build_system_prompt(profile=None, recent_sets=None)
+    rationale_policy = _section(prompt, "[RATIONALE POLICY]")
+
+    assert "Do not claim a selected exercise is pain-free or absolutely safe" in rationale_policy
+    assert "Avoid treatment or rehabilitation promises" in rationale_policy
+    assert "부담을 낮추는 방향" in rationale_policy
+    assert "의료진 허가 범위" in rationale_policy
+
+
 def test_prompt_weight_policy_delegates_prescription_to_server():
     prompt = _build_system_prompt(profile=None, recent_sets=None)
 

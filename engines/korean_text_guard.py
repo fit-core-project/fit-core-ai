@@ -81,6 +81,30 @@ _TOKEN_LABELS = {
     "wrist": "손목",
 }
 
+_CAUTIOUS_TEXT_REPLACEMENTS = {
+    "100% 안전": "상대적으로 부담이 낮은 편",
+    "완전히 안전": "상대적으로 부담이 낮은 편",
+    "안전하게 고강도 훈련": "부담을 낮추는 방향으로 훈련",
+    "안전하게 고볼륨": "부담을 낮추는 방향으로 볼륨을",
+    "안전하게 수행": "부담을 낮춰 수행",
+    "안전하게 진행": "부담을 낮춰 진행",
+    "안전하게": "부담을 낮추는 방향으로",
+    "안전한 환경": "동작이 안정적인 환경",
+    "안전한 옵션": "상대적으로 부담이 낮은 옵션",
+    "안전한 대안": "상대적으로 부담이 낮은 대안",
+    "안전한 운동": "상대적으로 부담이 낮은 운동",
+    "통증이 없는": "통증 부담을 낮춘",
+    "통증 없이": "통증 여부를 확인하며",
+    "통증을 해결": "통증 부담을 고려",
+    "치료합니다": "관리 관점에서 참고할 수 있습니다",
+    "치료에 도움이 됩니다": "부담 관리에 참고할 수 있습니다",
+    "회복을 돕습니다": "부담 관리에 참고할 수 있습니다",
+    "부상 방지에 좋습니다": "부상 위험을 낮추는 방향입니다",
+    "부상 방지": "부상 위험을 낮추는 방향",
+    "효과를 극대화": "효과를 높이는 데 초점",
+    "목표를 달성합니다": "목표에 맞춥니다",
+}
+
 
 def _has_final_consonant(value: str) -> bool:
     if not value:
@@ -141,12 +165,20 @@ def _replace_schema_tokens(text: str, exercise_labels: dict[str, str] | None = N
     return sanitized
 
 
+def _soften_absolute_safety_claims(text: str) -> str:
+    softened = text
+    for raw, replacement in _CAUTIOUS_TEXT_REPLACEMENTS.items():
+        softened = softened.replace(raw, replacement)
+    return softened
+
+
 def _sanitize_natural_language(
     text: str,
     fallback: str,
     exercise_labels: dict[str, str] | None = None,
 ) -> str:
     sanitized = _replace_schema_tokens(text, exercise_labels)
+    sanitized = _soften_absolute_safety_claims(sanitized)
     return fallback if _is_english_heavy(sanitized) else sanitized
 
 

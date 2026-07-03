@@ -120,3 +120,43 @@ def test_user_facing_text_replaces_exercise_ids_with_names():
     assert response.routine_blocks[0].exercise_rationale == (
         "머신 내로우 박스 터치 박스 스쿼트는 주동근이 대퇴사두이고 머신 후보라 선택했습니다."
     )
+
+
+def test_user_facing_text_softens_absolute_safety_or_medical_claims():
+    output = LLMRoutineOutput(
+        total_estimated_time=30,
+        summary_title="통증 고려 루틴",
+        rationale_summary=[
+            "이 운동은 통증 없이 안전하게 수행할 수 있고 치료합니다.",
+        ],
+        warnings=["100% 안전한 운동은 아니므로 통증이 있으면 중단하세요."],
+        exercises=[
+            LLMExercisePlan(
+                exercise_id="pushup",
+                exercise_name="푸시업",
+                movement_type="COMPOUND",
+                primary_muscles=["chest"],
+                equipment_type="BODYWEIGHT",
+                target_reps=10,
+                sets=2,
+                rest_time_sec=75,
+                exercise_rationale="안전한 옵션이며 부상 방지에 좋습니다.",
+            )
+        ],
+    )
+
+    response = build_routine_draft(output, "success", "none", False)
+    text = " ".join([
+        *response.rationale_summary,
+        *response.warnings,
+        response.routine_blocks[0].exercise_rationale,
+    ])
+
+    assert "통증 없이" not in text
+    assert "100% 안전" not in text
+    assert "안전한 옵션" not in text
+    assert "치료합니다" not in text
+    assert "부상 방지" not in text
+    assert "통증 여부를 확인하며" in text
+    assert "상대적으로 부담이 낮은 옵션" in text
+    assert "부상 위험을 낮추는 방향입니다" in text
