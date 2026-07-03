@@ -452,7 +452,9 @@ def test_prompt_requires_korean_user_facing_text():
 
     assert "All user-facing natural language fields must be Korean." in language_policy
     assert "summary_title, rationale_summary, exercise_rationale, and warnings must be Korean." in language_policy
-    assert "Do not output English explanations unless the field is an enum, id, equipment key, or muscle key." in language_policy
+    assert "do not mention raw exercise IDs" in language_policy
+    assert "translate muscle/equipment/schema tokens into Korean labels" in language_policy
+    assert "Natural-language explanation text must not expose raw schema keys" in language_policy
 
 
 def test_prompt_weight_policy_delegates_prescription_to_server():

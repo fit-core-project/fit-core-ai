@@ -76,6 +76,47 @@ def test_korean_text_with_schema_tokens_is_preserved():
     response = build_routine_draft(output, "success", "none", False)
 
     assert response.summary_title == "푸시 근비대 루틴"
-    assert response.rationale_summary == ["BARBELL 제한을 고려해 chest 후보 중 안전한 운동을 선택했습니다."]
+    assert response.rationale_summary == ["바벨 제한을 고려해 가슴 후보 중 안전한 운동을 선택했습니다."]
     assert response.warnings == ["통증이 있으면 세트를 줄이세요."]
-    assert response.routine_blocks[0].exercise_rationale == "BODYWEIGHT 후보이며 chest 목표에 맞아 선택했습니다."
+    assert response.routine_blocks[0].exercise_rationale == "맨몸 후보이며 가슴 목표에 맞아 선택했습니다."
+
+
+def test_user_facing_text_replaces_exercise_ids_with_names():
+    output = LLMRoutineOutput(
+        total_estimated_time=30,
+        summary_title="하체 루틴",
+        rationale_summary=["V24ROW-003179는 quadriceps 목표에 맞습니다."],
+        warnings=["V24ROW-003179 수행 중 통증이 있으면 중단하세요."],
+        exercises=[
+            LLMExercisePlan(
+                exercise_id="V24ROW-003179",
+                exercise_name="머신 내로우 박스 터치 박스 스쿼트",
+                movement_type="COMPOUND",
+                primary_muscles=["quadriceps"],
+                equipment_type="MACHINE",
+                target_reps=10,
+                sets=2,
+                rest_time_sec=90,
+                exercise_rationale="V24ROW-003179는 primary_muscles가 quadriceps이고 MACHINE 후보라 선택했습니다.",
+            )
+        ],
+    )
+
+    response = build_routine_draft(output, "success", "none", False)
+    text = " ".join([
+        *response.rationale_summary,
+        *response.warnings,
+        response.routine_blocks[0].exercise_rationale,
+    ])
+
+    assert "V24ROW-003179" not in text
+    assert "quadriceps" not in text
+    assert "primary_muscles" not in text
+    assert "MACHINE" not in text
+    assert "머신 내로우 박스 터치 박스 스쿼트" in text
+    assert "대퇴사두" in text
+    assert "주동근" in text
+    assert "머신" in text
+    assert response.routine_blocks[0].exercise_rationale == (
+        "머신 내로우 박스 터치 박스 스쿼트는 주동근이 대퇴사두이고 머신 후보라 선택했습니다."
+    )
