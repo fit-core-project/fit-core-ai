@@ -148,6 +148,49 @@ Report:
 
 - `tests/evaluation/.artifacts/gemma4-quality-seed-v4-score/gemma4-v4-baseline-partial-latency-gated-2026-07-03/gemma4-quality-seed-report.md`
 
+### Safety-Core Batch Live Score
+
+```bash
+python3 scripts/run_gemma4_quality_seed_live.py \
+  --seed tests/fixtures/gemma4_routine_quality_eval_seed_v3.jsonl \
+  --output-dir tests/evaluation/.artifacts/gemma4-quality-seed-live-v4 \
+  --run-id gemma4-v4-batched-2026-07-03-safety-core \
+  --scenario-id lower-back-legs-001,limited-ankle-legs-001,shoulder-push-001 \
+  --scenario-timeout-sec 240 \
+  --cooldown-sec 1.0 \
+  --resume
+```
+
+```bash
+python3 scripts/run_gemma4_quality_seed.py score-file \
+  --seed tests/fixtures/gemma4_routine_quality_eval_seed_v3.jsonl \
+  --results tests/evaluation/.artifacts/gemma4-quality-seed-live-v4/gemma4-v4-batched-2026-07-03-safety-core/gemma4-quality-seed-results-filled.json \
+  --output-dir tests/evaluation/.artifacts/gemma4-quality-seed-v4-score \
+  --run-id gemma4-v4-batched-2026-07-03-safety-core-score \
+  --scenario-id lower-back-legs-001,limited-ankle-legs-001,shoulder-push-001 \
+  --max-elapsed-ms 120000
+```
+
+Result:
+
+- scored: `3 / 3`
+- passed: `3 / 3`
+- hard safety passed: `3 / 3`
+- preferred quality passed: `3 / 3`
+- latency passed: `3 / 3`
+- fallback passed: `3 / 3`
+- recommendation: `pass`
+
+Scenario latency:
+
+- `lower-back-legs-001`: `112669 ms`
+- `limited-ankle-legs-001`: `82467 ms`
+- `shoulder-push-001`: `76917 ms`
+
+Report:
+
+- `tests/evaluation/.artifacts/gemma4-quality-seed-v4-score/gemma4-v4-batched-2026-07-03-safety-core-score/gemma4-quality-seed-report.md`
+
 ## Test Evidence
 
 ```bash
@@ -185,14 +228,20 @@ Local Gemma4 can pass quality checks, but long latency makes full-suite runs imp
 
 Category: `operational_constraint`
 
+### F4. Safety-core batch passes as the first live gate
+
+The first bounded live batch passed hard safety, preferred quality, fallback, contract, and 120-second latency gates for lower-back, ankle-mobility, and shoulder-pain scenarios.
+
+Category: `live_batch_pass`
+
 ## Next Actions
 
-1. Run `safety-core` batch with the generated command and score it.
-2. If `safety-core` passes except latency, decide whether the latency threshold should be:
+1. Run `time-equipment` batch next because it includes `short-time-push-001`.
+2. Then run `beginner-joint`, `medical-profile`, and `advanced-effect` batches.
+3. Decide latency policy after at least two batches:
    - strict model gate
    - local-environment warning
    - tuned-model comparison metric
-3. Run `time-equipment` batch next because it includes `short-time-push-001`.
 4. Only after batch score gaps are clear, change prompt/rules/model.
 
 ## Developer-Copy Summary
@@ -203,4 +252,5 @@ Routine AI v4 harness improved.
 - Added batch plan generator for 18 scenario Gemma4 live eval.
 - Candidate quality improved from `16 support + 1 no-candidate + 1 hard-stop` to `17 support + 1 hard-stop`.
 - Latency gate confirmed: one scenario fails at 196s when `--max-elapsed-ms 120000` is used.
+- First bounded live batch `safety-core` passed 3/3, including hard safety, preferred quality, fallback, contract, and latency gates.
 - No FE/BE contract change is required from this harness-only update.
