@@ -106,6 +106,30 @@ def test_candidate_quality_tags_detect_safe_alternative_candidate_reason():
     assert "safe_alternative_candidate" in tags
 
 
+def test_candidate_quality_tags_detect_short_time_candidate_pool():
+    row = {
+        "scenarioId": "short-time-push-001",
+        "input": {"timeAvailableMin": 20},
+        "candidatePreferredPatterns": ["short_time_candidate_pool"],
+        "preferredPatterns": ["two_to_three_exercises", "short_time_reason"],
+        "failurePatterns": [],
+    }
+    candidates = [
+        {
+            "id": "machine_chest_press",
+            "name_kr": "머신 체스트 프레스",
+            "primary_muscle": "chest",
+            "equipment_req": "MACHINE",
+            "score_reasons": ["primary target match"],
+        }
+    ]
+
+    tags = candidate_seed.derive_candidate_quality_tags(row, candidates)
+
+    assert "short_time_candidate_pool" in tags
+    assert "main_compound_then_accessory" in tags
+
+
 def test_candidate_report_can_compare_live_quality_gap(tmp_path, monkeypatch):
     def fake_scenario_candidates(*, row, db, top_n):  # noqa: ARG001 - test seam
         req = candidate_seed.request_from_seed(row)

@@ -11,8 +11,8 @@ Routine recommendation v4 should proceed from the current v3 branch, but the fir
 The immediate v4 priority is evaluation/runtime control:
 
 1. Run live evaluations in smaller batches instead of all 18 scenarios at once.
-2. Add latency budgets to score-file so slow outputs are visible as quality risks.
-3. Improve the short-time push scenario candidate/preferred-pattern evidence.
+2. Use `--max-elapsed-ms` in score-file so slow outputs are visible as quality risks.
+3. Use `candidatePreferredPatterns` for candidate-layer-only evidence, keeping `preferredPatterns` for live output quality.
 4. Continue live scoring only after the batch strategy is stable.
 
 ## Inputs
@@ -173,16 +173,17 @@ Primary category: `harness_runtime_gap`
 
 ## Recommended Next Actions
 
-1. Add `--max-elapsed-ms` based latency gate when scoring live results.
-2. Run live eval in 3-scenario batches:
+1. Generate a batch plan with `scripts/plan_gemma4_quality_batches.py`.
+2. Score each live batch with `--scenario-id` and `--max-elapsed-ms`.
+3. Run live eval in bounded batches:
    - safety batch
    - mobility batch
    - equipment/time batch
    - profile/condition batch
    - advanced/effect batch
-3. Improve `short-time-push-001` candidate-quality tags or rubric.
-4. After batching, run the remaining 15 live scenarios using `--resume`.
-5. Only after live score gaps are categorized, decide whether v4 needs:
+4. Improve `short-time-push-001` candidate-quality tags or rubric without polluting live output preferred-pattern scoring.
+5. After batching, run the remaining 15 live scenarios using `--resume`.
+6. Only after live score gaps are categorized, decide whether v4 needs:
    - DB material patch
    - Python rule patch
    - prompt payload patch
@@ -200,4 +201,3 @@ Routine recommendation v4 baseline started.
 - Main issue is live evaluation runtime: first 3 scenarios took about 196s, 85s, and 77s.
 
 Next work should focus on batched live evaluation and latency-aware scoring before changing prompt/model behavior.
-

@@ -140,6 +140,19 @@ python3 scripts/run_gemma4_quality_seed.py validate \
   --seed tests/fixtures/gemma4_routine_quality_eval_seed_v2.jsonl
 ```
 
+Create a bounded v4 batch plan:
+
+```bash
+python3 scripts/plan_gemma4_quality_batches.py \
+  --seed tests/fixtures/gemma4_routine_quality_eval_seed_v3.jsonl \
+  --run-prefix gemma4-v4-batched-YYYY-MM-DD \
+  --max-elapsed-ms 120000 \
+  --scenario-timeout-sec 240 \
+  --resume
+```
+
+Use the generated `gemma4-quality-batch-plan.md` as the execution checklist. Run one batch at a time, then score that same batch with `--scenario-id` and `--max-elapsed-ms`. Do not use a full 18-scenario live run as the default local Gemma4 gate; it is too slow and makes failures harder to isolate.
+
 Create a run plan:
 
 ```bash

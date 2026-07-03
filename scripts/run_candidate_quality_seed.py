@@ -43,6 +43,7 @@ OUTPUT_ONLY_PREFERRED_PATTERNS = {
     "empty_or_low_risk_candidate_reason",
     "clear_warning",
 }
+DEFAULT_SHORT_TIME_MIN = 30
 
 
 def utc_run_id() -> str:
@@ -142,6 +143,7 @@ def _has_primary(candidates: list[dict[str, Any]], primary: str) -> bool:
 def derive_candidate_quality_tags(row: dict[str, Any], candidates: list[dict[str, Any]]) -> list[str]:
     tags: set[str] = set()
     scenario_id = str(row.get("scenarioId") or "")
+    time_available_min = int(row.get("input", {}).get("timeAvailableMin") or 0)
     text = _candidate_text_blob(candidates)
     ids = " ".join(str(candidate.get("id") or "").lower() for candidate in candidates)
 
@@ -194,6 +196,8 @@ def derive_candidate_quality_tags(row: dict[str, Any], candidates: list[dict[str
     elif scenario_id == "short-time-push-001":
         if candidates:
             tags.add("main_compound_then_accessory")
+        if time_available_min and time_available_min <= DEFAULT_SHORT_TIME_MIN and candidates:
+            tags.add("short_time_candidate_pool")
 
     elif scenario_id == "beginner-lower-skill-001":
         if _has_equipment(candidates, "MACHINE") or _contains_any(text, ["stable", "안정", "bodyweight"]):
@@ -367,7 +371,8 @@ def analyze_seed_row(
 ) -> dict[str, Any]:
     req, db_target_muscles, ranked, hard_stop = _scenario_candidates(row=row, db=db, top_n=top_n)
     preferred_patterns = [str(item) for item in row.get("preferredPatterns", [])]
-    candidate_level_patterns = [
+    explicit_candidate_patterns = [str(item) for item in row.get("candidatePreferredPatterns", [])]
+    candidate_level_patterns = explicit_candidate_patterns or [
         pattern for pattern in preferred_patterns if pattern not in OUTPUT_ONLY_PREFERRED_PATTERNS
     ]
     candidate_tags = derive_candidate_quality_tags(row, ranked)
