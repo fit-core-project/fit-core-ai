@@ -14,6 +14,7 @@ Key improvements:
 2. Added `scripts/plan_gemma4_quality_batches.py` to split the 18-scenario v3 seed into bounded live/score batches.
 3. Confirmed latency-aware scoring works with `--max-elapsed-ms`.
 4. Re-ran candidate quality after the short-time push update.
+5. Ran and scored all five live batches; the combined 18-scenario suite passed.
 
 ## Why This Matters
 
@@ -191,6 +192,59 @@ Report:
 
 - `tests/evaluation/.artifacts/gemma4-quality-seed-v4-score/gemma4-v4-batched-2026-07-03-safety-core-score/gemma4-quality-seed-report.md`
 
+### Full Batched Live Suite
+
+The five generated live batches were combined and scored as one 18-scenario suite.
+
+```bash
+python3 scripts/combine_gemma4_quality_results.py \
+  --seed tests/fixtures/gemma4_routine_quality_eval_seed_v3.jsonl \
+  --output-dir tests/evaluation/.artifacts/gemma4-quality-seed-live-v4-combined \
+  --run-id gemma4-v4-batched-2026-07-03-combined \
+  --results tests/evaluation/.artifacts/gemma4-quality-seed-live-v4/gemma4-v4-batched-2026-07-03-safety-core/gemma4-quality-seed-results-filled.json \
+  --results tests/evaluation/.artifacts/gemma4-quality-seed-live-v4/gemma4-v4-batched-2026-07-03-time-equipment/gemma4-quality-seed-results-filled.json \
+  --results tests/evaluation/.artifacts/gemma4-quality-seed-live-v4/gemma4-v4-batched-2026-07-03-beginner-joint/gemma4-quality-seed-results-filled.json \
+  --results tests/evaluation/.artifacts/gemma4-quality-seed-live-v4/gemma4-v4-batched-2026-07-03-medical-profile/gemma4-quality-seed-results-filled.json \
+  --results tests/evaluation/.artifacts/gemma4-quality-seed-live-v4/gemma4-v4-batched-2026-07-03-advanced-effect/gemma4-quality-seed-results-filled.json
+```
+
+```bash
+python3 scripts/run_gemma4_quality_seed.py score-file \
+  --seed tests/fixtures/gemma4_routine_quality_eval_seed_v3.jsonl \
+  --results tests/evaluation/.artifacts/gemma4-quality-seed-live-v4-combined/gemma4-v4-batched-2026-07-03-combined/gemma4-quality-seed-results-filled.json \
+  --output-dir tests/evaluation/.artifacts/gemma4-quality-seed-v4-score \
+  --run-id gemma4-v4-batched-2026-07-03-combined-score \
+  --max-elapsed-ms 120000
+```
+
+Result:
+
+- scenario count: `18`
+- scored: `18 / 18`
+- passed: `18 / 18`
+- failed: `0`
+- hard safety passed: `18 / 18`
+- preferred quality passed: `18 / 18`
+- latency passed: `18 / 18`
+- fallback passed: `18 / 18`
+- max latency: `118010 ms`
+- min latency: `27 ms`
+- recommendation: `pass`
+
+Slowest scenarios:
+
+| Scenario | Latency |
+|---|---:|
+| `post-surgery-caution-001` | `118010 ms` |
+| `lower-back-legs-001` | `112669 ms` |
+| `profile-injury-plus-doms-001` | `109973 ms` |
+| `advanced-high-readiness-effect-safe-001` | `100713 ms` |
+| `beginner-lower-skill-001` | `97167 ms` |
+
+Report:
+
+- `tests/evaluation/.artifacts/gemma4-quality-seed-v4-score/gemma4-v4-batched-2026-07-03-combined-score/gemma4-quality-seed-report.md`
+
 ## Test Evidence
 
 ```bash
@@ -234,15 +288,25 @@ The first bounded live batch passed hard safety, preferred quality, fallback, co
 
 Category: `live_batch_pass`
 
+### F5. Full v4 seed passes in bounded live mode
+
+All 18 scenarios passed after being executed as bounded batches and rescored as one combined suite. This provides a stable baseline before changing model, prompt, DB rules, or scoring logic.
+
+Category: `full_seed_pass`
+
 ## Next Actions
 
-1. Run `time-equipment` batch next because it includes `short-time-push-001`.
-2. Then run `beginner-joint`, `medical-profile`, and `advanced-effect` batches.
-3. Decide latency policy after at least two batches:
+1. Treat this result as the v4 baseline before making prompt/model/rule changes.
+2. Decide latency policy:
    - strict model gate
    - local-environment warning
    - tuned-model comparison metric
-4. Only after batch score gaps are clear, change prompt/rules/model.
+3. Add a second-pass qualitative review for scenario outputs that passed numerically but still have missing preferred patterns.
+4. Start the next improvement loop only after choosing whether to optimize:
+   - latency
+   - rationale quality
+   - more exact exercise substitutions
+   - stricter medical/profile handling
 
 ## Developer-Copy Summary
 
@@ -253,4 +317,5 @@ Routine AI v4 harness improved.
 - Candidate quality improved from `16 support + 1 no-candidate + 1 hard-stop` to `17 support + 1 hard-stop`.
 - Latency gate confirmed: one scenario fails at 196s when `--max-elapsed-ms 120000` is used.
 - First bounded live batch `safety-core` passed 3/3, including hard safety, preferred quality, fallback, contract, and latency gates.
+- Full bounded live suite passed 18/18 with hard safety, preferred quality, fallback, contract, and 120s latency gates.
 - No FE/BE contract change is required from this harness-only update.
