@@ -317,6 +317,7 @@ high-risk answer는 LLM 단독 생성 금지.
 
 ## 다음 작업 순서
 
+0. source map 기준 파일 확인: `docs/research/supplement_source_map_v1_2026-07-03.json`
 1. `supplement_canonical_entities_v1.json` 작성
 2. 기존 3개 JSON에 `canonical`, `displayNameKo`, `coverageStatus` 추가
 3. parser alias registry를 canonical JSON 기준으로 생성하거나 일치 test 추가
@@ -331,4 +332,3 @@ high-risk answer는 LLM 단독 생성 금지.
 처음부터 완전히 새로 만드는 것은 비용이 크고, 이미 만든 safety/eval guard를 버릴 이유는 없다.
 
 다만 "현재 구조에 프롬프트만 더 붙이는 것"은 비추천이다. 지금 필요한 것은 보충제 지식 시스템의 뼈대 재정렬이다.
-
