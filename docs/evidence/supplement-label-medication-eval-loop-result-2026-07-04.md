@@ -60,7 +60,7 @@ python3 -m pytest -q -s --capture=no \
   tests/test_supplement_kb_schema.py
 ```
 
-Result: `75 passed`
+Result after dose-context split: `76 passed`
 
 ```bash
 python3 -m pytest -q -s --capture=no \
@@ -123,6 +123,64 @@ Artifacts:
 - `tests/evaluation/.artifacts/supplement-live/supplement-live-label-med-v1-20260704/supplement_live_eval_results.json`
 - `tests/evaluation/.artifacts/supplement-live/supplement-live-label-med-v1-20260704/supplement_live_eval_summary.md`
 
+## Follow-up: Dose Context Split
+
+Decision: a numeric product-label dose such as `400mg`, `5000IU`, `한 스쿱`, or `100억 CFU` is not automatically the same as `high dose`.
+
+The contract now separates:
+
+- `high dose`: explicit high-dose wording such as `고용량`, `고함량`, or `high dose`.
+- `dose specified`: numeric dose, serving amount, label amount, or product-dose context.
+
+Why: product labels often include normal serving amounts. Treating every numeric dose as `high dose` made the model overstate risk classification. The safer and clearer behavior is to mark the query as dose-sensitive, require label/daily-total/medication context, and reserve `high dose` for explicit high-dose wording or future clinician/pharmacist thresholds.
+
+Evaluation tightening: `high dose` expected-entity matching no longer accepts generic `함량` or `총량` wording. Those words now belong to `dose specified` only, so high-dose cases must be supported by explicit `고용량`, `고함량`, or `high dose` wording.
+
+Follow-up validation:
+
+```bash
+python3 -m json.tool data/documents/supplement_canonical_entities.json >/dev/null
+python3 -m json.tool tests/fixtures/supplement_label_medication_eval_cases.json >/dev/null
+```
+
+Result: pass
+
+```bash
+python3 -m pytest -q -s --capture=no \
+  tests/test_supplement_query_understanding.py \
+  tests/test_supplement_response_composer.py \
+  tests/test_supplement_kb_schema.py
+```
+
+Result: `76 passed`
+
+```bash
+python3 scripts/eval_supplement_live.py \
+  --timeout-sec 8 \
+  --run-id supplement-live-57case-dose-specified-strict-v1-20260704
+```
+
+Result: `57/57 pass`
+
+Artifacts:
+
+- `tests/evaluation/.artifacts/supplement-live/supplement-live-57case-dose-specified-strict-v1-20260704/supplement_live_eval_results.json`
+- `tests/evaluation/.artifacts/supplement-live/supplement-live-57case-dose-specified-strict-v1-20260704/supplement_live_eval_summary.md`
+
+```bash
+python3 scripts/eval_supplement_live.py \
+  --timeout-sec 8 \
+  --cases tests/fixtures/supplement_label_medication_eval_cases.json \
+  --run-id supplement-live-label-med-dose-specified-strict-v1-20260704
+```
+
+Result: `21/21 pass`
+
+Artifacts:
+
+- `tests/evaluation/.artifacts/supplement-live/supplement-live-label-med-dose-specified-strict-v1-20260704/supplement_live_eval_results.json`
+- `tests/evaluation/.artifacts/supplement-live/supplement-live-label-med-dose-specified-strict-v1-20260704/supplement_live_eval_summary.md`
+
 ## Notes
 
 - Default local Gemma timeout (`45s`) makes full 57-case live evaluation slow. For bounded regression loops, use the documented evaluation mode above.
@@ -132,5 +190,4 @@ Artifacts:
 ## Next Actions
 
 1. Add a pharmacist-review checklist scenario pack if real pharmacist feedback is available.
-2. Decide whether numeric dose should stay mapped to `high dose` internally or become a separate `dose specified` risk context in a future contract version.
-3. If production uses Chroma retrieval, run one dedicated Chroma rebuild and semantic retrieval drift check after the supplement corpus stabilizes.
+2. If production uses Chroma retrieval, run one dedicated Chroma rebuild and semantic retrieval drift check after the supplement corpus stabilizes.

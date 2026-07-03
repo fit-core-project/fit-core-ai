@@ -130,7 +130,8 @@ _FALLBACK_ALIAS_REGISTRY: tuple[AliasEntry, ...] = (
     AliasEntry(EntityType.CONDITION, "kidney disease", ("신장 기능 저하", "renal impairment")),
     AliasEntry(EntityType.RISK_CONTEXT, "pregnancy", ("임신", "임산부", "pregnancy")),
     AliasEntry(EntityType.RISK_CONTEXT, "breastfeeding", ("수유", "breastfeeding")),
-    AliasEntry(EntityType.RISK_CONTEXT, "high dose", ("고용량", "high dose")),
+    AliasEntry(EntityType.RISK_CONTEXT, "high dose", ("고용량", "고함량", "high dose")),
+    AliasEntry(EntityType.RISK_CONTEXT, "dose specified", ("dose specified", "numeric dose", "제품 함량", "성분표", "함량", "복용량", "용량")),
     AliasEntry(EntityType.RISK_CONTEXT, "long-term use", ("장기복용", "장기 복용", "long-term use")),
     AliasEntry(EntityType.RISK_CONTEXT, "surgery", ("수술", "surgery")),
     AliasEntry(EntityType.RISK_CONTEXT, "alcohol use", ("음주", "술", "알코올", "alcohol use")),
@@ -244,14 +245,14 @@ def _extract_entities(query: str) -> list[ParsedEntity]:
         found.append(ParsedEntity(type=entry.entity_type, canonical=entry.canonical, text=alias))
         seen.add(key)
 
-    if _has_numeric_dose_or_serving_context(query) and (EntityType.RISK_CONTEXT, "high dose") not in seen:
-        found.append(ParsedEntity(type=EntityType.RISK_CONTEXT, canonical="high dose", text="numeric dose"))
+    if _has_numeric_dose_or_serving_context(query) and (EntityType.RISK_CONTEXT, "dose specified") not in seen:
+        found.append(ParsedEntity(type=EntityType.RISK_CONTEXT, canonical="dose specified", text="numeric dose"))
 
     return found
 
 
 _NUMERIC_DOSE_PATTERN = re.compile(
-    r"\d+(?:[.,]\d+)?\s*(?:mg|mcg|μg|ug|iu|g|그램|미리그램|마이크로그램|알|정|캡슐|스푼)",
+    r"\d+(?:[.,]\d+)?\s*(?:mg|mcg|μg|ug|iu|g|cfu|그램|미리그램|마이크로그램|억\s*cfu|알|정|캡슐|스푼|스쿱)",
     re.IGNORECASE,
 )
 
@@ -261,7 +262,7 @@ def _has_numeric_dose_or_serving_context(query: str) -> bool:
         return False
     if _NUMERIC_DOSE_PATTERN.search(query):
         return True
-    return any(needle in query for needle in ("하루 몇", "하루 2", "하루 두", "하루 세", "몇 알", "몇 정", "몇 캡슐", "고함량"))
+    return any(needle in query for needle in ("하루 몇", "하루 2", "하루 두", "하루 세", "몇 알", "몇 정", "몇 캡슐", "한 스쿱", "몇 스쿱"))
 
 
 def _alias_matches(haystack: str, needle: str) -> bool:
@@ -282,7 +283,10 @@ def _infer_intents(query: str, entities: list[ParsedEntity]) -> list[IntentType]
     canonical_set = {entity.canonical for entity in entities}
 
     if "acetaminophen" in canonical_set and (
-        "liver disease" in canonical_set or "alcohol use" in canonical_set or "high dose" in canonical_set
+        "liver disease" in canonical_set
+        or "alcohol use" in canonical_set
+        or "high dose" in canonical_set
+        or "dose specified" in canonical_set
     ):
         intents.append(IntentType.MEDICATION_SAFETY)
 
@@ -313,7 +317,7 @@ def _infer_intents(query: str, entities: list[ParsedEntity]) -> list[IntentType]
     if supplement_entities and condition_entities:
         intents.append(IntentType.CONDITION_SAFETY)
 
-    if supplement_entities and any(entity.canonical in {"pregnancy", "high dose", "surgery", "alcohol use", "long-term use", "immunocompromised"} for entity in risk_entities):
+    if supplement_entities and any(entity.canonical in {"pregnancy", "high dose", "dose specified", "surgery", "alcohol use", "long-term use", "immunocompromised"} for entity in risk_entities):
         intents.append(IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY)
 
     return _dedupe_intents(intents) or [IntentType.UNKNOWN]

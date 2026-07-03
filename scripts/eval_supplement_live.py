@@ -88,7 +88,8 @@ _EXPECTED_ENTITY_EQUIVALENTS = {
     "probiotics": ["probiotics", "probiotic", "유산균", "프로바이오틱스"],
     "thyroid medication": ["thyroid medication", "levothyroxine", "갑상선약"],
     "warfarin": ["warfarin", "와파린", "anticoagulant", "항응고제"],
-    "high dose": ["high dose", "고용량", "고함량", "함량", "총량"],
+    "high dose": ["high dose", "고용량", "고함량"],
+    "dose specified": ["dose specified", "numeric dose", "용량", "복용량", "함량", "성분표", "총량", "라벨"],
     "pregnancy": ["pregnancy", "임신", "임산부", "임신 준비"],
     "surgery": ["surgery", "수술", "시술"],
 }

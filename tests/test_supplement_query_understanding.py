@@ -172,7 +172,8 @@ def test_parse_blood_pressure_medication_class_aliases():
 
     assert (EntityType.SUPPLEMENT_INGREDIENT, "magnesium") in _entity_types(parsed)
     assert (EntityType.DRUG_OR_DRUG_CLASS, "blood pressure medication") in _entity_types(parsed)
-    assert (EntityType.RISK_CONTEXT, "high dose") in _entity_types(parsed)
+    assert (EntityType.RISK_CONTEXT, "dose specified") in _entity_types(parsed)
+    assert (EntityType.RISK_CONTEXT, "high dose") not in _entity_types(parsed)
     assert IntentType.DRUG_INTERACTION in parsed.intents
 
 
@@ -184,8 +185,17 @@ def test_parse_diabetes_medication_class_aliases():
     assert IntentType.DRUG_INTERACTION in parsed.intents
 
 
-def test_parse_numeric_dose_as_high_dose_safety_context():
+def test_parse_numeric_dose_as_dose_specified_safety_context():
     parsed = parse_supplement_query("비타민D 5000IU 매일 먹어도 돼?")
+
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "vitamin d") in _entity_types(parsed)
+    assert (EntityType.RISK_CONTEXT, "dose specified") in _entity_types(parsed)
+    assert (EntityType.RISK_CONTEXT, "high dose") not in _entity_types(parsed)
+    assert IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY in parsed.intents
+
+
+def test_parse_explicit_high_dose_as_high_dose_safety_context():
+    parsed = parse_supplement_query("비타민D 고함량 제품 추가해도 돼?")
 
     assert (EntityType.SUPPLEMENT_INGREDIENT, "vitamin d") in _entity_types(parsed)
     assert (EntityType.RISK_CONTEXT, "high dose") in _entity_types(parsed)

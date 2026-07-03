@@ -639,7 +639,24 @@
       "entityType": "risk_context",
       "aliases": [
         "고용량",
+        "고함량",
         "high dose"
+      ],
+      "coverageStatus": "partial",
+      "sourceRefs": []
+    },
+    {
+      "canonical": "dose specified",
+      "displayNameKo": "용량 언급",
+      "entityType": "risk_context",
+      "aliases": [
+        "dose specified",
+        "numeric dose",
+        "제품 함량",
+        "성분표",
+        "함량",
+        "복용량",
+        "용량"
       ],
       "coverageStatus": "partial",
       "sourceRefs": []
