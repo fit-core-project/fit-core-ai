@@ -28,6 +28,7 @@ _RISK_INTENTS = {
 _UNUSABLE_ANSWERS = {"", "{}", "[]", "null", "none"}
 _WEAK_ANSWER_NEEDLES = (
     "정보가 부족",
+    "자료가 부족",
     "자료 없음",
     "답변할 수 없습니다",
     "WEB_SEARCH_REQUIRED",
@@ -107,14 +108,17 @@ def compose_supplement_response(
     caution_parts.extend(_caution_parts_from_docs(selected_docs, parsed_query, answer))
 
     used_kb_fallback = False
+    preferred_direct_answer = (
+        _direct_answer_from_query_and_docs(parsed_query, selected_docs)
+        if _should_prefer_deterministic_answer(parsed_query, selected_docs)
+        else ""
+    )
     if _is_weak_answer(answer):
-        answer = _fallback_answer_from_docs(selected_docs, parsed_query)
+        answer = preferred_direct_answer or _fallback_answer_from_docs(selected_docs, parsed_query)
         used_kb_fallback = True
-    elif _should_prefer_deterministic_answer(parsed_query, selected_docs) and _is_low_specificity_answer(answer):
-        deterministic_answer = _direct_answer_from_query_and_docs(parsed_query, selected_docs)
-        if deterministic_answer:
-            answer = deterministic_answer
-            used_kb_fallback = True
+    elif preferred_direct_answer and _should_replace_with_direct_answer(answer, parsed_query):
+        answer = preferred_direct_answer
+        used_kb_fallback = True
 
     risk_query = bool(set(parsed_query.intents) & _RISK_INTENTS)
     if risk_query:
@@ -140,6 +144,45 @@ def compose_supplement_response(
         caution=caution or None,
         used_kb_fallback=used_kb_fallback,
     )
+
+
+def _should_replace_with_direct_answer(answer: str, parsed_query: ParsedSupplementQuery) -> bool:
+    if _is_low_specificity_answer(answer):
+        return True
+    if _answer_misses_query_entities(answer, parsed_query):
+        return True
+    return False
+
+
+def _answer_misses_query_entities(answer: str, parsed_query: ParsedSupplementQuery) -> bool:
+    if not parsed_query.entities:
+        return False
+    normalized_answer = _normalize_match_text(answer)
+    missing: list[str] = []
+    for entity in parsed_query.entities:
+        candidates = {
+            entity.canonical,
+            entity.text,
+            _entity_label(entity.canonical),
+        }
+        if entity_coverage_status(entity.canonical) == "unsupported":
+            candidates.add("근거 DB")
+            candidates.add("성분표")
+        if not any(_normalize_match_text(candidate) in normalized_answer for candidate in candidates if candidate):
+            missing.append(entity.canonical)
+    if not missing:
+        return False
+
+    intents = set(parsed_query.intents)
+    if any(entity_coverage_status(entity.canonical) == "unsupported" for entity in parsed_query.entities):
+        return True
+    if intents & {IntentType.DRUG_INTERACTION, IntentType.CONDITION_SAFETY, IntentType.SUPPLEMENT_INTERACTION}:
+        return True
+    return False
+
+
+def _normalize_match_text(value: str | None) -> str:
+    return re.sub(r"[-_\\s]+", "", str(value or "").lower())
 
 
 def _normalize_answer(value: str | dict | None) -> tuple[str, str | None]:
@@ -523,6 +566,24 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
     doc_ids = _doc_ids(docs)
     intents = set(parsed_query.intents)
     canonicals = {entity.canonical for entity in entities}
+    all_canonicals = {entity.canonical for entity in parsed_query.entities}
+
+    unsupported_entities = [
+        entity for entity in parsed_query.entities if entity_coverage_status(entity.canonical) == "unsupported"
+    ]
+    if unsupported_entities:
+        labels = ", ".join(_entity_label(entity.canonical) for entity in unsupported_entities)
+        known_entities = [entity for entity in entities if entity_coverage_status(entity.canonical) != "unsupported"]
+        known_text = ""
+        if known_entities:
+            known_labels = ", ".join(_entity_label(entity.canonical) for entity in known_entities)
+            checks = _component_checks(known_entities, doc_ids)
+            known_text = f" 확인된 다른 성분은 {known_labels}입니다. {' '.join(checks)}"
+        return (
+            f"{labels}은 현재 Fit-Core 근거 DB에서 안전성/상호작용 근거가 충분히 잠기지 않은 성분입니다. "
+            "안전하다고 단정하지 않고, 제품명, 성분표, 함량, 복용량, 복용 중인 약과 질환 정보를 확인한 뒤 "
+            f"의사 또는 약사에게 상담하는 쪽으로 안내해야 합니다.{known_text}"
+        )
 
     if len(entities) == 1 and IntentType.TIMING in intents:
         timing_answer = _single_ingredient_timing_answer(entities[0].canonical, docs)
@@ -548,6 +609,48 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
             "일반적인 보충 목적이라도 고용량으로 늘리기 전에는 제품 함량과 복용 중인 약을 함께 점검하세요."
         )
 
+    if "omega3" in canonicals and "aspirin" in all_canonicals:
+        return (
+            "아스피린은 항혈소판제 맥락에 해당하므로 오메가3와 함께 볼 때 출혈 위험, 고용량 여부, 수술·시술 예정 여부를 확인해야 합니다. "
+            "복용 시간을 띄우는 것만으로 안전하다고 단정하지 말고, 오메가3 제품 함량과 아스피린 복용 목적을 의사 또는 약사에게 확인하세요."
+        )
+
+    if {"omega3", "vitamin e"} <= canonicals:
+        return (
+            "오메가3와 비타민E는 일반 용량인지, 고용량인지, 항응고제·항혈소판제 복용이나 수술 예정이 있는지에 따라 판단이 달라집니다. "
+            "둘을 함께 먹어도 된다고 단정하지 말고 제품 함량과 출혈 위험 맥락을 먼저 확인하세요."
+        )
+
+    if {"vitamin c", "iron"} <= canonicals:
+        return (
+            "비타민C는 철분 흡수에 도움이 될 수 있는 조합입니다. 다만 철분은 속 불편, 변비, 고용량 복용 문제가 있을 수 있고 "
+            "커피·칼슘·마그네슘·아연 같은 다른 성분과는 간격 확인이 필요하므로, 치료 목적 철분이면 제품 함량과 복용법을 의사 또는 약사에게 확인하세요."
+        )
+
+    if "magnesium" in canonicals and "blood pressure medication" in all_canonicals:
+        return (
+            "혈압약을 복용 중이면 마그네슘을 안전하다고 단정하기 어렵습니다. 혈압약 종류, 용량, 혈압 조절 상태, "
+            "마그네슘 제품 함량에 따라 판단이 달라지므로 의사 또는 약사에게 확인하세요."
+        )
+
+    if "vitamin d" in canonicals and "diabetes medication" in all_canonicals:
+        return (
+            "당뇨약을 복용 중이면 비타민D를 임의로 고용량 추가하지 말고 약 이름, 혈당 조절 상태, 비타민D 용량과 "
+            "검사 수치를 함께 확인해야 합니다. 복용 간격보다 용량과 개인 상태 확인이 우선입니다."
+        )
+
+    if "vitamin a" in canonicals and "liver disease" in all_canonicals:
+        return (
+            "간질환이나 간수치 이상이 있으면 비타민A, 특히 고함량 preformed vitamin A 제품은 임의로 복용하지 않는 편이 안전합니다. "
+            "종합비타민, 눈 건강 제품, 간유 제품 등과 비타민A가 중복될 수 있으니 제품 라벨과 총량을 의료진 또는 약사와 확인하세요."
+        )
+
+    if "zinc" in canonicals and "digestive symptom" in all_canonicals:
+        return (
+            "위가 약하거나 속이 불편한 편이라면 아연은 공복 복용 시 메스꺼움이나 위장 불편이 생길 수 있습니다. "
+            "식후 복용, 제품 함량, 제형을 확인하고 증상이 지속되면 의사 또는 약사에게 상담하세요."
+        )
+
     if IntentType.SYMPTOM_AFTER_INTAKE in intents:
         return (
             "먹고 속이 안 좋다면 계속 복용해도 된다고 단정하기 어렵습니다. 일단 제품명, 성분, 함량, 복용 시점과 증상 지속 시간을 확인해야 하며, "
@@ -561,6 +664,9 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
         )
 
     if len(entities) >= 2:
+        goal_answer = _goal_based_direct_answer(canonicals)
+        if IntentType.GOAL_BASED_RECOMMENDATION in intents and goal_answer:
+            return goal_answer
         checks = _component_checks(entities, doc_ids)
         if checks:
             labels = ", ".join(_entity_label(entity.canonical) for entity in entities)
@@ -589,11 +695,36 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
         )
 
     if IntentType.GOAL_BASED_RECOMMENDATION in intents:
+        goal_answer = _goal_based_direct_answer(canonicals)
+        if goal_answer:
+            return goal_answer
         return (
             "목적 기반 보충제 추천은 현재 확인된 corpus 범위 안에서만 조심스럽게 볼 수 있습니다. 운동 전인지 운동 후인지, 수면 목적이면 카페인 민감도와 "
             "복용 중인 약, 질환, 현재 먹는 제품을 알려주면 안전 범위 안에서 후보를 좁혀볼 수 있습니다."
         )
 
+    return ""
+
+
+def _goal_based_direct_answer(canonicals: set[str]) -> str:
+    if {"magnesium", "theanine", "melatonin"} <= canonicals:
+        return (
+            "수면 목적이라면 마그네슘, 테아닌, 멜라토닌은 성격이 다릅니다. 마그네슘은 결핍이나 근육 긴장 맥락을 확인하고, "
+            "테아닌은 긴장 완화 쪽으로 조심스럽게 볼 수 있으며, 멜라토닌은 수면 리듬 문제에서 단기간 사용 맥락으로 보는 편이 안전합니다. "
+            "불면이 지속되거나 수면제·진정제·혈압약·당뇨약을 복용 중이면 보충제로 해결하려고 하기보다 의료진 또는 약사에게 확인하세요."
+        )
+    if {"iron", "vitamin b", "caffeine"} <= canonicals:
+        return (
+            "피로와 집중 저하는 원인 확인이 먼저입니다. 철분은 결핍이나 빈혈 확인 없이 고용량으로 시작하지 않는 편이 좋고, "
+            "비타민B군은 결핍 가능성이나 식사 상태를 함께 봐야 하며, 카페인은 단기 각성에는 도움이 될 수 있지만 불면·심박·혈압 문제를 악화시킬 수 있습니다. "
+            "증상이 지속되면 검사와 생활요인을 먼저 확인하세요."
+        )
+    if {"protein", "creatine", "eaa", "glutamine"} <= canonicals:
+        return (
+            "근육량 증가 목적이라면 우선순위는 보통 식사 단백질과 프로틴으로 하루 총 단백질을 맞추고, 크레아틴은 꾸준히 복용 가능한지와 신장 관련 위험을 확인하는 쪽입니다. "
+            "EAA는 식사 단백질이 부족한 상황에서 조건부 후보이고, 글루타민은 운동 성과 향상을 필수로 단정하기 어렵기 때문에 우선순위가 낮습니다. "
+            "신장질환이 있으면 단백질·아미노산 보충 총량을 의료진과 확인하세요."
+        )
     return ""
 
 
@@ -629,6 +760,13 @@ def _clean_doc_list_text(text: str) -> str:
 def _should_prefer_deterministic_answer(parsed_query: ParsedSupplementQuery, docs: list[Any]) -> bool:
     entities = _supplement_entities(parsed_query)
     doc_ids = _doc_ids(docs)
+    intents = set(parsed_query.intents)
+    if any(entity_coverage_status(entity.canonical) == "unsupported" for entity in parsed_query.entities):
+        return True
+    if intents & {IntentType.GOAL_BASED_RECOMMENDATION, IntentType.DRUG_INTERACTION, IntentType.CONDITION_SAFETY}:
+        direct = _direct_answer_from_query_and_docs(parsed_query, docs)
+        if direct:
+            return True
     if len(entities) >= 2:
         return True
     return bool(
@@ -659,6 +797,30 @@ def _component_checks(entities: list[Any], doc_ids: set[str]) -> list[str]:
         checks.append("프로틴은 식사 단백질까지 합친 하루 총량과 신장질환 여부를 확인하세요.")
     if "creatine" in canonicals:
         checks.append("크레아틴은 신장 기능 이상 여부, 충분한 수분 섭취, 제품 권장량을 확인하세요.")
+    if "vitamin c" in canonicals:
+        checks.append("비타민C는 철분 흡수 보조 맥락이 있지만 고용량이나 위장 불편 여부를 확인하세요.")
+    if "vitamin e" in canonicals:
+        checks.append("비타민E는 고용량, 항응고제·항혈소판제, 수술 예정 여부를 확인하세요.")
+    if "vitamin a" in canonicals:
+        checks.append("비타민A는 임신 가능성, 간질환, 다른 제품과의 중복 함량을 확인하세요.")
+    if "vitamin b" in canonicals:
+        checks.append("비타민B군은 피로 원인과 고함량 B6 장기 복용 여부를 확인하세요.")
+    if "calcium" in canonicals:
+        checks.append("칼슘은 철분, 마그네슘, 아연, 일부 항생제·갑상선약과 간격 확인이 필요할 수 있습니다.")
+    if "theanine" in canonicals:
+        checks.append("테아닌은 수면장애 치료를 대체한다고 단정하지 말고 졸림이나 약물 병용 여부를 확인하세요.")
+    if "melatonin" in canonicals:
+        checks.append("멜라토닌은 수면 리듬 맥락의 단기 후보로 보고, 수면제·혈압약·당뇨약 병용 여부를 확인하세요.")
+    if "eaa" in canonicals:
+        checks.append("EAA는 식사 단백질이 부족한 경우의 조건부 후보이며 프로틴과 목적이 중복될 수 있습니다.")
+    if "glutamine" in canonicals:
+        checks.append("글루타민은 운동 성과 보충제로 필수라고 단정하기 어렵고 우선순위가 낮을 수 있습니다.")
+    if "berberine" in canonicals:
+        checks.append("베르베린은 당뇨약 등 처방약 복용과 위장 불편 여부를 확인하세요.")
+    if "quercetin" in canonicals:
+        checks.append("퀘르세틴은 근거 범위가 제한적이므로 제품 함량과 복용 중인 약을 확인하세요.")
+    if "nac" in canonicals:
+        checks.append("NAC는 제품 함량과 복용 목적, 처방약 병용 여부를 확인하세요.")
     return checks
 
 

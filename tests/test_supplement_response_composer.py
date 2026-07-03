@@ -715,3 +715,81 @@ def test_pregnancy_multivitamin_mentions_vitamin_a_high_dose_caution():
     assert "임산부" in result.answer
     assert "비타민A" in result.answer
     assert "고함량" in result.answer
+
+
+def test_unsupported_nmn_uses_direct_insufficient_evidence_answer():
+    result = compose_supplement_response(
+        question="NMN 먹어도 돼?",
+        parsed_query=parse_supplement_query("NMN 먹어도 돼?"),
+        generated_answer="유산균은 항생제와 동시에 먹으면 효과가 줄 수 있습니다.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "NMN" in result.answer
+    assert "근거 DB" in result.answer
+    assert "제품명" in result.answer
+    assert "성분표" in result.answer
+    assert "함량" in result.answer
+
+
+def test_omega3_aspirin_direct_answer_mentions_aspirin_and_bleeding():
+    result = compose_supplement_response(
+        question="아스피린 먹는데 오메가3 먹어도 돼?",
+        parsed_query=parse_supplement_query("아스피린 먹는데 오메가3 먹어도 돼?"),
+        generated_answer="개인 상태에 따라 달라질 수 있으므로 전문가와 상담하세요.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "아스피린" in result.answer
+    assert "오메가3" in result.answer
+    assert "출혈" in result.answer
+
+
+def test_sleep_goal_direct_answer_compares_three_options():
+    result = compose_supplement_response(
+        question="잠을 잘 못 자는데 마그네슘, 테아닌, 멜라토닌 중 뭐가 나아?",
+        parsed_query=parse_supplement_query("잠을 잘 못 자는데 마그네슘, 테아닌, 멜라토닌 중 뭐가 나아?"),
+        generated_answer="자료가 부족합니다.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "마그네슘" in result.answer
+    assert "테아닌" in result.answer
+    assert "멜라토닌" in result.answer
+    assert "수면제" in result.answer
+
+
+def test_liver_vitamin_a_direct_answer_mentions_liver_and_overlap():
+    result = compose_supplement_response(
+        question="간질환 있는데 비타민A 먹어도 돼?",
+        parsed_query=parse_supplement_query("간질환 있는데 비타민A 먹어도 돼?"),
+        generated_answer="개인 상태에 따라 달라질 수 있으므로 전문가와 상담하세요.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "간질환" in result.answer
+    assert "비타민A" in result.answer
+    assert "고함량" in result.answer
+
+
+def test_digestive_zinc_direct_answer_handles_weak_stomach_alias():
+    result = compose_supplement_response(
+        question="위가 약한데 아연 먹어도 돼?",
+        parsed_query=parse_supplement_query("위가 약한데 아연 먹어도 돼?"),
+        generated_answer="개인 상태에 따라 달라질 수 있으므로 전문가와 상담하세요.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "아연" in result.answer
+    assert "위장" in result.answer or "속" in result.answer
+    assert "식후" in result.answer

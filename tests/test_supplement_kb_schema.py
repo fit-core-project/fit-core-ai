@@ -251,6 +251,18 @@ def test_supplement_ingredient_profile_corpus_validates_against_schema():
         "ING_PROBIOTIC",
         "ING_ZINC",
         "ING_PROTEIN",
+        "ING_CALCIUM",
+        "ING_VITAMIN_C",
+        "ING_VITAMIN_E",
+        "ING_VITAMIN_A",
+        "ING_VITAMIN_B",
+        "ING_THEANINE",
+        "ING_MELATONIN",
+        "ING_EAA",
+        "ING_GLUTAMINE",
+        "ING_BERBERINE",
+        "ING_QUERCETIN",
+        "ING_NAC",
     ]
     assert {profile.type for profile in profiles} == {"ingredient_profile"}
     assert all(profile.aliases for profile in profiles)
@@ -280,6 +292,13 @@ def test_supplement_interaction_rule_corpus_validates_against_schema():
         "INT_ZINC_IRON_CALCIUM",
         "INT_MULTIVITAMIN_MINERAL_OVERLAP",
         "INT_SILYMARIN_MEDICATIONS",
+        "INT_VITAMIN_C_IRON",
+        "INT_OMEGA3_VITAMIN_E",
+        "INT_OMEGA3_ASPIRIN",
+        "INT_MAGNESIUM_BLOOD_PRESSURE_MEDICATION",
+        "INT_VITAMIN_D_DIABETES_MEDICATION",
+        "INT_BERBERINE_DIABETES_MEDICATION",
+        "INT_MELATONIN_BLOOD_PRESSURE_MEDICATION",
     ]
     assert {rule.type for rule in rules} == {"interaction_rule"}
     assert all(rule.entity_a.canonical for rule in rules)
@@ -310,6 +329,11 @@ def test_supplement_safety_rule_corpus_validates_against_schema():
         "SAFE_HIGH_DOSE_ZINC",
         "SAFE_LIVER_SILYMARIN",
         "SAFE_PREGNANCY_MULTIVITAMIN",
+        "SAFE_LIVER_VITAMIN_A",
+        "SAFE_HIGH_DOSE_VITAMIN_E",
+        "SAFE_DIGESTIVE_ZINC",
+        "SAFE_BERBERINE_DIGESTIVE_MEDICATION",
+        "SAFE_SLEEP_SUPPLEMENTS_MEDICATION",
     ]
     assert {rule.type for rule in rules} == {"safety_rule"}
     assert all(rule.trigger_conditions for rule in rules)

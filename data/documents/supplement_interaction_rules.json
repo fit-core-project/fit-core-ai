@@ -374,5 +374,213 @@
       "NCCIH_MILK_THISTLE",
       "MAYO_MILK_THISTLE"
     ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_VITAMIN_C_IRON",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "vitamin c",
+      "label": "비타민C"
+    },
+    "entity_b": {
+      "type": "supplement_ingredient",
+      "canonical": "iron",
+      "label": "철분"
+    },
+    "interaction_type": "absorption_interference",
+    "mechanism": "비타민C는 철분 흡수에 도움이 될 수 있지만, 철분 치료나 고함량 제품은 개인 상태와 위장 반응을 함께 확인해야 합니다.",
+    "recommendation": "비타민C와 철분을 함께 복용할 수 있는 맥락은 있으나, 철분 결핍 치료 중이거나 속 불편이 있으면 제품 함량과 복용법을 의사 또는 약사에게 확인하세요.",
+    "spacing_guidance": "흡수 보조 목적으로 같이 쓰기도 하지만, 커피·칼슘·마그네슘·아연 등 다른 간섭 요인은 별도로 간격을 확인하세요.",
+    "caution_level": "low",
+    "consultation_required_when": [
+      "빈혈 치료 중",
+      "임신 또는 수유 중",
+      "고용량 철분 복용 중",
+      "위장 증상이 있는 경우"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_VITAMIN_C_HP",
+      "USDA_WIC_IRON_VITAMIN_C",
+      "NIH_ODS_IRON_HP"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_OMEGA3_VITAMIN_E",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "omega3",
+      "label": "오메가3"
+    },
+    "entity_b": {
+      "type": "supplement_ingredient",
+      "canonical": "vitamin e",
+      "label": "비타민E"
+    },
+    "interaction_type": "bleeding_risk",
+    "mechanism": "오메가3와 고용량 비타민E는 모두 출혈 위험 맥락에서 주의가 필요할 수 있어, 항응고제·항혈소판제 복용이나 수술 예정 여부를 함께 확인해야 합니다.",
+    "recommendation": "일반 용량 여부와 제품 함량을 확인하고, 고용량 병용·출혈 병력·수술 예정·항응고제/항혈소판제 복용 중이면 의사 또는 약사에게 확인하세요.",
+    "spacing_guidance": "단순히 시간 간격만으로 해결된다고 단정하지 말고 총 함량과 위험 맥락을 확인하세요.",
+    "caution_level": "moderate",
+    "consultation_required_when": [
+      "항응고제 또는 항혈소판제 복용 중",
+      "아스피린 복용 중",
+      "수술 또는 시술 예정",
+      "고용량 제품 병용"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_OMEGA3_HP",
+      "NIH_ODS_VITAMIN_E_HP"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_OMEGA3_ASPIRIN",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "omega3",
+      "label": "오메가3"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "aspirin",
+      "label": "아스피린"
+    },
+    "interaction_type": "bleeding_risk",
+    "mechanism": "아스피린은 항혈소판제 맥락에 해당하므로 오메가3 복용 시 출혈 위험, 고용량 여부, 수술 예정 여부를 함께 확인해야 합니다.",
+    "recommendation": "아스피린을 복용 중이면 오메가3를 임의로 고용량 병용하지 말고 의사 또는 약사에게 제품 함량과 목적을 확인하세요.",
+    "spacing_guidance": "복용 시간을 띄우는 것만으로 위험이 사라진다고 단정하지 않습니다.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "아스피린 복용 중",
+      "출혈 병력",
+      "수술 또는 시술 예정",
+      "다른 항응고제 또는 항혈소판제 병용"
+    ],
+    "coverage_status": "partial",
+    "source_refs": [
+      "NIH_ODS_OMEGA3_HP"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_MAGNESIUM_BLOOD_PRESSURE_MEDICATION",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "magnesium",
+      "label": "마그네슘"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "blood pressure medication",
+      "label": "혈압약"
+    },
+    "interaction_type": "unknown_or_insufficient_evidence",
+    "mechanism": "혈압약은 계열과 용량에 따라 판단이 달라지므로 마그네슘 병용 안전성을 단정하기 어렵습니다.",
+    "recommendation": "혈압약을 복용 중이면 약 이름, 용량, 혈압 조절 상태, 마그네슘 제품 함량을 가지고 의사 또는 약사에게 확인하세요.",
+    "spacing_guidance": "단순 간격보다 약 종류와 혈압 상태 확인이 우선입니다.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "혈압약 복용 중",
+      "저혈압 증상",
+      "신장질환",
+      "복용 약이 여러 개인 경우"
+    ],
+    "coverage_status": "partial",
+    "source_refs": [
+      "NCCIH_HERB_DRUG_INTERACTIONS",
+      "NIH_ODS_MAGNESIUM_HP"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_VITAMIN_D_DIABETES_MEDICATION",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "vitamin d",
+      "label": "비타민D"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "diabetes medication",
+      "label": "당뇨약"
+    },
+    "interaction_type": "unknown_or_insufficient_evidence",
+    "mechanism": "당뇨약 병용 여부는 약 이름, 혈당 조절 상태, 비타민D 용량과 혈중 수치에 따라 달라질 수 있습니다.",
+    "recommendation": "당뇨약을 복용 중이면 비타민D를 임의로 고용량 추가하지 말고 혈당 조절 상태, 검사 수치, 제품 함량을 의료진 또는 약사에게 확인하세요.",
+    "spacing_guidance": "복용 간격보다 용량, 검사 수치, 당뇨약 종류 확인이 우선입니다.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "당뇨약 복용 중",
+      "고용량 비타민D 복용 고려",
+      "신장질환 또는 고칼슘혈증 위험",
+      "임신 또는 수유"
+    ],
+    "coverage_status": "partial",
+    "source_refs": [
+      "NCCIH_DIABETES_SUPPLEMENTS",
+      "NIH_ODS_VITAMIN_D_HP"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_BERBERINE_DIABETES_MEDICATION",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "berberine",
+      "label": "베르베린"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "diabetes medication",
+      "label": "당뇨약"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "베르베린은 혈당 관련 목적으로 사용되는 경우가 있어 당뇨약 복용 중에는 저혈당 등 개인 위험을 확인해야 합니다.",
+    "recommendation": "당뇨약 복용 중 베르베린을 임의로 시작하지 말고 의료진 또는 약사에게 제품 함량과 목적을 확인하세요.",
+    "spacing_guidance": "시간 간격만으로 판단하지 말고 혈당 기록, 약 종류, 용량을 함께 확인하세요.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "당뇨약 복용 중",
+      "저혈당 경험",
+      "임신 또는 수유",
+      "처방약 복용 중"
+    ],
+    "coverage_status": "partial",
+    "source_refs": [
+      "NCCIH_BERBERINE_WEIGHT_LOSS",
+      "NCCIH_DIABETES_SUPPLEMENTS"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_MELATONIN_BLOOD_PRESSURE_MEDICATION",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "melatonin",
+      "label": "멜라토닌"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "blood pressure medication",
+      "label": "혈압약"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "멜라토닌은 혈압약 등 일부 약물과 병용 시 개인 상태에 따라 주의가 필요할 수 있습니다.",
+    "recommendation": "혈압약을 복용 중이면 멜라토닌을 시작하기 전 약 이름, 용량, 혈압 상태를 의사 또는 약사에게 확인하세요.",
+    "spacing_guidance": "졸림, 어지러움, 혈압 변화 가능성을 고려해 단순 간격만으로 판단하지 않습니다.",
+    "caution_level": "moderate",
+    "consultation_required_when": [
+      "혈압약 복용 중",
+      "저혈압 또는 어지러움",
+      "수면제 또는 진정제 병용"
+    ],
+    "coverage_status": "partial",
+    "source_refs": [
+      "MAYO_MELATONIN"
+    ]
   }
 ]

@@ -103,6 +103,16 @@ def test_parse_unknown_when_no_known_entity_or_intent():
     assert parsed.intents == (IntentType.UNKNOWN,)
 
 
+def test_goal_comparison_phrases_are_goal_based_recommendation():
+    parsed = parse_supplement_query("잠을 잘 못 자는데 마그네슘, 테아닌, 멜라토닌 중 뭐가 나아?")
+
+    assert IntentType.GOAL_BASED_RECOMMENDATION in parsed.intents
+
+    parsed_focus = parse_supplement_query("피곤하고 집중이 안 되는데 철분, 비타민B, 카페인 중 뭘 봐야 해?")
+
+    assert IntentType.GOAL_BASED_RECOMMENDATION in parsed_focus.intents
+
+
 def test_parse_multivitamin_omega3_silymarin_combination():
     parsed = parse_supplement_query("종합비타민 오메가3 실리마린 같이 먹어도 돼?")
 

@@ -114,7 +114,7 @@ def test_high_risk_keeps_llm_answer_and_adds_deterministic_caution():
     assert "상담" in result.caution or "의료진" in result.caution or "의사" in result.caution or "약사" in result.caution
 
 
-def test_unknown_partial_known_keeps_llm_answer_but_enforces_label_request():
+def test_unknown_partial_known_prioritizes_unsupported_entity_and_keeps_known_check():
     result = compose_supplement_response(
         question="NMN이랑 마그네슘 같이 먹어도 돼?",
         parsed_query=parse_supplement_query("NMN이랑 마그네슘 같이 먹어도 돼?"),
@@ -123,7 +123,9 @@ def test_unknown_partial_known_keeps_llm_answer_but_enforces_label_request():
         selected_docs=[Doc("ING_MAGNESIUM", "ingredient_profile", "Name: magnesium", canonical="magnesium")],
     )
 
-    assert result.answer.startswith("마그네슘은")
+    assert result.used_kb_fallback is True
+    assert result.answer.startswith("NMN은")
+    assert "마그네슘" in result.answer
     assert "제품명" in result.answer
     assert "성분표" in result.answer
     assert "함량" in result.answer

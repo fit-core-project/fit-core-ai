@@ -449,7 +449,8 @@
       "entityType": "drug_or_drug_class",
       "aliases": [
         "아스피린",
-        "aspirin"
+        "aspirin",
+        "항혈소판제"
       ],
       "coverageStatus": "partial",
       "sourceRefs": [
@@ -488,7 +489,10 @@
       "entityType": "drug_or_drug_class",
       "aliases": [
         "혈압약",
-        "blood pressure medication"
+        "blood pressure medication",
+        "혈압 약",
+        "고혈압약",
+        "고혈압 약"
       ],
       "coverageStatus": "partial",
       "sourceRefs": [
@@ -502,7 +506,10 @@
       "entityType": "drug_or_drug_class",
       "aliases": [
         "당뇨약",
-        "diabetes medication"
+        "diabetes medication",
+        "당뇨 약",
+        "혈당약",
+        "혈당 약"
       ],
       "coverageStatus": "partial",
       "sourceRefs": [
@@ -686,7 +693,14 @@
         "메스꺼움",
         "설사",
         "복통",
-        "위장 불편"
+        "위장 불편",
+        "위가 약함",
+        "위가 약한",
+        "위가 약해",
+        "위장 약함",
+        "위장 약한",
+        "속이 약함",
+        "위가 안 좋음"
       ],
       "coverageStatus": "partial",
       "sourceRefs": [

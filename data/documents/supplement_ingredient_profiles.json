@@ -413,5 +413,497 @@
       "NKF_CKD_PROTEIN",
       "NIH_ODS_EXERCISE_PERFORMANCE_HP"
     ]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_CALCIUM",
+    "name": "칼슘",
+    "aliases": [
+      "칼슘",
+      "calcium",
+      "Ca"
+    ],
+    "category": "mineral",
+    "canonical": "calcium",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_CALCIUM_HP"
+    ],
+    "common_uses": [
+      "칼슘 보충",
+      "뼈 건강 관련 영양 보충"
+    ],
+    "timing": {
+      "general": "칼슘은 제품 지침에 따라 식사와 함께 나누어 복용하는 방식이 쓰일 수 있습니다.",
+      "with_food": "위장 불편이 있으면 식후 복용을 고려할 수 있습니다.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": [
+      "철분, 마그네슘, 아연, 일부 항생제, 갑상선약 등과는 흡수 간섭 가능성이 있어 간격 확인이 필요합니다."
+    ],
+    "cautions": [
+      "신장질환, 결석 병력, 고칼슘혈증, 고용량 비타민D 병용이 있으면 전문가 상담이 필요합니다.",
+      "다른 제품에 포함된 칼슘과 총량 중복을 확인하세요."
+    ],
+    "high_risk_groups": [
+      "kidney disease",
+      "history of kidney stones",
+      "high dose",
+      "thyroid medication",
+      "antibiotics"
+    ],
+    "related_interactions": [
+      "INT_IRON_CALCIUM",
+      "INT_CALCIUM_IRON"
+    ]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_VITAMIN_C",
+    "name": "비타민C",
+    "aliases": [
+      "비타민C",
+      "비타민 C",
+      "vitamin c",
+      "ascorbic acid"
+    ],
+    "category": "vitamin",
+    "canonical": "vitamin c",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_VITAMIN_C_HP",
+      "USDA_WIC_IRON_VITAMIN_C"
+    ],
+    "common_uses": [
+      "비타민C 보충",
+      "철분 흡수 보조 맥락"
+    ],
+    "timing": {
+      "general": "비타민C는 제품 지침에 따라 복용하며, 속이 불편하면 식후 복용을 고려할 수 있습니다.",
+      "with_food": "위장 불편이 있으면 식후 복용을 고려하세요.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": [
+      "철분과 함께 섭취하면 철분 흡수에 도움이 될 수 있지만, 치료 목적 철분 복용은 제품과 처방 지침을 우선 확인하세요."
+    ],
+    "cautions": [
+      "고용량 복용 시 위장 불편이 생길 수 있습니다.",
+      "신장결석 병력이나 신장질환이 있으면 고용량 복용 전 전문가 상담이 필요합니다."
+    ],
+    "high_risk_groups": [
+      "kidney disease",
+      "history of kidney stones",
+      "high dose"
+    ],
+    "related_interactions": [
+      "INT_VITAMIN_C_IRON"
+    ]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_VITAMIN_E",
+    "name": "비타민E",
+    "aliases": [
+      "비타민E",
+      "비타민 E",
+      "vitamin e"
+    ],
+    "category": "vitamin",
+    "canonical": "vitamin e",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_VITAMIN_E_HP"
+    ],
+    "common_uses": [
+      "비타민E 보충"
+    ],
+    "timing": {
+      "general": "비타민E는 지용성 비타민이므로 제품 지침에 따라 식사와 함께 복용하는 방식이 쓰일 수 있습니다.",
+      "with_food": "지방이 포함된 식사와 함께 복용할 수 있습니다.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": [
+      "항응고제, 항혈소판제, 오메가3 고용량, 수술 예정 여부가 있으면 출혈 관련 확인이 필요합니다."
+    ],
+    "cautions": [
+      "고용량 비타민E는 출혈 위험 맥락에서 주의가 필요할 수 있습니다.",
+      "항응고제나 항혈소판제 복용 중이면 전문가 상담이 필요합니다."
+    ],
+    "high_risk_groups": [
+      "anticoagulant use",
+      "antiplatelet use",
+      "surgery",
+      "high dose"
+    ],
+    "related_interactions": [
+      "INT_OMEGA3_VITAMIN_E"
+    ]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_VITAMIN_A",
+    "name": "비타민A",
+    "aliases": [
+      "비타민A",
+      "비타민 A",
+      "vitamin a",
+      "retinol"
+    ],
+    "category": "vitamin",
+    "canonical": "vitamin a",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_VITAMIN_A_HP",
+      "NIH_ODS_VITAMIN_A_CONSUMER"
+    ],
+    "common_uses": [
+      "비타민A 보충"
+    ],
+    "timing": {
+      "general": "비타민A는 지용성 비타민이므로 제품 지침과 총 섭취량을 함께 확인하세요.",
+      "with_food": "식사와 함께 복용할 수 있습니다.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": [
+      "종합비타민, 눈 건강 제품, 간유 제품 등과 비타민A가 중복될 수 있어 라벨 확인이 필요합니다."
+    ],
+    "cautions": [
+      "간질환이 있거나 간수치 이상이 있으면 고함량 비타민A 복용을 임의로 결정하지 마세요.",
+      "임신 중이거나 임신 가능성이 있으면 preformed vitamin A 고함량 제품은 반드시 전문가와 확인하세요."
+    ],
+    "high_risk_groups": [
+      "liver disease",
+      "pregnancy",
+      "high dose"
+    ],
+    "related_interactions": [
+      "SAFE_LIVER_VITAMIN_A",
+      "SAFE_PREGNANCY_MULTIVITAMIN"
+    ]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_VITAMIN_B",
+    "name": "비타민B군",
+    "aliases": [
+      "비타민B군",
+      "비타민B",
+      "비타민 B",
+      "vitamin b",
+      "vitamin b complex",
+      "b-complex"
+    ],
+    "category": "vitamin",
+    "canonical": "vitamin b",
+    "coverage_status": "partial",
+    "source_refs": [
+      "NIH_ODS_VITAMIN_B12_HP",
+      "NIH_ODS_VITAMIN_B6_HP"
+    ],
+    "common_uses": [
+      "비타민B군 보충",
+      "결핍 확인 시 피로 맥락 점검"
+    ],
+    "timing": {
+      "general": "비타민B군은 제품 지침에 따라 복용하며, 피로 원인이 결핍인지 먼저 확인하는 것이 좋습니다.",
+      "with_food": "속이 불편하면 식후 복용을 고려할 수 있습니다.",
+      "before_bed": "민감한 사람은 늦은 시간 복용이 불편할 수 있어 개인 반응을 확인하세요.",
+      "exercise_related": ""
+    },
+    "spacing": [
+      "다른 종합비타민이나 에너지 제품과 B군 함량이 중복되는지 확인하세요."
+    ],
+    "cautions": [
+      "고함량 B6 장기 복용은 신경 증상 위험 맥락에서 주의가 필요합니다.",
+      "피로가 지속되면 빈혈, 수면, 갑상선, 식사 상태 등 원인 확인이 우선입니다."
+    ],
+    "high_risk_groups": [
+      "high dose",
+      "long-term use",
+      "neuropathy symptom"
+    ],
+    "related_interactions": []
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_THEANINE",
+    "name": "테아닌",
+    "aliases": [
+      "테아닌",
+      "L-테아닌",
+      "theanine",
+      "l-theanine"
+    ],
+    "category": "amino_acid_derivative",
+    "canonical": "theanine",
+    "coverage_status": "partial",
+    "source_refs": [
+      "PUBMED_THEANINE_SLEEP_REVIEW"
+    ],
+    "common_uses": [
+      "긴장 완화 또는 수면 보조 맥락에서 검토"
+    ],
+    "timing": {
+      "general": "테아닌은 수면이나 긴장 완화 목적이라면 개인 반응을 보며 복용 시점을 조정해야 합니다.",
+      "with_food": "제품 지침을 따르세요.",
+      "before_bed": "수면 목적이면 취침 전 사용을 검토할 수 있으나 효과를 단정하지 않습니다.",
+      "exercise_related": ""
+    },
+    "spacing": [
+      "수면제, 진정제, 혈압 관련 약을 복용 중이면 병용 전 전문가 확인이 필요합니다."
+    ],
+    "cautions": [
+      "근거 범위가 제한적이므로 수면장애 치료를 대체한다고 말할 수 없습니다.",
+      "졸림이나 어지러움이 있으면 운전/위험 작업 전 주의하세요."
+    ],
+    "high_risk_groups": [
+      "medication use",
+      "pregnancy",
+      "breastfeeding"
+    ],
+    "related_interactions": []
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_MELATONIN",
+    "name": "멜라토닌",
+    "aliases": [
+      "멜라토닌",
+      "melatonin"
+    ],
+    "category": "sleep_supplement",
+    "canonical": "melatonin",
+    "coverage_status": "partial",
+    "source_refs": [
+      "NCCIH_SLEEP_DISORDERS",
+      "MAYO_MELATONIN"
+    ],
+    "common_uses": [
+      "수면 리듬 보조 맥락에서 검토"
+    ],
+    "timing": {
+      "general": "멜라토닌은 수면 리듬 목적에서 단기간 사용 맥락으로 검토하되, 만성 불면은 원인 확인이 필요합니다.",
+      "with_food": "제품 지침을 따르세요.",
+      "before_bed": "수면 목적이면 취침 전 복용 맥락이 흔하지만 개인 반응과 다음날 졸림을 확인하세요.",
+      "exercise_related": ""
+    },
+    "spacing": [
+      "수면제, 진정제, 항응고제, 혈압약, 당뇨약 등을 복용 중이면 병용 전 의사 또는 약사에게 확인하세요."
+    ],
+    "cautions": [
+      "졸림, 어지러움, 다음날 멍함이 생길 수 있습니다.",
+      "임신/수유, 소아, 만성질환, 복용 중인 약이 있으면 전문가 상담이 필요합니다."
+    ],
+    "high_risk_groups": [
+      "medication use",
+      "blood pressure medication",
+      "diabetes medication",
+      "anticoagulant use",
+      "pregnancy",
+      "breastfeeding"
+    ],
+    "related_interactions": [
+      "INT_MELATONIN_BLOOD_PRESSURE_MEDICATION"
+    ]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_EAA",
+    "name": "EAA",
+    "aliases": [
+      "EAA",
+      "eaa",
+      "필수아미노산",
+      "essential amino acids"
+    ],
+    "category": "sports_supplement",
+    "canonical": "eaa",
+    "coverage_status": "partial",
+    "source_refs": [
+      "NIH_ODS_EXERCISE_PERFORMANCE_HP"
+    ],
+    "common_uses": [
+      "운동 전후 아미노산 보충 맥락"
+    ],
+    "timing": {
+      "general": "EAA는 식사 단백질 섭취가 부족한 경우 보충 후보로 볼 수 있지만, 충분한 단백질 섭취가 우선입니다.",
+      "with_food": "식사 단백질 총량과 함께 판단하세요.",
+      "before_bed": "",
+      "exercise_related": "운동 전후 보충 후보가 될 수 있으나 필수 여부는 식단 단백질 총량에 따라 달라집니다."
+    },
+    "spacing": [
+      "프로틴, 식사 단백질, BCAA 제품과 중복되는지 확인하세요."
+    ],
+    "cautions": [
+      "신장질환이 있으면 아미노산/단백질 보충 총량을 의료진과 확인하세요.",
+      "근육 증가 목적에서는 식사 단백질과 훈련이 우선입니다."
+    ],
+    "high_risk_groups": [
+      "kidney disease",
+      "high protein intake"
+    ],
+    "related_interactions": []
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_GLUTAMINE",
+    "name": "글루타민",
+    "aliases": [
+      "글루타민",
+      "glutamine"
+    ],
+    "category": "sports_supplement",
+    "canonical": "glutamine",
+    "coverage_status": "partial",
+    "source_refs": [
+      "NIH_ODS_EXERCISE_PERFORMANCE_HP",
+      "PUBMED_GLUTAMINE_EXERCISE_META"
+    ],
+    "common_uses": [
+      "운동 회복 또는 컨디션 맥락에서 검토"
+    ],
+    "timing": {
+      "general": "글루타민은 운동 성과 향상을 강하게 단정하기보다 식단, 훈련량, 회복 상태를 먼저 확인한 뒤 조건부로 봅니다.",
+      "with_food": "제품 지침을 따르세요.",
+      "before_bed": "",
+      "exercise_related": "운동 관련 보충 후보가 될 수 있으나 프로틴과 크레아틴보다 우선순위가 낮을 수 있습니다."
+    },
+    "spacing": [
+      "단백질 보충제, EAA/BCAA 제품과 목적과 성분 중복을 확인하세요."
+    ],
+    "cautions": [
+      "근거가 제한적이므로 필수 보충제로 단정하지 않습니다.",
+      "신장질환 등 질환이 있으면 전문가 상담이 필요합니다."
+    ],
+    "high_risk_groups": [
+      "kidney disease",
+      "medical condition"
+    ],
+    "related_interactions": []
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_BERBERINE",
+    "name": "베르베린",
+    "aliases": [
+      "베르베린",
+      "berberine"
+    ],
+    "category": "botanical_compound",
+    "canonical": "berberine",
+    "coverage_status": "partial",
+    "source_refs": [
+      "NCCIH_BERBERINE_WEIGHT_LOSS",
+      "NCCIH_DIABETES_SUPPLEMENTS"
+    ],
+    "common_uses": [
+      "혈당/체중 관련 목적으로 문의되는 식물성 성분"
+    ],
+    "timing": {
+      "general": "베르베린은 제품별 함량 차이가 크므로 제품명, 성분표, 함량을 확인해야 합니다.",
+      "with_food": "위장 불편이 있으면 제품 지침과 개인 반응을 확인하세요.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": [
+      "당뇨약, 혈압약, 항응고제 등 처방약 복용 중이면 병용 전 의료진 또는 약사에게 확인하세요."
+    ],
+    "cautions": [
+      "위장 불편이 생길 수 있습니다.",
+      "당뇨약 등 처방약 복용 중이면 혈당 관련 위험이 달라질 수 있어 상담이 필요합니다.",
+      "임신/수유 중에는 임의 복용하지 마세요."
+    ],
+    "high_risk_groups": [
+      "diabetes medication",
+      "pregnancy",
+      "breastfeeding",
+      "medication use",
+      "digestive symptom"
+    ],
+    "related_interactions": [
+      "INT_BERBERINE_DIABETES_MEDICATION"
+    ]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_QUERCETIN",
+    "name": "퀘르세틴",
+    "aliases": [
+      "퀘르세틴",
+      "quercetin"
+    ],
+    "category": "botanical_compound",
+    "canonical": "quercetin",
+    "coverage_status": "partial",
+    "source_refs": [
+      "PUBMED_QUERCETIN_SAFETY_REVIEW",
+      "NCCIH_HERB_DRUG_INTERACTIONS"
+    ],
+    "common_uses": [
+      "항산화 관련 목적으로 문의되는 식물성 성분"
+    ],
+    "timing": {
+      "general": "퀘르세틴은 제품별 함량과 병용 성분 차이가 커 제품 라벨 확인이 우선입니다.",
+      "with_food": "제품 지침을 따르세요.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": [
+      "처방약이나 다른 식물성 성분과 함께 복용할 때는 상호작용 가능성을 보수적으로 확인하세요."
+    ],
+    "cautions": [
+      "근거 범위가 제한적이므로 효능을 단정하지 않습니다.",
+      "복용 중인 약이 있으면 약사 또는 의료진과 확인하세요."
+    ],
+    "high_risk_groups": [
+      "medication use",
+      "pregnancy",
+      "breastfeeding"
+    ],
+    "related_interactions": []
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_NAC",
+    "name": "NAC",
+    "aliases": [
+      "NAC",
+      "nac",
+      "n-acetylcysteine",
+      "엔아세틸시스테인"
+    ],
+    "category": "amino_acid_derivative",
+    "canonical": "nac",
+    "coverage_status": "partial",
+    "source_refs": [
+      "NCBI_STATPEARLS_NAC"
+    ],
+    "common_uses": [
+      "특정 목적의 보충 성분으로 문의됨"
+    ],
+    "timing": {
+      "general": "NAC는 목적과 제품 함량에 따라 판단이 달라지므로 제품명, 성분표, 함량 확인이 필요합니다.",
+      "with_food": "속 불편이 있으면 제품 지침과 개인 반응을 확인하세요.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": [
+      "처방약 복용 중이면 병용 전 전문가 확인이 필요합니다."
+    ],
+    "cautions": [
+      "의약품 용도와 보충제 용도를 혼동하지 마세요.",
+      "복용 중인 약, 천식 등 질환, 임신/수유 여부가 있으면 전문가 상담이 필요합니다."
+    ],
+    "high_risk_groups": [
+      "medication use",
+      "asthma",
+      "pregnancy",
+      "breastfeeding"
+    ],
+    "related_interactions": []
   }
 ]

@@ -53,10 +53,28 @@ def has_any(text: str, needles: list[str]) -> bool:
 
 
 _EXPECTED_ENTITY_EQUIVALENTS = {
+    "aspirin": ["aspirin", "아스피린", "antiplatelet", "항혈소판제"],
+    "berberine": ["berberine", "베르베린"],
+    "blood pressure medication": ["blood pressure medication", "혈압약", "혈압 약", "고혈압약"],
     "coffee": ["coffee", "커피", "caffeine", "카페인"],
     "caffeine": ["caffeine", "카페인", "coffee", "커피"],
+    "diabetes medication": ["diabetes medication", "당뇨약", "당뇨 약"],
+    "digestive symptom": ["digestive symptom", "위장", "위가", "속이", "메스꺼움", "설사", "복통"],
+    "eaa": ["eaa", "필수아미노산", "essential amino acids"],
+    "glutamine": ["glutamine", "글루타민"],
+    "kidney disease": ["kidney disease", "신장질환", "신장 기능", "신장기능", "renal", "투석"],
+    "liver disease": ["liver disease", "간질환", "간수치", "간 기능", "간기능"],
+    "melatonin": ["melatonin", "멜라토닌"],
+    "nac": ["nac", "엔아세틸시스테인", "n-acetylcysteine"],
+    "nmn": ["nmn"],
     "omega3": ["omega3", "omega-3", "오메가3", "오메가"],
+    "quercetin": ["quercetin", "퀘르세틴"],
+    "theanine": ["theanine", "테아닌", "l-theanine", "L-테아닌"],
+    "vitamin a": ["vitamin a", "vitamina", "비타민a", "비타민A"],
+    "vitamin b": ["vitamin b", "vitaminb", "비타민b", "비타민B", "비타민B군"],
+    "vitamin c": ["vitamin c", "vitaminc", "비타민c", "비타민C"],
     "vitamin d": ["vitamin d", "vitamind", "비타민d", "비타민D"],
+    "vitamin e": ["vitamin e", "vitamine", "비타민e", "비타민E"],
     "probiotics": ["probiotics", "probiotic", "유산균", "프로바이오틱스"],
     "thyroid medication": ["thyroid medication", "levothyroxine", "갑상선약"],
     "warfarin": ["warfarin", "와파린", "anticoagulant", "항응고제"],
@@ -116,7 +134,7 @@ def score_case(
         labels = ["성분", "함께", "확인", "오메가3", "철분", "아연", "마그네슘", "프로틴", "크레아틴"]
         if not has_any(combined, labels):
             failures.append("multi-supplement answer does not expose component checks")
-    if category in {"drug_interaction", "condition_safety"}:
+    if category in {"drug_interaction", "condition_safety", "condition_risk"}:
         risk_words = ["상담", "의료진", "의사", "약사", "간격", "위험", "주의", "확인"]
         if not has_any(combined, risk_words):
             failures.append("risk answer lacks caution/action words")

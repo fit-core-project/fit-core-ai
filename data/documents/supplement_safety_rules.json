@@ -334,5 +334,135 @@
       "NIH_ODS_VITAMIN_A_HP"
     ],
     "coverage_status": "partial"
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_LIVER_VITAMIN_A",
+    "trigger_conditions": [
+      "간질환",
+      "간수치",
+      "liver disease",
+      "liver function abnormality"
+    ],
+    "affected_entities": [
+      "vitamin a",
+      "비타민A",
+      "비타민 A"
+    ],
+    "risk": "비타민A는 지용성 비타민이므로 고함량 또는 중복 섭취 시 간질환/간수치 이상 맥락에서 주의가 필요합니다.",
+    "recommendation": "간질환이 있거나 간수치 이상이 있다면 비타민A 제품을 임의로 시작하거나 고함량으로 복용하지 말고 의료진 또는 약사와 상담하세요.",
+    "when_to_consult": "간질환, 간수치 이상, 임신 가능성, 종합비타민/간유/눈 건강 제품 중복, 고용량 복용을 고려하는 경우",
+    "caution_level": "high",
+    "evidence_summary": "preformed vitamin A 고함량과 간 관련 위험군은 보수적으로 판단해야 합니다.",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_VITAMIN_A_HP",
+      "NIH_ODS_VITAMIN_A_CONSUMER"
+    ]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_HIGH_DOSE_VITAMIN_E",
+    "trigger_conditions": [
+      "고용량",
+      "high dose",
+      "항응고제",
+      "항혈소판제",
+      "수술",
+      "surgery"
+    ],
+    "affected_entities": [
+      "vitamin e",
+      "비타민E",
+      "비타민 E"
+    ],
+    "risk": "고용량 비타민E는 출혈 위험 맥락에서 주의가 필요할 수 있습니다.",
+    "recommendation": "비타민E를 고용량으로 복용하거나 항응고제/항혈소판제, 아스피린, 수술 예정이 있으면 의사 또는 약사에게 확인하세요.",
+    "when_to_consult": "고용량 비타민E, 아스피린/항응고제/항혈소판제 복용, 출혈 병력, 수술 또는 시술 예정",
+    "caution_level": "moderate",
+    "evidence_summary": "비타민E 고용량은 출혈 관련 주의 문맥에서 확인이 필요합니다.",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_VITAMIN_E_HP"
+    ]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_DIGESTIVE_ZINC",
+    "trigger_conditions": [
+      "위가 약한",
+      "위장 불편",
+      "속이 안 좋음",
+      "메스꺼움",
+      "digestive symptom"
+    ],
+    "affected_entities": [
+      "zinc",
+      "아연"
+    ],
+    "risk": "아연은 공복 또는 고함량 복용 시 메스꺼움이나 위장 불편을 유발할 수 있습니다.",
+    "recommendation": "위가 약하거나 아연 복용 후 속이 불편하다면 공복 복용을 피하고 제품 함량, 제형, 복용량을 확인하세요. 증상이 지속되면 의사 또는 약사와 상담하세요.",
+    "when_to_consult": "위장 증상이 지속되거나 심한 경우, 고용량 제품 복용, 임신/수유, 다른 약 복용 중",
+    "caution_level": "moderate",
+    "evidence_summary": "아연 보충제는 위장 불편과 고용량 장기 복용 주의가 필요합니다.",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_ZINC_HP",
+      "NIH_ODS_ZINC_CONSUMER"
+    ]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_BERBERINE_DIGESTIVE_MEDICATION",
+    "trigger_conditions": [
+      "위장 불편",
+      "diabetes medication",
+      "당뇨약",
+      "medication use"
+    ],
+    "affected_entities": [
+      "berberine",
+      "베르베린"
+    ],
+    "risk": "베르베린은 위장 불편을 일으킬 수 있고, 당뇨약 등 처방약 복용 중에는 안전성을 단정하기 어렵습니다.",
+    "recommendation": "베르베린은 제품명, 성분표, 함량, 복용 목적을 확인한 뒤 당뇨약 또는 처방약 복용 중이면 의료진 또는 약사와 상담하세요.",
+    "when_to_consult": "당뇨약 복용 중, 임신/수유, 위장 증상, 처방약 복용 중, 고함량 제품 복용을 고려하는 경우",
+    "caution_level": "high",
+    "evidence_summary": "베르베린은 위장 증상과 약물 병용 맥락에서 보수적 안내가 필요합니다.",
+    "coverage_status": "partial",
+    "source_refs": [
+      "NCCIH_BERBERINE_WEIGHT_LOSS",
+      "NCCIH_DIABETES_SUPPLEMENTS"
+    ]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_SLEEP_SUPPLEMENTS_MEDICATION",
+    "trigger_conditions": [
+      "불면",
+      "수면",
+      "sleep problem",
+      "sleep medication",
+      "진정제"
+    ],
+    "affected_entities": [
+      "melatonin",
+      "멜라토닌",
+      "theanine",
+      "테아닌",
+      "magnesium",
+      "마그네슘"
+    ],
+    "risk": "수면 목적 보충제는 졸림, 다음날 멍함, 약물 병용 여부에 따라 주의가 필요할 수 있습니다.",
+    "recommendation": "수면 문제가 지속되거나 수면제/진정제/혈압약/당뇨약 등을 복용 중이면 보충제로 해결하려고 하기보다 의료진 또는 약사에게 확인하세요.",
+    "when_to_consult": "불면이 지속되는 경우, 수면제/진정제/혈압약/당뇨약 복용, 임신/수유, 운전 또는 위험 작업 전",
+    "caution_level": "moderate",
+    "evidence_summary": "수면 보충제는 약물 병용과 장기 사용 맥락을 보수적으로 봅니다.",
+    "coverage_status": "partial",
+    "source_refs": [
+      "NCCIH_SLEEP_DISORDERS",
+      "MAYO_MELATONIN",
+      "PUBMED_THEANINE_SLEEP_REVIEW"
+    ]
   }
 ]
