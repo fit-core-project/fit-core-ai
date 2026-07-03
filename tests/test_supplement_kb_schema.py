@@ -11,7 +11,7 @@ from engines.supplement.kb_schema import (
     InteractionType,
     SafetyRule,
 )
-from engines.supplement.query_understanding import EntityType
+from engines.supplement.query_understanding import ALIAS_REGISTRY, ENTITY_LABELS, EntityType
 
 
 def _roundtrip(model):
@@ -294,3 +294,26 @@ def test_supplement_safety_rule_corpus_validates_against_schema():
     assert all(rule.risk for rule in rules)
     assert all(rule.recommendation for rule in rules)
     assert all(rule.caution_level in CautionLevel for rule in rules)
+
+
+def test_supplement_canonical_entities_corpus_is_parser_source():
+    corpus_path = Path("data/documents/supplement_canonical_entities.json")
+    data = json.loads(corpus_path.read_text(encoding="utf-8"))
+    entities = data["entities"]
+
+    assert data["version"] == "supplement-canonical-entities-v1-2026-07-03"
+    assert entities
+    canonicals = [item["canonical"] for item in entities]
+    assert len(canonicals) == len(set(canonicals))
+    assert {"magnesium", "protein", "probiotics", "nmn"} <= set(canonicals)
+
+    registry_keys = {(entry.entity_type.value, entry.canonical) for entry in ALIAS_REGISTRY}
+    for item in entities:
+        assert item["entityType"] in EntityType._value2member_map_
+        assert item["aliases"]
+        assert item["displayNameKo"]
+        assert item["coverageStatus"] in {"covered", "partial", "unsupported"}
+        assert (item["entityType"], item["canonical"]) in registry_keys
+
+    assert ENTITY_LABELS["magnesium"] == "마그네슘"
+    assert ENTITY_LABELS["nmn"] == "NMN"

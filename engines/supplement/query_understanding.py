@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 
 
 class EntityType(str, Enum):
@@ -48,7 +50,10 @@ class ParsedSupplementQuery:
     intents: tuple[IntentType, ...]
 
 
-ALIAS_REGISTRY: tuple[AliasEntry, ...] = (
+_CANONICAL_ENTITIES_PATH = Path(__file__).resolve().parents[2] / "data" / "documents" / "supplement_canonical_entities.json"
+
+
+_FALLBACK_ALIAS_REGISTRY: tuple[AliasEntry, ...] = (
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "magnesium", ("마그네슘", "magnesium", "Mg")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "iron", ("철분", "iron", "Fe")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin a", ("비타민A", "비타민 A", "vitamin a")),
@@ -96,6 +101,75 @@ ALIAS_REGISTRY: tuple[AliasEntry, ...] = (
     AliasEntry(EntityType.RISK_CONTEXT, "immunocompromised", ("면역저하", "면역 저하", "항암", "중증질환", "중심정맥관")),
     AliasEntry(EntityType.RISK_CONTEXT, "digestive symptom", ("속이 안 좋음", "속이 안 좋은", "메스꺼움", "설사", "복통", "위장 불편")),
 )
+
+
+def _load_canonical_entities() -> list[dict[str, object]]:
+    try:
+        payload = json.loads(_CANONICAL_ENTITIES_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    entities = payload.get("entities")
+    return entities if isinstance(entities, list) else []
+
+
+_CANONICAL_ENTITY_ITEMS: list[dict[str, object]] = _load_canonical_entities()
+
+
+def _alias_registry_from_canonical_entities() -> tuple[AliasEntry, ...]:
+    entries: list[AliasEntry] = []
+    for item in _CANONICAL_ENTITY_ITEMS:
+        if not isinstance(item, dict):
+            continue
+        canonical = str(item.get("canonical") or "").strip()
+        entity_type = str(item.get("entityType") or "").strip()
+        aliases = item.get("aliases")
+        if not canonical or not entity_type or not isinstance(aliases, list):
+            continue
+        try:
+            parsed_type = EntityType(entity_type)
+        except ValueError:
+            continue
+        normalized_aliases = tuple(str(alias).strip() for alias in aliases if str(alias).strip())
+        if normalized_aliases:
+            entries.append(AliasEntry(parsed_type, canonical, normalized_aliases))
+    return tuple(entries)
+
+
+def _entity_labels_from_canonical_entities() -> dict[str, str]:
+    labels: dict[str, str] = {}
+    for item in _CANONICAL_ENTITY_ITEMS:
+        if not isinstance(item, dict):
+            continue
+        canonical = str(item.get("canonical") or "").strip()
+        display_name = str(item.get("displayNameKo") or "").strip()
+        if canonical and display_name:
+            labels[canonical] = display_name
+    return labels
+
+
+def _entity_coverage_from_canonical_entities() -> dict[str, str]:
+    coverage: dict[str, str] = {}
+    for item in _CANONICAL_ENTITY_ITEMS:
+        if not isinstance(item, dict):
+            continue
+        canonical = str(item.get("canonical") or "").strip()
+        coverage_status = str(item.get("coverageStatus") or "").strip()
+        if canonical and coverage_status:
+            coverage[canonical] = coverage_status
+    return coverage
+
+
+ALIAS_REGISTRY: tuple[AliasEntry, ...] = _alias_registry_from_canonical_entities() or _FALLBACK_ALIAS_REGISTRY
+ENTITY_LABELS: dict[str, str] = _entity_labels_from_canonical_entities()
+ENTITY_COVERAGE: dict[str, str] = _entity_coverage_from_canonical_entities()
+
+
+def entity_label(canonical: str) -> str:
+    return ENTITY_LABELS.get(canonical, canonical)
+
+
+def entity_coverage_status(canonical: str) -> str:
+    return ENTITY_COVERAGE.get(canonical, "partial")
 
 _TIMING_NEEDLES = ("언제", "먹는 시간", "복용 시간", "식후", "공복", "자기 전", "운동 전후", "운동 전", "운동 후")
 _INTERACTION_NEEDLES = ("같이", "함께", "병용", "먹어도", "복용해도", "한번에", "동시에")

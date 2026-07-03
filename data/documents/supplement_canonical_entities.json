@@ -1,0 +1,539 @@
+{
+  "version": "supplement-canonical-entities-v1-2026-07-03",
+  "sourceMap": "docs/research/supplement_source_map_v1_2026-07-03.json",
+  "entities": [
+    {
+      "canonical": "magnesium",
+      "displayNameKo": "마그네슘",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "마그네슘",
+        "magnesium",
+        "Mg"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "iron",
+      "displayNameKo": "철분",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "철분",
+        "iron",
+        "Fe"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "vitamin a",
+      "displayNameKo": "비타민A",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "비타민A",
+        "비타민 A",
+        "vitamin a"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "vitamin b",
+      "displayNameKo": "비타민B군",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "비타민B군",
+        "vitamin b",
+        "비타민B",
+        "비타민 B",
+        "vitamin b complex"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "vitamin c",
+      "displayNameKo": "비타민C",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "비타민C",
+        "비타민 C",
+        "vitamin c"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "vitamin d",
+      "displayNameKo": "비타민D",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "비타민D",
+        "비타민 D",
+        "vitamin d"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "vitamin e",
+      "displayNameKo": "비타민E",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "비타민E",
+        "비타민 E",
+        "vitamin e"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "omega3",
+      "displayNameKo": "오메가3",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "오메가3",
+        "오메가-3",
+        "omega3",
+        "omega-3",
+        "fish oil"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "creatine",
+      "displayNameKo": "크레아틴",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "크레아틴",
+        "creatine"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "protein",
+      "displayNameKo": "프로틴",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "프로틴",
+        "단백질 보충제",
+        "웨이",
+        "whey",
+        "whey protein",
+        "protein powder"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "multivitamin",
+      "displayNameKo": "종합비타민",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "종합비타민",
+        "멀티비타민",
+        "multivitamin",
+        "multi vitamin"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "silymarin",
+      "displayNameKo": "실리마린",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "실리마린",
+        "밀크씨슬",
+        "밀크시슬",
+        "silymarin",
+        "milk thistle"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "probiotics",
+      "displayNameKo": "유산균",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "유산균",
+        "프로바이오틱스",
+        "probiotic",
+        "probiotics"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "zinc",
+      "displayNameKo": "아연",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "아연",
+        "zinc",
+        "Zn"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "calcium",
+      "displayNameKo": "칼슘",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "칼슘",
+        "calcium",
+        "Ca"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "berberine",
+      "displayNameKo": "베르베린",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "베르베린",
+        "berberine"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "nac",
+      "displayNameKo": "NAC",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "NAC",
+        "nac",
+        "n-acetylcysteine",
+        "엔아세틸시스테인"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "quercetin",
+      "displayNameKo": "퀘르세틴",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "퀘르세틴",
+        "quercetin"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "eaa",
+      "displayNameKo": "EAA",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "EAA",
+        "eaa",
+        "필수아미노산",
+        "essential amino acids"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "glutamine",
+      "displayNameKo": "글루타민",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "글루타민",
+        "glutamine"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "nmn",
+      "displayNameKo": "NMN",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "NMN",
+        "nmn"
+      ],
+      "coverageStatus": "unsupported"
+    },
+    {
+      "canonical": "theanine",
+      "displayNameKo": "테아닌",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "테아닌",
+        "theanine",
+        "L-테아닌",
+        "l-theanine"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "melatonin",
+      "displayNameKo": "멜라토닌",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "멜라토닌",
+        "melatonin"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "caffeine",
+      "displayNameKo": "카페인",
+      "entityType": "supplement_ingredient",
+      "aliases": [
+        "카페인",
+        "caffeine"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "coffee",
+      "displayNameKo": "커피",
+      "entityType": "food_or_compound",
+      "aliases": [
+        "커피",
+        "coffee"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "antibiotics",
+      "displayNameKo": "항생제",
+      "entityType": "drug_or_drug_class",
+      "aliases": [
+        "항생제",
+        "antibiotics"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "medication",
+      "displayNameKo": "복용 중인 약",
+      "entityType": "drug_or_drug_class",
+      "aliases": [
+        "처방약",
+        "복용 중인 약",
+        "약물",
+        "medication",
+        "medicine"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "thyroid medication",
+      "displayNameKo": "갑상선약",
+      "entityType": "drug_or_drug_class",
+      "aliases": [
+        "갑상선약",
+        "thyroid medication",
+        "levothyroxine"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "anticoagulant",
+      "displayNameKo": "항응고제",
+      "entityType": "drug_or_drug_class",
+      "aliases": [
+        "항응고제",
+        "anticoagulant"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "warfarin",
+      "displayNameKo": "와파린",
+      "entityType": "drug_or_drug_class",
+      "aliases": [
+        "와파린",
+        "warfarin"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "aspirin",
+      "displayNameKo": "아스피린",
+      "entityType": "drug_or_drug_class",
+      "aliases": [
+        "아스피린",
+        "aspirin"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "acetaminophen",
+      "displayNameKo": "아세트아미노펜",
+      "entityType": "drug_or_drug_class",
+      "aliases": [
+        "타이레놀",
+        "acetaminophen",
+        "paracetamol"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "pain reliever",
+      "displayNameKo": "진통제",
+      "entityType": "drug_or_drug_class",
+      "aliases": [
+        "진통제",
+        "pain reliever"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "blood pressure medication",
+      "displayNameKo": "혈압약",
+      "entityType": "drug_or_drug_class",
+      "aliases": [
+        "혈압약",
+        "blood pressure medication"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "diabetes medication",
+      "displayNameKo": "당뇨약",
+      "entityType": "drug_or_drug_class",
+      "aliases": [
+        "당뇨약",
+        "diabetes medication"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "alcohol",
+      "displayNameKo": "알코올",
+      "entityType": "food_or_compound",
+      "aliases": [
+        "술",
+        "알코올",
+        "alcohol"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "kidney disease",
+      "displayNameKo": "신장질환",
+      "entityType": "condition",
+      "aliases": [
+        "신장질환",
+        "kidney disease",
+        "신장 기능 저하",
+        "renal impairment"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "liver disease",
+      "displayNameKo": "간질환",
+      "entityType": "condition",
+      "aliases": [
+        "간질환",
+        "간수치",
+        "간 기능",
+        "간 기능 저하",
+        "liver disease"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "insomnia",
+      "displayNameKo": "불면",
+      "entityType": "condition",
+      "aliases": [
+        "불면",
+        "insomnia"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "hypertension",
+      "displayNameKo": "고혈압",
+      "entityType": "condition",
+      "aliases": [
+        "고혈압",
+        "hypertension"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "pregnancy",
+      "displayNameKo": "임신",
+      "entityType": "risk_context",
+      "aliases": [
+        "임신",
+        "임산부",
+        "pregnancy"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "breastfeeding",
+      "displayNameKo": "수유",
+      "entityType": "risk_context",
+      "aliases": [
+        "수유",
+        "breastfeeding"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "high dose",
+      "displayNameKo": "고용량",
+      "entityType": "risk_context",
+      "aliases": [
+        "고용량",
+        "high dose"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "long-term use",
+      "displayNameKo": "장기복용",
+      "entityType": "risk_context",
+      "aliases": [
+        "장기복용",
+        "장기 복용",
+        "long-term use"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "surgery",
+      "displayNameKo": "수술",
+      "entityType": "risk_context",
+      "aliases": [
+        "수술",
+        "surgery"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "alcohol use",
+      "displayNameKo": "음주",
+      "entityType": "risk_context",
+      "aliases": [
+        "음주",
+        "술",
+        "알코올",
+        "alcohol use"
+      ],
+      "coverageStatus": "partial"
+    },
+    {
+      "canonical": "immunocompromised",
+      "displayNameKo": "면역저하",
+      "entityType": "risk_context",
+      "aliases": [
+        "면역저하",
+        "면역 저하",
+        "항암",
+        "중증질환",
+        "중심정맥관"
+      ],
+      "coverageStatus": "covered"
+    },
+    {
+      "canonical": "digestive symptom",
+      "displayNameKo": "위장 증상",
+      "entityType": "risk_context",
+      "aliases": [
+        "속이 안 좋음",
+        "속이 안 좋은",
+        "메스꺼움",
+        "설사",
+        "복통",
+        "위장 불편"
+      ],
+      "coverageStatus": "partial"
+    }
+  ]
+}

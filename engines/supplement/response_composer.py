@@ -5,7 +5,13 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from engines.supplement.query_understanding import EntityType, IntentType, ParsedSupplementQuery
+from engines.supplement.query_understanding import (
+    EntityType,
+    IntentType,
+    ParsedSupplementQuery,
+    entity_coverage_status,
+    entity_label,
+)
 
 
 _RISK_INTENTS = {
@@ -699,28 +705,15 @@ def _doc_ids(docs: list[Any]) -> set[str]:
 
 
 def _entity_label(canonical: str) -> str:
-    return {
-        "multivitamin": "종합비타민",
-        "omega3": "오메가3",
-        "silymarin": "실리마린",
-        "probiotics": "유산균",
-        "zinc": "아연",
-        "iron": "철분",
-        "calcium": "칼슘",
-        "protein": "프로틴",
-        "magnesium": "마그네슘",
-        "creatine": "크레아틴",
-        "vitamin a": "비타민A",
-        "vitamin c": "비타민C",
-        "vitamin d": "비타민D",
-        "vitamin e": "비타민E",
-    }.get(canonical, canonical)
+    return entity_label(canonical)
 
 
 def _has_unknown_or_partial_known(question: str, parsed_query: ParsedSupplementQuery) -> bool:
     if not question:
         return False
     if not parsed_query.entities:
+        return True
+    if any(entity_coverage_status(entity.canonical) == "unsupported" for entity in parsed_query.entities):
         return True
     known_text = question
     for entity in parsed_query.entities:

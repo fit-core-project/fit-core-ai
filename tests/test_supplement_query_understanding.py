@@ -147,3 +147,11 @@ def test_parse_symptom_after_intake_question():
 
     assert IntentType.SYMPTOM_AFTER_INTAKE in parsed.intents
     assert IntentType.SIDE_EFFECT in parsed.intents
+
+
+def test_parse_canonical_file_extension_entities():
+    parsed = parse_supplement_query("NMN이랑 NAC를 같이 먹어도 돼?")
+
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "nmn") in _entity_types(parsed)
+    assert (EntityType.SUPPLEMENT_INGREDIENT, "nac") in _entity_types(parsed)
+    assert IntentType.SUPPLEMENT_INTERACTION in parsed.intents
