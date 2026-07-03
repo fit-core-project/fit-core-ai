@@ -134,7 +134,7 @@ _KOREAN_AMOUNT_UNIT_RE = re.compile(
 _CONNECTOR_RE = re.compile(r"랑|이랑|하고|그리고|와\s+|,\s*")
 _MEAL_WORD_RE = re.compile(r"아침|조식|점심|중식|저녁|석식|간식|야식")
 _TIME_WORD_RE = re.compile(r"\d{1,2}시\s*\d{0,2}분?|\d{1,2}:\d{2}")
-_FILLER_RE = re.compile(r"에서?|으로|를|을|도|은|는|하고|그리고|먹었\w*|먹음|섭취\w*|마셨\w*|드셨\w*")
+_FILLER_RE = re.compile(r"오늘|에서?|으로|를|을|도|은|는|하고|그리고|먹었\w*|먹음|섭취\w*|마셨\w*|드셨\w*")
 _WORKOUT_CONTEXT_RE = re.compile(
     r"벤치프레스|벤치|스쿼트|데드리프트|푸쉬업|푸시업|랫풀다운|로우|운동",
     re.IGNORECASE,
@@ -210,7 +210,37 @@ def _clean_food_name(value: str) -> str:
     s = _WORKOUT_CONTEXT_RE.sub(" ", s)
     s = _FILLER_RE.sub(" ", s)
     s = re.sub(r"^(?:랑|이랑|와|과|,)\s*", "", s.strip())
-    return re.sub(r"\s{2,}", " ", s).strip(" ,.")
+    cleaned = re.sub(r"\s{2,}", " ", s).strip(" ,.")
+    for known_food in sorted(_FOOD_PER_100G, key=len, reverse=True):
+        if cleaned == known_food or cleaned.endswith(f" {known_food}") or cleaned.endswith(known_food):
+            return known_food
+    return cleaned
+
+
+def _known_food_mentions(text: str) -> list[str]:
+    mentions: list[str] = []
+    for known_food in sorted(_FOOD_PER_100G, key=len, reverse=True):
+        if known_food not in text:
+            continue
+        if any(known_food in existing or existing in known_food for existing in mentions):
+            continue
+        mentions.append(known_food)
+    return mentions
+
+
+def _looks_like_food_candidate(value: str) -> bool:
+    normalized = re.sub(r"\s+", " ", value).strip()
+    if not normalized:
+        return False
+    if normalized in {"잘", "어때"}:
+        return False
+    if any(marker in normalized for marker in {"날씨", "내일", "모레"}):
+        return False
+    if normalized in _FOOD_PER_100G:
+        return True
+    if re.fullmatch(r"[A-Za-z0-9_ -]+", normalized):
+        return False
+    return len(normalized) >= 2
 
 
 def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
@@ -263,13 +293,26 @@ def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
             **macros,
         ))
 
+    seen_foods = {item.food_name for item in items}
+    for food_name in _known_food_mentions(text_for_food):
+        if any(food_name in seen or seen in food_name for seen in seen_foods):
+            continue
+        macros = _macros_from_table(food_name, None, None)
+        items.append(DietParseItem(
+            food_name=food_name,
+            meal_type=meal_type,
+            time_of_day=time_of_day,
+            **macros,
+        ))
+        seen_foods.add(food_name)
+
     # Pass 2: if no structured match, split by connectors
     if not items:
         stripped = _FILLER_RE.sub(" ", text_for_food)
         parts = _CONNECTOR_RE.split(stripped)
         for part in parts:
             food_name = _clean_food_name(part)
-            if len(food_name) >= 1:
+            if _looks_like_food_candidate(food_name):
                 macros = _macros_from_table(food_name, None, None)
                 items.append(DietParseItem(
                     food_name=food_name,

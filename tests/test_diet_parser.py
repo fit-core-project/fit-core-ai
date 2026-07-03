@@ -37,6 +37,18 @@ def test_deterministic_diet_parse_estimates_banana_unit_macros():
     assert item.carbs_g and item.carbs_g > 0
 
 
+def test_deterministic_diet_parse_adds_known_food_mentioned_without_amount():
+    parsed = _deterministic_diet_parse("오늘 운동하고 계란 2개랑 바나나 먹었어")
+
+    assert [item.food_name for item in parsed.items] == ["계란", "바나나"]
+
+
+def test_deterministic_diet_parse_filters_non_food_noise():
+    assert _deterministic_diet_parse("오늘 점심 잘 먹었어").items == []
+    assert _deterministic_diet_parse("asdfjkl").items == []
+    assert _deterministic_diet_parse("내일 날씨 어때").items == []
+
+
 def test_diet_prompt_preserves_user_quantity_units():
     prompt_text = _build_diet_prompt().messages[0].prompt.template
 
