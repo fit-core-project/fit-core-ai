@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from engines.supplement.kb_schema import (
     CautionLevel,
+    CoverageStatus,
     IngredientProfile,
     InteractionRule,
     InteractionType,
@@ -24,8 +25,11 @@ def test_ingredient_profile_magnesium_fixture_roundtrips():
             "type": "ingredient_profile",
             "id": "ING_MAGNESIUM",
             "name": "마그네슘",
+            "canonical": "magnesium",
             "aliases": ["magnesium", "Mg"],
             "category": "mineral",
+            "coverage_status": "covered",
+            "source_refs": ["NIH_ODS_MAGNESIUM_HP"],
             "common_uses": ["일반적인 영양 보충"],
             "timing": {
                 "general": "식후나 저녁 시간대 복용이 일반적으로 무난합니다.",
@@ -42,6 +46,8 @@ def test_ingredient_profile_magnesium_fixture_roundtrips():
 
     assert profile.type == "ingredient_profile"
     assert profile.id == "ING_MAGNESIUM"
+    assert profile.canonical == "magnesium"
+    assert profile.coverage_status == CoverageStatus.COVERED
     assert profile.aliases == ["magnesium", "Mg"]
     assert _roundtrip(profile) == profile
 
@@ -52,8 +58,11 @@ def test_ingredient_profile_vitamin_d_fixture_roundtrips():
             "type": "ingredient_profile",
             "id": "ING_VITAMIN_D",
             "name": "비타민D",
+            "canonical": "vitamin d",
             "aliases": ["비타민 D", "vitamin d"],
             "category": "vitamin",
+            "coverage_status": "covered",
+            "source_refs": ["NIH_ODS_VITAMIN_D_HP"],
             "timing": {"general": "지방이 포함된 식사 후 복용하면 흡수에 유리할 수 있습니다."},
             "cautions": ["고용량 복용은 제품 라벨과 전문가 조언을 따르세요."],
         }
@@ -72,6 +81,8 @@ def test_interaction_rule_iron_caffeine_fixture_roundtrips():
             "entity_a": {"type": "supplement_ingredient", "canonical": "iron", "label": "철분"},
             "entity_b": {"type": "food_or_compound", "canonical": "caffeine", "label": "카페인"},
             "interaction_type": "absorption_interference",
+            "coverage_status": "covered",
+            "source_refs": ["NIH_ODS_IRON_HP", "MEDLINEPLUS_CAFFEINE"],
             "mechanism": "커피나 카페인 음료는 철분 흡수를 방해할 수 있습니다.",
             "recommendation": "함께 복용하지 말고 간격을 두는 방식을 고려합니다.",
             "spacing_guidance": "보통 2시간 이상 간격을 둡니다.",
@@ -95,6 +106,8 @@ def test_interaction_rule_omega3_warfarin_fixture_roundtrips():
             "entity_a": {"type": "supplement_ingredient", "canonical": "omega3", "label": "오메가3"},
             "entity_b": {"type": "drug_or_drug_class", "canonical": "warfarin", "label": "와파린"},
             "interaction_type": "bleeding_risk",
+            "coverage_status": "covered",
+            "source_refs": ["NIH_ODS_OMEGA3_HP"],
             "mechanism": "출혈 위험과 관련해 보수적으로 확인해야 합니다.",
             "recommendation": "복용 전 의사 또는 약사와 상담합니다.",
             "caution_level": "high",
@@ -117,6 +130,7 @@ def test_safety_rule_kidney_disease_magnesium_fixture_roundtrips():
             "affected_entities": ["magnesium"],
             "risk": "신장 기능이 저하된 경우 마그네슘 축적 위험을 고려해야 합니다.",
             "recommendation": "복용 전 전문가와 상담합니다.",
+            "coverage_status": "covered",
             "when_to_consult": "신장질환이 있거나 신장 기능 관련 진단을 받은 경우",
             "caution_level": "high",
             "evidence_summary": "일반 안전 guardrail 문서 기반",
@@ -138,6 +152,7 @@ def test_safety_rule_pregnancy_high_dose_vitamin_d_fixture_roundtrips():
             "affected_entities": ["vitamin d"],
             "risk": "고용량 복용은 혈중 칼슘 상승 등 위험이 있을 수 있습니다.",
             "recommendation": "제품 라벨과 전문가 조언을 따릅니다.",
+            "coverage_status": "partial",
             "when_to_consult": "임신 중이거나 고용량 복용을 고려하는 경우",
             "caution_level": "high",
         }
@@ -155,6 +170,7 @@ def test_type_is_fixed_per_schema():
                 "type": "interaction_rule",
                 "id": "ING_BAD",
                 "name": "bad",
+                "canonical": "bad",
                 "aliases": ["bad"],
                 "category": "bad",
             }
@@ -183,6 +199,7 @@ def test_blank_id_fails_validation():
                 "type": "ingredient_profile",
                 "id": " ",
                 "name": "마그네슘",
+                "canonical": "magnesium",
                 "aliases": ["magnesium"],
                 "category": "mineral",
             }
@@ -196,6 +213,7 @@ def test_aliases_must_be_a_list():
                 "type": "ingredient_profile",
                 "id": "ING_BAD",
                 "name": "마그네슘",
+                "canonical": "magnesium",
                 "aliases": "magnesium",
                 "category": "mineral",
             }
@@ -236,6 +254,9 @@ def test_supplement_ingredient_profile_corpus_validates_against_schema():
     ]
     assert {profile.type for profile in profiles} == {"ingredient_profile"}
     assert all(profile.aliases for profile in profiles)
+    assert all(profile.canonical for profile in profiles)
+    assert all(profile.coverage_status in CoverageStatus for profile in profiles)
+    assert all(profile.source_refs for profile in profiles)
     assert all(profile.timing.general for profile in profiles)
     assert all(profile.cautions for profile in profiles)
 
@@ -265,6 +286,8 @@ def test_supplement_interaction_rule_corpus_validates_against_schema():
     assert all(rule.entity_b.canonical for rule in rules)
     assert all(rule.mechanism for rule in rules)
     assert all(rule.recommendation for rule in rules)
+    assert all(rule.coverage_status in CoverageStatus for rule in rules)
+    assert all(rule.source_refs for rule in rules)
     assert all(rule.caution_level in CautionLevel for rule in rules)
 
 
@@ -293,6 +316,8 @@ def test_supplement_safety_rule_corpus_validates_against_schema():
     assert all(rule.affected_entities for rule in rules)
     assert all(rule.risk for rule in rules)
     assert all(rule.recommendation for rule in rules)
+    assert all(rule.coverage_status in CoverageStatus for rule in rules)
+    assert all(rule.source_refs for rule in rules)
     assert all(rule.caution_level in CautionLevel for rule in rules)
 
 
@@ -301,7 +326,7 @@ def test_supplement_canonical_entities_corpus_is_parser_source():
     data = json.loads(corpus_path.read_text(encoding="utf-8"))
     entities = data["entities"]
 
-    assert data["version"] == "supplement-canonical-entities-v1-2026-07-03"
+    assert data["version"] == "supplement-canonical-entities-v1.1-2026-07-03"
     assert entities
     canonicals = [item["canonical"] for item in entities]
     assert len(canonicals) == len(set(canonicals))
@@ -313,7 +338,32 @@ def test_supplement_canonical_entities_corpus_is_parser_source():
         assert item["aliases"]
         assert item["displayNameKo"]
         assert item["coverageStatus"] in {"covered", "partial", "unsupported"}
+        assert "sourceRefs" in item
         assert (item["entityType"], item["canonical"]) in registry_keys
 
     assert ENTITY_LABELS["magnesium"] == "마그네슘"
     assert ENTITY_LABELS["nmn"] == "NMN"
+
+
+def test_supplement_kb_source_refs_exist_in_active_source_map():
+    canonical_path = Path("data/documents/supplement_canonical_entities.json")
+    canonical_data = json.loads(canonical_path.read_text(encoding="utf-8"))
+    source_map_path = Path(canonical_data["sourceMap"])
+    source_map = json.loads(source_map_path.read_text(encoding="utf-8"))
+
+    source_ids = {
+        ref["id"]
+        for entity in source_map["entities"]
+        for ref in entity.get("sourceRefs", [])
+    }
+    assert source_ids
+
+    for corpus_path in [
+        Path("data/documents/supplement_ingredient_profiles.json"),
+        Path("data/documents/supplement_interaction_rules.json"),
+        Path("data/documents/supplement_safety_rules.json"),
+    ]:
+        for row in json.loads(corpus_path.read_text(encoding="utf-8")):
+            assert row["source_refs"], row["id"]
+            unknown = set(row["source_refs"]) - source_ids
+            assert not unknown, f"{corpus_path}#{row['id']} unknown source refs: {sorted(unknown)}"

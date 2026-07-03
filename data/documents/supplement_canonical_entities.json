@@ -1,6 +1,6 @@
 {
-  "version": "supplement-canonical-entities-v1-2026-07-03",
-  "sourceMap": "docs/research/supplement_source_map_v1_2026-07-03.json",
+  "version": "supplement-canonical-entities-v1.1-2026-07-03",
+  "sourceMap": "docs/research/supplement_source_map_v1_1_2026-07-03.json",
   "entities": [
     {
       "canonical": "magnesium",
@@ -11,7 +11,10 @@
         "magnesium",
         "Mg"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_MAGNESIUM_HP"
+      ]
     },
     {
       "canonical": "iron",
@@ -22,7 +25,10 @@
         "iron",
         "Fe"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_IRON_HP"
+      ]
     },
     {
       "canonical": "vitamin a",
@@ -33,7 +39,11 @@
         "비타민 A",
         "vitamin a"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_VITAMIN_A_HP",
+        "NIH_ODS_VITAMIN_A_CONSUMER"
+      ]
     },
     {
       "canonical": "vitamin b",
@@ -46,7 +56,11 @@
         "비타민 B",
         "vitamin b complex"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NIH_ODS_VITAMIN_B12_HP",
+        "NIH_ODS_VITAMIN_B6_HP"
+      ]
     },
     {
       "canonical": "vitamin c",
@@ -57,7 +71,11 @@
         "비타민 C",
         "vitamin c"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_VITAMIN_C_HP",
+        "USDA_WIC_IRON_VITAMIN_C"
+      ]
     },
     {
       "canonical": "vitamin d",
@@ -68,7 +86,11 @@
         "비타민 D",
         "vitamin d"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_VITAMIN_D_HP",
+        "ACOG_VITAMIN_D_PREGNANCY"
+      ]
     },
     {
       "canonical": "vitamin e",
@@ -79,7 +101,10 @@
         "비타민 E",
         "vitamin e"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_VITAMIN_E_HP"
+      ]
     },
     {
       "canonical": "omega3",
@@ -92,7 +117,10 @@
         "omega-3",
         "fish oil"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_OMEGA3_HP"
+      ]
     },
     {
       "canonical": "creatine",
@@ -102,7 +130,11 @@
         "크레아틴",
         "creatine"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_EXERCISE_PERFORMANCE_HP",
+        "MAYO_CREATINE"
+      ]
     },
     {
       "canonical": "protein",
@@ -116,7 +148,11 @@
         "whey protein",
         "protein powder"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NKF_CKD_PROTEIN",
+        "NIH_ODS_EXERCISE_PERFORMANCE_HP"
+      ]
     },
     {
       "canonical": "multivitamin",
@@ -128,7 +164,10 @@
         "multivitamin",
         "multi vitamin"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_MVMS_CONSUMER"
+      ]
     },
     {
       "canonical": "silymarin",
@@ -141,7 +180,11 @@
         "silymarin",
         "milk thistle"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NCCIH_MILK_THISTLE",
+        "MAYO_MILK_THISTLE"
+      ]
     },
     {
       "canonical": "probiotics",
@@ -153,7 +196,11 @@
         "probiotic",
         "probiotics"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_PROBIOTICS_HP",
+        "NCCIH_PROBIOTICS_SAFETY"
+      ]
     },
     {
       "canonical": "zinc",
@@ -164,7 +211,11 @@
         "zinc",
         "Zn"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_ZINC_HP",
+        "NIH_ODS_ZINC_CONSUMER"
+      ]
     },
     {
       "canonical": "calcium",
@@ -175,7 +226,10 @@
         "calcium",
         "Ca"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_CALCIUM_HP"
+      ]
     },
     {
       "canonical": "berberine",
@@ -185,7 +239,11 @@
         "베르베린",
         "berberine"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NCCIH_BERBERINE_WEIGHT_LOSS",
+        "NCCIH_DIABETES_SUPPLEMENTS"
+      ]
     },
     {
       "canonical": "nac",
@@ -197,7 +255,10 @@
         "n-acetylcysteine",
         "엔아세틸시스테인"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NCBI_STATPEARLS_NAC"
+      ]
     },
     {
       "canonical": "quercetin",
@@ -207,7 +268,11 @@
         "퀘르세틴",
         "quercetin"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "PUBMED_QUERCETIN_SAFETY_REVIEW",
+        "NCCIH_HERB_DRUG_INTERACTIONS"
+      ]
     },
     {
       "canonical": "eaa",
@@ -219,7 +284,10 @@
         "필수아미노산",
         "essential amino acids"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NIH_ODS_EXERCISE_PERFORMANCE_HP"
+      ]
     },
     {
       "canonical": "glutamine",
@@ -229,7 +297,11 @@
         "글루타민",
         "glutamine"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NIH_ODS_EXERCISE_PERFORMANCE_HP",
+        "PUBMED_GLUTAMINE_EXERCISE_META"
+      ]
     },
     {
       "canonical": "nmn",
@@ -239,7 +311,8 @@
         "NMN",
         "nmn"
       ],
-      "coverageStatus": "unsupported"
+      "coverageStatus": "unsupported",
+      "sourceRefs": []
     },
     {
       "canonical": "theanine",
@@ -251,7 +324,10 @@
         "L-테아닌",
         "l-theanine"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "PUBMED_THEANINE_SLEEP_REVIEW"
+      ]
     },
     {
       "canonical": "melatonin",
@@ -261,7 +337,11 @@
         "멜라토닌",
         "melatonin"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NCCIH_SLEEP_DISORDERS",
+        "MAYO_MELATONIN"
+      ]
     },
     {
       "canonical": "caffeine",
@@ -271,7 +351,12 @@
         "카페인",
         "caffeine"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NCCIH_GREEN_TEA",
+        "NCCIH_HERB_DRUG_INTERACTIONS",
+        "MEDLINEPLUS_CAFFEINE"
+      ]
     },
     {
       "canonical": "coffee",
@@ -281,7 +366,10 @@
         "커피",
         "coffee"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_IRON_HP"
+      ]
     },
     {
       "canonical": "antibiotics",
@@ -291,7 +379,11 @@
         "항생제",
         "antibiotics"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_ZINC_CONSUMER",
+        "NIH_ODS_CALCIUM_HP"
+      ]
     },
     {
       "canonical": "medication",
@@ -304,7 +396,10 @@
         "medication",
         "medicine"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NCCIH_HERB_DRUG_INTERACTIONS"
+      ]
     },
     {
       "canonical": "thyroid medication",
@@ -315,7 +410,11 @@
         "thyroid medication",
         "levothyroxine"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_CALCIUM_HP",
+        "NIH_ODS_IRON_CONSUMER"
+      ]
     },
     {
       "canonical": "anticoagulant",
@@ -325,7 +424,10 @@
         "항응고제",
         "anticoagulant"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NIH_ODS_OMEGA3_HP"
+      ]
     },
     {
       "canonical": "warfarin",
@@ -335,7 +437,11 @@
         "와파린",
         "warfarin"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_OMEGA3_HP",
+        "NIH_ODS_VITAMIN_E_HP"
+      ]
     },
     {
       "canonical": "aspirin",
@@ -345,7 +451,10 @@
         "아스피린",
         "aspirin"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NIH_ODS_OMEGA3_HP"
+      ]
     },
     {
       "canonical": "acetaminophen",
@@ -356,7 +465,11 @@
         "acetaminophen",
         "paracetamol"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "FDA_ACETAMINOPHEN_OVERUSE",
+        "NCBI_LIVERTOX_ACETAMINOPHEN"
+      ]
     },
     {
       "canonical": "pain reliever",
@@ -366,7 +479,8 @@
         "진통제",
         "pain reliever"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": []
     },
     {
       "canonical": "blood pressure medication",
@@ -376,7 +490,11 @@
         "혈압약",
         "blood pressure medication"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NCCIH_HERB_DRUG_INTERACTIONS",
+        "MAYO_MELATONIN"
+      ]
     },
     {
       "canonical": "diabetes medication",
@@ -386,7 +504,10 @@
         "당뇨약",
         "diabetes medication"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NCCIH_DIABETES_SUPPLEMENTS"
+      ]
     },
     {
       "canonical": "alcohol",
@@ -397,7 +518,8 @@
         "알코올",
         "alcohol"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": []
     },
     {
       "canonical": "kidney disease",
@@ -409,7 +531,11 @@
         "신장 기능 저하",
         "renal impairment"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_MAGNESIUM_HP",
+        "NKF_CKD_PROTEIN"
+      ]
     },
     {
       "canonical": "liver disease",
@@ -422,7 +548,11 @@
         "간 기능 저하",
         "liver disease"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NCCIH_MILK_THISTLE",
+        "NIH_ODS_VITAMIN_A_HP"
+      ]
     },
     {
       "canonical": "insomnia",
@@ -432,7 +562,11 @@
         "불면",
         "insomnia"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "MEDLINEPLUS_CAFFEINE",
+        "CDC_SLEEP_ABOUT"
+      ]
     },
     {
       "canonical": "hypertension",
@@ -442,7 +576,10 @@
         "고혈압",
         "hypertension"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NCCIH_GREEN_TEA"
+      ]
     },
     {
       "canonical": "pregnancy",
@@ -453,7 +590,11 @@
         "임산부",
         "pregnancy"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NIH_ODS_PREGNANCY_HP",
+        "NIH_ODS_VITAMIN_A_CONSUMER"
+      ]
     },
     {
       "canonical": "breastfeeding",
@@ -463,7 +604,8 @@
         "수유",
         "breastfeeding"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": []
     },
     {
       "canonical": "high dose",
@@ -473,7 +615,8 @@
         "고용량",
         "high dose"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": []
     },
     {
       "canonical": "long-term use",
@@ -484,7 +627,8 @@
         "장기 복용",
         "long-term use"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": []
     },
     {
       "canonical": "surgery",
@@ -494,7 +638,11 @@
         "수술",
         "surgery"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NIH_ODS_OMEGA3_HP",
+        "MAYO_VITAMIN_E"
+      ]
     },
     {
       "canonical": "alcohol use",
@@ -506,7 +654,11 @@
         "알코올",
         "alcohol use"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "FDA_ACETAMINOPHEN_OVERUSE",
+        "MEDLINEPLUS_DRUG_INDUCED_LIVER_INJURY"
+      ]
     },
     {
       "canonical": "immunocompromised",
@@ -519,7 +671,10 @@
         "중증질환",
         "중심정맥관"
       ],
-      "coverageStatus": "covered"
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        "NCCIH_PROBIOTICS_SAFETY"
+      ]
     },
     {
       "canonical": "digestive symptom",
@@ -533,7 +688,11 @@
         "복통",
         "위장 불편"
       ],
-      "coverageStatus": "partial"
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        "NIH_ODS_MAGNESIUM_HP",
+        "NCCIH_BERBERINE_WEIGHT_LOSS"
+      ]
     }
   ]
 }

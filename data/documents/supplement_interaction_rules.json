@@ -22,6 +22,13 @@
       "처방약 복용 중",
       "임신 또는 수유 중",
       "고용량 철분 복용 중"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NCCIH_GREEN_TEA",
+      "NCCIH_HERB_DRUG_INTERACTIONS",
+      "MEDLINEPLUS_CAFFEINE",
+      "NIH_ODS_IRON_HP"
     ]
   },
   {
@@ -47,6 +54,11 @@
       "골다공증 치료 중",
       "임신 또는 수유 중",
       "처방약 복용 중"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_CALCIUM_HP",
+      "NIH_ODS_IRON_HP"
     ]
   },
   {
@@ -72,6 +84,12 @@
       "감염 치료 중",
       "빈혈 치료 중",
       "임신 또는 수유 중"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_ZINC_CONSUMER",
+      "NIH_ODS_CALCIUM_HP",
+      "NIH_ODS_IRON_HP"
     ]
   },
   {
@@ -97,6 +115,12 @@
       "갑상선 질환 치료 중",
       "처방약 복용 중",
       "고용량 마그네슘 복용 고려 중"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_MAGNESIUM_HP",
+      "NIH_ODS_CALCIUM_HP",
+      "NIH_ODS_IRON_CONSUMER"
     ]
   },
   {
@@ -122,6 +146,12 @@
       "감염 치료 중",
       "신장질환이 있는 경우",
       "처방약 복용 중"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_ZINC_CONSUMER",
+      "NIH_ODS_CALCIUM_HP",
+      "NIH_ODS_MAGNESIUM_HP"
     ]
   },
   {
@@ -147,6 +177,12 @@
       "감염 치료 중",
       "고용량 아연 복용 중",
       "임신 또는 수유 중"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_ZINC_CONSUMER",
+      "NIH_ODS_CALCIUM_HP",
+      "NIH_ODS_ZINC_HP"
     ]
   },
   {
@@ -172,6 +208,11 @@
       "골다공증 치료 중",
       "처방약 복용 중",
       "임신 또는 수유 중"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_CALCIUM_HP",
+      "NIH_ODS_IRON_HP"
     ]
   },
   {
@@ -197,6 +238,10 @@
       "와파린 복용 중",
       "수술 예정",
       "출혈 질환 또는 멍이 잘 드는 경우"
+    ],
+    "coverage_status": "partial",
+    "source_refs": [
+      "NIH_ODS_OMEGA3_HP"
     ]
   },
   {
@@ -222,6 +267,13 @@
       "감염 치료 중",
       "면역저하 상태",
       "중증 질환 또는 중심정맥관 보유"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_ZINC_CONSUMER",
+      "NIH_ODS_CALCIUM_HP",
+      "NIH_ODS_PROBIOTICS_HP",
+      "NCCIH_PROBIOTICS_SAFETY"
     ]
   },
   {
@@ -247,6 +299,12 @@
       "고용량 미네랄 복용 중",
       "임신 또는 수유 중",
       "처방약 복용 중"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_IRON_HP",
+      "NIH_ODS_ZINC_HP",
+      "NIH_ODS_ZINC_CONSUMER"
     ]
   },
   {
@@ -272,6 +330,18 @@
       "간질환 또는 신장질환",
       "처방약 복용 중",
       "고함량 제품을 여러 개 복용 중"
+    ],
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_CALCIUM_HP",
+      "NIH_ODS_IRON_HP",
+      "NIH_ODS_MVMS_CONSUMER",
+      "NIH_ODS_VITAMIN_A_HP",
+      "NIH_ODS_VITAMIN_A_CONSUMER",
+      "NIH_ODS_VITAMIN_D_HP",
+      "ACOG_VITAMIN_D_PREGNANCY",
+      "NIH_ODS_ZINC_HP",
+      "NIH_ODS_ZINC_CONSUMER"
     ]
   },
   {
@@ -297,6 +367,12 @@
       "간질환 또는 간수치 이상",
       "임신 또는 수유 중",
       "여러 보충제를 함께 복용 중"
+    ],
+    "coverage_status": "partial",
+    "source_refs": [
+      "NCCIH_HERB_DRUG_INTERACTIONS",
+      "NCCIH_MILK_THISTLE",
+      "MAYO_MILK_THISTLE"
     ]
   }
 ]

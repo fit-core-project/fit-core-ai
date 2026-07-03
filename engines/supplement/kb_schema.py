@@ -24,6 +24,12 @@ class CautionLevel(str, Enum):
     CRITICAL = "critical"
 
 
+class CoverageStatus(str, Enum):
+    COVERED = "covered"
+    PARTIAL = "partial"
+    UNSUPPORTED = "unsupported"
+
+
 class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -63,8 +69,11 @@ class IngredientProfile(_StrictModel):
     type: Literal["ingredient_profile"] = "ingredient_profile"
     id: str
     name: str
+    canonical: str
     aliases: list[str]
     category: str
+    coverage_status: CoverageStatus = CoverageStatus.PARTIAL
+    source_refs: list[str] = Field(default_factory=list)
     common_uses: list[str] = Field(default_factory=list)
     timing: TimingGuidance = Field(default_factory=TimingGuidance)
     spacing: list[str] = Field(default_factory=list)
@@ -72,7 +81,7 @@ class IngredientProfile(_StrictModel):
     high_risk_groups: list[str] = Field(default_factory=list)
     related_interactions: list[str] = Field(default_factory=list)
 
-    @field_validator("name", "category", mode="after")
+    @field_validator("name", "canonical", "category", mode="after")
     @classmethod
     def _required_text_must_not_be_blank(cls, value: str) -> str:
         if not value.strip():
@@ -95,6 +104,8 @@ class InteractionRule(_StrictModel):
     entity_a: KnowledgeEntityRef
     entity_b: KnowledgeEntityRef
     interaction_type: InteractionType
+    coverage_status: CoverageStatus = CoverageStatus.PARTIAL
+    source_refs: list[str] = Field(default_factory=list)
     mechanism: str = ""
     recommendation: str = ""
     spacing_guidance: str = ""
@@ -109,6 +120,7 @@ class SafetyRule(_StrictModel):
     affected_entities: list[str]
     risk: str
     recommendation: str
+    coverage_status: CoverageStatus = CoverageStatus.PARTIAL
     caution_level: CautionLevel
     when_to_consult: str = ""
     evidence_summary: str = ""

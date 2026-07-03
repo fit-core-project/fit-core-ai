@@ -3,94 +3,169 @@
     "type": "ingredient_profile",
     "id": "ING_MAGNESIUM",
     "name": "마그네슘",
-    "aliases": ["magnesium", "Mg"],
+    "aliases": [
+      "magnesium",
+      "Mg"
+    ],
     "category": "mineral",
-    "common_uses": ["일반적인 영양 보충", "근육 기능과 에너지 대사 보조"],
+    "common_uses": [
+      "일반적인 영양 보충",
+      "근육 기능과 에너지 대사 보조"
+    ],
     "timing": {
       "general": "마그네슘은 식후나 저녁 시간대에 복용하는 방식이 일반적으로 무난합니다.",
       "with_food": "속이 불편하면 공복보다 식후 복용을 고려할 수 있습니다.",
       "before_bed": "저녁 시간대에 복용할 수 있습니다.",
       "exercise_related": ""
     },
-    "spacing": ["갑상선약, 일부 항생제, 철분, 칼슘과는 흡수 간섭 가능성이 있어 보통 2~4시간 간격을 두는 방식이 안전합니다."],
+    "spacing": [
+      "갑상선약, 일부 항생제, 철분, 칼슘과는 흡수 간섭 가능성이 있어 보통 2~4시간 간격을 두는 방식이 안전합니다."
+    ],
     "cautions": [
       "신장질환이 있거나 신장 기능이 저하된 경우 전문가 상담이 필요합니다.",
       "설사, 복통 등 위장 증상이 있으면 용량과 제형을 확인하세요.",
       "복용 중인 약이 있으면 의사 또는 약사와 상담하세요."
     ],
-    "high_risk_groups": ["kidney disease", "복용 중인 약이 있는 경우"],
-    "related_interactions": []
+    "high_risk_groups": [
+      "kidney disease",
+      "복용 중인 약이 있는 경우"
+    ],
+    "related_interactions": [],
+    "canonical": "magnesium",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_MAGNESIUM_HP"
+    ]
   },
   {
     "type": "ingredient_profile",
     "id": "ING_CREATINE",
     "name": "크레아틴",
-    "aliases": ["creatine"],
+    "aliases": [
+      "creatine"
+    ],
     "category": "sports_supplement",
-    "common_uses": ["운동 수행 보조", "근력 운동 보조"],
+    "common_uses": [
+      "운동 수행 보조",
+      "근력 운동 보조"
+    ],
     "timing": {
       "general": "크레아틴은 특정 시간보다 매일 꾸준히 복용하는 것이 더 중요합니다.",
       "with_food": "운동 전이나 운동 후 중 편한 시간에 식사와 함께 복용할 수 있습니다.",
       "before_bed": "",
       "exercise_related": "운동 전이나 운동 후 중 편한 시간에 복용할 수 있습니다."
     },
-    "spacing": ["수분 섭취를 충분히 하고, 여러 보충제를 함께 쓸 때는 총 섭취량을 확인하세요."],
+    "spacing": [
+      "수분 섭취를 충분히 하고, 여러 보충제를 함께 쓸 때는 총 섭취량을 확인하세요."
+    ],
     "cautions": [
       "신장질환이 있거나 신장 기능 관련 진단을 받은 경우 전문가와 상담하세요.",
       "효과를 치료 목적으로 단정하지 마세요."
     ],
-    "high_risk_groups": ["kidney disease"],
-    "related_interactions": []
+    "high_risk_groups": [
+      "kidney disease"
+    ],
+    "related_interactions": [],
+    "canonical": "creatine",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_EXERCISE_PERFORMANCE_HP",
+      "MAYO_CREATINE"
+    ]
   },
   {
     "type": "ingredient_profile",
     "id": "ING_VITAMIN_D",
     "name": "비타민D",
-    "aliases": ["비타민 D", "vitamin d"],
+    "aliases": [
+      "비타민 D",
+      "vitamin d"
+    ],
     "category": "vitamin",
-    "common_uses": ["비타민D 보충", "뼈 건강 관련 영양 보충"],
+    "common_uses": [
+      "비타민D 보충",
+      "뼈 건강 관련 영양 보충"
+    ],
     "timing": {
       "general": "비타민D는 지용성이라 지방이 포함된 식사 후 복용하면 흡수에 유리할 수 있습니다.",
       "with_food": "지방이 포함된 식사 후 복용하면 흡수에 유리할 수 있습니다.",
       "before_bed": "",
       "exercise_related": ""
     },
-    "spacing": ["칼슘과 함께 복용하는 제품도 있으나 개인 상태에 따라 적절성이 달라질 수 있습니다."],
+    "spacing": [
+      "칼슘과 함께 복용하는 제품도 있으나 개인 상태에 따라 적절성이 달라질 수 있습니다."
+    ],
     "cautions": [
       "고용량 복용은 혈중 칼슘 상승 등 위험이 있어 제품 라벨과 전문가 조언을 따르세요.",
       "임신, 수유, 신장질환, 부갑상선 질환이 있으면 전문가 상담이 필요합니다."
     ],
-    "high_risk_groups": ["pregnancy", "breastfeeding", "kidney disease", "high dose"],
-    "related_interactions": []
+    "high_risk_groups": [
+      "pregnancy",
+      "breastfeeding",
+      "kidney disease",
+      "high dose"
+    ],
+    "related_interactions": [],
+    "canonical": "vitamin d",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_VITAMIN_D_HP",
+      "ACOG_VITAMIN_D_PREGNANCY"
+    ]
   },
   {
     "type": "ingredient_profile",
     "id": "ING_OMEGA3",
     "name": "오메가3",
-    "aliases": ["오메가-3", "omega3", "omega-3", "fish oil", "EPA", "DHA"],
+    "aliases": [
+      "오메가-3",
+      "omega3",
+      "omega-3",
+      "fish oil",
+      "EPA",
+      "DHA"
+    ],
     "category": "fatty_acid",
-    "common_uses": ["일반적인 지방산 보충"],
+    "common_uses": [
+      "일반적인 지방산 보충"
+    ],
     "timing": {
       "general": "오메가3는 식후 복용이 일반적으로 무난합니다.",
       "with_food": "지방이 있는 식사와 함께 복용하면 비린 트림이나 위장 불편을 줄이는 데 도움이 될 수 있습니다.",
       "before_bed": "",
       "exercise_related": ""
     },
-    "spacing": ["항응고제나 항혈소판제를 복용 중이면 출혈 위험 관련 상담이 필요합니다."],
+    "spacing": [
+      "항응고제나 항혈소판제를 복용 중이면 출혈 위험 관련 상담이 필요합니다."
+    ],
     "cautions": [
       "와파린 등 항응고제 복용 중이거나 수술 예정이면 의사 또는 약사와 상담하세요.",
       "고용량 복용으로 효과를 단정하지 마세요."
     ],
-    "high_risk_groups": ["anticoagulant use", "surgery", "high dose"],
-    "related_interactions": []
+    "high_risk_groups": [
+      "anticoagulant use",
+      "surgery",
+      "high dose"
+    ],
+    "related_interactions": [],
+    "canonical": "omega3",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_OMEGA3_HP"
+    ]
   },
   {
     "type": "ingredient_profile",
     "id": "ING_IRON",
     "name": "철분",
-    "aliases": ["iron", "Fe"],
+    "aliases": [
+      "iron",
+      "Fe"
+    ],
     "category": "mineral",
-    "common_uses": ["철분 보충"],
+    "common_uses": [
+      "철분 보충"
+    ],
     "timing": {
       "general": "철분은 공복에 흡수가 유리할 수 있지만 속 불편이 있으면 소량의 음식과 함께 복용할 수 있습니다.",
       "with_food": "속 불편이 있으면 소량의 음식과 함께 복용할 수 있습니다.",
@@ -105,117 +180,238 @@
       "철분은 결핍 확인 없이 고용량으로 오래 복용하지 마세요.",
       "임신 중이거나 빈혈 치료 중이면 전문가 지시에 따르세요."
     ],
-    "high_risk_groups": ["pregnancy", "anemia treatment", "high dose"],
-    "related_interactions": []
+    "high_risk_groups": [
+      "pregnancy",
+      "anemia treatment",
+      "high dose"
+    ],
+    "related_interactions": [],
+    "canonical": "iron",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_IRON_HP"
+    ]
   },
   {
     "type": "ingredient_profile",
     "id": "ING_MULTIVITAMIN",
     "name": "종합비타민",
-    "aliases": ["종합비타민", "멀티비타민", "multivitamin", "multi vitamin"],
+    "aliases": [
+      "종합비타민",
+      "멀티비타민",
+      "multivitamin",
+      "multi vitamin"
+    ],
     "category": "vitamin_mineral_blend",
-    "common_uses": ["여러 비타민과 미네랄의 일반적인 영양 보충"],
+    "common_uses": [
+      "여러 비타민과 미네랄의 일반적인 영양 보충"
+    ],
     "timing": {
       "general": "종합비타민은 제품 지침에 따라 식사와 함께 복용하는 방식이 일반적으로 무난합니다.",
       "with_food": "속 불편을 줄이기 위해 식후 복용을 고려할 수 있습니다.",
       "before_bed": "",
       "exercise_related": ""
     },
-    "spacing": ["철분, 아연, 칼슘, 비타민A, 비타민D 등 고함량 성분이 다른 제품과 중복되는지 확인하세요."],
+    "spacing": [
+      "철분, 아연, 칼슘, 비타민A, 비타민D 등 고함량 성분이 다른 제품과 중복되는지 확인하세요."
+    ],
     "cautions": [
       "여러 비타민과 미네랄이 함께 들어 있어 다른 보충제와 중복 섭취를 확인해야 합니다.",
       "비타민A, 비타민D, 철분, 아연 등 고함량 성분은 제품 라벨을 확인하세요.",
       "임신, 간질환, 신장질환, 복용 중인 약이 있으면 의사 또는 약사와 상담하세요."
     ],
-    "high_risk_groups": ["pregnancy", "kidney disease", "liver disease", "medication use", "high dose"],
-    "related_interactions": ["INT_MULTIVITAMIN_MINERAL_OVERLAP"]
+    "high_risk_groups": [
+      "pregnancy",
+      "kidney disease",
+      "liver disease",
+      "medication use",
+      "high dose"
+    ],
+    "related_interactions": [
+      "INT_MULTIVITAMIN_MINERAL_OVERLAP"
+    ],
+    "canonical": "multivitamin",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_MVMS_CONSUMER"
+    ]
   },
   {
     "type": "ingredient_profile",
     "id": "ING_SILYMARIN",
     "name": "실리마린",
-    "aliases": ["실리마린", "밀크씨슬", "밀크시슬", "silymarin", "milk thistle"],
+    "aliases": [
+      "실리마린",
+      "밀크씨슬",
+      "밀크시슬",
+      "silymarin",
+      "milk thistle"
+    ],
     "category": "herbal_supplement",
-    "common_uses": ["간 건강 관련 일반 보조 목적"],
+    "common_uses": [
+      "간 건강 관련 일반 보조 목적"
+    ],
     "timing": {
       "general": "실리마린은 제품 지침에 따라 복용하며, 위장 불편이 있으면 식후 복용을 고려할 수 있습니다.",
       "with_food": "속 불편이 있으면 식후 복용을 고려할 수 있습니다.",
       "before_bed": "",
       "exercise_related": ""
     },
-    "spacing": ["처방약을 복용 중이면 약물 대사 관련 상호작용 가능성을 의사 또는 약사에게 확인하세요."],
+    "spacing": [
+      "처방약을 복용 중이면 약물 대사 관련 상호작용 가능성을 의사 또는 약사에게 확인하세요."
+    ],
     "cautions": [
       "간 건강 보조 목적으로 사용될 수 있으나 간질환 치료 효과를 단정하지 마세요.",
       "간질환이 있거나 처방약을 복용 중이면 임의로 치료 목적으로 사용하지 말고 상담하세요.",
       "약물 대사 관련 상호작용 가능성을 보수적으로 확인하세요."
     ],
-    "high_risk_groups": ["liver disease", "medication use", "pregnancy", "breastfeeding"],
-    "related_interactions": ["INT_SILYMARIN_MEDICATIONS"]
+    "high_risk_groups": [
+      "liver disease",
+      "medication use",
+      "pregnancy",
+      "breastfeeding"
+    ],
+    "related_interactions": [
+      "INT_SILYMARIN_MEDICATIONS"
+    ],
+    "canonical": "silymarin",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NCCIH_MILK_THISTLE",
+      "MAYO_MILK_THISTLE"
+    ]
   },
   {
     "type": "ingredient_profile",
     "id": "ING_PROBIOTIC",
     "name": "유산균",
-    "aliases": ["유산균", "프로바이오틱스", "probiotic", "probiotics"],
+    "aliases": [
+      "유산균",
+      "프로바이오틱스",
+      "probiotic",
+      "probiotics"
+    ],
     "category": "probiotic",
-    "common_uses": ["장 건강 관련 일반 보조 목적"],
+    "common_uses": [
+      "장 건강 관련 일반 보조 목적"
+    ],
     "timing": {
       "general": "유산균은 제품 지침에 따라 복용하세요.",
       "with_food": "제품별 권장 복용법이 다를 수 있으므로 라벨을 우선 확인하세요.",
       "before_bed": "",
       "exercise_related": ""
     },
-    "spacing": ["항생제 복용 중이면 동시에 복용하지 말고 제품 또는 처방 지침에 따른 간격을 확인하세요."],
+    "spacing": [
+      "항생제 복용 중이면 동시에 복용하지 말고 제품 또는 처방 지침에 따른 간격을 확인하세요."
+    ],
     "cautions": [
       "항생제와 동시에 복용하면 유산균 효과가 줄 수 있어 복용 간격 확인이 필요합니다.",
       "면역저하자, 중증 질환자, 중심정맥관 보유자는 복용 전 의료진과 상담하세요.",
       "항생제 치료를 대체하지 않습니다."
     ],
-    "high_risk_groups": ["immunocompromised", "severe illness", "central venous catheter", "antibiotics"],
-    "related_interactions": ["INT_PROBIOTIC_ANTIBIOTICS"]
+    "high_risk_groups": [
+      "immunocompromised",
+      "severe illness",
+      "central venous catheter",
+      "antibiotics"
+    ],
+    "related_interactions": [
+      "INT_PROBIOTIC_ANTIBIOTICS"
+    ],
+    "canonical": "probiotics",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_PROBIOTICS_HP",
+      "NCCIH_PROBIOTICS_SAFETY"
+    ]
   },
   {
     "type": "ingredient_profile",
     "id": "ING_ZINC",
     "name": "아연",
-    "aliases": ["아연", "zinc"],
+    "aliases": [
+      "아연",
+      "zinc"
+    ],
     "category": "mineral",
-    "common_uses": ["아연 보충"],
+    "common_uses": [
+      "아연 보충"
+    ],
     "timing": {
       "general": "아연은 제품 지침에 따라 복용하고 공복에 속이 불편하면 식후 복용을 고려할 수 있습니다.",
       "with_food": "공복 복용 시 메스꺼움이나 위장 불편이 있으면 식후 복용을 고려하세요.",
       "before_bed": "",
       "exercise_related": ""
     },
-    "spacing": ["철분, 칼슘, 일부 항생제 등과 흡수 간섭 가능성이 있어 간격 확인이 필요합니다."],
+    "spacing": [
+      "철분, 칼슘, 일부 항생제 등과 흡수 간섭 가능성이 있어 간격 확인이 필요합니다."
+    ],
     "cautions": [
       "고용량 장기 복용 시 구리 결핍이나 위장 불편 가능성이 있습니다.",
       "철분, 칼슘, 일부 항생제 등과 흡수 간섭 가능성이 있습니다.",
       "공복 복용 시 위장 불편이 생길 수 있습니다."
     ],
-    "high_risk_groups": ["high dose", "long-term use", "antibiotics", "pregnancy"],
-    "related_interactions": ["INT_ZINC_ANTIBIOTICS", "INT_ZINC_IRON_CALCIUM"]
+    "high_risk_groups": [
+      "high dose",
+      "long-term use",
+      "antibiotics",
+      "pregnancy"
+    ],
+    "related_interactions": [
+      "INT_ZINC_ANTIBIOTICS",
+      "INT_ZINC_IRON_CALCIUM"
+    ],
+    "canonical": "zinc",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NIH_ODS_ZINC_HP",
+      "NIH_ODS_ZINC_CONSUMER"
+    ]
   },
   {
     "type": "ingredient_profile",
     "id": "ING_PROTEIN",
     "name": "단백질 보충제",
-    "aliases": ["프로틴", "단백질 보충제", "웨이", "whey", "whey protein", "protein powder"],
+    "aliases": [
+      "프로틴",
+      "단백질 보충제",
+      "웨이",
+      "whey",
+      "whey protein",
+      "protein powder"
+    ],
     "category": "sports_supplement",
-    "common_uses": ["총 단백질 섭취량 보완", "운동 후 영양 보충"],
+    "common_uses": [
+      "총 단백질 섭취량 보완",
+      "운동 후 영양 보충"
+    ],
     "timing": {
       "general": "단백질 보충제는 식단에서 부족한 단백질을 보완하는 용도로 총 섭취량을 함께 고려하세요.",
       "with_food": "식사 단백질 섭취량과 합산해 판단하세요.",
       "before_bed": "",
       "exercise_related": "운동 전후보다 하루 총 단백질 섭취량과 식단 균형을 우선 확인하세요."
     },
-    "spacing": ["다른 고단백 식품이나 보충제와 합산해 총 단백질 섭취량을 확인하세요."],
+    "spacing": [
+      "다른 고단백 식품이나 보충제와 합산해 총 단백질 섭취량을 확인하세요."
+    ],
     "cautions": [
       "신장질환이 있으면 단백질 보충제 총량을 의료진과 확인하세요.",
       "유당불내증이나 우유 단백 알레르기가 있으면 제품 성분을 확인하세요.",
       "특정 용량은 개인의 체중, 식단, 질환에 따라 달라질 수 있어 근거 없이 단정하지 않습니다."
     ],
-    "high_risk_groups": ["kidney disease", "lactose intolerance", "milk allergy"],
-    "related_interactions": ["SAFE_KIDNEY_PROTEIN"]
+    "high_risk_groups": [
+      "kidney disease",
+      "lactose intolerance",
+      "milk allergy"
+    ],
+    "related_interactions": [
+      "SAFE_KIDNEY_PROTEIN"
+    ],
+    "canonical": "protein",
+    "coverage_status": "covered",
+    "source_refs": [
+      "NKF_CKD_PROTEIN",
+      "NIH_ODS_EXERCISE_PERFORMANCE_HP"
+    ]
   }
 ]

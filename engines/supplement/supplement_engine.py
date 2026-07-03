@@ -274,8 +274,12 @@ def _format_ingredient_profile(payload: dict[str, Any]) -> str:
         lines.append(f"ID: {_norm_text(payload.get('id'))}")
     if _norm_text(payload.get("name")):
         lines.append(f"Name: {_norm_text(payload.get('name'))}")
+    if _norm_text(payload.get("canonical")):
+        lines.append(f"Canonical: {_norm_text(payload.get('canonical'))}")
     if _norm_text(payload.get("category")):
         lines.append(f"Category: {_norm_text(payload.get('category'))}")
+    if _norm_text(payload.get("coverage_status")):
+        lines.append(f"Coverage status: {_norm_text(payload.get('coverage_status'))}")
     if payload.get("aliases"):
         lines.append("Aliases:\n" + _bullet_lines(payload.get("aliases")))
     if payload.get("common_uses"):
@@ -299,6 +303,8 @@ def _format_ingredient_profile(payload: dict[str, Any]) -> str:
         lines.append("Cautions:\n" + _bullet_lines(payload.get("cautions")))
     if payload.get("high_risk_groups"):
         lines.append("High risk groups:\n" + _bullet_lines(payload.get("high_risk_groups")))
+    if payload.get("source_refs"):
+        lines.append("Source refs:\n" + _bullet_lines(payload.get("source_refs")))
     return "\n".join(lines).strip()
 
 
@@ -331,8 +337,12 @@ def _format_interaction_rule(payload: dict[str, Any]) -> str:
         lines.append(f"Spacing guidance: {_norm_text(payload.get('spacing_guidance'))}")
     if _norm_text(payload.get("caution_level")):
         lines.append(f"Caution level: {_norm_text(payload.get('caution_level'))}")
+    if _norm_text(payload.get("coverage_status")):
+        lines.append(f"Coverage status: {_norm_text(payload.get('coverage_status'))}")
     if payload.get("consultation_required_when"):
         lines.append("Consultation required when:\n" + _bullet_lines(payload.get("consultation_required_when")))
+    if payload.get("source_refs"):
+        lines.append("Source refs:\n" + _bullet_lines(payload.get("source_refs")))
     return "\n".join(lines).strip()
 
 
@@ -352,6 +362,8 @@ def _format_safety_rule(payload: dict[str, Any]) -> str:
         lines.append(f"When to consult: {_norm_text(payload.get('when_to_consult'))}")
     if _norm_text(payload.get("caution_level")):
         lines.append(f"Caution level: {_norm_text(payload.get('caution_level'))}")
+    if _norm_text(payload.get("coverage_status")):
+        lines.append(f"Coverage status: {_norm_text(payload.get('coverage_status'))}")
     if _norm_text(payload.get("evidence_summary")):
         lines.append(f"Evidence summary: {_norm_text(payload.get('evidence_summary'))}")
     if payload.get("source_refs"):
@@ -360,6 +372,9 @@ def _format_safety_rule(payload: dict[str, Any]) -> str:
 
 
 def _canonical_from_ingredient(payload: dict[str, Any]) -> str:
+    canonical = _norm_text(payload.get("canonical")).lower()
+    if canonical:
+        return canonical
     for alias in payload.get("aliases") or []:
         alias_text = _norm_text(alias).lower()
         if alias_text and alias_text.isascii() and any(char.isalpha() for char in alias_text):
@@ -478,6 +493,8 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                     "id": _norm_text(row.get("id")),
                     "source": "ingredient_profile",
                     "canonical": _canonical_from_ingredient(row),
+                    "coverage_status": _norm_text(row.get("coverage_status")).lower(),
+                    "source_refs": ", ".join(_norm_text(value) for value in row.get("source_refs") or []),
                     "_source_file": "supplement_ingredient_profiles.json",
                 },
                 _format_ingredient_profile,
@@ -491,6 +508,8 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                     "entity_a_canonical": _norm_text((row.get("entity_a") or {}).get("canonical")).lower(),
                     "entity_b_canonical": _norm_text((row.get("entity_b") or {}).get("canonical")).lower(),
                     "caution_level": _norm_text(row.get("caution_level")).lower(),
+                    "coverage_status": _norm_text(row.get("coverage_status")).lower(),
+                    "source_refs": ", ".join(_norm_text(value) for value in row.get("source_refs") or []),
                     "_source_file": "supplement_interaction_rules.json",
                 },
                 _format_interaction_rule,
@@ -503,6 +522,8 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                     "source": "safety_rule",
                     "affected_entities": ", ".join(_norm_text(value).lower() for value in row.get("affected_entities") or []),
                     "caution_level": _norm_text(row.get("caution_level")).lower(),
+                    "coverage_status": _norm_text(row.get("coverage_status")).lower(),
+                    "source_refs": ", ".join(_norm_text(value) for value in row.get("source_refs") or []),
                     "_source_file": "supplement_safety_rules.json",
                 },
                 _format_safety_rule,

@@ -1,0 +1,1089 @@
+{
+  "version": "supplement-source-map-v1.1-2026-07-03",
+  "purpose": "Source map for rebuilding Fit-Core supplement AI knowledge base. Use as evidence routing material, not as user-facing medical advice.",
+  "sourcePolicy": {
+    "primary": [
+      "NIH ODS",
+      "NCCIH",
+      "MedlinePlus/NCBI"
+    ],
+    "secondary": [
+      "Mayo Clinic",
+      "National Kidney Foundation",
+      "peer-reviewed review article"
+    ],
+    "avoidAsPrimary": [
+      "SEO health blogs",
+      "retail supplement pages",
+      "non-reviewed wellness articles"
+    ],
+    "notes": [
+      "High-risk supplement answers must be rule/template driven before LLM polishing.",
+      "Unsupported ingredients should ask for product label, ingredient amount, medication list, and condition context.",
+      "Do not present supplement advice as diagnosis, treatment, prevention, or cure."
+    ]
+  },
+  "entities": [
+    {
+      "canonical": "magnesium",
+      "displayNameKo": "마그네슘",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_MAGNESIUM_HP",
+          "title": "Magnesium - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Magnesium-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "safety_rule",
+            "interaction_rule"
+          ],
+          "notes": "Use for kidney excretion/supplement upper-limit caution and magnesium-related medication spacing."
+        }
+      ]
+    },
+    {
+      "canonical": "iron",
+      "displayNameKo": "철분",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_IRON_HP",
+          "title": "Iron - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Iron-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "interaction_rule",
+            "safety_rule"
+          ],
+          "notes": "Use for iron absorption, medication interactions, excess iron risk, and at-risk groups."
+        }
+      ]
+    },
+    {
+      "canonical": "vitamin d",
+      "displayNameKo": "비타민D",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_VITAMIN_D_HP",
+          "title": "Vitamin D - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminD-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "safety_rule"
+          ],
+          "notes": "Use for fat-containing meal timing, high-dose toxicity, hypercalcemia, and calcium combination caution."
+        },
+        {
+          "id": "ACOG_VITAMIN_D_PREGNANCY",
+          "title": "Vitamin D: Screening and Supplementation During Pregnancy",
+          "publisher": "ACOG",
+          "url": "https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2011/07/vitamin-d-screening-and-supplementation-during-pregnancy",
+          "sourceUse": [
+            "pregnancy_safety_rule"
+          ],
+          "notes": "Use only for pregnancy-specific supplementation guardrails."
+        }
+      ]
+    },
+    {
+      "canonical": "omega3",
+      "displayNameKo": "오메가3",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_OMEGA3_HP",
+          "title": "Omega-3 Fatty Acids - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Omega3FattyAcids-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "interaction_rule",
+            "safety_rule"
+          ],
+          "notes": "Use for omega-3 overview and interaction/safety references."
+        }
+      ]
+    },
+    {
+      "canonical": "zinc",
+      "displayNameKo": "아연",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_ZINC_HP",
+          "title": "Zinc - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Zinc-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "interaction_rule",
+            "safety_rule"
+          ],
+          "notes": "Use for antibiotic and mineral interaction rules, long-term/high-dose zinc caution."
+        },
+        {
+          "id": "NIH_ODS_ZINC_CONSUMER",
+          "title": "Zinc - Consumer Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Zinc-Consumer/",
+          "sourceUse": [
+            "user_friendly_spacing_copy"
+          ],
+          "notes": "Use for plain-language spacing wording."
+        }
+      ]
+    },
+    {
+      "canonical": "calcium",
+      "displayNameKo": "칼슘",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_CALCIUM_HP",
+          "title": "Calcium - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Calcium-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "interaction_rule"
+          ],
+          "notes": "Use for levothyroxine, lithium, quinolone antibiotic, and iron/mineral spacing interactions."
+        }
+      ]
+    },
+    {
+      "canonical": "vitamin a",
+      "displayNameKo": "비타민A",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_VITAMIN_A_HP",
+          "title": "Vitamin A and Carotenoids - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminA-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "safety_rule"
+          ],
+          "notes": "Use for preformed vitamin A high-dose and pregnancy/liver caution."
+        },
+        {
+          "id": "NIH_ODS_VITAMIN_A_CONSUMER",
+          "title": "Vitamin A and Carotenoids - Consumer Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminA-Consumer/",
+          "sourceUse": [
+            "user_friendly_pregnancy_warning"
+          ],
+          "notes": "Use for plain-language high-dose preformed vitamin A pregnancy warning."
+        }
+      ]
+    },
+    {
+      "canonical": "vitamin c",
+      "displayNameKo": "비타민C",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_VITAMIN_C_HP",
+          "title": "Vitamin C - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminC-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "interaction_rule"
+          ],
+          "notes": "Use for vitamin C intake/safety and iron absorption support."
+        },
+        {
+          "id": "USDA_WIC_IRON_VITAMIN_C",
+          "title": "Eye on Nutrition: Iron and Vitamin C",
+          "publisher": "USDA WIC Works",
+          "url": "https://wicworks.fns.usda.gov/resources/eye-nutrition-iron-and-vitamin-c",
+          "sourceUse": [
+            "user_friendly_iron_absorption_copy"
+          ],
+          "notes": "Use for simple user-facing explanation that vitamin C can enhance iron absorption."
+        }
+      ]
+    },
+    {
+      "canonical": "probiotics",
+      "displayNameKo": "유산균",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_PROBIOTICS_HP",
+          "title": "Probiotics - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Probiotics-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "interaction_rule"
+          ],
+          "notes": "Use for antibiotic-associated diarrhea context and probiotic evidence overview."
+        },
+        {
+          "id": "NCCIH_PROBIOTICS_SAFETY",
+          "title": "Probiotics: Usefulness and Safety",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/probiotics-usefulness-and-safety",
+          "sourceUse": [
+            "safety_rule"
+          ],
+          "notes": "Use for immunocompromised safety and contamination/infection risk guardrails."
+        }
+      ]
+    },
+    {
+      "canonical": "creatine",
+      "displayNameKo": "크레아틴",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_EXERCISE_PERFORMANCE_HP",
+          "title": "Dietary Supplements for Exercise and Athletic Performance - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/ExerciseAndAthleticPerformance-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "performance_context"
+          ],
+          "notes": "Use for creatine performance context and sports supplement policy."
+        },
+        {
+          "id": "MAYO_CREATINE",
+          "title": "Creatine",
+          "publisher": "Mayo Clinic",
+          "url": "https://www.mayoclinic.org/drugs-supplements-creatine/art-20347591",
+          "sourceUse": [
+            "safety_rule"
+          ],
+          "notes": "Use as secondary source for healthy-user kidney safety vs pre-existing kidney condition caution."
+        }
+      ]
+    },
+    {
+      "canonical": "protein",
+      "displayNameKo": "단백질 보충제",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NKF_CKD_PROTEIN",
+          "title": "CKD Diet: How much protein is the right amount?",
+          "publisher": "National Kidney Foundation",
+          "url": "https://www.kidney.org/kidney-topics/ckd-diet-how-much-protein-right-amount",
+          "sourceUse": [
+            "safety_rule"
+          ],
+          "notes": "Use for kidney disease protein-intake caution and clinician/dietitian referral."
+        },
+        {
+          "id": "NIH_ODS_EXERCISE_PERFORMANCE_HP",
+          "title": "Dietary Supplements for Exercise and Athletic Performance - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/ExerciseAndAthleticPerformance-HealthProfessional/",
+          "sourceUse": [
+            "performance_context"
+          ],
+          "notes": "Use for exercise supplement context, not as kidney disease primary source."
+        }
+      ]
+    },
+    {
+      "canonical": "silymarin",
+      "displayNameKo": "실리마린",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NCCIH_MILK_THISTLE",
+          "title": "Milk Thistle: Usefulness and Safety",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/milk-thistle",
+          "sourceUse": [
+            "ingredient_profile",
+            "safety_rule"
+          ],
+          "notes": "Use for limited/inconsistent liver evidence and safety framing."
+        },
+        {
+          "id": "MAYO_MILK_THISTLE",
+          "title": "Milk thistle",
+          "publisher": "Mayo Clinic",
+          "url": "https://www.mayoclinic.org/drugs-supplements-milk-thistle/art-20362885",
+          "sourceUse": [
+            "interaction_rule"
+          ],
+          "notes": "Use as secondary source for medication interaction examples."
+        }
+      ]
+    },
+    {
+      "canonical": "melatonin",
+      "displayNameKo": "멜라토닌",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NCCIH_SLEEP_DISORDERS",
+          "title": "Sleep Disorders and Complementary Health Approaches",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/sleep-disorders-and-complementary-health-approaches",
+          "sourceUse": [
+            "ingredient_profile",
+            "safety_rule"
+          ],
+          "notes": "Use for short-term vs long-term safety framing."
+        },
+        {
+          "id": "MAYO_MELATONIN",
+          "title": "Melatonin",
+          "publisher": "Mayo Clinic",
+          "url": "https://www.mayoclinic.org/drugs-supplements-melatonin/art-20363071",
+          "sourceUse": [
+            "interaction_rule"
+          ],
+          "notes": "Use as secondary source for anticoagulant, anticonvulsant, blood pressure drug cautions."
+        }
+      ]
+    },
+    {
+      "canonical": "berberine",
+      "displayNameKo": "베르베린",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NCCIH_BERBERINE_WEIGHT_LOSS",
+          "title": "Berberine and Weight Loss: What You Need To Know",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/berberine-and-weight-loss-what-you-need-to-know",
+          "sourceUse": [
+            "ingredient_profile",
+            "safety_rule",
+            "interaction_rule"
+          ],
+          "notes": "Use for GI side effects and medication interaction caution."
+        },
+        {
+          "id": "NCCIH_DIABETES_SUPPLEMENTS",
+          "title": "Diabetes and Dietary Supplements: What You Need To Know",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/diabetes-and-dietary-supplements-what-you-need-to-know",
+          "sourceUse": [
+            "diabetes_medication_rule"
+          ],
+          "notes": "Use for diabetes medication context and clinician consultation."
+        }
+      ]
+    },
+    {
+      "canonical": "nac",
+      "displayNameKo": "NAC",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NCBI_STATPEARLS_NAC",
+          "title": "N-Acetyl Cysteine (NAC)",
+          "publisher": "NCBI Bookshelf / StatPearls",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK537183/",
+          "sourceUse": [
+            "ingredient_profile",
+            "interaction_rule"
+          ],
+          "notes": "Use cautiously as secondary clinical reference; include nitroglycerin/hypotension interaction only if validated in product policy."
+        }
+      ]
+    },
+    {
+      "canonical": "quercetin",
+      "displayNameKo": "퀘르세틴",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "PUBMED_QUERCETIN_SAFETY_REVIEW",
+          "title": "Safety Aspects of the Use of Quercetin as a Dietary Supplement",
+          "publisher": "PubMed",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/29127724/",
+          "sourceUse": [
+            "ingredient_profile"
+          ],
+          "notes": "Use as evidence locator only; full extraction needs manual review."
+        },
+        {
+          "id": "NCCIH_HERB_DRUG_INTERACTIONS",
+          "title": "Herb-Drug Interactions",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/providers/digest/herb-drug-interactions",
+          "sourceUse": [
+            "general_herb_drug_policy"
+          ],
+          "notes": "Use for general herb-drug interaction safety framing."
+        }
+      ]
+    },
+    {
+      "canonical": "eaa",
+      "displayNameKo": "EAA",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_EXERCISE_PERFORMANCE_HP",
+          "title": "Dietary Supplements for Exercise and Athletic Performance - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/ExerciseAndAthleticPerformance-HealthProfessional/",
+          "sourceUse": [
+            "performance_context"
+          ],
+          "notes": "Use for performance supplement framing; EAA/BCAA-specific profile may need additional review."
+        }
+      ]
+    },
+    {
+      "canonical": "glutamine",
+      "displayNameKo": "글루타민",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_EXERCISE_PERFORMANCE_HP",
+          "title": "Dietary Supplements for Exercise and Athletic Performance - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/ExerciseAndAthleticPerformance-HealthProfessional/",
+          "sourceUse": [
+            "performance_context"
+          ],
+          "notes": "Use for performance supplement framing; glutamine-specific profile may need additional review."
+        },
+        {
+          "id": "PUBMED_GLUTAMINE_EXERCISE_META",
+          "title": "The effect of glutamine supplementation on athletic performance, body composition, and immune function",
+          "publisher": "PubMed",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/29784526/",
+          "sourceUse": [
+            "performance_context"
+          ],
+          "notes": "Use as secondary evidence locator for weak/insufficient performance claims."
+        }
+      ]
+    },
+    {
+      "canonical": "nmn",
+      "displayNameKo": "NMN",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "unsupported",
+      "sourceRefs": [],
+      "notes": "No primary source selected yet. Product should ask for label/amount and avoid confident safety or efficacy claims."
+    },
+    {
+      "canonical": "multivitamin",
+      "displayNameKo": "종합비타민",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_MVMS_CONSUMER",
+          "title": "Multivitamin/mineral Supplements - Consumer Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/MVMS-Consumer/",
+          "sourceUse": [
+            "ingredient_profile",
+            "pregnancy_safety_rule",
+            "overlap_rule"
+          ],
+          "notes": "Use for prenatal MVM context and nutrient overlap checks."
+        }
+      ]
+    },
+    {
+      "canonical": "vitamin e",
+      "displayNameKo": "비타민E",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_VITAMIN_E_HP",
+          "title": "Vitamin E - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminE-HealthProfessional/",
+          "sourceUse": [
+            "ingredient_profile",
+            "bleeding_risk_rule"
+          ],
+          "notes": "Use for high-dose vitamin E bleeding/coagulation caution."
+        }
+      ]
+    },
+    {
+      "canonical": "vitamin b",
+      "displayNameKo": "비타민B군",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_VITAMIN_B12_HP",
+          "title": "Vitamin B12 - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminB12-HealthProfessional/",
+          "sourceUse": [
+            "fatigue_context"
+          ],
+          "notes": "Use for B12 deficiency/fatigue context; do not generalize to all B-complex claims without additional rows."
+        },
+        {
+          "id": "NIH_ODS_VITAMIN_B6_HP",
+          "title": "Vitamin B6 - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminB6-HealthProfessional/",
+          "sourceUse": [
+            "safety_rule"
+          ],
+          "notes": "Use for high-dose B6 neuropathy caution if B-complex products are discussed."
+        }
+      ]
+    },
+    {
+      "canonical": "theanine",
+      "displayNameKo": "테아닌",
+      "entityType": "supplement_ingredient",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "PUBMED_THEANINE_SLEEP_REVIEW",
+          "title": "Examining the effect of L-theanine on sleep: a systematic review",
+          "publisher": "PubMed",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/41176609/",
+          "sourceUse": [
+            "sleep_context"
+          ],
+          "notes": "Use as evidence locator only; extraction needs manual review before strong claims."
+        }
+      ]
+    },
+    {
+      "canonical": "caffeine",
+      "displayNameKo": "카페인",
+      "entityType": "food_or_compound",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NCCIH_GREEN_TEA",
+          "title": "Green Tea: Usefulness and Safety",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/green-tea",
+          "sourceUse": [
+            "stimulant_context",
+            "hypertension_rule",
+            "sleep_rule"
+          ],
+          "notes": "Use for caffeine-containing green tea/green tea extract safety and blood pressure/sleep caution."
+        },
+        {
+          "id": "NCCIH_HERB_DRUG_INTERACTIONS",
+          "title": "Herb-Drug Interactions",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/providers/digest/herb-drug-interactions",
+          "sourceUse": [
+            "blood_pressure_medication_rule"
+          ],
+          "notes": "Use for green tea/nadolol and general herb-drug interaction caution."
+        },
+        {
+          "id": "MEDLINEPLUS_CAFFEINE",
+          "title": "Caffeine",
+          "publisher": "MedlinePlus",
+          "url": "https://medlineplus.gov/caffeine.html",
+          "sourceUse": [
+            "stimulant_context",
+            "sleep_rule",
+            "high_intake_caution"
+          ],
+          "notes": "Use for general caffeine side effects including insomnia and fast heart rate."
+        }
+      ]
+    },
+    {
+      "canonical": "coffee",
+      "displayNameKo": "커피",
+      "entityType": "food_or_compound",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_IRON_HP",
+          "title": "Iron - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Iron-HealthProfessional/",
+          "sourceUse": [
+            "iron_absorption_rule"
+          ],
+          "notes": "Use for coffee/tea/polyphenol iron absorption interference context."
+        }
+      ]
+    },
+    {
+      "canonical": "antibiotics",
+      "displayNameKo": "항생제",
+      "entityType": "drug_or_drug_class",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_ZINC_CONSUMER",
+          "title": "Zinc - Consumer Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Zinc-Consumer/",
+          "sourceUse": [
+            "mineral_antibiotic_spacing_rule"
+          ],
+          "notes": "Use for quinolone/tetracycline antibiotic spacing with zinc; extend same class policy carefully to magnesium/calcium/iron only with matching source rows."
+        },
+        {
+          "id": "NIH_ODS_CALCIUM_HP",
+          "title": "Calcium - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Calcium-HealthProfessional/",
+          "sourceUse": [
+            "calcium_antibiotic_rule"
+          ],
+          "notes": "Use for quinolone antibiotic interaction."
+        }
+      ]
+    },
+    {
+      "canonical": "thyroid medication",
+      "displayNameKo": "갑상선약",
+      "entityType": "drug_or_drug_class",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_CALCIUM_HP",
+          "title": "Calcium - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Calcium-HealthProfessional/",
+          "sourceUse": [
+            "levothyroxine_mineral_spacing_rule"
+          ],
+          "notes": "Use for calcium/levothyroxine interaction; add magnesium/iron-specific rows from matching source before generalizing."
+        },
+        {
+          "id": "NIH_ODS_IRON_CONSUMER",
+          "title": "Iron - Consumer Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Iron-Consumer/",
+          "sourceUse": [
+            "iron_levothyroxine_rule"
+          ],
+          "notes": "Use for plain-language iron/levothyroxine interaction."
+        }
+      ]
+    },
+    {
+      "canonical": "warfarin",
+      "displayNameKo": "와파린",
+      "entityType": "drug_or_drug_class",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_OMEGA3_HP",
+          "title": "Omega-3 Fatty Acids - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Omega3FattyAcids-HealthProfessional/",
+          "sourceUse": [
+            "omega3_anticoagulant_rule"
+          ],
+          "notes": "Use for omega-3 anticoagulant/bleeding context."
+        },
+        {
+          "id": "NIH_ODS_VITAMIN_E_HP",
+          "title": "Vitamin E - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminE-HealthProfessional/",
+          "sourceUse": [
+            "vitamin_e_anticoagulant_rule"
+          ],
+          "notes": "Use for high-dose vitamin E bleeding/coagulation caution."
+        }
+      ]
+    },
+    {
+      "canonical": "aspirin",
+      "displayNameKo": "아스피린",
+      "entityType": "drug_or_drug_class",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_OMEGA3_HP",
+          "title": "Omega-3 Fatty Acids - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Omega3FattyAcids-HealthProfessional/",
+          "sourceUse": [
+            "antiplatelet_context"
+          ],
+          "notes": "Use only as antiplatelet/bleeding-risk context unless aspirin-specific rule source is added."
+        }
+      ]
+    },
+    {
+      "canonical": "blood pressure medication",
+      "displayNameKo": "혈압약",
+      "entityType": "drug_or_drug_class",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NCCIH_HERB_DRUG_INTERACTIONS",
+          "title": "Herb-Drug Interactions",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/providers/digest/herb-drug-interactions",
+          "sourceUse": [
+            "blood_pressure_medication_rule"
+          ],
+          "notes": "Use for green tea/nadolol and general herb-drug interaction caution."
+        },
+        {
+          "id": "MAYO_MELATONIN",
+          "title": "Melatonin",
+          "publisher": "Mayo Clinic",
+          "url": "https://www.mayoclinic.org/drugs-supplements-melatonin/art-20363071",
+          "sourceUse": [
+            "melatonin_blood_pressure_drug_rule"
+          ],
+          "notes": "Use as secondary source for melatonin/blood-pressure medication caution."
+        }
+      ]
+    },
+    {
+      "canonical": "diabetes medication",
+      "displayNameKo": "당뇨약",
+      "entityType": "drug_or_drug_class",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NCCIH_DIABETES_SUPPLEMENTS",
+          "title": "Diabetes and Dietary Supplements: What You Need To Know",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/diabetes-and-dietary-supplements-what-you-need-to-know",
+          "sourceUse": [
+            "diabetes_medication_rule"
+          ],
+          "notes": "Use for berberine/diabetes medication and broader clinician consultation rule."
+        }
+      ]
+    },
+    {
+      "canonical": "kidney disease",
+      "displayNameKo": "신장질환",
+      "entityType": "condition",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_MAGNESIUM_HP",
+          "title": "Magnesium - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Magnesium-HealthProfessional/",
+          "sourceUse": [
+            "magnesium_kidney_rule"
+          ],
+          "notes": "Use for kidney excretion and supplemental magnesium caution."
+        },
+        {
+          "id": "NKF_CKD_PROTEIN",
+          "title": "CKD Diet: How much protein is the right amount?",
+          "publisher": "National Kidney Foundation",
+          "url": "https://www.kidney.org/kidney-topics/ckd-diet-how-much-protein-right-amount",
+          "sourceUse": [
+            "protein_kidney_rule"
+          ],
+          "notes": "Use for CKD protein intake caution."
+        }
+      ]
+    },
+    {
+      "canonical": "liver disease",
+      "displayNameKo": "간질환",
+      "entityType": "condition",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NCCIH_MILK_THISTLE",
+          "title": "Milk Thistle: Usefulness and Safety",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/milk-thistle",
+          "sourceUse": [
+            "silymarin_liver_rule"
+          ],
+          "notes": "Use for limited evidence/safety framing around milk thistle."
+        },
+        {
+          "id": "NIH_ODS_VITAMIN_A_HP",
+          "title": "Vitamin A and Carotenoids - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminA-HealthProfessional/",
+          "sourceUse": [
+            "vitamin_a_liver_pregnancy_rule"
+          ],
+          "notes": "Use for preformed vitamin A high-dose safety."
+        }
+      ]
+    },
+    {
+      "canonical": "hypertension",
+      "displayNameKo": "고혈압",
+      "entityType": "condition",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NCCIH_GREEN_TEA",
+          "title": "Green Tea: Usefulness and Safety",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/green-tea",
+          "sourceUse": [
+            "caffeine_hypertension_rule"
+          ],
+          "notes": "Use for caffeine-containing green tea/green tea extract blood-pressure caution."
+        }
+      ]
+    },
+    {
+      "canonical": "immunocompromised",
+      "displayNameKo": "면역저하",
+      "entityType": "risk_context",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NCCIH_PROBIOTICS_SAFETY",
+          "title": "Probiotics: Usefulness and Safety",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/probiotics-usefulness-and-safety",
+          "sourceUse": [
+            "probiotic_immunocompromised_rule"
+          ],
+          "notes": "Use for serious infection/contamination risk guardrails."
+        }
+      ]
+    },
+    {
+      "canonical": "pregnancy",
+      "displayNameKo": "임신/임산부",
+      "entityType": "risk_context",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_PREGNANCY_HP",
+          "title": "Dietary Supplements and Life Stages: Pregnancy",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Pregnancy-HealthProfessional/",
+          "sourceUse": [
+            "pregnancy_supplement_policy"
+          ],
+          "notes": "Use for pregnancy-specific supplement context."
+        },
+        {
+          "id": "NIH_ODS_VITAMIN_A_CONSUMER",
+          "title": "Vitamin A and Carotenoids - Consumer Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/VitaminA-Consumer/",
+          "sourceUse": [
+            "vitamin_a_pregnancy_warning"
+          ],
+          "notes": "Use for preformed vitamin A high-dose pregnancy warning."
+        }
+      ]
+    },
+    {
+      "canonical": "surgery",
+      "displayNameKo": "수술/시술 예정",
+      "entityType": "risk_context",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_OMEGA3_HP",
+          "title": "Omega-3 Fatty Acids - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Omega3FattyAcids-HealthProfessional/",
+          "sourceUse": [
+            "omega3_surgery_bleeding_context"
+          ],
+          "notes": "Use for omega-3 bleeding-risk context; surgery-specific wording should remain conservative."
+        },
+        {
+          "id": "MAYO_VITAMIN_E",
+          "title": "Vitamin E",
+          "publisher": "Mayo Clinic",
+          "url": "https://www.mayoclinic.org/drugs-supplements-vitamin-e/art-20364144",
+          "sourceUse": [
+            "vitamin_e_surgery_rule"
+          ],
+          "notes": "Use as secondary source for surgery/procedure bleeding caution."
+        }
+      ]
+    },
+    {
+      "canonical": "digestive symptom",
+      "displayNameKo": "위장 증상",
+      "entityType": "risk_context",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_MAGNESIUM_HP",
+          "title": "Magnesium - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Magnesium-HealthProfessional/",
+          "sourceUse": [
+            "magnesium_gi_symptom_rule"
+          ],
+          "notes": "Use for supplemental magnesium diarrhea/nausea/cramping caution."
+        },
+        {
+          "id": "NCCIH_BERBERINE_WEIGHT_LOSS",
+          "title": "Berberine and Weight Loss: What You Need To Know",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/berberine-and-weight-loss-what-you-need-to-know",
+          "sourceUse": [
+            "general_gi_side_effect_context"
+          ],
+          "notes": "Use for GI symptom wording in unsupported/partial supplement contexts."
+        }
+      ]
+    },
+    {
+      "canonical": "acetaminophen",
+      "displayNameKo": "아세트아미노펜",
+      "entityType": "drug_or_drug_class",
+      "coverageStatus": "covered",
+      "sourceRefs": [
+        {
+          "id": "FDA_ACETAMINOPHEN_OVERUSE",
+          "title": "Don't Overuse Acetaminophen",
+          "publisher": "FDA",
+          "url": "https://www.fda.gov/consumers/consumer-updates/dont-overuse-acetaminophen",
+          "sourceUse": [
+            "medication_safety_rule",
+            "liver_alcohol_rule"
+          ],
+          "notes": "Use for total daily acetaminophen, duplicate-product, liver disease, and alcohol caution."
+        },
+        {
+          "id": "NCBI_LIVERTOX_ACETAMINOPHEN",
+          "title": "Acetaminophen - LiverTox",
+          "publisher": "NCBI Bookshelf",
+          "url": "https://www.ncbi.nlm.nih.gov/books/NBK548162/",
+          "sourceUse": [
+            "liver_toxicity_context"
+          ],
+          "notes": "Use for hepatotoxicity context; keep user-facing advice conservative."
+        }
+      ]
+    },
+    {
+      "canonical": "alcohol use",
+      "displayNameKo": "음주",
+      "entityType": "risk_context",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "FDA_ACETAMINOPHEN_OVERUSE",
+          "title": "Don't Overuse Acetaminophen",
+          "publisher": "FDA",
+          "url": "https://www.fda.gov/consumers/consumer-updates/dont-overuse-acetaminophen",
+          "sourceUse": [
+            "acetaminophen_alcohol_rule"
+          ],
+          "notes": "Use for acetaminophen with daily alcohol/liver risk caution."
+        },
+        {
+          "id": "MEDLINEPLUS_DRUG_INDUCED_LIVER_INJURY",
+          "title": "Drug-induced liver injury",
+          "publisher": "MedlinePlus Medical Encyclopedia",
+          "url": "https://medlineplus.gov/ency/article/000226.htm",
+          "sourceUse": [
+            "liver_condition_safety_context"
+          ],
+          "notes": "Use for conservative liver injury context; not a supplement-specific source."
+        }
+      ]
+    },
+    {
+      "canonical": "medication",
+      "displayNameKo": "복용 중인 약",
+      "entityType": "drug_or_drug_class",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NCCIH_HERB_DRUG_INTERACTIONS",
+          "title": "Herb-Drug Interactions",
+          "publisher": "NCCIH",
+          "url": "https://www.nccih.nih.gov/health/providers/digest/herb-drug-interactions",
+          "sourceUse": [
+            "generic_medication_interaction_guardrail"
+          ],
+          "notes": "Use only as broad interaction guardrail when exact medication is unknown."
+        }
+      ]
+    },
+    {
+      "canonical": "anticoagulant",
+      "displayNameKo": "항응고제",
+      "entityType": "drug_or_drug_class",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "NIH_ODS_OMEGA3_HP",
+          "title": "Omega-3 Fatty Acids - Health Professional Fact Sheet",
+          "publisher": "NIH Office of Dietary Supplements",
+          "url": "https://ods.od.nih.gov/factsheets/Omega3FattyAcids-HealthProfessional/",
+          "sourceUse": [
+            "omega3_anticoagulant_rule"
+          ],
+          "notes": "Use for broad anticoagulant/bleeding context; prefer exact drug when known."
+        }
+      ]
+    },
+    {
+      "canonical": "insomnia",
+      "displayNameKo": "불면",
+      "entityType": "condition",
+      "coverageStatus": "partial",
+      "sourceRefs": [
+        {
+          "id": "MEDLINEPLUS_CAFFEINE",
+          "title": "Caffeine",
+          "publisher": "MedlinePlus",
+          "url": "https://medlineplus.gov/caffeine.html",
+          "sourceUse": [
+            "caffeine_sleep_rule"
+          ],
+          "notes": "Use for caffeine excess and insomnia/sleep symptom caution."
+        },
+        {
+          "id": "CDC_SLEEP_ABOUT",
+          "title": "About Sleep",
+          "publisher": "CDC",
+          "url": "https://www.cdc.gov/sleep/about/index.html",
+          "sourceUse": [
+            "sleep_hygiene_caffeine_timing"
+          ],
+          "notes": "Use for broad caffeine timing/sleep hygiene guardrail."
+        }
+      ]
+    }
+  ]
+}
