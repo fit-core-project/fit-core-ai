@@ -53,6 +53,7 @@ _FOOD_PER_100G: dict[str, dict[str, float]] = {
     "두부":    {"protein_g": 8.1,  "carbs_g": 1.9,  "fat_g": 4.8},
     "연어":    {"protein_g": 20.0, "carbs_g": 0.0,  "fat_g": 13.5},
     "오트밀":  {"protein_g": 16.9, "carbs_g": 66.3, "fat_g": 6.9},
+    "바나나":  {"protein_g": 1.1,  "carbs_g": 22.8, "fat_g": 0.3},
     "삶은 달걀": {"protein_g": 12.6, "carbs_g": 0.7, "fat_g": 9.5},
 }
 
@@ -108,14 +109,37 @@ _TIME_RE = re.compile(r"(\d{1,2})시\s*(\d{1,2})?\s*분?|(\d{1,2}):(\d{2})")
 _AMOUNT_UNIT_RE = re.compile(
     r"(?P<food>[가-힣A-Za-z][가-힣A-Za-z0-9\s]{0,20}?)"
     r"\s+(?P<amount>\d+(?:\.\d+)?)\s*"
-    r"(?P<unit>g|그램|ml|공기|개|인분|스쿱)",
+    r"(?P<unit>g|그램|ml|공기|개|인분|스쿱|그릇|모|컵)",
+    re.IGNORECASE,
+)
+
+_KOREAN_AMOUNT_VALUES = {
+    "반": 0.5,
+    "한": 1.0,
+    "하나": 1.0,
+    "두": 2.0,
+    "둘": 2.0,
+    "세": 3.0,
+    "셋": 3.0,
+    "네": 4.0,
+    "넷": 4.0,
+}
+_KOREAN_AMOUNT_UNIT_RE = re.compile(
+    r"(?P<food>[가-힣A-Za-z][가-힣A-Za-z0-9\s]{0,20}?)"
+    r"\s+(?P<amount_word>반|하나|한|둘|두|셋|세|넷|네)\s*"
+    r"(?P<unit>공기|그릇|모|인분|개|스쿱|컵)",
     re.IGNORECASE,
 )
 
 _CONNECTOR_RE = re.compile(r"랑|이랑|하고|그리고|와\s+|,\s*")
 _MEAL_WORD_RE = re.compile(r"아침|조식|점심|중식|저녁|석식|간식|야식")
 _TIME_WORD_RE = re.compile(r"\d{1,2}시\s*\d{0,2}분?|\d{1,2}:\d{2}")
-_FILLER_RE = re.compile(r"에서?|으로|를|을|도|은|는|먹었\w*|먹음|섭취\w*|마셨\w*|드셨\w*")
+_FILLER_RE = re.compile(r"에서?|으로|를|을|도|은|는|하고|그리고|먹었\w*|먹음|섭취\w*|마셨\w*|드셨\w*")
+_WORKOUT_CONTEXT_RE = re.compile(
+    r"벤치프레스|벤치|스쿼트|데드리프트|푸쉬업|푸시업|랫풀다운|로우|운동",
+    re.IGNORECASE,
+)
+_WORKOUT_NUMERIC_RE = re.compile(r"\d+(?:\.\d+)?\s*(?:kg|킬로)|\d+\s*회|\d+\s*세트", re.IGNORECASE)
 
 
 # ---------- Helpers ----------
@@ -174,8 +198,19 @@ def _strip_context_words(text: str) -> str:
     """Remove meal/time markers and particles so food regex starts at food names."""
     s = _MEAL_WORD_RE.sub("", text)
     s = _TIME_WORD_RE.sub("", s)
+    s = _WORKOUT_NUMERIC_RE.sub(" ", s)
+    s = _WORKOUT_CONTEXT_RE.sub(" ", s)
     s = _PARTICLE_RE.sub(" ", s)
     return re.sub(r"\s{2,}", " ", s).strip()
+
+
+def _clean_food_name(value: str) -> str:
+    s = _MEAL_WORD_RE.sub(" ", value)
+    s = _TIME_WORD_RE.sub(" ", s)
+    s = _WORKOUT_CONTEXT_RE.sub(" ", s)
+    s = _FILLER_RE.sub(" ", s)
+    s = re.sub(r"^(?:랑|이랑|와|과|,)\s*", "", s.strip())
+    return re.sub(r"\s{2,}", " ", s).strip(" ,.")
 
 
 def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
@@ -190,12 +225,34 @@ def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
 
     # Pass 1: food + amount + unit (run on context-stripped text)
     text_for_food = _strip_context_words(text)
+    structured_spans: list[tuple[int, int]] = []
     for m in _AMOUNT_UNIT_RE.finditer(text_for_food):
-        food_name = m.group("food").strip()
+        food_name = _clean_food_name(m.group("food"))
+        if not food_name:
+            continue
         amount = float(m.group("amount"))
         unit = m.group("unit")
         if unit.lower() == "그램":
             unit = "g"
+        macros = _macros_from_table(food_name, amount, unit)
+        items.append(DietParseItem(
+            food_name=food_name,
+            amount=amount,
+            unit=unit,
+            meal_type=meal_type,
+            time_of_day=time_of_day,
+            **macros,
+        ))
+        structured_spans.append(m.span())
+
+    for m in _KOREAN_AMOUNT_UNIT_RE.finditer(text_for_food):
+        if any(not (m.end() <= start or m.start() >= end) for start, end in structured_spans):
+            continue
+        food_name = _clean_food_name(m.group("food"))
+        if not food_name:
+            continue
+        amount = _KOREAN_AMOUNT_VALUES[m.group("amount_word")]
+        unit = m.group("unit")
         macros = _macros_from_table(food_name, amount, unit)
         items.append(DietParseItem(
             food_name=food_name,
@@ -211,7 +268,7 @@ def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
         stripped = _FILLER_RE.sub(" ", text_for_food)
         parts = _CONNECTOR_RE.split(stripped)
         for part in parts:
-            food_name = part.strip()
+            food_name = _clean_food_name(part)
             if len(food_name) >= 1:
                 macros = _macros_from_table(food_name, None, None)
                 items.append(DietParseItem(
@@ -261,6 +318,7 @@ Return JSON only. No markdown fences. No explanations.
 Korean meal keywords: 아침/조식=breakfast, 점심/중식=lunch, 저녁/석식=dinner, 간식/야식=snack.
 For time_of_day: extract ONLY if the user explicitly states a time (e.g. "7시", "19:00", "오후 7시"). Do NOT guess or infer.
 Macros (protein_g, carbs_g, fat_g) MUST be estimated floats with 1 decimal place using your nutritional knowledge (e.g. 닭가슴살 100g → protein_g 31.0, carbs_g 0.0, fat_g 3.6). NEVER return null — use 0.0 only if you have absolutely no data for the food.
+Preserve the user's original quantity and unit when present. Do not convert "계란 2개" or "바나나 1개" into 100g; keep amount=2/unit=개 and amount=1/unit=개.
 Do NOT include an estimated_calories field.
 Use this exact JSON shape:
 {{"items":[{{"food_name":"string","amount":200.0,"unit":"g","protein_g":31.0,"carbs_g":0.0,"fat_g":3.6,"meal_type":"breakfast","time_of_day":null}}]}}
