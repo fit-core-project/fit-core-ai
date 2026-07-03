@@ -52,12 +52,40 @@ def has_any(text: str, needles: list[str]) -> bool:
     return any(str(needle).lower() in lowered for needle in needles if str(needle).strip())
 
 
-def score_case(case: dict[str, Any], payload: dict[str, Any], elapsed_ms: float) -> dict[str, Any]:
+_EXPECTED_ENTITY_EQUIVALENTS = {
+    "coffee": ["coffee", "커피", "caffeine", "카페인"],
+    "caffeine": ["caffeine", "카페인", "coffee", "커피"],
+    "omega3": ["omega3", "omega-3", "오메가3", "오메가"],
+    "vitamin d": ["vitamin d", "vitamind", "비타민d", "비타민D"],
+    "probiotics": ["probiotics", "probiotic", "유산균", "프로바이오틱스"],
+    "thyroid medication": ["thyroid medication", "levothyroxine", "갑상선약"],
+    "warfarin": ["warfarin", "와파린", "anticoagulant", "항응고제"],
+}
+
+
+def expected_entity_evidenced(expected: str, evidence_norm: str) -> bool:
+    expected_raw = str(expected)
+    candidates = _EXPECTED_ENTITY_EQUIVALENTS.get(expected_raw.lower(), [expected_raw])
+    for candidate in candidates:
+        candidate_norm = str(candidate).lower().replace("-", "").replace("_", "").replace(" ", "")
+        if candidate_norm and candidate_norm in evidence_norm:
+            return True
+    return False
+
+
+def score_case(
+    case: dict[str, Any],
+    payload: dict[str, Any],
+    elapsed_ms: float,
+    *,
+    allow_degraded: bool,
+) -> dict[str, Any]:
     answer = str(payload.get("answer") or "")
     caution = str(payload.get("caution") or "")
     mode = str(payload.get("mode") or "")
     sources = payload.get("sources") or []
     combined = f"{answer} {caution}"
+    source_text = json.dumps(sources, ensure_ascii=False).lower() if isinstance(sources, list) else ""
     failures: list[str] = []
     warnings: list[str] = []
 
@@ -69,9 +97,19 @@ def score_case(case: dict[str, Any], payload: dict[str, Any], elapsed_ms: float)
         if needle and needle in combined:
             failures.append(f"must_not_include found: {needle}")
     if not sources:
-        warnings.append("sources is empty")
+        if allow_degraded:
+            warnings.append("sources is empty")
+        else:
+            failures.append("sources is empty")
     if mode and mode != "full":
-        warnings.append(f"mode is {mode}")
+        if allow_degraded:
+            warnings.append(f"mode is {mode}")
+        else:
+            failures.append(f"mode is {mode}; expected full RAG mode")
+    for expected in case.get("expected_entities") or []:
+        evidence_norm = f"{combined} {source_text}".lower().replace("-", "").replace("_", "").replace(" ", "")
+        if not expected_entity_evidenced(str(expected), evidence_norm):
+            failures.append(f"expected entity not evidenced: {expected}")
 
     category = case.get("category")
     if category == "multi_supplement":
@@ -98,6 +136,7 @@ def score_case(case: dict[str, Any], payload: dict[str, Any], elapsed_ms: float)
         "elapsed_ms": elapsed_ms,
         "mode": mode,
         "sources_count": len(sources) if isinstance(sources, list) else 0,
+        "sources": sources if isinstance(sources, list) else [],
         "answer": answer,
         "caution": caution,
     }
@@ -125,7 +164,7 @@ def run_case(args: argparse.Namespace, case: dict[str, Any]) -> dict[str, Any]:
             "caution": "",
         }
     elapsed_ms = round((time.perf_counter() - started) * 1000, 1)
-    return score_case(case, payload, elapsed_ms)
+    return score_case(case, payload, elapsed_ms, allow_degraded=args.allow_degraded)
 
 
 def write_outputs(args: argparse.Namespace, results: list[dict[str, Any]]) -> tuple[Path, Path]:
@@ -170,6 +209,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout-sec", type=float, default=20.0)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--case-id", action="append", default=[])
+    parser.add_argument(
+        "--allow-degraded",
+        action="store_true",
+        help="Treat degraded mode as endpoint-survival smoke instead of quality failure.",
+    )
     return parser.parse_args()
 
 

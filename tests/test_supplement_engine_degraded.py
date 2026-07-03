@@ -18,7 +18,8 @@ def test_supplement_ready_engine_uses_full_path(monkeypatch):
     assert result["sources"] == [{"id": "doc-1"}]
 
 
-def test_supplement_missing_db_degraded_answer():
+def test_supplement_missing_db_degraded_answer(monkeypatch):
+    monkeypatch.setenv("SUPPLEMENT_ENABLE_CURATED_JSON_FALLBACK", "false")
     engine = SupplementRAGEngine(db_path="./missing-demo-db")
 
     result = engine.answer_question("마그네슘 먹어도 돼?")
@@ -28,6 +29,20 @@ def test_supplement_missing_db_degraded_answer():
     assert result["sources"] == []
     assert result["mode"] == "degraded"
     assert "의사" in result["answer"] or "약사" in result["answer"]
+
+
+def test_supplement_missing_chroma_uses_curated_json_kb(monkeypatch):
+    monkeypatch.delenv("SUPPLEMENT_ENABLE_CURATED_JSON_FALLBACK", raising=False)
+    monkeypatch.setenv("SUPPLEMENT_LLM_TIMEOUT_SEC", "0.01")
+    engine = SupplementRAGEngine(db_path="./missing-demo-db")
+
+    result = engine.answer_question("마그네슘은 언제 먹는 게 좋아?")
+
+    assert engine.ready is True
+    assert getattr(engine, "retrieval_mode", None) == "curated_json"
+    assert result["mode"] == "full"
+    assert result["sources"]
+    assert "마그네슘" in result["answer"] or "마그네슘" in result.get("caution", "")
 
 
 def test_supplement_answer_question_never_raises_in_degraded_mode():

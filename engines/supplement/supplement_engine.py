@@ -208,6 +208,10 @@ def _env_flag_enabled(name: str) -> bool:
     return os.getenv(name, "").strip().lower() in _TRUE_VALUES
 
 
+def _env_flag_disabled(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"false", "0", "no", "n", "off"}
+
+
 def _positive_float_env(name: str, default: float) -> float:
     raw = os.getenv(name, "").strip()
     if not raw:
@@ -247,6 +251,122 @@ def _invoke_with_timeout(runnable: Any, payload: dict[str, Any], timeout_sec: fl
         executor.shutdown(wait=False, cancel_futures=True)
 
 
+def _norm_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False)
+    return str(value).strip()
+
+
+def _bullet_lines(values: Any) -> str:
+    if not values:
+        return ""
+    if not isinstance(values, list):
+        values = [values]
+    return "\n".join(f"- {_norm_text(value)}" for value in values if _norm_text(value))
+
+
+def _format_ingredient_profile(payload: dict[str, Any]) -> str:
+    timing = payload.get("timing") or {}
+    lines = ["[Ingredient profile]"]
+    if _norm_text(payload.get("id")):
+        lines.append(f"ID: {_norm_text(payload.get('id'))}")
+    if _norm_text(payload.get("name")):
+        lines.append(f"Name: {_norm_text(payload.get('name'))}")
+    if _norm_text(payload.get("category")):
+        lines.append(f"Category: {_norm_text(payload.get('category'))}")
+    if payload.get("aliases"):
+        lines.append("Aliases:\n" + _bullet_lines(payload.get("aliases")))
+    if payload.get("common_uses"):
+        lines.append("Common uses:\n" + _bullet_lines(payload.get("common_uses")))
+    if isinstance(timing, dict):
+        timing_lines = []
+        for key, label in [
+            ("general", "General"),
+            ("with_food", "With food"),
+            ("before_bed", "Before bed"),
+            ("exercise_related", "Exercise related"),
+        ]:
+            value = _norm_text(timing.get(key))
+            if value:
+                timing_lines.append(f"- {label}: {value}")
+        if timing_lines:
+            lines.append("Timing:\n" + "\n".join(timing_lines))
+    if payload.get("spacing"):
+        lines.append("Spacing:\n" + _bullet_lines(payload.get("spacing")))
+    if payload.get("cautions"):
+        lines.append("Cautions:\n" + _bullet_lines(payload.get("cautions")))
+    if payload.get("high_risk_groups"):
+        lines.append("High risk groups:\n" + _bullet_lines(payload.get("high_risk_groups")))
+    return "\n".join(lines).strip()
+
+
+def _format_interaction_rule(payload: dict[str, Any]) -> str:
+    entity_a = payload.get("entity_a") or {}
+    entity_b = payload.get("entity_b") or {}
+    lines = ["[Interaction rule]"]
+    if _norm_text(payload.get("id")):
+        lines.append(f"ID: {_norm_text(payload.get('id'))}")
+    for label, entity in [("Entity A", entity_a), ("Entity B", entity_b)]:
+        if isinstance(entity, dict):
+            entity_text = " / ".join(
+                value
+                for value in [
+                    _norm_text(entity.get("label")),
+                    _norm_text(entity.get("canonical")),
+                    _norm_text(entity.get("type")),
+                ]
+                if value
+            )
+            if entity_text:
+                lines.append(f"{label}: {entity_text}")
+    if _norm_text(payload.get("interaction_type")):
+        lines.append(f"Interaction type: {_norm_text(payload.get('interaction_type'))}")
+    if _norm_text(payload.get("mechanism")):
+        lines.append(f"Mechanism: {_norm_text(payload.get('mechanism'))}")
+    if _norm_text(payload.get("recommendation")):
+        lines.append(f"Recommendation: {_norm_text(payload.get('recommendation'))}")
+    if _norm_text(payload.get("spacing_guidance")):
+        lines.append(f"Spacing guidance: {_norm_text(payload.get('spacing_guidance'))}")
+    if _norm_text(payload.get("caution_level")):
+        lines.append(f"Caution level: {_norm_text(payload.get('caution_level'))}")
+    if payload.get("consultation_required_when"):
+        lines.append("Consultation required when:\n" + _bullet_lines(payload.get("consultation_required_when")))
+    return "\n".join(lines).strip()
+
+
+def _format_safety_rule(payload: dict[str, Any]) -> str:
+    lines = ["[Safety rule]"]
+    if _norm_text(payload.get("id")):
+        lines.append(f"ID: {_norm_text(payload.get('id'))}")
+    if payload.get("trigger_conditions"):
+        lines.append("Trigger conditions:\n" + _bullet_lines(payload.get("trigger_conditions")))
+    if payload.get("affected_entities"):
+        lines.append("Affected entities:\n" + _bullet_lines(payload.get("affected_entities")))
+    if _norm_text(payload.get("risk")):
+        lines.append(f"Risk: {_norm_text(payload.get('risk'))}")
+    if _norm_text(payload.get("recommendation")):
+        lines.append(f"Recommendation: {_norm_text(payload.get('recommendation'))}")
+    if _norm_text(payload.get("when_to_consult")):
+        lines.append(f"When to consult: {_norm_text(payload.get('when_to_consult'))}")
+    if _norm_text(payload.get("caution_level")):
+        lines.append(f"Caution level: {_norm_text(payload.get('caution_level'))}")
+    if _norm_text(payload.get("evidence_summary")):
+        lines.append(f"Evidence summary: {_norm_text(payload.get('evidence_summary'))}")
+    if payload.get("source_refs"):
+        lines.append("Source refs:\n" + _bullet_lines(payload.get("source_refs")))
+    return "\n".join(lines).strip()
+
+
+def _canonical_from_ingredient(payload: dict[str, Any]) -> str:
+    for alias in payload.get("aliases") or []:
+        alias_text = _norm_text(alias).lower()
+        if alias_text and alias_text.isascii() and any(char.isalpha() for char in alias_text):
+            return alias_text
+    return _norm_text(payload.get("name")).lower()
+
+
 class SupplementRAGEngine:
     def __init__(self, db_path: str = "./data/chroma_db"):
         self.ready = False
@@ -270,20 +390,12 @@ class SupplementRAGEngine:
         engine.db_path = None
         return engine
 
-    def _init_full_rag(self, db_path: str) -> None:
-        self.db_dir = self._find_latest_db(db_path)
-        if not self.db_dir:
-            raise RuntimeError("chroma_db_missing")
-
+    def _init_common_runtime(self) -> None:
         from langchain_core.documents import Document
         from langchain_core.output_parsers import StrOutputParser
         from langchain_core.prompts import ChatPromptTemplate
-        from langchain_community.tools import DuckDuckGoSearchRun
-        from langchain_community.vectorstores import Chroma
-        from langchain_huggingface import HuggingFaceEmbeddings
         from kiwipiepy import Kiwi
         from rank_bm25 import BM25Okapi
-        from sentence_transformers import CrossEncoder
         import numpy as np
 
         self.np = np
@@ -298,32 +410,19 @@ class SupplementRAGEngine:
         self.StrOutputParser = StrOutputParser
         self.llm = get_llm("supplement", temperature=0.1)
         self.query_optimizer = get_llm("supplement", temperature=0.0)
-        self.web_search = DuckDuckGoSearchRun()
 
-        embedding_model_path = _cached_hf_model_path(_EMBEDDING_MODEL_ID, "modules.json")
-        reranker_model_path = _cached_hf_model_path(_RERANKER_MODEL_ID, "config.json")
+        try:
+            from langchain_community.tools import DuckDuckGoSearchRun
 
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name=embedding_model_path,
-            model_kwargs={"device": self.device, "local_files_only": True},
-            encode_kwargs={"normalize_embeddings": True},
-        )
-
-        self.vector_store = Chroma(persist_directory=str(self.db_dir), embedding_function=self.embeddings)
+            self.web_search = DuckDuckGoSearchRun()
+            self.web_search_available = True
+        except Exception as exc:  # noqa: BLE001 - web fallback is optional.
+            logger.warning("[Supplement RAG] web search disabled: %s", sanitize_exception_for_log(exc))
+            self.web_search = None
+            self.web_search_available = False
         self.kiwi = Kiwi(num_workers=-1)
+        self.BM25Okapi = BM25Okapi
         self.target_tags = ("N", "V", "X", "S", "VA")
-        all_db_data = self.vector_store.get()
-        self.original_docs = [
-            Document(page_content=txt, metadata=meta)
-            for txt, meta in zip(all_db_data.get("documents", []), all_db_data.get("metadatas", []))
-        ]
-        if not self.original_docs:
-            raise RuntimeError("chroma_db_empty")
-
-        clean_texts = [(doc.page_content or "").strip() for doc in self.original_docs]
-        tokenized_corpus = [self._tokenize_kiwi(text) for text in clean_texts]
-        self.bm25 = BM25Okapi(tokenized_corpus)
-        self.reranker = CrossEncoder(reranker_model_path, device=self.device, max_length=512, local_files_only=True)
 
         self.local_prompt = ChatPromptTemplate.from_messages(
             [
@@ -359,6 +458,112 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                 ("human", "{question}"),
             ]
         )
+
+    def _init_bm25_from_docs(self) -> None:
+        clean_texts = [(doc.page_content or "").strip() for doc in self.original_docs]
+        tokenized_corpus = [self._tokenize_kiwi(text) for text in clean_texts]
+        self.bm25 = self.BM25Okapi(tokenized_corpus)
+
+    def _init_curated_json_kb(self, reason: str) -> None:
+        if _env_flag_disabled("SUPPLEMENT_ENABLE_CURATED_JSON_FALLBACK"):
+            raise RuntimeError(reason)
+
+        documents_dir = Path(os.getenv("SUPPLEMENT_CURATED_DOCS_DIR", "./data/documents"))
+        docs: list[Any] = []
+        source_specs = [
+            (
+                documents_dir / "supplement_ingredient_profiles.json",
+                "ingredient_profile",
+                lambda row: {
+                    "id": _norm_text(row.get("id")),
+                    "source": "ingredient_profile",
+                    "canonical": _canonical_from_ingredient(row),
+                    "_source_file": "supplement_ingredient_profiles.json",
+                },
+                _format_ingredient_profile,
+            ),
+            (
+                documents_dir / "supplement_interaction_rules.json",
+                "interaction_rule",
+                lambda row: {
+                    "id": _norm_text(row.get("id")),
+                    "source": "interaction_rule",
+                    "entity_a_canonical": _norm_text((row.get("entity_a") or {}).get("canonical")).lower(),
+                    "entity_b_canonical": _norm_text((row.get("entity_b") or {}).get("canonical")).lower(),
+                    "caution_level": _norm_text(row.get("caution_level")).lower(),
+                    "_source_file": "supplement_interaction_rules.json",
+                },
+                _format_interaction_rule,
+            ),
+            (
+                documents_dir / "supplement_safety_rules.json",
+                "safety_rule",
+                lambda row: {
+                    "id": _norm_text(row.get("id")),
+                    "source": "safety_rule",
+                    "affected_entities": ", ".join(_norm_text(value).lower() for value in row.get("affected_entities") or []),
+                    "caution_level": _norm_text(row.get("caution_level")).lower(),
+                    "_source_file": "supplement_safety_rules.json",
+                },
+                _format_safety_rule,
+            ),
+        ]
+
+        for path, source, metadata_factory, formatter in source_specs:
+            if not path.exists():
+                continue
+            rows = json.loads(path.read_text(encoding="utf-8"))
+            for row in rows:
+                metadata = metadata_factory(row)
+                metadata.setdefault("source", source)
+                docs.append(self.Document(page_content=formatter(row), metadata=metadata))
+
+        if not docs:
+            raise RuntimeError("curated_json_kb_missing")
+
+        self.db_dir = documents_dir
+        self.embeddings = None
+        self.vector_store = None
+        self.reranker = None
+        self.original_docs = docs
+        self.retrieval_mode = "curated_json"
+        self._init_bm25_from_docs()
+        logger.warning("[Supplement RAG] using curated JSON fallback KB: %s", reason)
+
+    def _init_full_rag(self, db_path: str) -> None:
+        self._init_common_runtime()
+        self.retrieval_mode = "chroma"
+        self.db_dir = self._find_latest_db(db_path)
+        if not self.db_dir:
+            self._init_curated_json_kb("chroma_db_missing")
+            return
+
+        from langchain_community.vectorstores import Chroma
+        from langchain_huggingface import HuggingFaceEmbeddings
+        from sentence_transformers import CrossEncoder
+
+        embedding_model_path = _cached_hf_model_path(_EMBEDDING_MODEL_ID, "modules.json")
+        reranker_model_path = _cached_hf_model_path(_RERANKER_MODEL_ID, "config.json")
+
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name=embedding_model_path,
+            model_kwargs={"device": self.device, "local_files_only": True},
+            encode_kwargs={"normalize_embeddings": True},
+        )
+
+        self.vector_store = Chroma(persist_directory=str(self.db_dir), embedding_function=self.embeddings)
+        self.kiwi = Kiwi(num_workers=-1)
+        self.target_tags = ("N", "V", "X", "S", "VA")
+        all_db_data = self.vector_store.get()
+        self.original_docs = [
+            self.Document(page_content=txt, metadata=meta)
+            for txt, meta in zip(all_db_data.get("documents", []), all_db_data.get("metadatas", []))
+        ]
+        if not self.original_docs:
+            self._init_curated_json_kb("chroma_db_empty")
+            return
+        self._init_bm25_from_docs()
+        self.reranker = CrossEncoder(reranker_model_path, device=self.device, max_length=512, local_files_only=True)
 
     def _find_latest_db(self, base_path: str) -> Path | None:
         base_dir = Path(base_path)
@@ -501,6 +706,17 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         ]
         return limited[:8] if limited else docs
 
+    def _limit_entity_relevant_docs(self, docs: list[Any], parsed_query: ParsedSupplementQuery) -> list[Any]:
+        entities = self._all_parsed_entity_values(parsed_query)
+        if not entities:
+            return docs
+        limited = [
+            doc
+            for doc in docs
+            if self._doc_metadata_entity_values(doc) & entities or self._doc_text_contains_any(doc, entities)
+        ]
+        return limited if limited else docs
+
     def _doc_source_type(self, doc: Any) -> str:
         meta = doc.metadata or {}
         return str(meta.get("source") or meta.get("type") or "").strip()
@@ -633,9 +849,10 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             "finalTopK": 8,
             "device": self.device,
             "dbPath": str(self.db_dir),
+            "retrievalMode": getattr(self, "retrieval_mode", "unknown"),
             "queryOptimizerEnabled": _env_flag_enabled("SUPPLEMENT_ENABLE_LLM_QUERY_OPTIMIZER"),
             "queryOptimizerUsed": False,
-            "webSearchEnabled": _env_flag_enabled("SUPPLEMENT_ENABLE_WEB_FALLBACK"),
+            "webSearchEnabled": _env_flag_enabled("SUPPLEMENT_ENABLE_WEB_FALLBACK") and bool(getattr(self, "web_search_available", False)),
         }
 
         def mark(name: str, started_at: float) -> None:
@@ -656,12 +873,12 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
 
         k = 30
         stage_start = time.perf_counter()
-        query_embedding = self.embeddings.embed_query(search_query)
+        query_embedding = self.embeddings.embed_query(search_query) if self.embeddings and self.vector_store else None
         mark("embedding", stage_start)
         counts["embeddingDim"] = len(query_embedding) if hasattr(query_embedding, "__len__") else None
 
         stage_start = time.perf_counter()
-        vector_docs = self.vector_store.similarity_search_by_vector(query_embedding, k=k)
+        vector_docs = self.vector_store.similarity_search_by_vector(query_embedding, k=k) if query_embedding is not None else []
         mark("chromaRetrieval", stage_start)
         counts["vectorDocs"] = len(vector_docs)
 
@@ -705,9 +922,14 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
 
         stage_start = time.perf_counter()
         pairs = [[question, doc.page_content] for doc in candidate_docs]
-        rerank_scores = self.reranker.predict(pairs)
-        reranked_results = sorted(zip(rerank_scores, candidate_docs), key=lambda item: item[0], reverse=True)
-        reranked_docs = [doc for _score, doc in reranked_results]
+        if self.reranker is not None and pairs:
+            rerank_scores = self.reranker.predict(pairs)
+            reranked_results = sorted(zip(rerank_scores, candidate_docs), key=lambda item: item[0], reverse=True)
+            reranked_docs = [doc for _score, doc in reranked_results]
+            counts["rerankerUsed"] = True
+        else:
+            reranked_docs = candidate_docs
+            counts["rerankerUsed"] = False
         final_docs = []
         seen_final_keys = set()
         for doc in [*priority_kb_docs, *reranked_docs]:
@@ -719,6 +941,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             if len(final_docs) >= 8:
                 break
         final_docs = self._limit_goal_context_docs(final_docs, parsed_query, normalized_question)
+        final_docs = self._limit_entity_relevant_docs(final_docs, parsed_query)
         mark("rerank", stage_start)
         counts["rerankPairs"] = len(pairs)
         counts["finalDocs"] = len(final_docs)
@@ -766,7 +989,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         web_search_used = False
         timing_ms["webSearch"] = 0
         timing_ms["webLlmGeneration"] = 0
-        if "WEB_SEARCH_REQUIRED" in answer.strip().upper() and counts["webSearchEnabled"] and not final_docs:
+        if "WEB_SEARCH_REQUIRED" in answer.strip().upper() and counts["webSearchEnabled"] and self.web_search and not final_docs:
             try:
                 web_search_used = True
                 web_query = f"{search_query} dosage efficacy side effects interaction"

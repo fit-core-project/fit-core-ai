@@ -516,6 +516,31 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
     entities = _supplement_entities(parsed_query)
     doc_ids = _doc_ids(docs)
     intents = set(parsed_query.intents)
+    canonicals = {entity.canonical for entity in entities}
+
+    if len(entities) == 1 and IntentType.TIMING in intents:
+        timing_answer = _single_ingredient_timing_answer(entities[0].canonical, docs)
+        if timing_answer:
+            return timing_answer
+
+    if IntentType.FOOD_COMPOUND_INTERACTION in intents and "INT_IRON_CAFFEINE" in doc_ids:
+        return (
+            "철분은 커피나 카페인 음료와 동시에 먹으면 흡수에 방해가 될 수 있습니다. "
+            "철분 보충제를 복용한다면 커피와는 시간 간격을 두는 편이 안전하며, 빈혈 치료나 고용량 철분 복용 중이면 "
+            "구체적인 간격을 의사 또는 약사에게 확인하세요."
+        )
+
+    if IntentType.SIDE_EFFECT in intents and "creatine" in canonicals:
+        return (
+            "크레아틴은 사람에 따라 위장 불편, 체중 증가로 느껴지는 수분 저류, 복용량 관련 불편이 생길 수 있습니다. "
+            "신장질환이 있거나 신장 기능을 추적 중이면 임의로 시작하지 말고 의료진과 상담하세요."
+        )
+
+    if "omega3" in canonicals and {"SAFE_OMEGA3_SURGERY", "INT_OMEGA3_ANTICOAGULANTS"} & doc_ids:
+        return (
+            "검색된 상호작용 규칙에 따르면 오메가3는 와파린 같은 항응고제나 항혈소판제 복용, 출혈 위험, 수술·시술 예정 여부가 있으면 먼저 확인해야 합니다. "
+            "일반적인 보충 목적이라도 고용량으로 늘리기 전에는 제품 함량과 복용 중인 약을 함께 점검하세요."
+        )
 
     if IntentType.SYMPTOM_AFTER_INTAKE in intents:
         return (
@@ -564,6 +589,35 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
         )
 
     return ""
+
+
+def _single_ingredient_timing_answer(canonical: str, docs: list[Any]) -> str:
+    for doc in docs:
+        meta = getattr(doc, "metadata", {}) or {}
+        if meta.get("source") != "ingredient_profile" or meta.get("canonical") != canonical:
+            continue
+        text = getattr(doc, "page_content", "") or ""
+        timing = _list_after(text, "Timing")
+        spacing = _list_after(text, "Spacing")
+        cautions = _list_after(text, "Cautions")
+        label = _entity_label(canonical)
+        parts = []
+        if timing:
+            parts.append(f"{label} 복용 타이밍은 {_clean_doc_list_text(timing)}")
+        if spacing:
+            parts.append(f"다른 성분이나 약과 함께 먹는 경우에는 {_clean_doc_list_text(spacing)}")
+        if cautions:
+            parts.append(f"주의할 점은 {_clean_doc_list_text(cautions)}")
+        if parts:
+            return " ".join(parts)
+    return ""
+
+
+def _clean_doc_list_text(text: str) -> str:
+    cleaned = re.sub(r"\b(?:General|With food|Before bed|Exercise related):\s*", "", text or "")
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    cleaned = cleaned.replace("..", ".")
+    return cleaned.strip(" .") + "."
 
 
 def _should_prefer_deterministic_answer(parsed_query: ParsedSupplementQuery, docs: list[Any]) -> bool:
