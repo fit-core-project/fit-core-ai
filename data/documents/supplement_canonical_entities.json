@@ -492,7 +492,18 @@
         "blood pressure medication",
         "혈압 약",
         "고혈압약",
-        "고혈압 약"
+        "고혈압 약",
+        "ACE 억제제",
+        "ACE inhibitor",
+        "ARB",
+        "베타차단제",
+        "베타 차단제",
+        "beta blocker",
+        "칼슘채널차단제",
+        "칼슘 채널 차단제",
+        "calcium channel blocker",
+        "이뇨제",
+        "diuretic"
       ],
       "coverageStatus": "partial",
       "sourceRefs": [
@@ -509,7 +520,15 @@
         "diabetes medication",
         "당뇨 약",
         "혈당약",
-        "혈당 약"
+        "혈당 약",
+        "메트포르민",
+        "metformin",
+        "인슐린",
+        "insulin",
+        "SGLT2",
+        "GLP-1",
+        "설폰요소제",
+        "sulfonylurea"
       ],
       "coverageStatus": "partial",
       "sourceRefs": [
@@ -693,6 +712,8 @@
         "메스꺼움",
         "설사",
         "복통",
+        "변비",
+        "constipation",
         "위장 불편",
         "위가 약함",
         "위가 약한",

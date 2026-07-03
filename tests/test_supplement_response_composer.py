@@ -793,3 +793,70 @@ def test_digestive_zinc_direct_answer_handles_weak_stomach_alias():
     assert "아연" in result.answer
     assert "위장" in result.answer or "속" in result.answer
     assert "식후" in result.answer
+
+
+def test_vitamin_d_numeric_dose_requests_label_total_and_labs():
+    result = compose_supplement_response(
+        question="비타민D 5000IU 매일 먹어도 돼?",
+        parsed_query=parse_supplement_query("비타민D 5000IU 매일 먹어도 돼?"),
+        generated_answer="복용해도 됩니다.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "비타민D" in result.answer
+    assert "IU" in result.answer
+    assert "하루 총량" in result.answer
+    assert "검사 수치" in result.answer
+    assert "의료진" in result.answer or "약사" in result.answer
+    assert "복용해도 됩니다" not in result.answer
+
+
+def test_zinc_high_dose_long_term_mentions_copper_and_gi():
+    result = compose_supplement_response(
+        question="아연 50mg 장기복용 괜찮아?",
+        parsed_query=parse_supplement_query("아연 50mg 장기복용 괜찮아?"),
+        generated_answer="개인 상태에 따라 달라질 수 있으므로 전문가와 상담하세요.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "아연" in result.answer
+    assert "구리 결핍" in result.answer
+    assert "위장" in result.answer
+    assert "장기" in result.answer
+
+
+def test_iron_dose_constipation_mentions_lab_and_spacing():
+    result = compose_supplement_response(
+        question="철분 65mg 제품 먹고 변비가 있는데 계속 먹어도 돼?",
+        parsed_query=parse_supplement_query("철분 65mg 제품 먹고 변비가 있는데 계속 먹어도 돼?"),
+        generated_answer="{}",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "철분" in result.answer
+    assert "변비" in result.answer
+    assert "검사 수치" in result.answer
+    assert "간격" in result.answer
+
+
+def test_omega3_label_surgery_mentions_epa_dha_bleeding():
+    result = compose_supplement_response(
+        question="수술 1주 전인데 오메가3 EPA DHA 2000mg 먹어도 돼?",
+        parsed_query=parse_supplement_query("수술 1주 전인데 오메가3 EPA DHA 2000mg 먹어도 돼?"),
+        generated_answer="문제 없습니다.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+
+    assert result.used_kb_fallback is True
+    assert "오메가3" in result.answer
+    assert "EPA+DHA" in result.answer
+    assert "수술" in result.answer
+    assert "출혈" in result.answer
+    assert "문제 없습니다" not in result.answer

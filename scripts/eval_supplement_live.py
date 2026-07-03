@@ -55,11 +55,21 @@ def has_any(text: str, needles: list[str]) -> bool:
 _EXPECTED_ENTITY_EQUIVALENTS = {
     "aspirin": ["aspirin", "아스피린", "antiplatelet", "항혈소판제"],
     "berberine": ["berberine", "베르베린"],
-    "blood pressure medication": ["blood pressure medication", "혈압약", "혈압 약", "고혈압약"],
+    "blood pressure medication": [
+        "blood pressure medication",
+        "혈압약",
+        "혈압 약",
+        "고혈압약",
+        "ACE 억제제",
+        "ARB",
+        "베타차단제",
+        "칼슘채널차단제",
+        "이뇨제",
+    ],
     "coffee": ["coffee", "커피", "caffeine", "카페인"],
     "caffeine": ["caffeine", "카페인", "coffee", "커피"],
-    "diabetes medication": ["diabetes medication", "당뇨약", "당뇨 약"],
-    "digestive symptom": ["digestive symptom", "위장", "위가", "속이", "메스꺼움", "설사", "복통"],
+    "diabetes medication": ["diabetes medication", "당뇨약", "당뇨 약", "메트포르민", "인슐린", "SGLT2", "GLP-1"],
+    "digestive symptom": ["digestive symptom", "위장", "위가", "속이", "메스꺼움", "설사", "복통", "변비"],
     "eaa": ["eaa", "필수아미노산", "essential amino acids"],
     "glutamine": ["glutamine", "글루타민"],
     "kidney disease": ["kidney disease", "신장질환", "신장 기능", "신장기능", "renal", "투석"],
@@ -78,6 +88,9 @@ _EXPECTED_ENTITY_EQUIVALENTS = {
     "probiotics": ["probiotics", "probiotic", "유산균", "프로바이오틱스"],
     "thyroid medication": ["thyroid medication", "levothyroxine", "갑상선약"],
     "warfarin": ["warfarin", "와파린", "anticoagulant", "항응고제"],
+    "high dose": ["high dose", "고용량", "고함량", "함량", "총량"],
+    "pregnancy": ["pregnancy", "임신", "임산부", "임신 준비"],
+    "surgery": ["surgery", "수술", "시술"],
 }
 
 

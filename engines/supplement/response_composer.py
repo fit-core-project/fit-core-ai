@@ -40,6 +40,8 @@ _WEAK_ANSWER_NEEDLES = (
 )
 _UNSAFE_PHRASES = (
     "먹어도 됩니다",
+    "복용해도 됩니다",
+    "계속 먹어도 됩니다",
     "문제 없습니다",
     "안전합니다",
     "걱정하지 않아도 됩니다",
@@ -147,6 +149,8 @@ def compose_supplement_response(
 
 
 def _should_replace_with_direct_answer(answer: str, parsed_query: ParsedSupplementQuery) -> bool:
+    if any(phrase in (answer or "") for phrase in _UNSAFE_PHRASES):
+        return True
     if _is_low_specificity_answer(answer):
         return True
     if _answer_misses_query_entities(answer, parsed_query):
@@ -585,6 +589,10 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
             f"의사 또는 약사에게 상담하는 쪽으로 안내해야 합니다.{known_text}"
         )
 
+    dose_answer = _dose_or_label_context_answer(canonicals, all_canonicals, parsed_query.raw_query)
+    if dose_answer:
+        return dose_answer
+
     if len(entities) == 1 and IntentType.TIMING in intents:
         timing_answer = _single_ingredient_timing_answer(entities[0].canonical, docs)
         if timing_answer:
@@ -706,6 +714,91 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
     return ""
 
 
+def _dose_or_label_context_answer(canonicals: set[str], all_canonicals: set[str], question: str) -> str:
+    if not canonicals or not _has_dose_or_label_context(question):
+        return ""
+
+    if "magnesium" in canonicals:
+        return (
+            "마그네슘 제품은 라벨의 1회 함량과 하루 총량, 원소량 기준인지 여부를 먼저 확인해야 합니다. "
+            "신장질환, 설사·위장 불편, 혈압약이나 항생제·갑상선약 병용 여부가 있으면 임의로 늘리지 말고 의사 또는 약사에게 확인하세요."
+        )
+    if "vitamin d" in canonicals:
+        return (
+            "비타민D는 제품 라벨의 IU/μg 함량, 하루 총량, 다른 종합비타민과의 중복, 혈중 비타민D·칼슘 관련 검사 수치를 함께 봐야 합니다. "
+            "고함량으로 매일 복용하려는 상황이거나 당뇨약·신장질환·임신/수유 맥락이 있으면 의료진 또는 약사에게 확인하세요."
+        )
+    if "zinc" in canonicals:
+        return (
+            "아연은 제품 함량과 하루 총량, 장기 복용 여부를 먼저 확인해야 합니다. "
+            "고함량 또는 장기 복용에서는 위장 불편과 구리 결핍 가능성을 보수적으로 봐야 하므로, 철분·칼슘·항생제 병용이나 속 불편이 있으면 약사에게 확인하세요."
+        )
+    if "iron" in canonicals:
+        return (
+            "철분은 제품 함량과 복용 목적이 중요합니다. 결핍이나 빈혈 치료 목적이 아니라면 임의로 고함량을 계속 복용하지 않는 편이 안전하며, "
+            "변비·속 불편, 커피·칼슘·마그네슘·아연·항생제와의 간격, 검사 수치를 함께 확인하세요."
+        )
+    if "omega3" in canonicals:
+        return (
+            "오메가3는 제품 라벨에서 EPA+DHA 총량과 하루 섭취량을 확인해야 합니다. "
+            "아스피린·항응고제·항혈소판제 복용, 멍이나 출혈, 수술·시술 예정, 비타민E 고함량 병용이 있으면 복용 간격만으로 판단하지 말고 의료진 또는 약사에게 확인하세요."
+        )
+    if "vitamin a" in canonicals or "multivitamin" in canonicals:
+        return (
+            "종합비타민이나 비타민A 제품은 라벨에서 preformed vitamin A 함량, 비타민D·철분·아연 등 중복 성분, 하루 총량을 확인해야 합니다. "
+            "임신 준비·임신/수유, 간질환·간수치 이상, 눈 건강 제품이나 간유 제품 병용이 있으면 임의 복용을 피하고 전문가에게 확인하세요."
+        )
+    if "vitamin e" in canonicals:
+        return (
+            "비타민E는 제품 함량과 고함량 여부, 다른 항산화 제품과의 중복을 확인해야 합니다. "
+            "아스피린·항응고제·항혈소판제 복용, 출혈 병력, 수술·시술 예정이 있으면 안전하다고 단정하지 말고 의사 또는 약사에게 확인하세요."
+        )
+    if "berberine" in canonicals and "diabetes medication" in all_canonicals:
+        return (
+            "베르베린은 제품 함량과 목적, 혈당 기록, 복용 중인 당뇨약 종류를 함께 봐야 합니다. "
+            "메트포르민·인슐린 등 혈당 관련 약을 복용 중이면 저혈당이나 위장 불편 가능성을 고려해 의료진 또는 약사에게 먼저 확인하세요."
+        )
+
+    labels = ", ".join(_entity_label(canonical) for canonical in sorted(canonicals))
+    return (
+        f"{labels} 제품은 제품명, 성분표, 1회 함량, 하루 복용량, 다른 제품과의 중복 성분을 먼저 확인해야 합니다. "
+        "복용 중인 약, 질환, 임신/수유, 수술 예정 여부가 있으면 안전하다고 단정하지 말고 의사 또는 약사에게 확인하세요."
+    )
+
+
+_DOSE_OR_LABEL_PATTERN = re.compile(
+    r"\d+(?:[.,]\d+)?\s*(?:mg|mcg|μg|ug|iu|g|그램|미리그램|마이크로그램|알|정|캡슐|스푼)",
+    re.IGNORECASE,
+)
+
+
+def _has_dose_or_label_context(question: str) -> bool:
+    if not question:
+        return False
+    if _DOSE_OR_LABEL_PATTERN.search(question):
+        return True
+    return any(
+        needle in question
+        for needle in (
+            "제품",
+            "라벨",
+            "성분표",
+            "함량",
+            "복용량",
+            "용량",
+            "몇 알",
+            "몇 정",
+            "몇 캡슐",
+            "하루 2",
+            "하루 두",
+            "하루 세",
+            "EPA",
+            "DHA",
+            "고함량",
+        )
+    )
+
+
 def _goal_based_direct_answer(canonicals: set[str]) -> str:
     if {"magnesium", "theanine", "melatonin"} <= canonicals:
         return (
@@ -762,6 +855,8 @@ def _should_prefer_deterministic_answer(parsed_query: ParsedSupplementQuery, doc
     doc_ids = _doc_ids(docs)
     intents = set(parsed_query.intents)
     if any(entity_coverage_status(entity.canonical) == "unsupported" for entity in parsed_query.entities):
+        return True
+    if entities and _has_dose_or_label_context(parsed_query.raw_query):
         return True
     if intents & {IntentType.GOAL_BASED_RECOMMENDATION, IntentType.DRUG_INTERACTION, IntentType.CONDITION_SAFETY}:
         direct = _direct_answer_from_query_and_docs(parsed_query, docs)

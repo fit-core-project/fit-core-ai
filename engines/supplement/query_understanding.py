@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -81,8 +82,43 @@ _FALLBACK_ALIAS_REGISTRY: tuple[AliasEntry, ...] = (
     AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "aspirin", ("아스피린", "aspirin")),
     AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "acetaminophen", ("타이레놀", "acetaminophen", "paracetamol")),
     AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "pain reliever", ("진통제", "pain reliever")),
-    AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "blood pressure medication", ("혈압약", "blood pressure medication")),
-    AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "diabetes medication", ("당뇨약", "diabetes medication")),
+    AliasEntry(
+        EntityType.DRUG_OR_DRUG_CLASS,
+        "blood pressure medication",
+        (
+            "혈압약",
+            "혈압 약",
+            "고혈압약",
+            "blood pressure medication",
+            "ACE 억제제",
+            "ACE inhibitor",
+            "ARB",
+            "베타차단제",
+            "beta blocker",
+            "칼슘채널차단제",
+            "calcium channel blocker",
+            "이뇨제",
+            "diuretic",
+        ),
+    ),
+    AliasEntry(
+        EntityType.DRUG_OR_DRUG_CLASS,
+        "diabetes medication",
+        (
+            "당뇨약",
+            "당뇨 약",
+            "혈당약",
+            "diabetes medication",
+            "메트포르민",
+            "metformin",
+            "인슐린",
+            "insulin",
+            "SGLT2",
+            "GLP-1",
+            "설폰요소제",
+            "sulfonylurea",
+        ),
+    ),
     AliasEntry(EntityType.FOOD_OR_COMPOUND, "coffee", ("커피", "coffee")),
     AliasEntry(EntityType.FOOD_OR_COMPOUND, "caffeine", ("카페인", "caffeine")),
     AliasEntry(EntityType.FOOD_OR_COMPOUND, "calcium", ("칼슘", "calcium")),
@@ -99,7 +135,7 @@ _FALLBACK_ALIAS_REGISTRY: tuple[AliasEntry, ...] = (
     AliasEntry(EntityType.RISK_CONTEXT, "surgery", ("수술", "surgery")),
     AliasEntry(EntityType.RISK_CONTEXT, "alcohol use", ("음주", "술", "알코올", "alcohol use")),
     AliasEntry(EntityType.RISK_CONTEXT, "immunocompromised", ("면역저하", "면역 저하", "항암", "중증질환", "중심정맥관")),
-    AliasEntry(EntityType.RISK_CONTEXT, "digestive symptom", ("속이 안 좋음", "속이 안 좋은", "메스꺼움", "설사", "복통", "위장 불편")),
+    AliasEntry(EntityType.RISK_CONTEXT, "digestive symptom", ("속이 안 좋음", "속이 안 좋은", "메스꺼움", "설사", "복통", "변비", "constipation", "위장 불편")),
 )
 
 
@@ -200,7 +236,7 @@ def _extract_entities(query: str) -> list[ParsedEntity]:
     for entry, alias in alias_candidates:
         haystack = lowered if _is_ascii(alias) else query
         needle = alias.lower() if _is_ascii(alias) else alias
-        if needle not in haystack:
+        if not _alias_matches(haystack, needle):
             continue
         key = (entry.entity_type, entry.canonical)
         if key in seen:
@@ -208,7 +244,32 @@ def _extract_entities(query: str) -> list[ParsedEntity]:
         found.append(ParsedEntity(type=entry.entity_type, canonical=entry.canonical, text=alias))
         seen.add(key)
 
+    if _has_numeric_dose_or_serving_context(query) and (EntityType.RISK_CONTEXT, "high dose") not in seen:
+        found.append(ParsedEntity(type=EntityType.RISK_CONTEXT, canonical="high dose", text="numeric dose"))
+
     return found
+
+
+_NUMERIC_DOSE_PATTERN = re.compile(
+    r"\d+(?:[.,]\d+)?\s*(?:mg|mcg|μg|ug|iu|g|그램|미리그램|마이크로그램|알|정|캡슐|스푼)",
+    re.IGNORECASE,
+)
+
+
+def _has_numeric_dose_or_serving_context(query: str) -> bool:
+    if not query:
+        return False
+    if _NUMERIC_DOSE_PATTERN.search(query):
+        return True
+    return any(needle in query for needle in ("하루 몇", "하루 2", "하루 두", "하루 세", "몇 알", "몇 정", "몇 캡슐", "고함량"))
+
+
+def _alias_matches(haystack: str, needle: str) -> bool:
+    if not needle:
+        return False
+    if _is_ascii(needle) and len(needle) <= 2:
+        return re.search(rf"(?<![a-z0-9]){re.escape(needle.lower())}(?![a-z0-9])", haystack.lower()) is not None
+    return needle in haystack
 
 
 def _infer_intents(query: str, entities: list[ParsedEntity]) -> list[IntentType]:
