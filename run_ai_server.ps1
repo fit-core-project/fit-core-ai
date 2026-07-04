@@ -6,6 +6,14 @@ Set-Location $AppDir
 $env:HF_HUB_OFFLINE = "1"
 $env:TRANSFORMERS_OFFLINE = "1"
 
+# food_engine 임베딩 모델 로컬 캐시 경로 (HF_HUB_OFFLINE 환경에서 필수)
+if (-not $env:FOOD_EMBEDDING_PATH) {
+    $bgeSnapshot = "$env:USERPROFILE\.cache\huggingface\hub\models--dragonkue--BGE-m3-ko\snapshots"
+    $latestSnapshot = Get-ChildItem -Path $bgeSnapshot -Directory -ErrorAction SilentlyContinue |
+                      Sort-Object Name -Descending | Select-Object -First 1
+    if ($latestSnapshot) { $env:FOOD_EMBEDDING_PATH = $latestSnapshot.FullName }
+}
+
 $OllamaCommand = Get-Command ollama -ErrorAction SilentlyContinue
 $Ollama = if ($OllamaCommand) {
     $OllamaCommand.Source

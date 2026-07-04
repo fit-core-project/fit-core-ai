@@ -18,6 +18,11 @@ from pydantic import BaseModel, Field
 from engines.llm_router import _parse_json_content, get_llm, resolve_llm_provider
 from engines.log_redaction import sanitize_exception_for_log, summarize_text_for_log
 
+try:
+    from engines.food.food_engine import get_food_engine
+except Exception:
+    get_food_engine = None
+
 logger = logging.getLogger(__name__)
 
 _TRUE_VALUES = {"true", "1", "yes", "on"}
@@ -31,6 +36,8 @@ class DietParseItem(BaseModel):
     protein_g: Optional[float] = None
     carbs_g: Optional[float] = None
     fat_g: Optional[float] = None
+    kcal: Optional[float] = None
+    source: Optional[str] = None
     meal_type: Optional[str] = None   # breakfast | lunch | dinner | snack | null
     time_of_day: Optional[str] = None  # "HH:mm" | null
 
@@ -227,15 +234,24 @@ def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
 # ---------- Macro enrichment ----------
 
 def _enrich_macros(parsed: ParsedDietLog) -> ParsedDietLog:
-    """Enrich macros from food table.
-
-    Policy:
-    - known food (in _FOOD_PER_100G) + computable weight → always prefer table (overrides LLM)
-    - unknown food, all macros null → try table (won't match, safe)
-    - unknown food, macros present → keep LLM values
-    """
+    engine = get_food_engine() if get_food_engine is not None else None
     enriched = []
     for item in parsed.items:
+        db_hit = None
+        if engine is not None and getattr(engine, "available", False):
+            try:
+                db_hit = engine.search(item.food_name, item.amount, item.unit)
+            except Exception:
+                db_hit = None
+        if db_hit is not None:
+            enriched.append(item.model_copy(update={
+                "protein_g": db_hit.get("protein_g"),
+                "carbs_g": db_hit.get("carbs_g"),
+                "fat_g": db_hit.get("fat_g"),
+                "kcal": db_hit.get("kcal"),
+                "source": "db",
+            }))
+            continue
         food_key = item.food_name.strip()
         is_known = food_key in _FOOD_PER_100G
         all_null = item.protein_g is None and item.carbs_g is None and item.fat_g is None
