@@ -33,7 +33,6 @@ class DietParseItem(BaseModel):
     fat_g: Optional[float] = None
     meal_type: Optional[str] = None   # breakfast | lunch | dinner | snack | null
     time_of_day: Optional[str] = None  # "HH:mm" | null
-    source: Optional[str] = None      # "db" | "ai" | null
 
 
 class ParsedDietLog(BaseModel):
@@ -198,14 +197,12 @@ def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
         if unit.lower() == "그램":
             unit = "g"
         macros = _macros_from_table(food_name, amount, unit)
-        source = "db" if macros["protein_g"] is not None else "ai"
         items.append(DietParseItem(
             food_name=food_name,
             amount=amount,
             unit=unit,
             meal_type=meal_type,
             time_of_day=time_of_day,
-            source=source,
             **macros,
         ))
 
@@ -217,12 +214,10 @@ def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
             food_name = part.strip()
             if len(food_name) >= 1:
                 macros = _macros_from_table(food_name, None, None)
-                source = "db" if macros["protein_g"] is not None else "ai"
                 items.append(DietParseItem(
                     food_name=food_name,
                     meal_type=meal_type,
                     time_of_day=time_of_day,
-                    source=source,
                     **macros,
                 ))
 
@@ -247,15 +242,10 @@ def _enrich_macros(parsed: ParsedDietLog) -> ParsedDietLog:
         if is_known:
             macros = _macros_from_table(food_key, item.amount, item.unit)
             if macros["protein_g"] is not None:
-                item = item.model_copy(update={**macros, "source": "db"})
-            else:
-                item = item.model_copy(update={"source": "ai"})
+                item = item.model_copy(update=macros)
         elif all_null:
             macros = _macros_from_table(food_key, item.amount, item.unit)
-            source = "db" if macros["protein_g"] is not None else "ai"
-            item = item.model_copy(update={**macros, "source": source})
-        else:
-            item = item.model_copy(update={"source": "ai"})
+            item = item.model_copy(update=macros)
         enriched.append(item)
     return ParsedDietLog(items=enriched)
 
