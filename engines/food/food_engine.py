@@ -18,7 +18,7 @@ import threading
 from pathlib import Path
 from typing import Optional
 
-from engines.food.food_query_normalization import normalize_food_query_for_search
+from engines.food.food_query_normalization import build_food_search_queries
 
 logger = logging.getLogger(__name__)
 
@@ -157,19 +157,58 @@ class FoodSearchEngine:
         return float(amount) * per_unit
 
     # ── 메인 검색 ───────────────────────────────────────────────
+    @staticmethod
+    def _dedupe_result_key(doc):
+        meta = doc.metadata or {}
+        for field in ("food_id", "id"):
+            value = meta.get(field)
+            if value:
+                return (field, value)
+        name = meta.get("name") or meta.get("rep_name")
+        if name:
+            return (
+                "name",
+                name,
+                meta.get("data_type"),
+                meta.get("major_category"),
+            )
+        page_content = getattr(doc, "page_content", None)
+        if page_content:
+            return ("page_content", page_content)
+        return ("metadata", tuple(sorted(meta.items())))
+
+    @classmethod
+    def _dedupe_results(cls, result_groups):
+        seen = set()
+        deduped = []
+        for results in result_groups:
+            for doc, distance in results:
+                key = cls._dedupe_result_key(doc)
+                if key in seen:
+                    continue
+                seen.add(key)
+                deduped.append((doc, distance))
+                if len(deduped) >= TOP_K:
+                    return deduped
+        return deduped
+
     def search(self, food_name: str, amount=None, unit=None) -> Optional[dict]:
         if not self.available or self._vector_store is None:
             return None
-        query = normalize_food_query_for_search(food_name)
-        if not query:
+        search_queries = build_food_search_queries(food_name)
+        if not search_queries:
             return None
 
         try:
             with self._lock:
-                results = self._vector_store.similarity_search_with_score(query, k=TOP_K)
+                result_groups = [
+                    self._vector_store.similarity_search_with_score(query, k=TOP_K)
+                    for query in search_queries
+                ]
         except Exception as exc:
-            logger.warning("[food_engine] 검색 실패(%s): %s", query, exc)
+            logger.warning("[food_engine] 검색 실패(%s): %s", search_queries, exc)
             return None
+        results = self._dedupe_results(result_groups)
         if not results:
             return None
 

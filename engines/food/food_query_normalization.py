@@ -5,6 +5,7 @@ change API request/response contracts or user-visible food names.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Literal
 
@@ -188,3 +189,28 @@ def analyze_food_query_for_search(query: str | None) -> FoodQueryAnalysis:
 def normalize_food_query_for_search(query: str | None) -> str:
     """Return the canonicalized query used for food vector retrieval."""
     return analyze_food_query_for_search(query).normalized_query
+
+
+def _dedupe_preserve_order(values: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for value in values:
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        deduped.append(value)
+    return deduped
+
+
+def build_food_search_queries(query: str | None) -> list[str]:
+    """Build ordered vector retrieval queries for a food search input."""
+    analysis = analyze_food_query_for_search(query)
+    if not analysis.cleaned_query:
+        return []
+    if analysis.protected:
+        return [analysis.cleaned_query]
+    if analysis.alias_applied:
+        return _dedupe_preserve_order(
+            [analysis.normalized_query, analysis.cleaned_query]
+        )
+    return [analysis.cleaned_query]

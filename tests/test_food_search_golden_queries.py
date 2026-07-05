@@ -113,10 +113,10 @@ def _engine_with_fake_vectorstore():
 @pytest.mark.parametrize(
     ("raw_query", "expected_query"),
     [
-        ("삶은 계란", "달걀 삶은것"),
+        ("삶은 계란", ["달걀 삶은것", "삶은 계란"]),
         ("계란빵", "계란빵"),
         ("샐러드 닭가슴살", "샐러드 닭가슴살"),
-        ("닭가슴살 생것", "닭고기 가슴(껍질 제거) 생것"),
+        ("닭가슴살 생것", ["닭고기 가슴(껍질 제거) 생것", "닭가슴살 생것"]),
     ],
 )
 def test_food_search_engine_uses_golden_normalized_query_for_vectorstore(
@@ -128,7 +128,10 @@ def test_food_search_engine_uses_golden_normalized_query_for_vectorstore(
     result = engine.search(raw_query, 100, "g")
 
     assert result is not None
-    assert engine._vector_store.queries == [expected_query]
+    expected_queries = (
+        expected_query if isinstance(expected_query, list) else [expected_query]
+    )
+    assert engine._vector_store.queries == expected_queries
 
 
 @pytest.mark.chroma
