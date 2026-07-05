@@ -18,6 +18,7 @@ import threading
 from pathlib import Path
 from typing import Optional
 
+from engines.food.food_canonical_index import load_food_canonical_index
 from engines.food.food_query_normalization import analyze_food_query_for_search
 from engines.food.food_query_normalization import build_food_search_queries
 from engines.food.food_reranker import (
@@ -35,6 +36,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 EMBEDDING_MODEL_ID = os.getenv("FOOD_EMBEDDING_MODEL", "dragonkue/BGE-m3-ko")
 FOOD_DB_DIR = PROJECT_ROOT / "data" / "food_chroma_db"
 FOOD_COLLECTION_NAME = "food_db"
+FOOD_CSV_PATH = PROJECT_ROOT / "data" / "food_db" / "food_db_clean.csv"
 
 # 코사인 유사도 임계값. 이 값 미만이면 매칭 실패로 간주(오탐 방지). 캘리브레이션 필요.
 SIMILARITY_THRESHOLD = float(os.getenv("FOOD_SIM_THRESHOLD", "0.55"))
@@ -96,6 +98,7 @@ class FoodSearchEngine:
     def __init__(self):
         self.available = False
         self._vector_store = None
+        self._canonical_index = None
         self._lock = threading.Lock()  # 임베딩/검색 직렬화 (모델 스레드안전 보장 X)
         self._load()
 
@@ -129,6 +132,7 @@ class FoodSearchEngine:
                 return
 
             self.available = True
+            self._load_canonical_index()
             logger.info(
                 "[food_engine] 로드 완료 (docs=%s, model=%s, device=%s, thr=%.2f)",
                 cnt, EMBEDDING_MODEL_ID, resolve_device(), SIMILARITY_THRESHOLD,
@@ -137,6 +141,13 @@ class FoodSearchEngine:
             logger.warning("[food_engine] 로드 실패 → 폴백 모드: %s", exc)
             self._vector_store = None
             self.available = False
+
+    def _load_canonical_index(self):
+        try:
+            self._canonical_index = load_food_canonical_index(FOOD_CSV_PATH)
+        except Exception as exc:
+            logger.warning("[food_engine] canonical index 로드 실패: %s", exc)
+            self._canonical_index = None
 
     # ── 단위 → 그램 ─────────────────────────────────────────────
     @staticmethod
@@ -190,6 +201,50 @@ class FoodSearchEngine:
                 )
         return candidates
 
+    @staticmethod
+    def _dedupe_candidates(candidates):
+        seen = set()
+        deduped = []
+        for candidate in candidates:
+            if candidate.dedupe_key in seen:
+                continue
+            seen.add(candidate.dedupe_key)
+            deduped.append(candidate)
+        return deduped
+
+    @staticmethod
+    def _canonical_lookup_queries(analysis):
+        if not analysis.cleaned_query:
+            return []
+        if analysis.protected:
+            return [analysis.cleaned_query]
+        queries = []
+        for query in (analysis.normalized_query, analysis.cleaned_query):
+            if query and query not in queries:
+                queries.append(query)
+        return queries
+
+    def _lookup_canonical_candidates(self, analysis):
+        index = getattr(self, "_canonical_index", None)
+        if index is None:
+            return []
+        candidates = []
+        for lookup_index, query in enumerate(self._canonical_lookup_queries(analysis)):
+            for original_rank, record in enumerate(index.lookup(query, limit=TOP_K)):
+                doc = record.to_document()
+                dedupe_key = build_food_candidate_dedupe_key(doc)
+                candidates.append(
+                    FoodSearchCandidate(
+                        document=doc,
+                        vector_score=0.0,
+                        source_query=query,
+                        source_query_index=-1 + lookup_index,
+                        original_rank=original_rank,
+                        dedupe_key=dedupe_key,
+                    )
+                )
+        return self._dedupe_candidates(candidates)
+
     @classmethod
     def _dedupe_results(cls, result_groups):
         candidates = cls._collect_candidates(
@@ -218,7 +273,9 @@ class FoodSearchEngine:
         except Exception as exc:
             logger.warning("[food_engine] 검색 실패(%s): %s", search_queries, exc)
             return None
-        candidates = self._collect_candidates(result_groups, search_queries)
+        canonical_candidates = self._lookup_canonical_candidates(analysis)
+        vector_candidates = self._collect_candidates(result_groups, search_queries)
+        candidates = self._dedupe_candidates(canonical_candidates + vector_candidates)
         candidates = rerank_food_candidates(analysis, candidates, final_k=TOP_K)
         if not candidates:
             return None
