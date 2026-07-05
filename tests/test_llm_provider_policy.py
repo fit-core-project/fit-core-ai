@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sys
 import types
 
@@ -115,14 +116,15 @@ def test_default_provider_uses_local_ollama(monkeypatch):
     assert config.model_name == "gemma4:latest"
 
 
-def test_blocked_production_log_has_no_raw_env_or_api_key(monkeypatch, capsys, dummy_provider_modules):
+def test_blocked_production_log_has_no_raw_env_or_api_key(monkeypatch, caplog, dummy_provider_modules):
     _clear_provider_env(monkeypatch)
+    caplog.set_level(logging.WARNING, logger="engines.llm_router")
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("LLM_PROVIDER", "local")
     monkeypatch.setenv("GOOGLE_API_KEY", "secret-google-key")
 
     llm = llm_router.get_llm("routine")
-    captured = capsys.readouterr().out
+    captured = "\n".join(record.getMessage() for record in caplog.records)
 
     assert isinstance(llm, _DummyGemini)
     assert "local provider blocked in production" in captured
@@ -130,8 +132,9 @@ def test_blocked_production_log_has_no_raw_env_or_api_key(monkeypatch, capsys, d
     assert "GOOGLE_API_KEY" not in captured
 
 
-def test_allowed_local_log_uses_sanitized_model_name(monkeypatch, capsys, dummy_provider_modules):
+def test_allowed_local_log_uses_sanitized_model_name(monkeypatch, caplog, dummy_provider_modules):
     _clear_provider_env(monkeypatch)
+    caplog.set_level(logging.INFO, logger="engines.llm_router")
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("LLM_PROVIDER", "local")
     monkeypatch.setenv("ALLOW_LOCAL_LLM_IN_PRODUCTION", "true")
@@ -139,7 +142,7 @@ def test_allowed_local_log_uses_sanitized_model_name(monkeypatch, capsys, dummy_
     monkeypatch.setenv("OLLAMA_BASE_URL", "http://user:pass@127.0.0.1:11434")
 
     llm = llm_router.get_llm("routine", temperature=0.1)
-    captured = capsys.readouterr().out
+    captured = "\n".join(record.getMessage() for record in caplog.records)
 
     assert llm.model == "gemma4:latestraw-token"
     assert "production local provider enabled via explicit opt-in" in captured

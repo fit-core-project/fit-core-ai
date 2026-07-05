@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from fastapi import HTTPException
 from langchain_core.prompts import ChatPromptTemplate
@@ -104,33 +106,40 @@ def test_sanitize_dev_log_payload_removes_request_body_and_traceback():
     assert "secret" not in str(payload)
 
 
-def test_fallback_debug_prompt_does_not_print_raw_prompt_or_user_note(capsys):
+def _logged_messages(caplog):
+    return "\n".join(record.getMessage() for record in caplog.records)
+
+
+def test_fallback_debug_prompt_does_not_print_raw_prompt_or_user_note(caplog):
+    caplog.set_level(logging.DEBUG, logger="engines.fallback")
     prompt = ChatPromptTemplate.from_messages(
         [("human", "Routine prompt with note={user_note}")]
     )
 
     _debug_print_prompt(prompt, {"user_note": "secret-user-note"})
 
-    output = capsys.readouterr().out
+    output = _logged_messages(caplog)
     assert "secret-user-note" not in output
     assert "Routine prompt with note" not in output
     assert "prompt_char_count" in output
 
 
-def test_fallback_debug_prompt_render_failure_does_not_print_invoke_values(capsys):
+def test_fallback_debug_prompt_render_failure_does_not_print_invoke_values(caplog):
+    caplog.set_level(logging.DEBUG, logger="engines.fallback")
     prompt = ChatPromptTemplate.from_messages(
         [("human", "Routine prompt with missing={missing}")]
     )
 
     _debug_print_prompt(prompt, {"user_note": "secret-user-note"})
 
-    output = capsys.readouterr().out
+    output = _logged_messages(caplog)
     assert "secret-user-note" not in output
     assert "Routine prompt with missing" not in output
     assert "error_type" in output
 
 
-def test_fallback_debug_llm_output_does_not_print_raw_rationale(capsys):
+def test_fallback_debug_llm_output_does_not_print_raw_rationale(caplog):
+    caplog.set_level(logging.DEBUG, logger="engines.fallback")
     output = LLMRoutineOutput(
         total_estimated_time=30,
         summary_title="secret summary title",
@@ -152,7 +161,7 @@ def test_fallback_debug_llm_output_does_not_print_raw_rationale(capsys):
 
     _debug_print_llm_output("TEST_OUTPUT", output)
 
-    captured = capsys.readouterr().out
+    captured = _logged_messages(caplog)
     assert "secret exercise rationale" not in captured
     assert "secret rationale summary" not in captured
     assert "secret summary title" not in captured
@@ -161,20 +170,23 @@ def test_fallback_debug_llm_output_does_not_print_raw_rationale(capsys):
     assert "parsed_exercise_count" in captured
 
 
-def test_main_parse_log_logging_redacts_text(monkeypatch, capsys):
+def test_main_parse_log_logging_redacts_text(monkeypatch, caplog):
     import main
 
+    caplog.set_level(logging.INFO, logger="main")
     monkeypatch.setattr(main, "parse_natural_language_log", lambda text: "{}")
 
     assert main.api_parse_log(main.LogRequest(text="secret nlp text")) == {}
 
-    captured = capsys.readouterr().out
+    captured = _logged_messages(caplog)
     assert "secret nlp text" not in captured
     assert "char_count" in captured
 
 
-def test_main_supplement_logging_redacts_question(monkeypatch, capsys):
+def test_main_supplement_logging_redacts_question(monkeypatch, caplog):
     import main
+
+    caplog.set_level(logging.INFO, logger="main")
 
     class FakeSupplementRag:
         def answer_question(self, question):
@@ -186,13 +198,15 @@ def test_main_supplement_logging_redacts_question(monkeypatch, capsys):
         main.SupplementChatRequest(question="secret supplement question")
     ) == {"answer": "ok", "sources": []}
 
-    captured = capsys.readouterr().out
+    captured = _logged_messages(caplog)
     assert "secret supplement question" not in captured
     assert "char_count" in captured
 
 
-def test_main_supplement_exception_logging_redacts_message(monkeypatch, capsys):
+def test_main_supplement_exception_logging_redacts_message(monkeypatch, caplog):
     import main
+
+    caplog.set_level(logging.ERROR, logger="main")
 
     class FailingSupplementRag:
         def answer_question(self, question):
@@ -206,7 +220,7 @@ def test_main_supplement_exception_logging_redacts_message(monkeypatch, capsys):
 
     assert result["mode"] == "degraded"
 
-    captured = capsys.readouterr().out
+    captured = _logged_messages(caplog)
     assert "secret supplement question" not in captured
     assert "secret exception message" not in captured
     assert "RuntimeError" in captured

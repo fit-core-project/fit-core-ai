@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 import pytest
 
 from engines.candidate_ranker import score_candidate_exercises
@@ -83,9 +85,10 @@ def test_feedback_ranking_flag_on_calls_db_with_normalized_ids(monkeypatch):
     }
 
 
-def test_feedback_ranking_db_error_returns_none(monkeypatch, capsys):
+def test_feedback_ranking_db_error_returns_none(monkeypatch, caplog):
     import engines.feedback_aggregation as feedback_aggregation
 
+    caplog.set_level(logging.WARNING, logger="engines.routine_pipeline")
     monkeypatch.setattr(feedback_aggregation, "get_feedback_aware_ranking_enabled", lambda: True)
     monkeypatch.setattr(
         feedback_aggregation,
@@ -95,7 +98,7 @@ def test_feedback_ranking_db_error_returns_none(monkeypatch, capsys):
 
     result = _get_feedback_adjustments_if_enabled(object(), "user-1", [candidate("pushup")])
 
-    captured = capsys.readouterr().out
+    captured = "\n".join(record.getMessage() for record in caplog.records)
     assert result is None
     assert "RuntimeError" in captured
     assert "secret db error" not in captured
