@@ -18,7 +18,13 @@ import threading
 from pathlib import Path
 from typing import Optional
 
+from engines.food.food_query_normalization import analyze_food_query_for_search
 from engines.food.food_query_normalization import build_food_search_queries
+from engines.food.food_reranker import (
+    FoodSearchCandidate,
+    build_food_candidate_dedupe_key,
+    rerank_food_candidates,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -159,42 +165,46 @@ class FoodSearchEngine:
     # ── 메인 검색 ───────────────────────────────────────────────
     @staticmethod
     def _dedupe_result_key(doc):
-        meta = doc.metadata or {}
-        for field in ("food_id", "id"):
-            value = meta.get(field)
-            if value:
-                return (field, value)
-        name = meta.get("name") or meta.get("rep_name")
-        if name:
-            return (
-                "name",
-                name,
-                meta.get("data_type"),
-                meta.get("major_category"),
-            )
-        page_content = getattr(doc, "page_content", None)
-        if page_content:
-            return ("page_content", page_content)
-        return ("metadata", tuple(sorted(meta.items())))
+        return build_food_candidate_dedupe_key(doc)
+
+    @staticmethod
+    def _collect_candidates(result_groups, search_queries):
+        seen = set()
+        candidates = []
+        for source_query_index, results in enumerate(result_groups):
+            source_query = search_queries[source_query_index]
+            for original_rank, (doc, distance) in enumerate(results):
+                dedupe_key = build_food_candidate_dedupe_key(doc)
+                if dedupe_key in seen:
+                    continue
+                seen.add(dedupe_key)
+                candidates.append(
+                    FoodSearchCandidate(
+                        document=doc,
+                        vector_score=float(distance),
+                        source_query=source_query,
+                        source_query_index=source_query_index,
+                        original_rank=original_rank,
+                        dedupe_key=dedupe_key,
+                    )
+                )
+        return candidates
 
     @classmethod
     def _dedupe_results(cls, result_groups):
-        seen = set()
-        deduped = []
-        for results in result_groups:
-            for doc, distance in results:
-                key = cls._dedupe_result_key(doc)
-                if key in seen:
-                    continue
-                seen.add(key)
-                deduped.append((doc, distance))
-                if len(deduped) >= TOP_K:
-                    return deduped
-        return deduped
+        candidates = cls._collect_candidates(
+            result_groups,
+            [str(index) for index, _ in enumerate(result_groups)],
+        )
+        return [
+            (candidate.document, candidate.vector_score)
+            for candidate in candidates[:TOP_K]
+        ]
 
     def search(self, food_name: str, amount=None, unit=None) -> Optional[dict]:
         if not self.available or self._vector_store is None:
             return None
+        analysis = analyze_food_query_for_search(food_name)
         search_queries = build_food_search_queries(food_name)
         if not search_queries:
             return None
@@ -208,15 +218,17 @@ class FoodSearchEngine:
         except Exception as exc:
             logger.warning("[food_engine] 검색 실패(%s): %s", search_queries, exc)
             return None
-        results = self._dedupe_results(result_groups)
-        if not results:
+        candidates = self._collect_candidates(result_groups, search_queries)
+        candidates = rerank_food_candidates(analysis, candidates, final_k=TOP_K)
+        if not candidates:
             return None
 
         # cosine space: score=거리(작을수록 유사), 코사인 유사도 = 1 - 거리
-        doc, distance = results[0]
+        doc = candidates[0].document
+        distance = candidates[0].vector_score
         similarity = 1.0 - float(distance)
         if similarity < SIMILARITY_THRESHOLD:
-            logger.debug("[food_engine] 임계값 미달: '%s' sim=%.3f", query, similarity)
+            logger.debug("[food_engine] 임계값 미달: '%s' sim=%.3f", search_queries, similarity)
             return None
 
         meta = doc.metadata or {}
