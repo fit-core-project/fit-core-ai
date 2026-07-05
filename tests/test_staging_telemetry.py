@@ -19,11 +19,8 @@ pytest tests/test_staging_telemetry.py -v -s
 """
 from __future__ import annotations
 
-import io
-import json
 import math
 import os
-import sys
 from contextlib import contextmanager
 from statistics import mean, median
 from typing import Any
@@ -50,45 +47,15 @@ from engines.schemas import (
 
 @contextmanager
 def capture_telemetry():
-    """stdout에서 [Telemetry] 라인을 캡처해 파싱한 dict 리스트로 반환한다."""
+    """Capture routine telemetry events at the production emit boundary."""
     captured: list[dict] = []
-    old_stdout = sys.stdout
-    buf = io.StringIO()
 
-    class _Tee:
-        encoding = "utf-8"
-        errors = "replace"
+    def _capture(payload: dict[str, Any]) -> None:
+        if payload.get("event") == "routine_generation_quality":
+            captured.append(dict(payload))
 
-        def write(self, data: str) -> int:
-            buf.write(data)
-            try:
-                old_stdout.write(data)
-            except (UnicodeEncodeError, AttributeError):
-                pass
-            return len(data)
-
-        def flush(self):
-            try:
-                old_stdout.flush()
-            except Exception:
-                pass
-
-        def fileno(self):
-            raise io.UnsupportedOperation("fileno")
-
-    sys.stdout = _Tee()
-    try:
+    with patch("engines.routine_telemetry.emit_routine_quality_telemetry", side_effect=_capture):
         yield captured
-    finally:
-        sys.stdout = old_stdout
-        for line in buf.getvalue().splitlines():
-            if line.startswith("[Telemetry] "):
-                try:
-                    event = json.loads(line[len("[Telemetry] "):])
-                    if event.get("event") == "routine_generation_quality":
-                        captured.append(event)
-                except json.JSONDecodeError:
-                    pass
 
 
 def _make_db_mock() -> MagicMock:
