@@ -1,0 +1,166 @@
+from __future__ import annotations
+
+import os
+import threading
+from types import SimpleNamespace
+
+import pytest
+
+from engines.food.food_engine import FoodSearchEngine
+from engines.food.food_query_normalization import normalize_food_query_for_search
+
+
+EXPECTED_NORMALIZATION_CASES = [
+    ("계란", "달걀"),
+    ("계란 생것", "달걀 생것"),
+    ("삶은 계란", "달걀 삶은것"),
+    ("삶은계란", "달걀 삶은것"),
+    ("계란 삶은것", "달걀 삶은것"),
+    ("계란후라이", "달걀후라이"),
+    ("닭가슴살 생것", "닭고기 가슴(껍질 제거) 생것"),
+    ("닭 가슴살 생것", "닭고기 가슴(껍질 제거) 생것"),
+    ("삶은 닭가슴살", "닭고기 가슴(껍질 제거) 삶은것"),
+    ("삶은 닭 가슴살", "닭고기 가슴(껍질 제거) 삶은것"),
+    ("닭가슴살 삶은것", "닭고기 가슴(껍질 제거) 삶은것"),
+    ("닭 가슴살 삶은것", "닭고기 가슴(껍질 제거) 삶은것"),
+    ("구운 닭가슴살", "닭고기 가슴(껍질 제거) 구운것(팬)"),
+    ("구운 닭 가슴살", "닭고기 가슴(껍질 제거) 구운것(팬)"),
+    ("닭가슴살 구운것", "닭고기 가슴(껍질 제거) 구운것(팬)"),
+    ("닭 가슴살 구운것", "닭고기 가슴(껍질 제거) 구운것(팬)"),
+]
+
+MUST_PRESERVE_CASES = [
+    ("계란빵", "계란빵"),
+    ("볶음밥 계란", "볶음밥 계란"),
+    ("김밥 계란", "김밥 계란"),
+    ("닭가슴살", "닭가슴살"),
+    ("닭가슴살 100g", "닭가슴살 100g"),
+    ("샐러드 닭가슴살", "샐러드 닭가슴살"),
+    ("닭가슴살 샐러드", "닭가슴살 샐러드"),
+    ("샌드위치 닭가슴살", "샌드위치 닭가슴살"),
+]
+
+WHITESPACE_AND_SAFETY_CASES = [
+    (None, ""),
+    ("", ""),
+    ("  삶은   계란  ", "달걀 삶은것"),
+    ("  닭가슴살   생것  ", "닭고기 가슴(껍질 제거) 생것"),
+    ("  계란빵  ", "계란빵"),
+    ("  샐러드   닭가슴살  ", "샐러드 닭가슴살"),
+]
+
+MUST_NOT_NORMALIZE_TO_CASES = [
+    ("계란빵", "달걀"),
+    ("계란빵", "달걀 생것"),
+    ("볶음밥 계란", "볶음밥 달걀"),
+    ("김밥 계란", "김밥 달걀"),
+    ("닭가슴살", "닭고기 가슴(껍질 제거) 생것"),
+    ("닭가슴살 100g", "닭고기 가슴(껍질 제거) 생것"),
+    ("샐러드 닭가슴살", "닭고기 가슴(껍질 제거) 생것"),
+    ("닭가슴살 샐러드", "닭고기 가슴(껍질 제거) 생것"),
+    ("샌드위치 닭가슴살", "닭고기 가슴(껍질 제거) 생것"),
+]
+
+
+@pytest.mark.parametrize(("query", "expected"), EXPECTED_NORMALIZATION_CASES)
+def test_food_search_expected_normalization_golden_queries(query, expected):
+    assert normalize_food_query_for_search(query) == expected
+
+
+@pytest.mark.parametrize(("query", "expected"), MUST_PRESERVE_CASES)
+def test_food_search_must_preserve_golden_queries(query, expected):
+    assert normalize_food_query_for_search(query) == expected
+
+
+@pytest.mark.parametrize(("query", "expected"), WHITESPACE_AND_SAFETY_CASES)
+def test_food_search_whitespace_and_safety_golden_queries(query, expected):
+    assert normalize_food_query_for_search(query) == expected
+
+
+@pytest.mark.parametrize(("query", "blocked"), MUST_NOT_NORMALIZE_TO_CASES)
+def test_food_search_must_not_normalize_to_regression_queries(query, blocked):
+    assert normalize_food_query_for_search(query) != blocked
+
+
+class _FakeVectorStore:
+    def __init__(self):
+        self.queries: list[str] = []
+
+    def similarity_search_with_score(self, query, k):
+        self.queries.append(query)
+        doc = SimpleNamespace(
+            metadata={
+                "name": query,
+                "protein_g": 10.0,
+                "carb_g": 20.0,
+                "fat_g": 3.0,
+                "kcal": 147.0,
+                "basis_value": 100.0,
+                "basis_unit": "g",
+            }
+        )
+        return [(doc, 0.1)]
+
+
+def _engine_with_fake_vectorstore():
+    engine = object.__new__(FoodSearchEngine)
+    engine.available = True
+    engine._vector_store = _FakeVectorStore()
+    engine._lock = threading.Lock()
+    return engine
+
+
+@pytest.mark.parametrize(
+    ("raw_query", "expected_query"),
+    [
+        ("삶은 계란", "달걀 삶은것"),
+        ("계란빵", "계란빵"),
+        ("샐러드 닭가슴살", "샐러드 닭가슴살"),
+        ("닭가슴살 생것", "닭고기 가슴(껍질 제거) 생것"),
+    ],
+)
+def test_food_search_engine_uses_golden_normalized_query_for_vectorstore(
+    raw_query,
+    expected_query,
+):
+    engine = _engine_with_fake_vectorstore()
+
+    result = engine.search(raw_query, 100, "g")
+
+    assert result is not None
+    assert engine._vector_store.queries == [expected_query]
+
+
+@pytest.mark.chroma
+@pytest.mark.smoke
+@pytest.mark.skipif(
+    os.getenv("RUN_FOOD_SEARCH_SMOKE") != "1",
+    reason="Set RUN_FOOD_SEARCH_SMOKE=1 to run local Chroma food search smoke.",
+)
+@pytest.mark.parametrize(
+    ("raw_query", "expected_normalized", "expected_top1"),
+    [
+        ("계란", "달걀", "달걀 생것"),
+        ("삶은 계란", "달걀 삶은것", "달걀 삶은것"),
+        ("계란후라이", "달걀후라이", "달걀후라이"),
+        ("계란빵", "계란빵", "계란빵"),
+        ("닭가슴살 생것", "닭고기 가슴(껍질 제거) 생것", "닭고기 가슴(껍질 제거) 생것"),
+        ("삶은 닭가슴살", "닭고기 가슴(껍질 제거) 삶은것", "닭고기 가슴(껍질 제거) 삶은것"),
+        ("구운 닭가슴살", "닭고기 가슴(껍질 제거) 구운것(팬)", "닭고기 가슴(껍질 제거) 구운것(팬)"),
+        ("샐러드 닭가슴살", "샐러드 닭가슴살", "샐러드 닭가슴살"),
+    ],
+)
+def test_food_search_rank_smoke_opt_in(raw_query, expected_normalized, expected_top1):
+    from engines.food.food_engine import get_food_engine
+
+    engine = get_food_engine()
+    assert engine.available is True
+    assert engine._vector_store is not None
+
+    normalized = normalize_food_query_for_search(raw_query)
+    assert normalized == expected_normalized
+
+    results = engine._vector_store.similarity_search_with_score(normalized, k=3)
+    top1 = (results[0][0].metadata or {}).get("name") if results else None
+
+    assert top1 == expected_top1
