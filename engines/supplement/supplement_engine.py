@@ -410,6 +410,16 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         meta = doc.metadata or {}
         return meta.get("id") or meta.get("_source_file") or hash(doc.page_content)
 
+    def _format_source(self, meta: dict[str, Any]) -> dict[str, str]:
+        source = {
+            "id": str(meta.get("id", "N/A")),
+            "type": str(meta.get("source") or meta.get("type") or "DOC"),
+        }
+        source_file = str(meta.get("_source_file") or meta.get("source_file") or "").strip()
+        if source_file:
+            source["file"] = source_file.replace("\\", "/").split("/")[-1]
+        return source
+
     def _expanded_canonicals(self, canonical: str) -> set[str]:
         normalized = (canonical or "").strip().lower()
         if not normalized:
@@ -731,12 +741,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             source_key = f"{meta.get('_source_file')}_{meta.get('id')}"
             if source_key in seen_keys:
                 continue
-            sources.append(
-                {
-                    "id": str(meta.get("id", "N/A")),
-                    "type": str(meta.get("source") or meta.get("type") or "DOC"),
-                }
-            )
+            sources.append(self._format_source(meta))
             seen_keys.add(source_key)
         mark("sourceFormatting", stage_start)
 
@@ -796,12 +801,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                 source_key = f"{meta.get('_source_file')}_{meta.get('id')}"
                 if source_key in seen_keys:
                     continue
-                sources.append(
-                    {
-                        "id": str(meta.get("id", "N/A")),
-                        "type": str(meta.get("source") or meta.get("type") or "DOC"),
-                    }
-                )
+                sources.append(self._format_source(meta))
                 seen_keys.add(source_key)
             mark("sourceFormatting", stage_start)
 

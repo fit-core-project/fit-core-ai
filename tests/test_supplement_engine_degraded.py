@@ -189,7 +189,14 @@ def test_supplement_web_fallback_disabled_keeps_local_sources(monkeypatch):
         (),
         {
             "similarity_search_by_vector": lambda self, embedding, k: [
-                Document(page_content="creatine local doc", metadata={"_source_file": "local.json", "id": "doc-1", "source": "supp"})
+                Document(
+                    page_content="creatine local doc",
+                    metadata={
+                        "_source_file": "private/path/local.json",
+                        "id": "doc-1",
+                        "source": "supp",
+                    },
+                )
             ]
         },
     )()
