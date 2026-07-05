@@ -13,10 +13,16 @@ from typing import Any
 _DISPLAY_PREFIX_RE = re.compile(r"^\[[^\]]+\]\s*")
 
 
+# Reviewed safe aliases only. Protected compounds and broad dish/product names
+# must not be added to ingredient rows.
 FOOD_EMBEDDING_ROW_ALIASES: dict[str, list[str]] = {
     "달걀 생것": ["계란", "계란 생것"],
     "달걀 삶은것": ["삶은 계란", "삶은계란", "계란 삶은것"],
     "달걀후라이": ["계란후라이"],
+    "고구마 찐것": ["찐 고구마", "고구마 찐"],
+    "고구마 구운것": ["구운 고구마", "고구마 구운"],
+    "바나나 생것": ["바나나"],
+    "사과 생것": ["사과"],
     "닭고기 가슴(껍질 제거) 생것": ["닭가슴살 생것", "닭 가슴살 생것"],
     "닭고기 가슴(껍질 제거) 삶은것": [
         "삶은 닭가슴살",

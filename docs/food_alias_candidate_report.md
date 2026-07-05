@@ -10,6 +10,22 @@
 - Chroma rebuild is not part of this report.
 - Runtime alias rules are not changed by this report.
 
+## Applied In PR 8E
+
+These reviewed aliases were added only to `FOOD_EMBEDDING_ROW_ALIASES`.
+Runtime `FOOD_SEARCH_ALIAS_RULES` and protected query rules were not changed.
+
+| target_name | applied_aliases | reason |
+| --- | --- | --- |
+| 고구마 찐것 | 찐 고구마, 고구마 찐 | Safe cooking-state phrase/order variant for the exact steamed sweet potato row. |
+| 고구마 구운것 | 구운 고구마, 고구마 구운 | Safe cooking-state phrase/order variant for the exact grilled sweet potato row; `군고구마` was intentionally not added. |
+| 바나나 생것 | 바나나 | Safe raw fruit alias for the exact raw banana row. |
+| 사과 생것 | 사과 | Safe raw fruit alias for the exact raw apple row. |
+
+Still not applied: `계란빵`, `볶음밥 계란`, `김밥 계란`, `샐러드 닭가슴살`,
+`닭가슴살 샐러드`, `샌드위치 닭가슴살`, `군고구마`, `순두부`, `연두부`,
+`두유`, `콩우유`, product/brand-like names, and mixed dish/ingredient groups.
+
 ## Safe Or Review Candidates
 
 | source_alias | target_name | target_rep_name | data_type | major_category | candidate_type | risk_label | reason |

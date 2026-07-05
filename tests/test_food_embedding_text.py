@@ -7,6 +7,10 @@ from engines.food.food_embedding_text import (
     dedupe_text_parts,
     get_food_embedding_aliases,
 )
+from engines.food.food_query_normalization import (
+    FOOD_SEARCH_ALIAS_RULES,
+    PROTECTED_FOOD_SEARCH_QUERIES,
+)
 
 
 def test_embedding_text_uses_embed_text_first():
@@ -77,6 +81,41 @@ def test_grilled_chicken_breast_aliases_are_appended():
     assert "구운 닭 가슴살" in text
     assert "닭가슴살 구운것" in text
     assert "닭 가슴살 구운것" in text
+
+
+def test_reviewed_safe_sweet_potato_aliases_are_appended():
+    steamed_text = build_food_embedding_text({"name": "고구마 찐것"})
+    grilled_text = build_food_embedding_text({"name": "고구마 구운것"})
+
+    assert "고구마 찐것" in steamed_text
+    assert "찐 고구마" in steamed_text
+    assert "고구마 찐" in steamed_text
+    assert "군고구마" not in steamed_text
+
+    assert "고구마 구운것" in grilled_text
+    assert "구운 고구마" in grilled_text
+    assert "고구마 구운" in grilled_text
+    assert "군고구마" not in grilled_text
+
+
+def test_reviewed_safe_raw_fruit_aliases_are_appended():
+    banana_text = build_food_embedding_text({"name": "바나나 생것"})
+    apple_text = build_food_embedding_text({"name": "사과 생것"})
+
+    assert "바나나 생것" in banana_text
+    assert "바나나" in banana_text
+    assert "바나나 우유" not in banana_text
+
+    assert "사과 생것" in apple_text
+    assert "사과" in apple_text
+    assert "사과 주스" not in apple_text
+
+
+def test_reviewed_safe_aliases_do_not_leak_to_neighbor_rows():
+    assert build_food_embedding_text({"name": "고구마 생것"}) == "고구마 생것"
+    assert build_food_embedding_text({"name": "고구마 말린것"}) == "고구마 말린것"
+    assert build_food_embedding_text({"name": "바나나 우유"}) == "바나나 우유"
+    assert build_food_embedding_text({"name": "사과 주스"}) == "사과 주스"
 
 
 def test_display_prefix_name_can_match_alias_key():
@@ -151,9 +190,30 @@ def test_unknown_tofu_gets_no_broad_alias():
 
     assert text == "두부"
     assert "순두부" not in text
+    assert "연두부" not in text
+
+
+def test_high_risk_alias_candidates_are_not_added_to_ingredient_rows():
+    sweet_potato_text = build_food_embedding_text({"name": "고구마 찐것"})
+    tofu_text = build_food_embedding_text({"name": "두부"})
+    milk_text = build_food_embedding_text({"name": "우유"})
+
+    assert "군고구마" not in sweet_potato_text
+    assert "순두부" not in tofu_text
+    assert "연두부" not in tofu_text
+    assert "두유" not in milk_text
+    assert "콩우유" not in milk_text
 
 
 def test_aliases_can_be_found_from_rep_name_when_name_has_no_rule():
     aliases = get_food_embedding_aliases({"name": "달걀 대표", "rep_name": "달걀 생것"})
 
     assert aliases == ["계란", "계란 생것"]
+
+
+def test_runtime_alias_registry_is_not_changed_by_embedding_aliases():
+    assert "찐 고구마" not in FOOD_SEARCH_ALIAS_RULES
+    assert "구운 고구마" not in FOOD_SEARCH_ALIAS_RULES
+    assert "바나나" not in FOOD_SEARCH_ALIAS_RULES
+    assert "사과" not in FOOD_SEARCH_ALIAS_RULES
+    assert "계란빵" in PROTECTED_FOOD_SEARCH_QUERIES
