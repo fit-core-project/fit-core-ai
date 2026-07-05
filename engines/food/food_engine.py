@@ -41,7 +41,12 @@ FOOD_CSV_PATH = PROJECT_ROOT / "data" / "food_db" / "food_db_clean.csv"
 # 코사인 유사도 임계값. 이 값 미만이면 매칭 실패로 간주(오탐 방지). 캘리브레이션 필요.
 SIMILARITY_THRESHOLD = float(os.getenv("FOOD_SIM_THRESHOLD", "0.55"))
 # 검색 후보 수
-TOP_K = int(os.getenv("FOOD_TOP_K", "3"))
+FOOD_SEARCH_FINAL_K = int(os.getenv("FOOD_SEARCH_FINAL_K", os.getenv("FOOD_TOP_K", "3")))
+TOP_K = FOOD_SEARCH_FINAL_K
+FOOD_SEARCH_FETCH_K = max(
+    int(os.getenv("FOOD_SEARCH_FETCH_K", "10")),
+    FOOD_SEARCH_FINAL_K,
+)
 
 # ── 단위 → 그램 변환 테이블 (diet_parser 와 의미상 동일. 추후 단일 출처로 통합 권장) ──
 _GRAM_UNITS = {"g", "gram", "grams", "그램", "ml", "밀리리터", "cc"}
@@ -267,7 +272,7 @@ class FoodSearchEngine:
         try:
             with self._lock:
                 result_groups = [
-                    self._vector_store.similarity_search_with_score(query, k=TOP_K)
+                    self._vector_store.similarity_search_with_score(query, k=FOOD_SEARCH_FETCH_K)
                     for query in search_queries
                 ]
         except Exception as exc:
@@ -276,7 +281,7 @@ class FoodSearchEngine:
         canonical_candidates = self._lookup_canonical_candidates(analysis)
         vector_candidates = self._collect_candidates(result_groups, search_queries)
         candidates = self._dedupe_candidates(canonical_candidates + vector_candidates)
-        candidates = rerank_food_candidates(analysis, candidates, final_k=TOP_K)
+        candidates = rerank_food_candidates(analysis, candidates, final_k=FOOD_SEARCH_FINAL_K)
         if not candidates:
             return None
 
