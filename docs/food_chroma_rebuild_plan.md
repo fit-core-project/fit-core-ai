@@ -235,3 +235,80 @@ Stop the rollout and use rollback if any of these occur:
 - It does not change the embedding model.
 - It does not change runtime search behavior.
 - It does not add broad aliases, fuzzy matching, or BM25.
+
+## Execution Record
+
+### 2026-07-06 — First successful rebuild (alias-removal)
+
+**Applied commit:** `b90c460` — `refactor(food): drop no-op document embedding aliases`
+
+**Result:** Success.
+
+- Documents indexed: 19,891
+- Device: cuda, ~36 s
+- Backup before rebuild: `data/food_chroma_db.backup_20260706_182927`
+
+**Smoke results:**
+
+| Query | Expected top-1 | Result | Score |
+| --- | --- | --- | --- |
+| `계란` (normalized: `달걀`) | `달걀 생것` | `달걀 생것` ✓ | 0.1979 |
+| `삶은 계란` (normalized: `달걀 삶은것`) | `달걀 삶은것` | `달걀 삶은것` ✓ | −0.0000 (exact) |
+| `찐 고구마` | `고구마 찐것` | `고구마 찐것` ✓ | 0.924 |
+| `구운 고구마` | `고구마 구운것` | `고구마 구운것` ✓ | 0.944 |
+| `바나나` | `바나나 생것` | `바나나 생것` ✓ | 1.0 |
+| `사과` | `사과 생것` | `사과 생것` ✓ | 1.0 |
+| `계란빵` | preserved | `계란빵` ✓ | 1.0 |
+| `볶음밥 계란` | preserved | `볶음밥 계란` ✓ | 1.0 |
+| `김밥 계란` | preserved | `김밥 계란` ✓ | 1.0 |
+| `샐러드 닭가슴살` | preserved | `샐러드 닭가슴살` ✓ | 1.0 |
+
+Golden smoke marker (`RUN_FOOD_SEARCH_SMOKE=1`, `chroma and smoke`): **8 passed / 0 failed**
+(Previous attempt with aliases: 2 failed — `계란 → 달걀국`, `삶은 계란 → 달걀 난백 삶은것`)
+
+**Rebuild history:**
+
+1. First attempt (2026-07-06, commit `2d34702`, `FOOD_EMBEDDING_ROW_ALIASES` populated):
+   smoke regressions — `계란 → 달걀국` and `삶은 계란 → 달걀 난백 삶은것`. Rolled back.
+2. Root-cause analysis confirmed document-side aliases are no-op-to-harmful (see lessons
+   learned below).
+3. Second attempt (2026-07-06, commit `b90c460`, `FOOD_EMBEDDING_ROW_ALIASES = {}`):
+   all smoke and golden tests passed. No rollback needed.
+
+---
+
+### Lessons learned — document-side embedding aliases
+
+**Do not add aliases to `FOOD_EMBEDDING_ROW_ALIASES` without re-validating against a
+rebuild and the full golden smoke suite.**
+
+This pipeline normalizes queries to canonical names *before* hitting Chroma, so
+document-side aliases contribute nothing to matching and actively harm retrieval:
+
+1. **Runtime normalization pre-empts document aliases.**
+   `FOOD_SEARCH_ALIAS_RULES` converts user queries (e.g. `계란 → 달걀`,
+   `삶은 계란 → 달걀 삶은것`) before the Chroma call. The document alias `계란`
+   added to `달걀 생것` is never the actual query string that reaches the index.
+
+2. **`rep_name`-based canonical index handles fruit and vegetable queries.**
+   `바나나 생것` (rep\_name `바나나`) and `사과 생것` (rep\_name `사과`) are
+   returned via canonical index lookup with `vector_score = 0.0` injection.
+   Document aliases for these rows are redundant.
+
+3. **BGE-m3-ko handles cooking-state equivalence directly.**
+   `찐 고구마` and `고구마 찐것` are ranked correctly by the embedding model
+   without any document-side alias. Adding aliases dilutes the focused embedding.
+
+4. **Alias enrichment breaks exact-match.**
+   BGE uses mean pooling. Appending alias tokens to a document (e.g.
+   `달걀 생것 | 계란 | 계란 생것`) shifts the document vector away from the
+   canonical-name query (`달걀`). Short competitors (`달걀국`, `달걀 난백 삶은것`)
+   retain their focused embeddings and climb above the diluted canonical row.
+   In the failed rebuild, `달걀 생것` fell outside the top-20 for query `달걀`.
+
+**Where to improve search quality instead:**
+
+- Add or refine entries in `FOOD_SEARCH_ALIAS_RULES` (runtime query normalization).
+- Expand `rep_name`-based canonical index coverage.
+- Tune the reranker weights or cooking-state detection logic.
+- Do *not* use `FOOD_EMBEDDING_ROW_ALIASES` as a search-quality lever.
