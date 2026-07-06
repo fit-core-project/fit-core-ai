@@ -167,3 +167,105 @@ def test_food_search_rank_smoke_opt_in(raw_query, expected_normalized, expected_
     top1 = (results[0][0].metadata or {}).get("name") if results else None
 
     assert top1 == expected_top1
+
+
+# ---------------------------------------------------------------------------
+# Full-pipeline smoke: engine.search() → canonical + reranker 포함 E2E
+# ---------------------------------------------------------------------------
+# 기존 test_food_search_rank_smoke_opt_in 은 normalization + vector 직접 호출만 검증.
+# 아래 두 테스트는 전체 4단계 파이프라인(normalization→canonical→vector→reranker)을
+# engine.search() 한 번으로 검증한다.
+
+# 부류 A — 현재 올바른 동작 → 회귀 방지 고정 (2026-07-06 진단 기준)
+_FULL_PIPELINE_REGRESSION_CASES = [
+    # 닭가슴살은 의도적 ambiguous 보존 — 원재료로 강제되지 않는 것이 올바른 동작
+    pytest.param("닭가슴살", "샐러드 닭가슴살", id="닭가슴살-ambiguous-preserved"),
+    # 흰쌀밥 → 쌀밥: DB canonical 동치, 현재 올바른 매핑
+    pytest.param("흰쌀밥", "쌀밥", id="흰쌀밥-canonical-equivalent"),
+]
+
+# 부류 B — 현재 틀린 동작 → xfail 개선 목표
+# strict=True: 런타임 개선 후 통과하면 XPASS로 신호 발생
+# 4/8 건(두부·오트밀·삶은두부·볶은두부)은 DB coverage gap이 전제 — pipeline fix 전에 DB 확장 필요
+_FULL_PIPELINE_IMPROVEMENT_CASES = [
+    # [정규화 레이어] 수량 토큰 미제거 → alias 미매핑
+    pytest.param(
+        "계란 2개", "달걀 생것",
+        marks=pytest.mark.xfail(strict=True, reason="normalization: quantity token '2개' not stripped before alias lookup"),
+        id="계란2개-quantity-strip",
+    ),
+    pytest.param(
+        "바나나 1개", "바나나 생것",
+        marks=pytest.mark.xfail(strict=True, reason="normalization: quantity token '1개' not stripped; canonical rep_name='바나나' miss"),
+        id="바나나1개-quantity-strip",
+    ),
+    pytest.param(
+        "닭가슴살 100g", "닭고기 가슴(껍질 제거) 생것",
+        marks=pytest.mark.xfail(strict=True, reason="normalization: '100g' not stripped; protected query preserved instead of re-aliasing as ingredient"),
+        id="닭가슴살100g-quantity-strip",
+    ),
+    # [reranker 레이어] cooking-state score가 vector top-1을 역전
+    pytest.param(
+        "고구마 조림", "고구마조림",
+        marks=pytest.mark.xfail(strict=True, reason="reranker: cooking-state score demotes vector top-1 (고구마조림 dist=0.056) in favour of 고구마 구운것"),
+        id="고구마조림-reranker",
+    ),
+    # [DB coverage gap] 원재료성 두부가 DB에 없음 + pipeline도 두부국(음식) 반환
+    pytest.param(
+        "두부", "두부",
+        marks=pytest.mark.xfail(strict=True, reason="DB coverage gap: raw 두부(원재료) not in food_db; pipeline returns dish 두부국"),
+        id="두부-db-gap",
+    ),
+    # [DB coverage gap] 원재료성 오트밀이 DB에 없음
+    pytest.param(
+        "오트밀", "오트밀",
+        marks=pytest.mark.xfail(strict=True, reason="DB coverage gap: raw 오트밀 not in food_db; pipeline returns 라떼 오트밀 라떼 핫(HOT)"),
+        id="오트밀-db-gap",
+    ),
+    # [DB coverage gap] 두부 삶은것이 DB에 없음 + reranker가 동부 삶은것 반환
+    pytest.param(
+        "삶은 두부", "두부 삶은것",
+        marks=pytest.mark.xfail(strict=True, reason="DB coverage gap: 두부 삶은것 not in food_db; reranker returns 동부 삶은것"),
+        id="삶은두부-db-gap",
+    ),
+    # [DB coverage gap] 두부볶음(단독)이 DB에 없고 두부볶음 돼지고기만 존재
+    pytest.param(
+        "볶은 두부", "두부볶음",
+        marks=pytest.mark.xfail(strict=True, reason="DB coverage gap: plain 두부볶음 not in food_db (only 두부볶음 돼지고기); pipeline fix also needed"),
+        id="볶은두부-db-gap",
+    ),
+]
+
+
+@pytest.mark.chroma
+@pytest.mark.smoke
+@pytest.mark.skipif(
+    os.getenv("RUN_FOOD_SEARCH_SMOKE") != "1",
+    reason="Set RUN_FOOD_SEARCH_SMOKE=1 to run local Chroma food search smoke.",
+)
+@pytest.mark.parametrize(("raw_query", "expected_top1"), _FULL_PIPELINE_REGRESSION_CASES)
+def test_food_search_full_pipeline_regression(raw_query, expected_top1):
+    from engines.food.food_engine import get_food_engine
+
+    engine = get_food_engine()
+    assert engine.available is True
+    result = engine.search(raw_query, 100, "g")
+    matched = result.get("matched_name") if result else None
+    assert matched == expected_top1
+
+
+@pytest.mark.chroma
+@pytest.mark.smoke
+@pytest.mark.skipif(
+    os.getenv("RUN_FOOD_SEARCH_SMOKE") != "1",
+    reason="Set RUN_FOOD_SEARCH_SMOKE=1 to run local Chroma food search smoke.",
+)
+@pytest.mark.parametrize(("raw_query", "expected_top1"), _FULL_PIPELINE_IMPROVEMENT_CASES)
+def test_food_search_full_pipeline_improvement_targets(raw_query, expected_top1):
+    from engines.food.food_engine import get_food_engine
+
+    engine = get_food_engine()
+    assert engine.available is True
+    result = engine.search(raw_query, 100, "g")
+    matched = result.get("matched_name") if result else None
+    assert matched == expected_top1
