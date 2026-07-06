@@ -13,30 +13,14 @@ from typing import Any
 _DISPLAY_PREFIX_RE = re.compile(r"^\[[^\]]+\]\s*")
 
 
-# Reviewed safe aliases only. Protected compounds and broad dish/product names
-# must not be added to ingredient rows.
-FOOD_EMBEDDING_ROW_ALIASES: dict[str, list[str]] = {
-    "달걀 생것": ["계란", "계란 생것"],
-    "달걀 삶은것": ["삶은 계란", "삶은계란", "계란 삶은것"],
-    "달걀후라이": ["계란후라이"],
-    "고구마 찐것": ["찐 고구마", "고구마 찐"],
-    "고구마 구운것": ["구운 고구마", "고구마 구운"],
-    "바나나 생것": ["바나나"],
-    "사과 생것": ["사과"],
-    "닭고기 가슴(껍질 제거) 생것": ["닭가슴살 생것", "닭 가슴살 생것"],
-    "닭고기 가슴(껍질 제거) 삶은것": [
-        "삶은 닭가슴살",
-        "삶은 닭 가슴살",
-        "닭가슴살 삶은것",
-        "닭 가슴살 삶은것",
-    ],
-    "닭고기 가슴(껍질 제거) 구운것(팬)": [
-        "구운 닭가슴살",
-        "구운 닭 가슴살",
-        "닭가슴살 구운것",
-        "닭 가슴살 구운것",
-    ],
-}
+# Intentionally empty. Document-side embedding aliases were found to be a
+# no-op-to-harmful in this pipeline: runtime FOOD_SEARCH_ALIAS_RULES already
+# normalizes queries to canonical names before Chroma, and rep_name-based
+# canonical index injection (vector_score=0.0) decides fruit/veg matches.
+# Enriching document text only diluted canonical rows' vectors and broke
+# exact-match (see egg-family smoke regression, rebuild rollback 2026-07-06).
+# Do NOT reintroduce document aliases without re-validating against a rebuild.
+FOOD_EMBEDDING_ROW_ALIASES: dict[str, list[str]] = {}
 
 
 def clean_embedding_text_part(value: Any) -> str:

@@ -20,26 +20,25 @@ def _row(**overrides):
     return row
 
 
-def test_build_documents_uses_enriched_embedding_text():
+def test_build_documents_uses_base_embedding_text_only():
+    # With an empty alias registry the document text is just the base text.
     texts, metadatas, ids, skipped = build_documents([_row()])
 
     assert skipped == 0
     assert ids == ["F0001"]
     assert len(texts) == 1
-    assert "달걀 삶은것" in texts[0]
-    assert "삶은 계란" in texts[0]
-    assert "삶은계란" in texts[0]
-    assert "계란 삶은것" in texts[0]
+    assert texts[0] == "달걀 삶은것"
 
     assert metadatas[0]["name"] == "달걀 삶은것"
     assert metadatas[0]["rep_name"] == "달걀"
     assert metadatas[0]["data_type"] == "원재료성 식품"
 
 
-def test_build_documents_keeps_aliases_out_of_metadata():
+def test_build_documents_keeps_embedding_text_out_of_metadata():
+    # The embedding text lives only in texts; raw row fields go into metadata.
     texts, metadatas, _, _ = build_documents([_row()])
 
-    assert "삶은 계란" in texts[0]
+    assert texts[0] == "달걀 삶은것"
     metadata_text = " ".join(str(value) for value in metadatas[0].values())
     assert "삶은 계란" not in metadata_text
     assert "삶은계란" not in metadata_text
@@ -47,6 +46,7 @@ def test_build_documents_keeps_aliases_out_of_metadata():
 
 
 def test_build_documents_does_not_leak_protected_compound_aliases():
+    # Protected compound terms must never appear in ingredient document text.
     texts, metadatas, ids, skipped = build_documents(
         [
             _row(
@@ -60,8 +60,7 @@ def test_build_documents_does_not_leak_protected_compound_aliases():
 
     assert skipped == 0
     assert ids == ["F0002"]
-    assert "닭가슴살 생것" in texts[0]
-    assert "닭 가슴살 생것" in texts[0]
+    assert texts[0] == "닭고기 가슴(껍질 제거) 생것"
     assert "샐러드 닭가슴살" not in texts[0]
     assert "닭가슴살 샐러드" not in texts[0]
     assert "샌드위치 닭가슴살" not in texts[0]
