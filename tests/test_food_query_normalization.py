@@ -6,7 +6,10 @@ from types import SimpleNamespace
 import pytest
 
 from engines.food.food_engine import FoodSearchEngine
-from engines.food.food_query_normalization import normalize_food_query_for_search
+from engines.food.food_query_normalization import (
+    normalize_food_query_for_search,
+    strip_trailing_quantity,
+)
 
 
 @pytest.mark.parametrize(
@@ -43,6 +46,73 @@ from engines.food.food_query_normalization import normalize_food_query_for_searc
 )
 def test_normalize_food_query_for_search(query, expected):
     assert normalize_food_query_for_search(query) == expected
+
+
+# ---------------------------------------------------------------------------
+# strip_trailing_quantity unit tests
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # Basic quantity strip
+        ("계란 2개", "계란"),
+        ("바나나 1개", "바나나"),
+        ("닭가슴살 100g", "닭가슴살"),
+        ("우유 200ml", "우유"),
+        ("고구마 3.5kg", "고구마"),
+        ("두부 1인분", "두부"),
+        ("오트밀 2컵", "오트밀"),
+        # No quantity suffix — unchanged
+        ("계란", "계란"),
+        ("닭가슴살", "닭가슴살"),
+        ("계란빵", "계란빵"),
+        ("달걀 생것", "달걀 생것"),
+        ("삶은 계란", "삶은 계란"),
+        # Non-trailing numbers or units — unchanged (strip is end-anchored)
+        ("1인분 닭가슴살", "1인분 닭가슴살"),
+        ("100g 달걀", "100g 달걀"),
+        # Quantity-only input — returns original (guard against empty result)
+        ("100g", "100g"),
+        ("1개", "1개"),
+        # Protected compound queries unchanged (no trailing digit+unit)
+        ("샐러드 닭가슴살", "샐러드 닭가슴살"),
+        ("닭가슴살 샐러드", "닭가슴살 샐러드"),
+        # Idempotency: applying strip twice returns same result
+    ],
+)
+def test_strip_trailing_quantity(text, expected):
+    assert strip_trailing_quantity(text) == expected
+
+
+def test_strip_trailing_quantity_is_idempotent():
+    for query in ["계란 2개", "닭가슴살 100g", "바나나 1개", "계란빵", "계란"]:
+        once = strip_trailing_quantity(query)
+        twice = strip_trailing_quantity(once)
+        assert once == twice, f"Not idempotent for {query!r}: {once!r} -> {twice!r}"
+
+
+# ---------------------------------------------------------------------------
+# normalize_food_query_for_search with quantity suffix
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    ("query", "expected_normalized"),
+    [
+        # quantity strip → alias applies
+        ("계란 2개", "달걀"),
+        ("삶은 계란 1개", "달걀 삶은것"),
+        # quantity strip → ambiguous (no alias for 바나나)
+        ("바나나 1개", "바나나"),
+        # quantity strip → strips to protected-ambiguous base
+        ("닭가슴살 100g", "닭가슴살"),
+        # protected dishes with no trailing quantity — unchanged
+        ("계란빵", "계란빵"),
+        ("샐러드 닭가슴살", "샐러드 닭가슴살"),
+    ],
+)
+def test_normalize_with_quantity_suffix(query, expected_normalized):
+    assert normalize_food_query_for_search(query) == expected_normalized
 
 
 class _FakeVectorStore:

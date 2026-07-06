@@ -5,6 +5,7 @@ change API request/response contracts or user-visible food names.
 """
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Literal
@@ -57,6 +58,27 @@ FOOD_SEARCH_ALIAS_RULES: dict[str, str] = {
 }
 
 
+# Matches a trailing quantity token at the END of a query string.
+# Examples: "계란 2개", "닭가슴살 100g", "바나나 1개", "우유 200ml"
+# The strip is limited to the trailing position so that food names whose
+# description begins with a number (rare in this DB) are not affected.
+# Units: put multi-char units before single-char overlaps (kg before g, ml before l).
+_QUANTITY_SUFFIX_RE = re.compile(
+    r"\s*\d+(?:\.\d+)?\s*(?:개|kg|g|ml|l|인분|컵|조각|쪽|티스푼|스푼)\s*$",
+    re.IGNORECASE,
+)
+
+
+def strip_trailing_quantity(text: str) -> str:
+    """Remove a trailing quantity token (number + unit) from a query string.
+
+    Returns the original string unchanged if stripping would leave an empty
+    string, or if no quantity suffix is present.
+    """
+    stripped = _QUANTITY_SUFFIX_RE.sub("", text).strip()
+    return stripped if stripped else text
+
+
 _COOKING_STATE_KEYWORDS: tuple[tuple[str, str], ...] = (
     ("삶은것", "삶은것"),
     ("삶은", "삶은것"),
@@ -79,11 +101,10 @@ _DISH_KEYWORDS: tuple[str, ...] = (
     "국",
 )
 
-# Amount-bearing raw ingredient queries are intentionally preserved until a
-# later intent-aware retrieval step can safely decide how to handle quantities.
-_CONSERVATIVE_PROTECTED_QUERIES: set[str] = {
-    "닭가슴살 100g",
-}
+# Amount-bearing queries were previously listed here for conservative
+# protection. Quantity strip (strip_trailing_quantity) now handles them
+# generically before the protected/alias checks, so this set is empty.
+_CONSERVATIVE_PROTECTED_QUERIES: set[str] = {}
 
 
 def clean_food_search_query(query: str | None) -> str:
@@ -117,6 +138,10 @@ def analyze_food_query_for_search(query: str | None) -> FoodQueryAnalysis:
     """Analyze a food search query without changing public search contracts."""
     raw_query = "" if query is None else str(query)
     cleaned_query = clean_food_search_query(query)
+    # Strip trailing quantity token (e.g. "계란 2개" → "계란") before alias /
+    # protected checks so that quantity-bearing queries reach the same
+    # normalization path as their bare counterparts.
+    cleaned_query = strip_trailing_quantity(cleaned_query)
     if not cleaned_query:
         return FoodQueryAnalysis(
             raw_query=raw_query,

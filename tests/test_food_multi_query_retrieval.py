@@ -30,7 +30,7 @@ from engines.food.food_query_normalization import build_food_search_queries
         ("볶음밥 계란", ["볶음밥 계란"]),
         ("김밥 계란", ["김밥 계란"]),
         ("닭가슴살", ["닭가슴살"]),
-        ("닭가슴살 100g", ["닭가슴살 100g"]),
+        ("닭가슴살 100g", ["닭가슴살"]),  # quantity strip -> 닭가슴살 (protected-ambiguous)
         ("샐러드 닭가슴살", ["샐러드 닭가슴살"]),
         ("닭가슴살 샐러드", ["닭가슴살 샐러드"]),
         ("샌드위치 닭가슴살", ["샌드위치 닭가슴살"]),

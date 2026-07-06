@@ -56,7 +56,6 @@ def test_analysis_cleans_query_without_changing_normalization_contract(
         ("볶음밥 계란", "볶음밥", "dish"),
         ("김밥 계란", "김밥", "dish"),
         ("닭가슴살", None, "ambiguous"),
-        ("닭가슴살 100g", None, "ambiguous"),
         ("샐러드 닭가슴살", "샐러드", "dish"),
         ("닭가슴살 샐러드", "샐러드", "dish"),
         ("샌드위치 닭가슴살", "샌드위치", "dish"),
@@ -70,6 +69,18 @@ def test_analysis_marks_protected_queries_without_aliasing(query, dish_keyword, 
     assert analysis.intent == intent
     assert analysis.alias_applied is False
     assert analysis.matched_dish_keyword == dish_keyword
+
+
+def test_analysis_quantity_bearing_protected_query_strips_to_base():
+    # "닭가슴살 100g" strips to "닭가슴살" which is protected-ambiguous.
+    # normalized_query reflects the stripped form, not the original.
+    analysis = analyze_food_query_for_search("닭가슴살 100g")
+
+    assert analysis.protected is True
+    assert analysis.intent == "ambiguous"
+    assert analysis.cleaned_query == "닭가슴살"
+    assert analysis.normalized_query == "닭가슴살"
+    assert analysis.alias_applied is False
 
 
 @pytest.mark.parametrize(

@@ -34,7 +34,8 @@ MUST_PRESERVE_CASES = [
     ("볶음밥 계란", "볶음밥 계란"),
     ("김밥 계란", "김밥 계란"),
     ("닭가슴살", "닭가슴살"),
-    ("닭가슴살 100g", "닭가슴살 100g"),
+    # quantity-strip: "닭가슴살 100g" -> "닭가슴살" (protected-ambiguous, not raw ingredient)
+    ("닭가슴살 100g", "닭가슴살"),
     ("샐러드 닭가슴살", "샐러드 닭가슴살"),
     ("닭가슴살 샐러드", "닭가슴살 샐러드"),
     ("샌드위치 닭가슴살", "샌드위치 닭가슴살"),
@@ -182,26 +183,21 @@ _FULL_PIPELINE_REGRESSION_CASES = [
     pytest.param("닭가슴살", "샐러드 닭가슴살", id="닭가슴살-ambiguous-preserved"),
     # 흰쌀밥 → 쌀밥: DB canonical 동치, 현재 올바른 매핑
     pytest.param("흰쌀밥", "쌀밥", id="흰쌀밥-canonical-equivalent"),
+    # 계란 2개 → quantity strip → 계란 → 달걀 alias → canonical → 달걀 생것 (PR#1 승격)
+    pytest.param("계란 2개", "달걀 생것", id="계란2개-quantity-strip-promoted"),
+    # 바나나 1개 → quantity strip → 바나나 → canonical rep_name → 바나나 생것 (PR#1 승격)
+    pytest.param("바나나 1개", "바나나 생것", id="바나나1개-quantity-strip-promoted"),
 ]
 
 # 부류 B — 현재 틀린 동작 → xfail 개선 목표
 # strict=True: 런타임 개선 후 통과하면 XPASS로 신호 발생
-# 4/8 건(두부·오트밀·삶은두부·볶은두부)은 DB coverage gap이 전제 — pipeline fix 전에 DB 확장 필요
+# 4/6 건(두부·오트밀·삶은두부·볶은두부)은 DB coverage gap이 전제 — pipeline fix 전에 DB 확장 필요
 _FULL_PIPELINE_IMPROVEMENT_CASES = [
-    # [정규화 레이어] 수량 토큰 미제거 → alias 미매핑
-    pytest.param(
-        "계란 2개", "달걀 생것",
-        marks=pytest.mark.xfail(strict=True, reason="normalization: quantity token '2개' not stripped before alias lookup"),
-        id="계란2개-quantity-strip",
-    ),
-    pytest.param(
-        "바나나 1개", "바나나 생것",
-        marks=pytest.mark.xfail(strict=True, reason="normalization: quantity token '1개' not stripped; canonical rep_name='바나나' miss"),
-        id="바나나1개-quantity-strip",
-    ),
+    # [정규화 레이어] 닭가슴살 100g → 닭가슴살 (protected-ambiguous) → 샐러드 닭가슴살
+    # 목표: 수량 strip 후 ingredient 재분류 + 생것 alias 경로 필요 (별도 PR)
     pytest.param(
         "닭가슴살 100g", "닭고기 가슴(껍질 제거) 생것",
-        marks=pytest.mark.xfail(strict=True, reason="normalization: '100g' not stripped; protected query preserved instead of re-aliasing as ingredient"),
+        marks=pytest.mark.xfail(strict=True, reason="normalization: 100g stripped to 닭가슴살 but protected-ambiguous; ingredient re-alias path not yet implemented"),
         id="닭가슴살100g-quantity-strip",
     ),
     # [reranker 레이어] cooking-state score가 vector top-1을 역전
