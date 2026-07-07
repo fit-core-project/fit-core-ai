@@ -192,29 +192,19 @@ _FULL_PIPELINE_REGRESSION_CASES = [
     # forcing raw here would be inconsistent with the bare "닭가슴살" ambiguous-
     # preservation contract. Decision 2026-07-06.
     pytest.param("닭가슴살 100g", "샐러드 닭가슴살", id="닭가슴살100g-ambiguous-same-as-bare"),
+    # 두부/오트밀 원재료 DB 추가 후 원재료 행이 최상위로 올라옴 (PR#2 승격, 2026-07-07)
+    pytest.param("두부", "두부", id="두부-raw-ingredient-added"),
+    pytest.param("오트밀", "오트밀", id="오트밀-raw-ingredient-added"),
 ]
 
 # 부류 B — 현재 틀린 동작 → xfail 개선 목표
 # strict=True: 런타임 개선 후 통과하면 XPASS로 신호 발생
-# 4/5 건(두부·오트밀·삶은두부·볶은두부)은 DB coverage gap이 전제 — pipeline fix 전에 DB 확장 필요
 _FULL_PIPELINE_IMPROVEMENT_CASES = [
     # [reranker 레이어] cooking-state score가 vector top-1을 역전
     pytest.param(
         "고구마 조림", "고구마조림",
         marks=pytest.mark.xfail(strict=True, reason="reranker: cooking-state score demotes vector top-1 (고구마조림 dist=0.056) in favour of 고구마 구운것"),
         id="고구마조림-reranker",
-    ),
-    # [DB coverage gap] 원재료성 두부가 DB에 없음 + pipeline도 두부국(음식) 반환
-    pytest.param(
-        "두부", "두부",
-        marks=pytest.mark.xfail(strict=True, reason="DB coverage gap: raw 두부(원재료) not in food_db; pipeline returns dish 두부국"),
-        id="두부-db-gap",
-    ),
-    # [DB coverage gap] 원재료성 오트밀이 DB에 없음
-    pytest.param(
-        "오트밀", "오트밀",
-        marks=pytest.mark.xfail(strict=True, reason="DB coverage gap: raw 오트밀 not in food_db; pipeline returns 라떼 오트밀 라떼 핫(HOT)"),
-        id="오트밀-db-gap",
     ),
     # [DB coverage gap] 두부 삶은것이 DB에 없음 + reranker가 동부 삶은것 반환
     pytest.param(
