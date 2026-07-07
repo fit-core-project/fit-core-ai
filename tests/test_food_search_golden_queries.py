@@ -187,19 +187,17 @@ _FULL_PIPELINE_REGRESSION_CASES = [
     pytest.param("계란 2개", "달걀 생것", id="계란2개-quantity-strip-promoted"),
     # 바나나 1개 → quantity strip → 바나나 → canonical rep_name → 바나나 생것 (PR#1 승격)
     pytest.param("바나나 1개", "바나나 생것", id="바나나1개-quantity-strip-promoted"),
+    # "닭가슴살 100g" resolves to the same ambiguous canonical as bare "닭가슴살"
+    # after quantity strip. Deliberately NOT forced to a raw ingredient target:
+    # forcing raw here would be inconsistent with the bare "닭가슴살" ambiguous-
+    # preservation contract. Decision 2026-07-06.
+    pytest.param("닭가슴살 100g", "샐러드 닭가슴살", id="닭가슴살100g-ambiguous-same-as-bare"),
 ]
 
 # 부류 B — 현재 틀린 동작 → xfail 개선 목표
 # strict=True: 런타임 개선 후 통과하면 XPASS로 신호 발생
-# 4/6 건(두부·오트밀·삶은두부·볶은두부)은 DB coverage gap이 전제 — pipeline fix 전에 DB 확장 필요
+# 4/5 건(두부·오트밀·삶은두부·볶은두부)은 DB coverage gap이 전제 — pipeline fix 전에 DB 확장 필요
 _FULL_PIPELINE_IMPROVEMENT_CASES = [
-    # [정규화 레이어] 닭가슴살 100g → 닭가슴살 (protected-ambiguous) → 샐러드 닭가슴살
-    # 목표: 수량 strip 후 ingredient 재분류 + 생것 alias 경로 필요 (별도 PR)
-    pytest.param(
-        "닭가슴살 100g", "닭고기 가슴(껍질 제거) 생것",
-        marks=pytest.mark.xfail(strict=True, reason="normalization: 100g stripped to 닭가슴살 but protected-ambiguous; ingredient re-alias path not yet implemented"),
-        id="닭가슴살100g-quantity-strip",
-    ),
     # [reranker 레이어] cooking-state score가 vector top-1을 역전
     pytest.param(
         "고구마 조림", "고구마조림",
