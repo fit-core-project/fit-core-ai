@@ -96,9 +96,15 @@ def _canonical_match_score(analysis: FoodQueryAnalysis, candidate: FoodSearchCan
         return 4
     if normalized and normalized == rep_name:
         return 3
+    # name matches allow both directions: name is a specific food name, so
+    # "쌀밥" ⊂ query "흰쌀밥" is a valid canonical equivalence.
     if _contains_exact_food_text(normalized, name):
         return 2
-    if _contains_exact_food_text(normalized, rep_name):
+    # rep_name matches are forward-only: rep_name is a shared group root
+    # ("고구마" covers 고구마 생것/찐것/구운것...), so rep_name ⊂ query
+    # ("고구마" ⊂ "고구마 조림") is a false positive that lets a raw-ingredient
+    # row outrank the correct dish. Stage-level diagnosis 2026-07-07.
+    if normalized and rep_name and normalized in rep_name:
         return 2
     return 0
 

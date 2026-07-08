@@ -195,17 +195,16 @@ _FULL_PIPELINE_REGRESSION_CASES = [
     # 두부/오트밀 원재료 DB 추가 후 원재료 행이 최상위로 올라옴 (PR#2 승격, 2026-07-07)
     pytest.param("두부", "두부", id="두부-raw-ingredient-added"),
     pytest.param("오트밀", "오트밀", id="오트밀-raw-ingredient-added"),
+    # 고구마 조림: reranker rep_name 역방향 false positive 수정 후 승격 (PR#3, 2026-07-08)
+    # 근본 원인: rep_name="고구마"(공통 그룹 루트) ⊂ query "고구마 조림" → canonical_score=2 오판
+    # → 고구마 구운것(원재료, dist=0.23)이 고구마조림(정답 음식, dist=0.056) 역전.
+    # 수정: rep_name 매칭을 정방향 전용으로 제한(역방향 제거).
+    pytest.param("고구마 조림", "고구마조림", id="고구마조림-reranker-fixed"),
 ]
 
 # 부류 B — 현재 틀린 동작 → xfail 개선 목표
 # strict=True: 런타임 개선 후 통과하면 XPASS로 신호 발생
 _FULL_PIPELINE_IMPROVEMENT_CASES = [
-    # [reranker 레이어] cooking-state score가 vector top-1을 역전
-    pytest.param(
-        "고구마 조림", "고구마조림",
-        marks=pytest.mark.xfail(strict=True, reason="reranker: cooking-state score demotes vector top-1 (고구마조림 dist=0.056) in favour of 고구마 구운것"),
-        id="고구마조림-reranker",
-    ),
     # [DB coverage gap] 두부 삶은것이 DB에 없음 + reranker가 동부 삶은것 반환
     pytest.param(
         "삶은 두부", "두부 삶은것",

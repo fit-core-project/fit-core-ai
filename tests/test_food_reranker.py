@@ -11,6 +11,7 @@ from engines.food.food_reranker import (
     FoodSearchCandidate,
     build_food_candidate_dedupe_key,
     rerank_food_candidates,
+    _canonical_match_score,
 )
 
 
@@ -131,6 +132,47 @@ def test_reranker_does_not_overcorrect_ambiguous_chicken_breast_query(query):
     )
 
     assert names[0] == "샐러드 닭가슴살"
+
+
+# ---------------------------------------------------------------------------
+# _canonical_match_score: rep_name forward-only fix (2026-07-07)
+# ---------------------------------------------------------------------------
+
+def _score(query: str, name: str, rep_name: str) -> int:
+    analysis = analyze_food_query_for_search(query)
+    doc = _doc(name, rep_name=rep_name)
+    candidate = _candidate(doc, rank=0)
+    return _canonical_match_score(analysis, candidate)
+
+
+@pytest.mark.parametrize(
+    ("query", "name", "rep_name", "expected_score", "description"),
+    [
+        # [BUG FIX] rep_name "고구마" is a substring of query "고구마 조림" (reverse).
+        # This was returning 2, causing raw-ingredient to outrank the correct dish.
+        # Forward-only rep_name means rep_name ⊄ query → score=0.
+        ("고구마 조림", "고구마 구운것", "고구마", 0, "rep_name reverse blocked"),
+        # [PRESERVED] name "쌀밥" ⊂ query "흰쌀밥" — valid canonical equivalence.
+        # name allows both directions, so this must still return 2.
+        ("흰쌀밥", "쌀밥", "쌀밥", 2, "name reverse preserved (흰쌀밥→쌀밥)"),
+        # [EXACT] normalized == name → 4
+        ("달걀 삶은것", "달걀 삶은것", "달걀", 4, "exact name match"),
+        # [EXACT] normalized == rep_name → 3
+        ("달걀", "달걀 생것", "달걀", 3, "exact rep_name match"),
+        # [FORWARD name] normalized "닭가슴살" ⊂ name "샐러드 닭가슴살" → 2
+        ("닭가슴살", "샐러드 닭가슴살", "샐러드", 2, "name forward: query in name"),
+        # [FORWARD name] normalized "달걀" ⊂ name "달걀 삶은것" → 2
+        ("달걀", "달걀 삶은것", "달걀", 3, "exact rep_name wins before forward name"),
+        # [FORWARD rep_name] normalized "바나나 생것" contains rep_name "바나나" is false;
+        # forward means normalized in rep_name. "바나나" in "바나나" is exact → already 3.
+        # Demonstrate forward rep_name: "닭고기" in "닭고기 가슴(껍질 제거)" → 2
+        ("닭고기", "닭고기 가슴(껍질 제거) 생것", "닭고기 가슴(껍질 제거)", 2, "rep_name forward: query in rep_name"),
+        # [NO MATCH] neither name nor rep_name relates to query → 0
+        ("오렌지", "사과 생것", "사과", 0, "no match"),
+    ],
+)
+def test_canonical_match_score(query, name, rep_name, expected_score, description):
+    assert _score(query, name, rep_name) == expected_score, description
 
 
 class _BadOrderVectorStore:
