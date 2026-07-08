@@ -23,6 +23,7 @@ from engines.schemas import (
     LLMRoutineOutput,
     PainAreaEntry,
     RecentSetRecord,
+    RoutineRequest,
 )
 
 
@@ -105,6 +106,95 @@ class TestHappyPath:
         assert result.status_reason_code == "none"
         assert len(result.routine_blocks) == 1
         assert result.routine_blocks[0].exercise_id == "barbell_bench_press"
+
+    def test_professional_clearance_warning_is_deterministic_on_success(
+        self, sample_request, sample_profile, sample_llm_output, mock_candidates
+    ):
+        db = _make_db_mock()
+        request = sample_request.model_copy(update={
+            "condition_policies": [
+                {
+                    "policyType": "surgeryHistory",
+                    "bodyPart": "shoulder",
+                    "status": "needs_clearance",
+                    "professionalClearance": False,
+                }
+            ]
+        })
+        llm_output = sample_llm_output.model_copy(update={"warnings": []})
+        mock_llm = _make_llm_mock(return_value=llm_output)
+
+        with (
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert result.generation_status == "success"
+        assert any("의료진 허가" in warning for warning in result.warnings)
+
+    def test_professional_clearance_warning_is_deterministic_on_fallback(
+        self, sample_request, sample_profile, mock_candidates
+    ):
+        db = _make_db_mock()
+        request = sample_request.model_copy(update={
+            "condition_policies": [
+                {
+                    "policyType": "surgeryHistory",
+                    "bodyPart": "shoulder",
+                    "status": "needs_clearance",
+                    "professionalClearance": False,
+                }
+            ]
+        })
+        mock_llm = _make_llm_mock(side_effect=asyncio.TimeoutError())
+
+        with (
+            patch("engines.routine_pipeline.get_llm", return_value=mock_llm),
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        assert result.generation_status == "fallback"
+        assert any("의료진 허가" in warning for warning in result.warnings)
+
+    def test_low_readiness_extreme_pain_context_does_not_force_normal_routine(self, sample_profile, mock_candidates):
+        db = _make_db_mock()
+        request = RoutineRequest(
+            user_id="extreme-pain-user",
+            target_split_label="full_body",
+            readiness_level="low",
+            time_available_min=45,
+            pain_areas=[
+                PainAreaEntry(body_part="lower-back"),
+                PainAreaEntry(body_part="knees"),
+                PainAreaEntry(body_part="front-deltoids"),
+                PainAreaEntry(body_part="chest"),
+                PainAreaEntry(body_part="upper-back"),
+                PainAreaEntry(body_part="quadriceps"),
+                PainAreaEntry(body_part="hamstring"),
+            ],
+            doms_data={},
+            equipment=[],
+            goal="hypertrophy",
+        )
+
+        with (
+            patch("engines.routine_pipeline.get_llm") as get_llm_mock,
+            patch("engines.routine_pipeline.get_candidate_exercises", return_value=mock_candidates),
+        ):
+            result = generate_smart_routine(
+                request, db, profile=sample_profile, recent_sets=[]
+            )
+
+        get_llm_mock.assert_not_called()
+        assert result.generation_status == "failed"
+        assert result.status_reason_code == "emptyCandidate"
+        assert result.routine_blocks == []
 
     def test_success_routine_blocks_have_prescriptions(
         self, sample_request, sample_profile, sample_llm_output, mock_candidates
@@ -800,4 +890,3 @@ class TestNoProfile:
             )
 
         assert result.generation_status == "success"
-

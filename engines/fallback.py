@@ -21,7 +21,11 @@ from .registry import LARGE_MUSCLE_SLUGS, ACCESSORY_MUSCLE_SLUGS
 from .prescription.estimator import estimate_routine_time_min, _movement_type_key
 from .prescription.params import _prescription_params_for_exercise
 from .prescription.weight import _resolve_target_weight
-from .prescription.adjustments import _apply_readiness_to_exercise, _apply_large_muscle_volume_guard
+from .prescription.adjustments import (
+    _apply_large_muscle_volume_guard,
+    _apply_readiness_to_exercise,
+    _target_exercise_count,
+)
 from .candidate_ranker import _is_loadable_equipment
 from .log_redaction import (
     sanitize_dev_log_payload,
@@ -80,6 +84,16 @@ def _candidate_order_key(candidate: dict) -> Tuple[int, int, int, int, str]:
     )
 
 
+def _fallback_target_exercise_count(time_available_min: Optional[int]) -> int:
+    """Fallback should be more conservative than the normal LLM target count."""
+    minutes = int(time_available_min or 60)
+    if minutes <= 25:
+        return 2
+    if minutes <= 30:
+        return 3
+    return _target_exercise_count(minutes)
+
+
 def _order_exercises_for_training(exercises: List[LLMExercisePlan]) -> List[LLMExercisePlan]:
     return [
         exercise
@@ -116,16 +130,39 @@ def _build_prescription(
     ]
 
 
+def _candidate_by_id(ranked_candidates: Optional[List[dict]]) -> Dict[str, dict]:
+    return {
+        str(candidate.get("id") or "").strip().lower(): candidate
+        for candidate in (ranked_candidates or [])
+        if str(candidate.get("id") or "").strip()
+    }
+
+
+def _candidate_score_context(candidate: Optional[dict]) -> Dict[str, List[Any]]:
+    if not candidate:
+        return {"reasons": [], "boosts": [], "penalties": []}
+    return {
+        "reasons": list(candidate.get("score_display_reasons") or []),
+        "boosts": list(candidate.get("score_boosts") or []),
+        "penalties": list(candidate.get("score_penalties") or []),
+    }
+
+
 def build_routine_draft(
     llm_output: LLMRoutineOutput,
     generation_status: GenerationStatus,
     status_reason_code: StatusReasonCode,
     is_fallback: bool,
+    ranked_candidates: Optional[List[dict]] = None,
 ) -> RoutineDraftResponse:
     blocks = []
+    ranked_by_id = _candidate_by_id(ranked_candidates)
     llm_output = enforce_korean_user_text_on_output(llm_output)
     ordered_exercises = _order_exercises_for_training(llm_output.exercises)
     for order, ex in enumerate(ordered_exercises, start=1):
+        score_context = _candidate_score_context(
+            ranked_by_id.get(str(ex.exercise_id or "").strip().lower())
+        )
         blocks.append(RoutineBlock(
             order=order,
             exercise_id=ex.exercise_id,
@@ -150,6 +187,9 @@ def build_routine_draft(
                 )
                 for s in ex.substitution_candidates
             ],
+            reasons=score_context["reasons"],
+            boosts=score_context["boosts"],
+            penalties=score_context["penalties"],
         ))
 
     return enforce_korean_user_text_on_response(RoutineDraftResponse(
@@ -280,11 +320,15 @@ def generate_fallback_routine(
 
     blocks: List[RoutineBlock] = []
     fallback_plans: List[LLMExercisePlan] = []
+    ranked_by_id = _candidate_by_id(candidates)
     remaining_sets = max_total_sets
+    max_exercise_count = _fallback_target_exercise_count(req.time_available_min)
     order = 1
 
     for ex in sorted_candidates:
         if remaining_sets <= 0:
+            break
+        if len(fallback_plans) >= max_exercise_count:
             break
 
         doms_level = doms.get(ex["primary_muscle"], 0)
@@ -328,8 +372,18 @@ def generate_fallback_routine(
         _apply_readiness_to_exercise(plan, req.readiness_level)
         _apply_large_muscle_volume_guard(plan, req.target_split_label, fallback_target_muscles)
         plan.target_weight_kg = _resolve_target_weight(plan, goal, recent_sets, profile)
+
+        while plan.sets > 1 and estimate_routine_time_min([*fallback_plans, plan]) > req.time_available_min:
+            plan.sets -= 1
+
+        if fallback_plans and estimate_routine_time_min([*fallback_plans, plan]) > req.time_available_min:
+            continue
+
         sets = plan.sets
         remaining_sets -= sets
+        score_context = _candidate_score_context(
+            ranked_by_id.get(str(plan.exercise_id or "").strip().lower())
+        )
 
         blocks.append(RoutineBlock(
             order=order,
@@ -348,6 +402,9 @@ def generate_fallback_routine(
             ),
             exercise_rationale=plan.exercise_rationale,
             substitution_candidates=[],
+            reasons=score_context["reasons"],
+            boosts=score_context["boosts"],
+            penalties=score_context["penalties"],
         ))
         fallback_plans.append(plan)
         order += 1

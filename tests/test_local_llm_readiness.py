@@ -49,6 +49,29 @@ def test_unreachable_reports_failed_ollama_unreachable():
     assert report["ollama_reachable"] is False
     assert report["readiness_status"] == "failed_ollama_unreachable"
     assert report["error_category"] == "ollama_unreachable"
+    assert report["next_action"] in {"install_or_start_ollama", "windows_ollama_detected_but_http_unreachable"}
+
+
+def test_detect_windows_ollama_install_from_visible_files(tmp_path):
+    data_dir = tmp_path / "Ollama"
+    program_dir = tmp_path / "Programs" / "Ollama"
+    data_dir.mkdir()
+    program_dir.mkdir(parents=True)
+    (data_dir / "ollama.pid").write_text("1234", encoding="utf-8")
+    (data_dir / "server.log").write_text("server started", encoding="utf-8")
+    (program_dir / "ollama.exe").write_text("fake exe", encoding="utf-8")
+
+    report = readiness.detect_windows_ollama_install(
+        data_dir=str(data_dir),
+        program_dir=str(program_dir),
+    )
+
+    assert report["windows_install_detected"] is True
+    assert report["windows_data_dir_detected"] is True
+    assert report["windows_program_dir_detected"] is True
+    assert report["windows_executable_detected"] is True
+    assert report["windows_pid_file_detected"] is True
+    assert report["windows_server_log_detected"] is True
 
 
 def test_probe_timeout_reports_failed_probe_timeout():
@@ -98,6 +121,31 @@ def test_sanitize_base_url_hides_path_query_and_credentials():
     }
     assert "user" not in json.dumps(sanitized)
     assert "secret" not in json.dumps(sanitized)
+
+
+def test_windows_install_detected_changes_unreachable_next_action(monkeypatch, tmp_path):
+    data_dir = tmp_path / "Ollama"
+    program_dir = tmp_path / "Programs" / "Ollama"
+    data_dir.mkdir()
+    program_dir.mkdir(parents=True)
+    (program_dir / "ollama.exe").write_text("fake exe", encoding="utf-8")
+    monkeypatch.setenv("WINDOWS_OLLAMA_DATA_DIR", str(data_dir))
+    monkeypatch.setenv("WINDOWS_OLLAMA_PROGRAM_DIR", str(program_dir))
+
+    def fake_request(method, url, *, timeout_sec, payload=None):
+        raise urllib.error.URLError("connection refused")
+
+    report = readiness.build_readiness_report(
+        base_url="http://127.0.0.1:11434",
+        model="gemma4:latest",
+        timeout_sec=30,
+        request_json=fake_request,
+    )
+
+    assert report["windows_install_detected"] is True
+    assert report["windows_executable_detected"] is True
+    assert report["readiness_status"] == "failed_ollama_unreachable"
+    assert report["next_action"] == "windows_ollama_detected_but_http_unreachable"
 
 
 def test_strict_mode_returns_nonzero_on_failure(monkeypatch, capsys):

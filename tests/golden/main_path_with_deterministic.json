@@ -53,6 +53,68 @@
           "exercise_name": "덤벨 벤치프레스",
           "reason": "바벨 없을 때 대체"
         }
+      ],
+      "reasons": [
+        "운동 효율 등급 5이 추천 점수에 반영되었습니다.",
+        "복합 운동이라 메인 운동 우선순위가 올라갔습니다.",
+        "중량 조절이 가능한 장비 운동이라 우선순위가 올라갔습니다.",
+        "오늘 목표 주동근과 직접 일치합니다.",
+        "보조 자극 부위가 오늘 목표와 겹칩니다.",
+        "대근육 주동근 운동이라 메인 볼륨으로 우선 반영되었습니다.",
+        "해당 주동근의 가벼운 근육통이 반영되어 우선순위가 조금 낮아졌습니다."
+      ],
+      "boosts": [
+        {
+          "constraint_code": null,
+          "rule_code": "efficiency_tier",
+          "profile_signal_code": null,
+          "score": 30,
+          "reason": "운동 효율 등급 5이 추천 점수에 반영되었습니다."
+        },
+        {
+          "constraint_code": null,
+          "rule_code": "movement_type_compound",
+          "profile_signal_code": null,
+          "score": 30,
+          "reason": "복합 운동이라 메인 운동 우선순위가 올라갔습니다."
+        },
+        {
+          "constraint_code": null,
+          "rule_code": "loadable_equipment",
+          "profile_signal_code": null,
+          "score": 18,
+          "reason": "중량 조절이 가능한 장비 운동이라 우선순위가 올라갔습니다."
+        },
+        {
+          "constraint_code": null,
+          "rule_code": "primary_target_match",
+          "profile_signal_code": null,
+          "score": 20,
+          "reason": "오늘 목표 주동근과 직접 일치합니다."
+        },
+        {
+          "constraint_code": null,
+          "rule_code": "secondary_target_match",
+          "profile_signal_code": null,
+          "score": 8,
+          "reason": "보조 자극 부위가 오늘 목표와 겹칩니다."
+        },
+        {
+          "constraint_code": null,
+          "rule_code": "large_muscle_priority",
+          "profile_signal_code": null,
+          "score": 10,
+          "reason": "대근육 주동근 운동이라 메인 볼륨으로 우선 반영되었습니다."
+        }
+      ],
+      "penalties": [
+        {
+          "constraint_code": null,
+          "rule_code": "doms_penalty",
+          "profile_signal_code": "doms",
+          "score": -10,
+          "reason": "해당 주동근의 가벼운 근육통이 반영되어 우선순위가 조금 낮아졌습니다."
+        }
       ]
     }
   ],

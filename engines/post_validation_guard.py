@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import List
 
-from .candidate_ranker import _candidate_is_safe
+from .candidate_ranker import _candidate_is_safe, _normalize_body_part
 from .schemas import LLMRoutineOutput, PainAreaEntry
 
 logger = logging.getLogger(__name__)
@@ -87,6 +87,12 @@ def audit_routine_output(
         )
         pain_tokens = {p.body_part.lower() for p in pain_areas if p.body_part}
         candidate_pain = str(candidate.get("pain_triggers") or "").lower()
+        normalized_pain_tokens = {
+            _normalize_body_part(p.body_part)
+            for p in pain_areas
+            if p.body_part
+        }
+        primary_muscle = _normalize_body_part(candidate.get("primary_muscle"))
 
         if equip_tokens & blocked:
             violations.append(Violation(
@@ -103,12 +109,19 @@ def audit_routine_output(
                 constraint="pain_area",
                 detail=f"pain_triggers matches injury area(s): {matched}",
             ))
+        elif primary_muscle and primary_muscle in normalized_pain_tokens:
+            violations.append(Violation(
+                exercise_id=eid,
+                exercise_name=exercise.exercise_name,
+                constraint="pain_area",
+                detail=f"primary_muscle directly targets pain area: {primary_muscle}",
+            ))
         else:
             violations.append(Violation(
                 exercise_id=eid,
                 exercise_name=exercise.exercise_name,
                 constraint="equipment",
-                detail="unsafe candidate (equipment or pain trigger conflict)",
+                detail="unsafe candidate (equipment, pain trigger, or primary pain area conflict)",
             ))
 
     return GuardReport(violations=violations)

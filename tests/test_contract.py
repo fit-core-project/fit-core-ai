@@ -59,6 +59,35 @@ class TestRoutineRequestParsing:
         assert req.pain_areas == []
         assert req.doms_data == {}
         assert req.equipment == []
+        assert req.experience_level is None
+        assert req.mobility_limits == []
+        assert req.condition_policies == []
+        assert req.anthropometry_signals == {}
+
+    def test_routine_quality_inputs_parse_camel_case(self):
+        payload = {
+            "timeAvailableMin": 60,
+            "experienceLevel": "beginner",
+            "mobilityLimits": ["limited_ankle_dorsiflexion"],
+            "conditionPolicies": [
+                {
+                    "conditionCode": "lumbar_herniation",
+                    "bodyPart": "lower-back",
+                    "phase": "rehab",
+                    "professionalClearance": False,
+                }
+            ],
+            "anthropometrySignals": {
+                "femurLengthLevel": "long",
+                "armLengthLevel": "average",
+            },
+        }
+        req = RoutineRequest.model_validate(payload)
+
+        assert req.mobility_limits == ["limited_ankle_dorsiflexion"]
+        assert req.experience_level == "beginner"
+        assert req.condition_policies[0]["conditionCode"] == "lumbar_herniation"
+        assert req.anthropometry_signals["femurLengthLevel"] == "long"
 
 
 class TestRoutineDraftResponseSerialization:
@@ -151,3 +180,26 @@ class TestRoutineDraftResponseSerialization:
         assert "isFallback" in dumped
         assert "is_fallback" not in dumped
 
+    def test_score_breakdown_serialized_as_camel_case(self, sample_llm_output, mock_candidates):
+        from engines.candidate_ranker import score_candidate_exercises
+        from engines.fallback import build_routine_draft as _build_routine_draft
+
+        ranked = score_candidate_exercises(mock_candidates, ["chest"], doms_db={"chest": 1})
+        response = _build_routine_draft(
+            sample_llm_output,
+            "success",
+            "none",
+            False,
+            ranked_candidates=ranked,
+        )
+        dumped = response.model_dump(by_alias=True)
+        block = dumped["routineBlocks"][0]
+
+        assert "reasons" in block
+        assert "boosts" in block
+        assert "penalties" in block
+        assert block["boosts"]
+        assert block["penalties"]
+        assert "ruleCode" in block["boosts"][0]
+        assert "rule_code" not in block["boosts"][0]
+        assert any(item["profileSignalCode"] == "doms" for item in block["penalties"])

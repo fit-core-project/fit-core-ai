@@ -33,7 +33,7 @@ from sqlalchemy.orm import Session
 
 from .candidate_pool_policy import get_candidate_pool_size
 from .candidate_ranker import format_candidates_for_prompt, score_candidate_exercises
-from .db_queries import get_candidate_exercises
+from .db_queries import get_candidate_exercises, get_user_constraint_profile_from_sqlite
 from .fallback import (
     _debug_print_draft,
     _debug_print_llm_output,
@@ -63,6 +63,16 @@ from .routine_telemetry import classify_fallback_reason, observe_routine_quality
 logger = logging.getLogger(__name__)
 
 _TRUE_VALUES = {"true", "1", "yes", "on"}
+_EXTREME_PAIN_TARGET_OVERLAP_RATIO = 0.5
+_EXTREME_PAIN_MIN_BODY_PARTS = 5
+_PROFESSIONAL_CLEARANCE_WARNING = "수술/질환 이력이 있는 부위는 의료진 허가 범위 안에서만 진행하세요."
+_CLEARANCE_REQUIRED_STATUSES = {
+    "needs_clearance",
+    "requires_clearance",
+    "medical_clearance_required",
+    "doctor_clearance_required",
+    "post_surgery",
+}
 
 
 def _local_raw_json_invoke_flag_enabled() -> bool:
@@ -200,6 +210,115 @@ def _safe_positive_int_env(name: str) -> Optional[int]:
     return value if value > 0 else None
 
 
+def _is_false_value(value: Any) -> bool:
+    if value is False:
+        return True
+    if value is None:
+        return False
+    return str(value).strip().lower() in {"false", "0", "no", "off"}
+
+
+def _policy_requires_professional_clearance_notice(condition_policies: List[dict]) -> bool:
+    for policy in condition_policies or []:
+        if not isinstance(policy, dict):
+            continue
+        status = str(policy.get("status") or policy.get("phase") or "").strip().lower()
+        policy_type = str(policy.get("policyType") or policy.get("policy_type") or "").strip().lower()
+        clearance = policy.get("professionalClearance", policy.get("professional_clearance"))
+        requires_clearance = policy.get(
+            "requiresProfessionalClearance",
+            policy.get("requires_professional_clearance"),
+        )
+        if _is_false_value(clearance) or requires_clearance is True:
+            return True
+        if status in _CLEARANCE_REQUIRED_STATUSES:
+            return True
+        if policy_type == "surgeryhistory" and status:
+            return True
+    return False
+
+
+def _apply_deterministic_request_warnings(
+    response: RoutineDraftResponse,
+    condition_policies: List[dict],
+) -> RoutineDraftResponse:
+    if not _policy_requires_professional_clearance_notice(condition_policies):
+        return response
+    response.warnings = _merge_unique_strings(response.warnings, [_PROFESSIONAL_CLEARANCE_WARNING])
+    return response
+
+
+def _normalize_body_part_slug(value: Any) -> str:
+    return str(value or "").strip().lower().replace("_", "-")
+
+
+def _should_block_extreme_pain_context(req: RoutineRequest, target_muscles: List[str]) -> bool:
+    if str(req.readiness_level or "").strip().lower() != "low":
+        return False
+    pain_parts = {
+        _normalize_body_part_slug(pain.body_part)
+        for pain in (req.pain_areas or [])
+        if pain.body_part
+    }
+    target_parts = {
+        _normalize_body_part_slug(part)
+        for part in target_muscles
+        if str(part).strip()
+    }
+    if len(pain_parts) < _EXTREME_PAIN_MIN_BODY_PARTS or not target_parts:
+        return False
+    target_overlap = pain_parts & target_parts
+    return (len(target_overlap) / len(target_parts)) >= _EXTREME_PAIN_TARGET_OVERLAP_RATIO
+
+
+def _extreme_pain_failed_response() -> RoutineDraftResponse:
+    return RoutineDraftResponse(
+        generation_status="failed",
+        status_reason_code="emptyCandidate",
+        is_fallback=False,
+        total_estimated_time=0,
+        summary_title="오늘은 루틴 생성을 보류했어요",
+        rationale_summary=[
+            "낮은 컨디션과 여러 주요 통증/부상 부위가 오늘 목표 근육과 겹쳐, 안전한 루틴을 억지로 구성하지 않았습니다.",
+        ],
+        routine_blocks=[],
+        warnings=[
+            "통증/부상 부위를 줄이거나 목표 부위를 바꾼 뒤 다시 시도해 주세요.",
+            "운동 중 통증이 있으면 진행하지 말고 필요한 경우 전문가와 상담해 주세요.",
+        ],
+    )
+
+
+def _merge_unique_strings(*groups: Optional[List[str]]) -> List[str]:
+    merged: List[str] = []
+    seen: set[str] = set()
+    for group in groups:
+        for item in group or []:
+            text = str(item).strip()
+            key = text.lower()
+            if not text or key in seen:
+                continue
+            seen.add(key)
+            merged.append(text)
+    return merged
+
+
+def _format_prompt_mapping(value: Any) -> str:
+    if not value:
+        return "none"
+    if isinstance(value, dict):
+        return ", ".join(f"{key}={val}" for key, val in value.items())
+    if isinstance(value, list):
+        parts = []
+        for item in value:
+            if isinstance(item, dict):
+                parts.append(", ".join(f"{key}={val}" for key, val in item.items() if val is not None))
+            else:
+                parts.append(str(item))
+        return " | ".join(part for part in parts if part) or "none"
+    return str(value)
+
+
 def _rendered_prompt_char_count(prompt, invoke_kwargs: dict) -> int:
     try:
         messages = prompt.format_messages(**invoke_kwargs)
@@ -313,8 +432,9 @@ def _compute_feedback_stats(
 def _finalize_success(
     output: LLMRoutineOutput,
     label: str,
+    ranked_candidates: Optional[List[dict]] = None,
 ) -> RoutineDraftResponse:
-    draft = build_routine_draft(output, "success", "none", False)
+    draft = build_routine_draft(output, "success", "none", False, ranked_candidates=ranked_candidates)
     _debug_print_draft(label, draft)
     return draft
 
@@ -362,7 +482,7 @@ def _deterministic_or_fallback(
                 recent_sets,
                 profile,
             )
-    return _finalize_success(deterministic, draft_label)
+    return _finalize_success(deterministic, draft_label, ranked_candidates)
 
 
 def _validate_or_fallback(
@@ -430,7 +550,27 @@ def generate_smart_routine(
     doms_db = req.doms_data
     goal = req.goal or (profile.goal_type if profile else "hypertrophy")
     pain_areas = req.pain_areas
+    local_constraint_profile = get_user_constraint_profile_from_sqlite(req.user_id)
+    mobility_limits = _merge_unique_strings(
+        req.mobility_limits,
+        local_constraint_profile.get("mobility_limits", []),
+    )
+    condition_policies = [
+        *(req.condition_policies or []),
+        *(local_constraint_profile.get("condition_policies", []) or []),
+    ]
+    anthropometry_signals = {
+        **(local_constraint_profile.get("anthropometry_signals", {}) or {}),
+        **(req.anthropometry_signals or {}),
+    }
     logger.info("[매핑] doms -> %s", doms_db)
+
+    if _should_block_extreme_pain_context(req, db_target_muscles):
+        logger.warning("[Safety] extreme pain context -> failed emptyCandidate")
+        return _apply_deterministic_request_warnings(
+            _extreme_pain_failed_response(),
+            condition_policies,
+        )
 
     candidates = get_candidate_exercises(db, db_target_muscles, req.equipment, pain_areas)
     candidate_pool_size = get_candidate_pool_size()
@@ -459,6 +599,12 @@ def generate_smart_routine(
         unpreferred_exercise_ids=req.unpreferred_exercise_ids,
         top_n=candidate_pool_size,
         feedback_adjustments=feedback_adjustments,
+        readiness_level=req.readiness_level,
+        goal=goal,
+        mobility_limits=mobility_limits,
+        condition_policies=condition_policies,
+        anthropometry_signals=anthropometry_signals,
+        experience_level=req.experience_level or (profile.experience_level if profile else None),
     )
     feedback_stats = _compute_feedback_stats(ranked_candidates, feedback_adjustments)
     feedback_adjusted_candidate_count = feedback_stats["adjusted"]
@@ -491,10 +637,14 @@ def generate_smart_routine(
         "time_available_min": req.time_available_min,
         "target_exercise_count": target_exercise_count,
         "readiness_level": req.readiness_level or "normal",
+        "experience_level": req.experience_level or (profile.experience_level if profile else "none"),
         "unavailable_equipment": ", ".join(req.equipment) if req.equipment else "none",
         "target_split_label": req.target_split_label or "none",
         "target_muscles": ", ".join(db_target_muscles) if db_target_muscles else "none",
         "current_pain_areas": _format_request_pain_areas(pain_areas),
+        "mobility_limits": ", ".join(mobility_limits) if mobility_limits else "none",
+        "condition_policies": _format_prompt_mapping(condition_policies),
+        "anthropometry_signals": _format_prompt_mapping(anthropometry_signals),
         "candidate_count": len(ranked_candidates),
     }
     _debug_print_prompt(prompt, invoke_kwargs)
@@ -549,6 +699,7 @@ def generate_smart_routine(
         time_budget_exceeded = True
 
     def _observe(response: RoutineDraftResponse) -> RoutineDraftResponse:
+        response = _apply_deterministic_request_warnings(response, condition_policies)
         fallback_used = response.is_fallback or response.generation_status == "fallback"
         fallback_reason = classify_fallback_reason(
             fallback_used=fallback_used,
