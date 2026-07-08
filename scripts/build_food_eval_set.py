@@ -18,6 +18,9 @@ EVAL_DIR = PROJECT_ROOT / "data" / "eval"
 EVALSET_PATH = EVAL_DIR / "food_search_evalset_v1.jsonl"
 RESULTS_PATH = EVAL_DIR / "food_search_baseline_v1_results.jsonl"
 REPORT_PATH = EVAL_DIR / "food_search_baseline_v1_report.md"
+EVALSET_V2_PATH = EVAL_DIR / "food_search_evalset_v2.jsonl"
+RESULTS_V2_PATH = EVAL_DIR / "food_search_baseline_v2_results.jsonl"
+REPORT_V2_PATH = EVAL_DIR / "food_search_baseline_v2_report.md"
 
 TYPE_TARGETS = {"A": 200, "B": 200, "C": 200, "D": 200, "E": 200}
 RAW_DATA_TYPE = "원재료성 식품"
@@ -31,6 +34,20 @@ COOKING_PREFIX = {
     "볶은것": "볶은",
 }
 QUANTITY_SUFFIXES = (" 100g", " 200g", " 1개", " 2개", " 한컵")
+PROCESSED_OR_COMPOUND_TERMS = (
+    "젓갈",
+    "맛탕",
+    "샐러드",
+    "샌드위치",
+    "김밥",
+    "찌개",
+    "전골",
+    "볶음밥",
+    "덮밥",
+    "튀김",
+    "장아찌",
+    "절임",
+)
 
 
 def read_food_rows() -> list[dict[str, str]]:
@@ -40,6 +57,30 @@ def read_food_rows() -> list[dict[str, str]]:
 
 def normalize_spaces(value: str) -> str:
     return " ".join((value or "").strip().split())
+
+
+def compact_text(value: str | None) -> str:
+    return normalize_spaces(value or "").replace(" ", "")
+
+
+def base_compare_text(value: str | None) -> str:
+    text = normalize_spaces(value or "")
+    for token in (
+        "생것",
+        "삶은것",
+        "구운것",
+        "찐것",
+        "데친것",
+        "볶은것",
+        "조린것",
+        "말린것",
+        "대표",
+        "평균",
+        "국산",
+        "수입",
+    ):
+        text = text.replace(token, "")
+    return compact_text(text)
 
 
 def row_key(row: dict[str, str]) -> tuple[str, str]:
@@ -69,6 +110,55 @@ def ambiguity_base(name: str) -> str:
     for token in ("생것", "말린것", "냉동", "대표", "평균", "국산", "수입"):
         base = base.replace(token, "")
     return normalize_spaces(base)
+
+
+def is_processed_or_compound_name(name: str | None) -> bool:
+    text = normalize_spaces(name or "")
+    return any(term in text for term in PROCESSED_OR_COMPOUND_TERMS)
+
+
+def is_same_base_name(base: str | None, name: str | None) -> bool:
+    base_compact = base_compare_text(base)
+    name_compact = base_compare_text(name)
+    return bool(base_compact and name_compact and name_compact.startswith(base_compact))
+
+
+def same_base_allowed_names(base: str, rows: list[dict[str, str]]) -> list[str]:
+    return sorted(
+        {
+            row["name"]
+            for row in rows
+            if row.get("name")
+            and row.get("data_type") == RAW_DATA_TYPE
+            and is_same_base_name(base, row["name"])
+            and not is_processed_or_compound_name(row["name"])
+        }
+    )
+
+
+def refine_evalset_v2(items: list[dict[str, Any]], rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    refined = [dict(item) for item in items]
+    for item in refined:
+        if item.get("type") != "E":
+            continue
+        if item.get("expected_kind") == "preserve_ambiguous":
+            item["expected"] = {
+                "allowed_base": item["query"],
+                "disallow": "different_base_or_processed_or_compound_or_no_match",
+                "blocked_terms": list(PROCESSED_OR_COMPOUND_TERMS),
+            }
+            item["note"] = (
+                "v2: ambiguous 단일 재료명은 같은 base 생것/기본형, 조리형, provenance 변형을 허용하고 "
+                "다른 재료/가공품/복합요리/no-match만 실패 처리"
+            )
+        elif item.get("expected_kind") == "allowed_set":
+            allowed = same_base_allowed_names(item["query"], rows)
+            if allowed:
+                item["expected"] = allowed
+                item["note"] = (
+                    "v2: CSV에 실재하는 같은 base 행 중 가공품/복합요리를 제외한 생것/조리형/provenance 변형 허용"
+                )
+    return refined
 
 
 def round_robin_by_category(rows: list[dict[str, str]], limit: int) -> list[dict[str, str]]:
@@ -292,6 +382,11 @@ def is_pass(item: dict[str, Any], trace: dict[str, Any]) -> bool:
     if expected_kind == "allowed_set":
         return actual in set(expected)
     if expected_kind == "preserve_ambiguous":
+        if not actual:
+            return False
+        allowed_base = expected.get("allowed_base")
+        if allowed_base:
+            return is_same_base_name(allowed_base, actual) and not is_processed_or_compound_name(actual)
         blocked = set(expected.get("blocked_names", []))
         return actual not in blocked
     raise ValueError(f"Unknown expected_kind: {expected_kind}")
@@ -317,6 +412,15 @@ def classify_failure(item: dict[str, Any], trace: dict[str, Any], csv_names: set
     if allowed and not (allowed & vector_names):
         return "vector", "expected was absent from vector top-k"
     if item["expected_kind"] == "preserve_ambiguous":
+        allowed_base = expected.get("allowed_base")
+        if allowed_base:
+            if not actual:
+                return "canonical", "ambiguous query returned no top-1 match"
+            if is_processed_or_compound_name(actual):
+                return "reranker", "ambiguous query matched a processed or compound food"
+            if not is_same_base_name(allowed_base, actual):
+                return "vector", "ambiguous query matched a different base ingredient"
+            return "기대값의심", "preserve_ambiguous expected is inconsistent with same-base actual"
         blocked = set(expected.get("blocked_names", []))
         if actual in blocked:
             return "정규화", "ambiguous query resolved to a blocked raw ingredient"
@@ -350,20 +454,28 @@ def summarize_percent(passed: int, total: int) -> str:
     return f"{passed}/{total} ({passed / total * 100:.1f}%)" if total else "0/0 (0.0%)"
 
 
-def make_report(results: list[dict[str, Any]]) -> str:
+def make_report(results: list[dict[str, Any]], version: str = "v1", v1_results: list[dict[str, Any]] | None = None) -> str:
     total = len(results)
     passed = sum(1 for row in results if row["pass"])
     lines = [
-        "# Food Search Baseline v1",
+        f"# Food Search Baseline {version}",
         "",
         f"- Evalset: {total} queries",
         f"- Overall accuracy: {summarize_percent(passed, total)}",
-        "",
-        "## Accuracy by Type",
-        "",
-        "| Type | Pass | Total | Accuracy |",
-        "|---|---:|---:|---:|",
     ]
+    if v1_results:
+        v1_total = len(v1_results)
+        v1_passed = sum(1 for row in v1_results if row["pass"])
+        lines.append(f"- v1 comparison: {summarize_percent(v1_passed, v1_total)} -> {summarize_percent(passed, total)}")
+    if version == "v2":
+        lines.extend(
+            [
+                "- v2 refinement: preserve_ambiguous now passes same-base raw/basic ingredient matches.",
+                "- allowed_set expansion: E allowed sets include same-base CSV rows, excluding processed or compound terms.",
+                "- Still-fail contract: no-match, different-base, processed, and compound foods remain failures.",
+            ]
+        )
+    lines.extend(["", "## Accuracy by Type", "", "| Type | Pass | Total | Accuracy |", "|---|---:|---:|---:|"])
     for item_type in sorted({row["type"] for row in results}):
         subset = [row for row in results if row["type"] == item_type]
         ok = sum(1 for row in subset if row["pass"])
@@ -417,21 +529,36 @@ def make_report(results: list[dict[str, Any]]) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build food search evalset and optional baseline report.")
     parser.add_argument("--baseline", action="store_true", help="Run FoodSearchEngine over the evalset and write results/report.")
+    parser.add_argument("--version", choices=("v1", "v2"), default="v1", help="Evalset version to build.")
     args = parser.parse_args()
 
     rows = read_food_rows()
     evalset = build_evalset(rows)
-    write_jsonl(EVALSET_PATH, evalset)
-    print(f"wrote {EVALSET_PATH} ({len(evalset)} rows)")
+    evalset_path = EVALSET_PATH
+    results_path = RESULTS_PATH
+    report_path = REPORT_PATH
+    if args.version == "v2":
+        evalset = refine_evalset_v2(evalset, rows)
+        evalset_path = EVALSET_V2_PATH
+        results_path = RESULTS_V2_PATH
+        report_path = REPORT_V2_PATH
+
+    write_jsonl(evalset_path, evalset)
+    print(f"wrote {evalset_path} ({len(evalset)} rows)")
     print("type distribution:", dict(Counter(item["type"] for item in evalset)))
     print("category distribution:", dict(Counter(item["major_category"] for item in evalset).most_common()))
 
     if args.baseline:
         results = run_baseline(evalset, rows)
-        write_jsonl(RESULTS_PATH, results)
-        REPORT_PATH.write_text(make_report(results), encoding="utf-8", newline="\n")
-        print(f"wrote {RESULTS_PATH}")
-        print(f"wrote {REPORT_PATH}")
+        write_jsonl(results_path, results)
+        v1_results = load_jsonl(RESULTS_PATH) if args.version == "v2" and RESULTS_PATH.exists() else None
+        report_path.write_text(
+            make_report(results, version=args.version, v1_results=v1_results),
+            encoding="utf-8",
+            newline="\n",
+        )
+        print(f"wrote {results_path}")
+        print(f"wrote {report_path}")
 
 
 if __name__ == "__main__":
