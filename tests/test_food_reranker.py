@@ -157,6 +157,16 @@ def _score(query: str, name: str, rep_name: str) -> int:
         ("흰쌀밥", "쌀밥", "쌀밥", 2, "name reverse preserved (흰쌀밥→쌀밥)"),
         # [EXACT] normalized == name → 4
         ("달걀 삶은것", "달걀 삶은것", "달걀", 4, "exact name match"),
+        # [COMPACT EXACT] whitespace-only difference is an exact name match.
+        ("해물스파게티", "해물 스파게티", "해물 스파게티", 4, "compact exact name match"),
+        # [COMPACT EXACT] whitespace-only difference is an exact rep_name match.
+        ("해물스파게티", "치즈 스파게티 해물", "해물 스파게티", 3, "compact exact rep_name match"),
+        # [PRESERVED] shorter substring candidate still scores 2, below compact exact 4.
+        ("해물스파게티", "스파게티", "스파게티", 2, "shorter substring remains score 2"),
+        # [PRESERVED] name reverse is kept for 흰쌀밥 → 쌀밥.
+        ("흰쌀밥", "쌀밥", "쌀밥", 2, "name reverse preserved for 흰쌀밥"),
+        # [PRESERVED] rep_name reverse is still blocked for 고구마 조림 → 고구마.
+        ("고구마 조림", "고구마 구운것", "고구마", 0, "rep_name reverse remains blocked"),
         # [EXACT] normalized == rep_name → 3
         ("달걀", "달걀 생것", "달걀", 3, "exact rep_name match"),
         # [FORWARD name] normalized "닭가슴살" ⊂ name "샐러드 닭가슴살" → 2

@@ -88,13 +88,25 @@ def _contains_exact_food_text(needle: str, haystack: str) -> bool:
     return needle == haystack or needle in haystack or haystack in needle
 
 
+def _compact_food_text(value: str) -> str:
+    return "".join(value.split())
+
+
 def _canonical_match_score(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> int:
     name = get_food_candidate_name(candidate.document)
     rep_name = get_food_candidate_rep_name(candidate.document)
     normalized = analysis.normalized_query
     if normalized and normalized == name:
         return 4
+    # compact-exact: treat whitespace-only differences as exact match.
+    # "해물스파게티"(user) vs "해물 스파게티"(name) -> compact equal -> score 4,
+    # so the correct dish outranks a shorter substring candidate ("스파게티", score 2).
+    # This is additive: existing substring logic (incl. name reverse for 흰쌀밥) is kept.
+    if normalized and name and _compact_food_text(normalized) == _compact_food_text(name):
+        return 4
     if normalized and normalized == rep_name:
+        return 3
+    if normalized and rep_name and _compact_food_text(normalized) == _compact_food_text(rep_name):
         return 3
     # name matches allow both directions: name is a specific food name, so
     # "쌀밥" ⊂ query "흰쌀밥" is a valid canonical equivalence.
