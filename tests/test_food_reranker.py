@@ -12,6 +12,7 @@ from engines.food.food_reranker import (
     build_food_candidate_dedupe_key,
     rerank_food_candidates,
     _canonical_match_score,
+    _rerank_key,
 )
 
 
@@ -183,6 +184,49 @@ def _score(query: str, name: str, rep_name: str) -> int:
 )
 def test_canonical_match_score(query, name, rep_name, expected_score, description):
     assert _score(query, name, rep_name) == expected_score, description
+
+
+def _key(query: str, name: str, rep_name: str = "", *, rank: int = 0) -> tuple:
+    analysis = analyze_food_query_for_search(query)
+    doc = _doc(name, rep_name=rep_name)
+    candidate = _candidate(doc, rank=rank)
+    return _rerank_key(analysis, candidate)
+
+
+def test_rerank_key_boosts_cooking_state_match_above_short_substring():
+    query = "삶은 국수 말린것을"
+
+    expected_key = _key(query, "국수 말린것을 삶은것", "국수", rank=0)
+    shorter_key = _key(query, "국수 말린것", "국수", rank=2)
+
+    assert expected_key[1] == 3
+    assert expected_key[2] == 2
+    assert shorter_key[1] == 2
+    assert shorter_key[2] == 0
+    assert expected_key > shorter_key
+
+
+def test_rerank_key_does_not_boost_cooking_state_without_food_token_overlap():
+    key = _key("삶은 국수 말린것을", "바나나 삶은것", "바나나")
+
+    assert key[1] == 0
+    assert key[2] == 2
+    assert key[5] == 1
+
+
+def test_rerank_key_does_not_boost_without_query_cooking_state():
+    key = _key("국수 말린것을", "국수 말린것을 삶은것", "국수")
+
+    assert key[1] == 2
+    assert key[2] == 0
+
+
+def test_rerank_key_preserves_name_reverse_and_exact_scores():
+    reverse_key = _key("흰쌀밥", "쌀밥", "쌀밥")
+    exact_key = _key("해물스파게티", "해물 스파게티", "해물 스파게티")
+
+    assert reverse_key[1] == 2
+    assert exact_key[1] == 4
 
 
 class _BadOrderVectorStore:

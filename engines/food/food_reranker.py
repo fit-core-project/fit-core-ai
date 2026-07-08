@@ -176,14 +176,42 @@ def _token_overlap_score(analysis: FoodQueryAnalysis, candidate: FoodSearchCandi
     return min(sum(1 for token in tokens if token in text), 2)
 
 
+def _non_cooking_token_overlap_score(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> int:
+    tokens = {token for token in analysis.normalized_query.split() if token}
+    if analysis.cooking_state:
+        tokens = {
+            token
+            for token in tokens
+            if token not in analysis.cooking_state and analysis.cooking_state not in token
+        }
+    if not tokens:
+        return 0
+    text = get_food_candidate_text(candidate.document)
+    return min(sum(1 for token in tokens if token in text), 2)
+
+
 def _rerank_key(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> tuple:
+    canonical = _canonical_match_score(analysis, candidate)
+    cooking = _cooking_state_score(analysis, candidate)
+    token_overlap = _token_overlap_score(analysis, candidate)
+    # G1 fix: when the user specifies a cooking state and a candidate matches it,
+    # promote that candidate above shorter substring matches (canonical=2). The
+    # token guard prevents unrelated foods with only the same cooking state from
+    # receiving the boost.
+    if (
+        analysis.cooking_state
+        and cooking > 0
+        and token_overlap > 0
+        and _non_cooking_token_overlap_score(analysis, candidate) > 0
+    ):
+        canonical = max(canonical, 3)
     return (
         _protected_dish_score(analysis, candidate),
-        _canonical_match_score(analysis, candidate),
-        _cooking_state_score(analysis, candidate),
+        canonical,
+        cooking,
         _compound_score(analysis, candidate),
         _data_type_score(analysis, candidate),
-        _token_overlap_score(analysis, candidate),
+        token_overlap,
         -candidate.source_query_index,
         -candidate.original_rank,
     )
