@@ -1,0 +1,455 @@
+{
+  "$defs": {
+    "InjuryConditionEntry": {
+      "additionalProperties": false,
+      "description": "Closed, previously assessed movement restrictions for one body region.",
+      "properties": {
+        "areaCode": {
+          "enum": [
+            "shoulder",
+            "knee",
+            "lumbar",
+            "wrist",
+            "ankle",
+            "hip",
+            "elbow",
+            "neck"
+          ],
+          "title": "Areacode",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "activeUncleared",
+            "managedWithRestrictions",
+            "managedNoRestrictions",
+            "recovered"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "restrictedMovementPatterns": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Restrictedmovementpatterns",
+          "type": "array"
+        }
+      },
+      "required": [
+        "areaCode",
+        "status"
+      ],
+      "title": "InjuryConditionEntry",
+      "type": "object"
+    },
+    "PainAreaEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "area": {
+          "title": "Area",
+          "type": "string"
+        },
+        "side": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Side"
+        }
+      },
+      "required": [
+        "area"
+      ],
+      "title": "PainAreaEntry",
+      "type": "object"
+    },
+    "RecentTrainingMethodUse": {
+      "additionalProperties": false,
+      "description": "Small, closed history signal used only to avoid repeated auto methods.",
+      "properties": {
+        "methodCode": {
+          "enum": [
+            "pausedReps",
+            "tempoEccentric"
+          ],
+          "title": "Methodcode",
+          "type": "string"
+        },
+        "targetSplitLabel": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Targetsplitlabel"
+        },
+        "sessionsAgo": {
+          "maximum": 12,
+          "minimum": 1,
+          "title": "Sessionsago",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "methodCode",
+        "sessionsAgo"
+      ],
+      "title": "RecentTrainingMethodUse",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "userId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Userid"
+    },
+    "targetSplitLabel": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Targetsplitlabel"
+    },
+    "targetMuscles": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Targetmuscles",
+      "type": "array"
+    },
+    "readinessLevel": {
+      "default": "normal",
+      "enum": [
+        "low",
+        "normal",
+        "high"
+      ],
+      "title": "Readinesslevel",
+      "type": "string"
+    },
+    "timeAvailableMin": {
+      "maximum": 180,
+      "minimum": 10,
+      "title": "Timeavailablemin",
+      "type": "integer"
+    },
+    "painAreas": {
+      "items": {
+        "$ref": "#/$defs/PainAreaEntry"
+      },
+      "title": "Painareas",
+      "type": "array"
+    },
+    "domsData": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Domsdata",
+      "type": "object"
+    },
+    "equipment": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Equipment",
+      "type": "array"
+    },
+    "availableEquipment": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Availableequipment",
+      "type": "array"
+    },
+    "goal": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Goal"
+    },
+    "experienceLevel": {
+      "anyOf": [
+        {
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Experiencelevel"
+    },
+    "specializationFocus": {
+      "anyOf": [
+        {
+          "enum": [
+            "upperChest",
+            "midChest",
+            "lowerChest",
+            "latEmphasis",
+            "midBackEmphasis",
+            "trapeziusEmphasis",
+            "quadricepsEmphasis",
+            "hamstringEmphasis",
+            "gluteEmphasis",
+            "adductorEmphasis",
+            "abductorEmphasis",
+            "calvesEmphasis",
+            "frontDeltoidEmphasis",
+            "sideDeltoidEmphasis",
+            "rearDeltoidEmphasis",
+            "bicepsEmphasis",
+            "tricepsEmphasis",
+            "forearmEmphasis"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Specializationfocus"
+    },
+    "methodMode": {
+      "default": "auto",
+      "enum": [
+        "auto",
+        "manual",
+        "off"
+      ],
+      "title": "Methodmode",
+      "type": "string"
+    },
+    "requestedMethod": {
+      "anyOf": [
+        {
+          "enum": [
+            "pausedReps",
+            "tempoEccentric"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Requestedmethod"
+    },
+    "trainingMethod": {
+      "anyOf": [
+        {
+          "enum": [
+            "pausedReps",
+            "tempoEccentric"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trainingmethod"
+    },
+    "recentTrainingMethodUses": {
+      "items": {
+        "$ref": "#/$defs/RecentTrainingMethodUse"
+      },
+      "title": "Recenttrainingmethoduses",
+      "type": "array"
+    },
+    "advancedChestFocus": {
+      "default": "balanced",
+      "enum": [
+        "balanced",
+        "upperChest",
+        "lowerChest",
+        "pausedPress"
+      ],
+      "title": "Advancedchestfocus",
+      "type": "string"
+    },
+    "trainingStyle": {
+      "default": "gym",
+      "enum": [
+        "gym",
+        "bodybuilding",
+        "crossfit",
+        "athletic",
+        "mobility",
+        "yoga_pilates",
+        "rehab_prehab",
+        "home"
+      ],
+      "title": "Trainingstyle",
+      "type": "string"
+    },
+    "sessionStructure": {
+      "default": "standard",
+      "enum": [
+        "standard",
+        "superset",
+        "circuit",
+        "density"
+      ],
+      "title": "Sessionstructure",
+      "type": "string"
+    },
+    "adjunctOptions": {
+      "items": {
+        "enum": [
+          "conditioning_finisher",
+          "endurance_support",
+          "mobility_warmup",
+          "cooldown_stretch",
+          "prehab_accessory"
+        ],
+        "type": "string"
+      },
+      "title": "Adjunctoptions",
+      "type": "array"
+    },
+    "userNote": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Usernote"
+    },
+    "preferredExerciseIds": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Preferredexerciseids",
+      "type": "array"
+    },
+    "unpreferredExerciseIds": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unpreferredexerciseids",
+      "type": "array"
+    },
+    "profileSignals": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Profilesignals",
+      "type": "array"
+    },
+    "mobilityLimits": {
+      "items": {
+        "enum": [
+          "limited_ankle_dorsiflexion",
+          "limited_hip_flexion",
+          "limited_shoulder_flexion",
+          "limited_wrist_extension"
+        ],
+        "type": "string"
+      },
+      "title": "Mobilitylimits",
+      "type": "array"
+    },
+    "injuryConditions": {
+      "items": {
+        "$ref": "#/$defs/InjuryConditionEntry"
+      },
+      "title": "Injuryconditions",
+      "type": "array"
+    },
+    "shoulderConditionStatus": {
+      "anyOf": [
+        {
+          "enum": [
+            "activeUncleared",
+            "managedWithRestrictions",
+            "managedNoRestrictions",
+            "recovered"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Shoulderconditionstatus"
+    },
+    "restrictedMovementPatterns": {
+      "items": {
+        "enum": [
+          "overheadPosition",
+          "horizontalPush",
+          "horizontalPull",
+          "armRaise",
+          "behindBackRotation",
+          "unknown"
+        ],
+        "type": "string"
+      },
+      "title": "Restrictedmovementpatterns",
+      "type": "array"
+    },
+    "conditionPolicies": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Conditionpolicies",
+      "type": "array"
+    },
+    "anthropometrySignals": {
+      "additionalProperties": true,
+      "title": "Anthropometrysignals",
+      "type": "object"
+    }
+  },
+  "required": [
+    "timeAvailableMin"
+  ],
+  "title": "RoutineRequest",
+  "type": "object"
+}

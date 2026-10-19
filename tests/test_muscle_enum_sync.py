@@ -2,8 +2,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from engines.muscle_mapping import get_mapped_targets, map_doms_to_db
+from engines.muscle_mapping import (
+    get_mapped_targets,
+    map_doms_to_db,
+    resolve_request_target_muscles,
+    resolve_request_target_split_label,
+)
 from engines.registry import (
+    INTERNAL_CANONICAL_MUSCLE_SLUGS,
     MUSCLE_SLUGS,
     MUSCLE_REGISTRY,
     SPLIT_LABEL_TO_MUSCLES,
@@ -31,7 +37,9 @@ def test_registry_covers_every_db_muscle_enum():
 
 def test_split_labels_cover_every_db_muscle_enum():
     split_enums = {enum for enums in SPLIT_LABEL_TO_MUSCLES.values() for enum in enums}
-    assert split_enums == MUSCLE_SLUGS
+    assert MUSCLE_SLUGS <= split_enums
+    assert split_enums <= INTERNAL_CANONICAL_MUSCLE_SLUGS
+    assert "side-deltoids" in SPLIT_LABEL_TO_MUSCLES["shoulder"]
 
 
 def test_frontend_chest_slug_preserves_spreadsheet_slug():
@@ -53,4 +61,28 @@ def test_target_and_doms_values_are_not_alias_mapped():
 
     doms = map_doms_to_db([DomEntry(body_part="knees", level="severe")])
     assert doms == {"knees": 3}
+
+
+def test_custom_split_uses_explicit_target_muscles():
+    assert resolve_request_target_muscles(
+        "custom",
+        ["chest", "upper-back", "chest"],
+    ) == ["chest", "upper-back"]
+
+
+def test_explicit_targets_override_a_stale_preset_label():
+    assert resolve_request_target_muscles("push", ["quadriceps"]) == ["quadriceps"]
+    assert resolve_request_target_split_label("push", ["quadriceps"]) == "custom"
+
+
+def test_edited_push_targets_do_not_restore_chest():
+    explicit = ["front-deltoids", "triceps"]
+    assert resolve_request_target_muscles("push", explicit) == explicit
+    assert resolve_request_target_split_label("push", explicit) == "custom"
+
+
+def test_complete_frontend_push_preset_keeps_push_semantics():
+    explicit = ["chest", "front-deltoids", "triceps"]
+    assert resolve_request_target_muscles("push", explicit) == explicit
+    assert resolve_request_target_split_label("push", explicit) == "push"
 

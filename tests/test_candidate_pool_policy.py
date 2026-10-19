@@ -52,6 +52,58 @@ def test_candidate_ranker_default_top_n_remains_twelve():
     assert signature.parameters["top_n"].default == DEFAULT_CANDIDATE_POOL_SIZE
 
 
+def test_default_gym_excludes_unrequested_specialty_style_candidates():
+    candidates = [
+        {
+            "id": "cable_crunch",
+            "name_kr": "케이블 크런치",
+            "primary_muscle": "abs",
+            "movement_type": "ISOLATION",
+            "equipment_req": "CABLE",
+            "training_style_tags": "bodybuilding,gym",
+        },
+        {
+            "id": "child_pose",
+            "name_kr": "차일드 포즈 스트레치",
+            "primary_muscle": "lower-back",
+            "movement_type": "STATIC",
+            "equipment_req": "BODYWEIGHT",
+            "training_style_tags": "mobility,yoga_pilates",
+        },
+    ]
+
+    ranked = score_candidate_exercises(
+        candidates,
+        ["abs", "lower-back"],
+        training_style="gym",
+        adjunct_options=[],
+    )
+
+    assert [candidate["id"] for candidate in ranked] == ["cable_crunch"]
+
+
+def test_default_gym_allows_specialty_style_when_matching_adjunct_is_requested():
+    candidates = [
+        {
+            "id": "child_pose",
+            "name_kr": "차일드 포즈 스트레치",
+            "primary_muscle": "lower-back",
+            "movement_type": "STATIC",
+            "equipment_req": "BODYWEIGHT",
+            "training_style_tags": "mobility,yoga_pilates",
+        },
+    ]
+
+    ranked = score_candidate_exercises(
+        candidates,
+        ["lower-back"],
+        training_style="gym",
+        adjunct_options=["cooldown_stretch"],
+    )
+
+    assert [candidate["id"] for candidate in ranked] == ["child_pose"]
+
+
 def test_routine_pipeline_passes_configured_pool_size(
     monkeypatch,
     sample_request,

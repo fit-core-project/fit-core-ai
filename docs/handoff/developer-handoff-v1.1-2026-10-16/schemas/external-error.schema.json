@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Approved external error envelope; HTTP adapter implementation target",
+  "type": "object",
+  "required": ["error"],
+  "additionalProperties": false,
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": ["code", "messageKo", "retryable", "requestId"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {"type": "string", "minLength": 1},
+        "messageKo": {"type": "string", "minLength": 1},
+        "retryable": {"type": "boolean"},
+        "requestId": {"type": "string", "minLength": 1},
+        "requiredContractVersion": {"const": "routine-core-v4-draft-v3"},
+        "unsupportedFields": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"code": {"const": "PROFILE_LOOKUP_UNAVAILABLE"}}, "required": ["code"]},
+          "then": {"properties": {"retryable": {"const": true}}}
+        },
+        {
+          "if": {"properties": {"code": {"const": "UNSUPPORTED_CONTRACT_CAPABILITY"}}, "required": ["code"]},
+          "then": {"required": ["requiredContractVersion", "unsupportedFields"], "properties": {"retryable": {"const": false}}}
+        }
+      ]
+    }
+  }
+}

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from engines.candidate_ranker import score_candidate_exercises
+from engines.candidate_ranker import _candidate_doms_prescription_signal, score_candidate_exercises
 from engines.fallback import generate_fallback_routine
 from engines.muscle_mapping import get_mapped_targets, split_label_to_muscles
 from engines.prescription.targets import apply_deterministic_targets
@@ -16,7 +16,8 @@ from engines.schemas import (
 from engines.llm_parser import validate_and_repair_routine_output
 
 
-CASE_DIR = Path(__file__).parent / "prompt_cases"
+# Preserve develop fixtures; the approved core policy has a separate oracle.
+CASE_DIR = Path(__file__).parent / "prompt_cases_core_v3"
 
 CANDIDATE_CATALOG = {
     "barbell_bench_press": {
@@ -137,12 +138,37 @@ def test_prompt_case_constraints(case):
         time_available_min=req.time_available_min,
     )
 
-    if expected["status"] == "fallback":
+    if expected["status"] in {"fallback", "failed"}:
         assert validated is None
         return
 
     assert validated is not None
-    deterministic = apply_deterministic_targets(validated, req.goal or "hypertrophy", [], None)
+    doms_signal_by_exercise_id = {
+        str(candidate.get("id") or "").strip().lower(): _candidate_doms_prescription_signal(
+            candidate,
+            req.doms_data,
+        )
+        for candidate in ranked
+    }
+    deterministic = apply_deterministic_targets(
+        validated,
+        req.goal or "hypertrophy",
+        [],
+        None,
+        readiness_level=req.readiness_level,
+        target_split_label=req.target_split_label,
+        target_muscles=target_muscles,
+        doms_db=req.doms_data,
+        doms_level_by_exercise_id={
+            exercise_id: signal["direct_level"]
+            for exercise_id, signal in doms_signal_by_exercise_id.items()
+        },
+        secondary_doms_level_by_exercise_id={
+            exercise_id: signal["secondary_level"]
+            for exercise_id, signal in doms_signal_by_exercise_id.items()
+        },
+        experience_level=req.experience_level,
+    )
     exercise = deterministic.exercises[0]
     assert expected["status"] == "success"
     if "exercise_id" in expected:
@@ -153,4 +179,3 @@ def test_prompt_case_constraints(case):
         assert exercise.rest_time_sec == expected["rest_sec"]
     if "primary_muscle" in expected:
         assert exercise.primary_muscles == [expected["primary_muscle"]]
-

@@ -198,7 +198,8 @@ _SCENARIOS: list[dict[str, Any]] = [
         "req": dict(
             user_id="u4", target_split_label="push",
             readiness_level="normal", time_available_min=50,
-            pain_areas=[PainAreaEntry(area="front-deltoids", severity="severe")],
+            # The approved core contract treats injury as a severity-free flag.
+            pain_areas=[PainAreaEntry(area="front-deltoids")],
             doms_data={}, equipment=[], goal="hypertrophy",
         ),
         "profile": dict(
@@ -212,7 +213,7 @@ _SCENARIOS: list[dict[str, Any]] = [
         "req": dict(
             user_id="u5", target_split_label="legs",
             readiness_level="normal", time_available_min=50,
-            pain_areas=[PainAreaEntry(area="quadriceps", severity="severe")],
+            pain_areas=[PainAreaEntry(area="quadriceps")],
             doms_data={}, equipment=[], goal="hypertrophy",
         ),
         "profile": dict(

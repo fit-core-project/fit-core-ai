@@ -1,0 +1,93 @@
+{
+  "generation_status": "success",
+  "status_reason_code": "none",
+  "is_fallback": false,
+  "total_estimated_time": 20,
+  "summary_title": "Push 세션 추천 루틴",
+  "rationale_summary": [
+    "중급자 숙련도에 맞춰 점진적 과부하를 적용하기 쉬운 보편 운동을 우선했습니다.",
+    "상체 밀기 패턴 중심",
+    "DOMS 고려 볼륨 조정",
+    "표시한 근육통을 반영해 해당 운동의 세트 수와 강도를 보수적으로 조정하고 제약을 통과한 후보로 구성했습니다."
+  ],
+  "block_contract": [
+    {
+      "exercise_id": "barbell_bench_press",
+      "exercise_name": "바벨 벤치프레스",
+      "movement_type": "COMPOUND",
+      "equipment_type": "BARBELL",
+      "session_phase": "secondary_compound",
+      "execution_group_id": "S1",
+      "execution_group_type": "single",
+      "prescription": [
+        {"set_type": "working", "target_reps": 8, "target_rir": 3, "target_rest_sec": 120},
+        {"set_type": "working", "target_reps": 8, "target_rir": 3, "target_rest_sec": 120}
+      ],
+      "boost_rule_codes": [
+        "efficiency_tier",
+        "movement_type_compound",
+        "loadable_equipment",
+        "mainstream_gym_priority",
+        "primary_target_match",
+        "secondary_target_match",
+        "large_muscle_priority",
+        "intermediate_free_weight_progression_preference",
+        "intermediate_mainstream_progression_boost"
+      ],
+      "penalty_rule_codes": ["doms_penalty"],
+      "substitution_ids": []
+    },
+    {
+      "exercise_id": "pushup",
+      "exercise_name": "푸시업",
+      "movement_type": "COMPOUND",
+      "equipment_type": "BODYWEIGHT",
+      "session_phase": "secondary_compound",
+      "execution_group_id": "S2",
+      "execution_group_type": "single",
+      "prescription": [
+        {"set_type": "working", "target_reps": 8, "target_rir": 3, "target_rest_sec": 120},
+        {"set_type": "working", "target_reps": 8, "target_rir": 3, "target_rest_sec": 120}
+      ],
+      "boost_rule_codes": [
+        "efficiency_tier",
+        "movement_type_compound",
+        "primary_target_match",
+        "secondary_target_match",
+        "large_muscle_priority"
+      ],
+      "penalty_rule_codes": ["bodyweight_deprioritized", "doms_penalty"],
+      "substitution_ids": []
+    },
+    {
+      "exercise_id": "dumbbell_fly",
+      "exercise_name": "덤벨 플라이",
+      "movement_type": "ISOLATION",
+      "equipment_type": "DUMBBELL",
+      "session_phase": "isolation_accessory",
+      "execution_group_id": "S3",
+      "execution_group_type": "single",
+      "prescription": [
+        {"set_type": "working", "target_reps": 12, "target_rir": 3, "target_rest_sec": 75},
+        {"set_type": "working", "target_reps": 12, "target_rir": 3, "target_rest_sec": 75}
+      ],
+      "boost_rule_codes": [
+        "efficiency_tier",
+        "movement_type_isolation",
+        "loadable_equipment",
+        "mainstream_gym_priority",
+        "primary_target_match",
+        "large_muscle_priority",
+        "intermediate_mainstream_progression_boost"
+      ],
+      "penalty_rule_codes": ["doms_penalty"],
+      "substitution_ids": []
+    }
+  ],
+  "warning_evidence": {
+    "productive_fill_added": true,
+    "candidate_exhaustion_disclosed": true,
+    "doms_warning_count": 3,
+    "underfill_option_disclosed": true
+  }
+}

@@ -192,7 +192,7 @@ def test_fb08_doms3_not_restored(feedback_scenarios, test_db):
 
 
 def test_existing_harness_scenarios_unaffected():
-    path = Path(__file__).parent / "evaluation" / "fixtures" / "scenarios.json"
+    path = Path(__file__).parent / "evaluation" / "fixtures" / "scenarios_core_v3.json"
     scenarios = json.loads(path.read_text(encoding="utf-8"))
     harness = EvalHarness()
 

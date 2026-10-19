@@ -1,0 +1,14 @@
+[
+  {
+    "id": "lookup-unavailable",
+    "provenance": "synthetic implementation target; not an observed HTTP response",
+    "httpStatus": 503,
+    "response": {"error": {"code": "PROFILE_LOOKUP_UNAVAILABLE", "messageKo": "저장된 운동 제한 정보를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.", "retryable": true, "requestId": "synthetic-lookup-001"}}
+  },
+  {
+    "id": "legacy-capability-unsupported",
+    "provenance": "synthetic implementation target; not an observed HTTP response",
+    "httpStatus": 422,
+    "response": {"error": {"code": "UNSUPPORTED_CONTRACT_CAPABILITY", "messageKo": "현재 연결 버전으로 이 루틴의 실행 정보를 표시할 수 없습니다.", "retryable": false, "requestId": "synthetic-capability-001", "requiredContractVersion": "routine-core-v4-draft-v3", "unsupportedFields": ["executionGroupType", "trainingMethod"]}}
+  }
+]

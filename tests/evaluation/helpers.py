@@ -8,6 +8,7 @@ from typing import Any, Optional
 from engines.candidate_ranker import score_candidate_exercises
 from engines.prescription.adjustments import _calculate_max_total_sets
 from engines.routine_pipeline import _validate_or_fallback
+from engines.routine_telemetry import count_guard_repairs
 from engines.rule_critic import (
     RoutineEvalContext,
     _check_hard_constraints_sanity,
@@ -34,6 +35,8 @@ class ScenarioResult:
     warnings: list[str]
     fallback_used: bool
     repair_used: bool
+    generation_status: str
+    status_reason_code: str
     routine_blocks: list[dict[str, Any]]
     total_estimated_time: int
     requested_duration: int
@@ -127,11 +130,7 @@ class EvalHarness:
         )
         context.available_equipment = scenario.get("available_equipment", [])
         context.overrides = dict(expected)
-        repair_count = len([
-            warning
-            for warning in response.warnings
-            if "Guard:" in warning and "replaced" in warning
-        ])
+        repair_count = count_guard_repairs(response.warnings)
         fallback_used = response.is_fallback or response.generation_status == "fallback"
         critic = evaluate_routine_quality(
             response,
@@ -142,13 +141,38 @@ class EvalHarness:
         )
         blocks = [block.model_dump(by_alias=False) for block in response.routine_blocks]
         fail_warnings = [warning for warning in critic.warnings if warning.startswith("FAIL ")]
-        passed = (
-            not critic.hard_violations
-            and critic.score >= 80
-            and not fail_warnings
-            and fallback_used == bool(expected.get("is_fallback", False))
-            and (repair_count > 0) == bool(expected.get("expected_repair", False))
-        )
+        expected_generation_status = expected.get("generation_status")
+        expected_status_reason_code = expected.get("status_reason_code")
+        expected_hard_stop = bool(expected.get("expected_hard_stop", False))
+        min_total_score = int(expected.get("min_total_score", 80))
+        if expected_generation_status:
+            passed = (
+                not critic.hard_violations
+                and response.generation_status == expected_generation_status
+                and (
+                    not expected_status_reason_code
+                    or response.status_reason_code == expected_status_reason_code
+                )
+                and fallback_used == bool(expected.get("is_fallback", False))
+                and (repair_count > 0) == bool(expected.get("expected_repair", False))
+            )
+            if expected_hard_stop:
+                passed = passed and (
+                    response.generation_status == "failed"
+                    and response.status_reason_code == "emptyCandidate"
+                    and response.is_fallback is False
+                    and response.total_estimated_time == 0
+                    and not response.routine_blocks
+                    and repair_count == 0
+                )
+        else:
+            passed = (
+                not critic.hard_violations
+                and critic.score >= min_total_score
+                and not fail_warnings
+                and fallback_used == bool(expected.get("is_fallback", False))
+                and (repair_count > 0) == bool(expected.get("expected_repair", False))
+            )
         if expected.get("must_pass", True) is False:
             passed = bool(expected.get("expected_violation")) and (
                 bool(critic.hard_violations) or bool(fail_warnings)
@@ -164,6 +188,8 @@ class EvalHarness:
             warnings=list(response.warnings) + critic.warnings,
             fallback_used=fallback_used,
             repair_used=repair_count > 0,
+            generation_status=response.generation_status,
+            status_reason_code=response.status_reason_code,
             routine_blocks=blocks,
             total_estimated_time=response.total_estimated_time,
             requested_duration=scenario["duration_min"],

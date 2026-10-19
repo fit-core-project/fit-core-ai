@@ -6,7 +6,7 @@ import os
 import json
 import re
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 import httpx
 from dotenv import load_dotenv
@@ -68,14 +68,32 @@ def _parse_positive_int_env(name: str) -> int | None:
     return value if value > 0 else None
 
 
-def _local_ollama_options_from_env() -> dict[str, int]:
-    options: dict[str, int] = {}
+def _local_ollama_reasoning_from_env(default: bool | str | None = None) -> bool | str | None:
+    raw = os.getenv("LOCAL_LLM_REASONING")
+    if raw is None or not raw.strip():
+        return default
+    value = raw.strip().lower()
+    if value in _TRUE_VALUES:
+        return True
+    if value in {"false", "0", "no", "off", "none"}:
+        return False
+    return raw.strip()
+
+
+def _local_ollama_options_from_env(*, reasoning_default: bool | str | None = None) -> dict[str, Any]:
+    options: dict[str, Any] = {}
     num_predict = _parse_positive_int_env("LOCAL_LLM_NUM_PREDICT")
     num_ctx = _parse_positive_int_env("LOCAL_LLM_NUM_CTX")
+    seed = _parse_positive_int_env("LOCAL_LLM_SEED")
+    reasoning = _local_ollama_reasoning_from_env(reasoning_default)
     if num_predict is not None:
         options["num_predict"] = num_predict
     if num_ctx is not None:
         options["num_ctx"] = num_ctx
+    if seed is not None:
+        options["seed"] = seed
+    if reasoning is not None:
+        options["reasoning"] = reasoning
     return options
 
 
@@ -184,7 +202,9 @@ def get_llm(engine_type: str, temperature: float = 0):
             base_url=base_url,
             temperature=temperature,
             format="json",
-            **_local_ollama_options_from_env(),
+            **_local_ollama_options_from_env(
+                reasoning_default=False if engine_type == "routine" else None,
+            ),
         )
         return LocalJsonChatModel(llm)
 

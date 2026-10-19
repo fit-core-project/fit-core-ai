@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "routine-focus-admission-v1",
+  "decisionVersion": "focus-basic-admission-v1-2026-09-15",
+  "sourceCatalogSha256": "22e7b98199b3ee8b1d4e880e88fe76a5ad7a8dc14430c7f94ed0143f4f234ff2",
+  "reviews": [
+    {
+      "catalogExerciseId": "V24ROW-006682",
+      "sourceIdentity": {
+        "v24_row_uid": "V24ROW-006682",
+        "name": "덤벨 루마니안 데드리프트",
+        "english": "Dumbbell Romanian Deadlift",
+        "category": "햄스트링",
+        "subpart": "힙힌지/후면사슬",
+        "pattern": "힙힌지",
+        "equipment": "덤벨",
+        "primary_muscle": "햄스트링",
+        "difficulty": "초급~중급",
+        "v24_validation_grade_norm": "A",
+        "v24_pain_risk_norm": "high",
+        "v24_release_tier_norm": "hold",
+        "v24_license_gate_norm": "link_metadata_only_no_text_image_video_copy_terms_review_required",
+        "v24_quality_gate": "hold_manual_review",
+        "v24_preprocess_quality_score": "90",
+        "v24_next_action": "url_license_safety_review"
+      },
+      "catalogIdentity": {
+        "name_kr": "덤벨 루마니안 데드리프트",
+        "name_en": "Dumbbell Romanian Deadlift",
+        "primary_muscle": "hamstring",
+        "secondary_muscle": null,
+        "equipment_req": "DUMBBELL",
+        "movement_type": "COMPOUND"
+      },
+      "effectiveIdentity": {
+        "primary_muscle": "hamstring",
+        "equipment_req": "DUMBBELL",
+        "movement_type": "COMPOUND"
+      },
+      "displayNameKo": "덤벨 루마니안 데드리프트",
+      "scope": "non_beginner_existing_health_filters",
+      "reviewKind": "engineering_product_admission_not_clinical_clearance",
+      "sourceUrl": "https://www.acefitness.org/continuing-education/certified/may-2025/8865/the-ace-do-it-better-series-the-romanian-deadlift/",
+      "licenseUse": "factual_metadata_only_no_copied_instruction_image_or_video"
+    },
+    {
+      "catalogExerciseId": "V24ROW-006024",
+      "sourceIdentity": {
+        "v24_row_uid": "V24ROW-006024",
+        "name": "덤벨 인클라인 컬",
+        "english": "Dumbbell Incline Curl",
+        "category": "팔",
+        "subpart": "이두 장두",
+        "pattern": "팔꿈치 굴곡",
+        "equipment": "덤벨",
+        "primary_muscle": "상완이두근",
+        "difficulty": "초급~중급",
+        "v24_validation_grade_norm": "A",
+        "v24_pain_risk_norm": "medium",
+        "v24_release_tier_norm": "gold",
+        "v24_license_gate_norm": "link_metadata_only_no_text_image_video_copy_terms_review_required",
+        "v24_quality_gate": "gold_release_candidate",
+        "v24_preprocess_quality_score": "90",
+        "v24_next_action": "ready_for_production"
+      },
+      "catalogIdentity": {
+        "name_kr": "덤벨 인클라인 컬",
+        "name_en": "Dumbbell Incline Curl",
+        "primary_muscle": "biceps",
+        "secondary_muscle": null,
+        "equipment_req": "DUMBBELL",
+        "movement_type": "ISOLATION"
+      },
+      "effectiveIdentity": {
+        "primary_muscle": "biceps",
+        "equipment_req": "DUMBBELL",
+        "movement_type": "ISOLATION"
+      },
+      "displayNameKo": "덤벨 인클라인 컬",
+      "scope": "non_beginner_existing_health_filters",
+      "reviewKind": "engineering_product_admission_not_clinical_clearance",
+      "sourceUrl": "https://www.acefitness.org/continuing-education/prosource/august-2014/4933/ace-study-reveals-best-biceps-exercises/",
+      "licenseUse": "factual_metadata_only_no_copied_instruction_image_or_video"
+    },
+    {
+      "catalogExerciseId": "V24ROW-006121",
+      "sourceIdentity": {
+        "v24_row_uid": "V24ROW-006121",
+        "name": "덤벨 리버스 리스트 컬",
+        "english": "Dumbbell Reverse Wrist Curl",
+        "category": "전완/그립",
+        "subpart": "전완 신근",
+        "pattern": "악력/손목",
+        "equipment": "덤벨",
+        "primary_muscle": "전완 신근군",
+        "difficulty": "초급~중급",
+        "v24_validation_grade_norm": "A",
+        "v24_pain_risk_norm": "medium",
+        "v24_release_tier_norm": "silver",
+        "v24_license_gate_norm": "link_metadata_only_no_text_image_video_copy_terms_review_required",
+        "v24_quality_gate": "silver_release_candidate",
+        "v24_preprocess_quality_score": "70",
+        "v24_next_action": "ready_for_limited_release"
+      },
+      "catalogIdentity": {
+        "name_kr": "덤벨 리버스 리스트 컬",
+        "name_en": "Dumbbell Reverse Wrist Curl",
+        "primary_muscle": "upper-back",
+        "secondary_muscle": "forearm",
+        "equipment_req": "DUMBBELL",
+        "movement_type": "ISOLATION"
+      },
+      "effectiveIdentity": {
+        "primary_muscle": "forearm",
+        "equipment_req": "DUMBBELL",
+        "movement_type": "ISOLATION"
+      },
+      "displayNameKo": "덤벨 리버스 리스트 컬",
+      "scope": "non_beginner_existing_health_filters",
+      "reviewKind": "engineering_product_admission_not_clinical_clearance",
+      "sourceUrl": "https://www.acefitness.org/resources/everyone/exercise-library/29/wrist-curl-extension/",
+      "licenseUse": "factual_metadata_only_no_copied_instruction_image_or_video"
+    }
+  ]
+}

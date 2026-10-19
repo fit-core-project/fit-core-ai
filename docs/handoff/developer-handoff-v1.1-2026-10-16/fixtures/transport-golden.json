@@ -1,0 +1,819 @@
+[
+  {
+    "id": "working",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-working",
+        "generationStatus": "success",
+        "statusReasonCode": "none",
+        "isFallback": false,
+        "totalEstimatedTime": 30,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "working",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": null,
+            "executionGroupType": "single",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 1,
+            "transitionRestSec": null,
+            "groupRestSec": null
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 30,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "F02-timed",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-F02-timed",
+        "generationStatus": "success",
+        "statusReasonCode": "none",
+        "isFallback": false,
+        "totalEstimatedTime": 30,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "timed",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90,
+                "targetDurationSec": 30
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": null,
+            "executionGroupType": "single",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 1,
+            "transitionRestSec": null,
+            "groupRestSec": null
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 30,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "F03-distance",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-F03-distance",
+        "generationStatus": "success",
+        "statusReasonCode": "none",
+        "isFallback": false,
+        "totalEstimatedTime": 30,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "distance",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90,
+                "targetDistanceM": 20
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": null,
+            "executionGroupType": "single",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 1,
+            "transitionRestSec": null,
+            "groupRestSec": null
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 30,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "F04-interval",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-F04-interval",
+        "generationStatus": "success",
+        "statusReasonCode": "none",
+        "isFallback": false,
+        "totalEstimatedTime": 30,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "interval",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90,
+                "targetDurationSec": 50,
+                "intervalWorkSec": 20,
+                "intervalRecoverySec": 10,
+                "intervalRounds": 2
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": null,
+            "executionGroupType": "single",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 1,
+            "transitionRestSec": null,
+            "groupRestSec": null
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 30,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "F05-group-method",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-F05-group-method",
+        "generationStatus": "success",
+        "statusReasonCode": "none",
+        "isFallback": false,
+        "totalEstimatedTime": 30,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "working",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": "synthetic-pair-1",
+            "executionGroupType": "superset",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 2,
+            "transitionRestSec": 15,
+            "groupRestSec": 90,
+            "trainingMethod": {
+              "code": "pausedReps",
+              "labelKo": "정지 반복",
+              "purposeKo": "합성 검증",
+              "instructionKo": "2초 정지",
+              "pauseSec": 2,
+              "eccentricSec": null,
+              "source": "manual",
+              "reasonCode": null
+            }
+          },
+          {
+            "order": 2,
+            "exerciseId": "115",
+            "exerciseName": "합성 묶음 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "working",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": "synthetic-pair-1",
+            "executionGroupType": "superset",
+            "executionGroupPosition": 2,
+            "executionGroupSize": 2,
+            "transitionRestSec": 15,
+            "groupRestSec": 90
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 30,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "detail",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-detail",
+        "generationStatus": "success",
+        "statusReasonCode": "none",
+        "isFallback": false,
+        "totalEstimatedTime": 30,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "working",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": null,
+            "executionGroupType": "single",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 1,
+            "transitionRestSec": null,
+            "groupRestSec": null,
+            "primaryMuscleDetails": [
+              "side-deltoids"
+            ]
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 30,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "unilateral-reserved",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-unilateral-reserved",
+        "generationStatus": "success",
+        "statusReasonCode": "none",
+        "isFallback": false,
+        "totalEstimatedTime": 30,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "unilateralPrescription": {
+              "quantityMode": "repsPerSide",
+              "sideCount": 2,
+              "setUnit": "bothSides",
+              "sideOrder": "leftThenRight",
+              "sideSwitchSec": 10,
+              "secondsPerRep": 3,
+              "restPlacement": "afterBothSides"
+            },
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "working",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": null,
+            "executionGroupType": "single",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 1,
+            "transitionRestSec": null,
+            "groupRestSec": null
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 30,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "short-20-of-50",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-short-20-of-50",
+        "generationStatus": "success",
+        "statusReasonCode": "none",
+        "isFallback": false,
+        "totalEstimatedTime": 20,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "working",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": null,
+            "executionGroupType": "single",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 1,
+            "transitionRestSec": null,
+            "groupRestSec": null
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": true,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 20,
+        "thresholdRatio": 0.5,
+        "messageKo": "요청하신 50분보다 짧은 예상 20분 루틴입니다. 시간을 채우기 위해 운동 부위나 세트 수를 자동으로 늘리지 않았습니다. 현재 루틴을 유지하거나 목표 부위를 직접 바꿔 다시 요청할 수 있습니다. 재생성에서도 등록된 부상·장비 등의 제한은 유지됩니다.",
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "exact-half",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-exact-half",
+        "generationStatus": "success",
+        "statusReasonCode": "none",
+        "isFallback": false,
+        "totalEstimatedTime": 25,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "working",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": null,
+            "executionGroupType": "single",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 1,
+            "transitionRestSec": null,
+            "groupRestSec": null
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 25,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "confirmed-context-options",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-confirmed-context-options",
+        "generationStatus": "success",
+        "statusReasonCode": "none",
+        "isFallback": false,
+        "totalEstimatedTime": 20,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "working",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": null,
+            "executionGroupType": "single",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 1,
+            "transitionRestSec": null,
+            "groupRestSec": null
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": true,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 20,
+        "thresholdRatio": 0.5,
+        "messageKo": "요청하신 50분보다 짧은 예상 20분 루틴입니다. 시간을 채우기 위해 운동 부위나 세트 수를 자동으로 늘리지 않았습니다. 현재 루틴을 유지하거나 목표 부위를 직접 바꿔 다시 요청할 수 있습니다. 재생성에서도 등록된 부상·장비 등의 제한은 유지됩니다. 추가 부위의 운동 가능 여부와 분량은 기존 제한을 유지한 재생성에서 확인합니다.",
+        "targetExpansionOptions": [
+          {
+            "code": "addQuadriceps",
+            "labelKo": "앞 허벅지를 추가해 다시 생성",
+            "proposedTargetMuscles": [
+              "gluteal",
+              "quadriceps"
+            ],
+            "requiresConfirmation": true,
+            "requiresRegeneration": true,
+            "availability": "notEvaluated"
+          },
+          {
+            "code": "addHamstring",
+            "labelKo": "뒤 허벅지를 추가해 다시 생성",
+            "proposedTargetMuscles": [
+              "gluteal",
+              "hamstring"
+            ],
+            "requiresConfirmation": true,
+            "requiresRegeneration": true,
+            "availability": "notEvaluated"
+          },
+          {
+            "code": "addCalves",
+            "labelKo": "종아리를 추가해 다시 생성",
+            "proposedTargetMuscles": [
+              "gluteal",
+              "calves"
+            ],
+            "requiresConfirmation": true,
+            "requiresRegeneration": true,
+            "availability": "notEvaluated"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "failed-empty",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-failed-empty",
+        "generationStatus": "failed",
+        "statusReasonCode": "emptyCandidate",
+        "isFallback": false,
+        "totalEstimatedTime": 0,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 0,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "lookup-failed",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-lookup-failed",
+        "generationStatus": "failed",
+        "statusReasonCode": "schemaError",
+        "isFallback": false,
+        "totalEstimatedTime": 0,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 0,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  },
+  {
+    "id": "fallback-network",
+    "scope": "synthetic transport only; not a generated or admitted routine",
+    "response": {
+      "contractVersion": "routine-core-v4-draft-v3",
+      "routine": {
+        "routineDraftId": "synthetic-fallback-network",
+        "generationStatus": "fallback",
+        "statusReasonCode": "networkError",
+        "isFallback": true,
+        "totalEstimatedTime": 30,
+        "summaryTitle": "합성 계약 예시",
+        "rationaleSummary": [],
+        "routineBlocks": [
+          {
+            "order": 1,
+            "exerciseId": "14",
+            "exerciseName": "합성 전송 검증 운동",
+            "movementPattern": null,
+            "movementType": null,
+            "primaryMuscles": [
+              "biceps"
+            ],
+            "equipmentType": null,
+            "defaultRestSec": 90,
+            "prescription": [
+              {
+                "setIndex": 1,
+                "setType": "working",
+                "targetReps": 8,
+                "targetWeightKg": null,
+                "targetRir": 2,
+                "targetRestSec": 90
+              }
+            ],
+            "exerciseRationale": "단위/직렬화 검증용이며 추천 결과가 아닙니다.",
+            "substitutionCandidates": [],
+            "reasons": [],
+            "boosts": [],
+            "penalties": [],
+            "sessionPhase": null,
+            "executionGroupId": null,
+            "executionGroupType": "single",
+            "executionGroupPosition": 1,
+            "executionGroupSize": 1,
+            "transitionRestSec": null,
+            "groupRestSec": null
+          }
+        ],
+        "warnings": []
+      },
+      "shortRoutineNotice": {
+        "isShortRoutine": false,
+        "requestedTimeMin": 50,
+        "plannedTimeMin": 30,
+        "thresholdRatio": 0.5,
+        "messageKo": null,
+        "targetExpansionOptions": []
+      }
+    }
+  }
+]

@@ -154,4 +154,3 @@ def feedback_client(test_db):
     finally:
         app.dependency_overrides.clear()
         client.close()
-

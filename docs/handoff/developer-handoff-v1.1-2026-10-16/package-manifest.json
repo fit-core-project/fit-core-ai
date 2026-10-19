@@ -1,0 +1,29 @@
+{
+  "version": "developer-handoff-v1.1-2026-10-16",
+  "runtimeCommit": "e0d04e7952cb8e63c36e727f51abe29d17d400f7",
+  "sha256": {
+    "01-backend.md": "0b434637df29d8d15d91edef6b5f8d350850dac59a5373e9a98bfbf804c829ec",
+    "02-frontend.md": "30965937a38dfe47c6f782d4a09be33594dac0c31feb57a6f2bcff7c4caef864",
+    "03-contract-v4.md": "02db2c4c4c95de20d3ded5f087937ecd2e656edc44c0736969da909fb9ec6701",
+    "04-verification.md": "688cf7891891531be1f66793bda9e77f97e42387b9af8f6ce22dc93a5ab9e07d",
+    "05-develop-deltas.md": "0a9c14ae56c0ac74cefb988a84da0ab0da417977d5e9e4b69c1ecdd302a81d96",
+    "06-decisions.md": "3fa10b552691cd3ac7a74b4f2927366a18a1bd5abd68248057496bda44990b22",
+    "07-legacy-implementation-scope.md": "7c74ce3a4ef032e4fa3d6da80fdd6b4e0f2fafaa7c3f2ca0f78f2543f08232e0",
+    "README.md": "4b822349be35b93cfccb06e6932d773a7ae6e299a8f6db4311d56fe6d6798b08",
+    "asset-provenance.json": "fe237cd6fb8d6ce8683237f3673c65461891e56f284b2dcb4e3b49e9d007d774",
+    "fixtures/bf01-20-oracle.json": "453580601f8ba2568ecb2a33e1845ca8acf97f167c1e33acdccf514e82fd8f2f",
+    "fixtures/catalog-identity-bridge.json": "73469a16d4b23f9959d10634ef3a52ff02b6cc9e0cbc25200284c78d1dc3bab5",
+    "fixtures/external-error-golden.json": "21abbf960dd72968f8c2d2df0cd3ffc2be5512a959201c5e3123a65fad2f9321",
+    "fixtures/numeric-seed.json": "b9397213563d43bd0ad38823b675b30923c136ad3267f3b8b64b40ee3885abce",
+    "fixtures/public-input-golden.json": "6601ccc202c032587d82f9ab0f242926ae3eed08338e81c9d048872e47efdad4",
+    "fixtures/transport-golden.json": "3995b49ed692db0ef94d37543271f4e88e84b6d59f1176e287e952257847e614",
+    "references/prior-drafts.md": "b9a4bb4040ffcc364454185f1fe92377821db0c42a32f10f9dd89ded3a76d98b",
+    "schemas/external-error.schema.json": "5c53fbd56739301287fbe0115e985fbb67e8010e38589a79aa777ac4bca68623",
+    "schemas/internal-request.schema.json": "2bc394a45bc7c82497d2cc5fd227efbc62b0d6e0774965d95c0431b87d7ef2ec",
+    "schemas/public-request.schema.json": "5ebfda8c93d2ad6c6c74a81bb72870f3cd6f85e188d13709cb4a153b8fb92c4d",
+    "schemas/response-v4.schema.json": "39eec0439bf76e1e900198f63c45c63945c08da0f803ff15ab698ab51880666c",
+    "verify_core_assets.py": "5e11acbfed5585a53349d5debff169748355292f63bc1fbd5cf64db7bce6b763",
+    "verify_external_errors.py": "643a5d10808d54a128e14889e746941113373270da0e5c8589d5393f777b952e",
+    "verify_transport.py": "619eecdfe989191e9a569fdc5164f8895124093e4119cc649f16a81f15f5a547"
+  }
+}

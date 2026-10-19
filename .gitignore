@@ -319,6 +319,9 @@ $RECYCLE.BIN/
 /data/*
 !/data/eval/
 !/data/eval/**
+!/data/provenance/
+!/data/provenance/*.json
+!/data/provenance/v25_canonical_filter_core.csv
 pre-phase-archive/
 
 .claude

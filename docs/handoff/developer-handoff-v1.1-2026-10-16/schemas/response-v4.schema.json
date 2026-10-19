@@ -1,0 +1,914 @@
+{
+  "$defs": {
+    "AdjunctDecision": {
+      "properties": {
+        "option": {
+          "enum": [
+            "conditioning_finisher",
+            "endurance_support",
+            "mobility_warmup",
+            "cooldown_stretch",
+            "prehab_accessory"
+          ],
+          "title": "Option",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "applied",
+            "suppressed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reasonCode": {
+          "enum": [
+            "applied",
+            "slotCapacityAfterMainMinimum",
+            "noEligibleCandidate",
+            "insufficientTimeAfterMainMinimum",
+            "postValidationRemoved"
+          ],
+          "title": "Reasoncode",
+          "type": "string"
+        },
+        "slotId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Slotid"
+        },
+        "exerciseId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exerciseid"
+        }
+      },
+      "required": [
+        "option",
+        "status",
+        "reasonCode"
+      ],
+      "title": "AdjunctDecision",
+      "type": "object"
+    },
+    "PersonalizationSuggestion": {
+      "properties": {
+        "suggestionType": {
+          "const": "specializationFocus",
+          "title": "Suggestiontype",
+          "type": "string"
+        },
+        "code": {
+          "enum": [
+            "upperChest",
+            "midChest",
+            "lowerChest",
+            "latEmphasis",
+            "midBackEmphasis",
+            "trapeziusEmphasis",
+            "quadricepsEmphasis",
+            "hamstringEmphasis",
+            "gluteEmphasis",
+            "adductorEmphasis",
+            "abductorEmphasis",
+            "calvesEmphasis",
+            "frontDeltoidEmphasis",
+            "sideDeltoidEmphasis",
+            "rearDeltoidEmphasis",
+            "bicepsEmphasis",
+            "tricepsEmphasis",
+            "forearmEmphasis"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "reasonKo": {
+          "title": "Reasonko",
+          "type": "string"
+        },
+        "evidenceSetCount": {
+          "minimum": 0,
+          "title": "Evidencesetcount",
+          "type": "integer"
+        },
+        "comparisonMaxSetCount": {
+          "minimum": 0,
+          "title": "Comparisonmaxsetcount",
+          "type": "integer"
+        },
+        "requiresConfirmation": {
+          "default": true,
+          "title": "Requiresconfirmation",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "suggestionType",
+        "code",
+        "reasonKo",
+        "evidenceSetCount",
+        "comparisonMaxSetCount"
+      ],
+      "title": "PersonalizationSuggestion",
+      "type": "object"
+    },
+    "RoutineBlock": {
+      "properties": {
+        "unilateralPrescription": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnilateralPrescription"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "order": {
+          "title": "Order",
+          "type": "integer"
+        },
+        "exerciseId": {
+          "title": "Exerciseid",
+          "type": "string"
+        },
+        "exerciseName": {
+          "title": "Exercisename",
+          "type": "string"
+        },
+        "movementPattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Movementpattern"
+        },
+        "movementType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Movementtype"
+        },
+        "primaryMuscles": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Primarymuscles",
+          "type": "array"
+        },
+        "primaryMuscleDetails": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Primarymuscledetails",
+          "type": "array"
+        },
+        "equipmentType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Equipmenttype"
+        },
+        "defaultRestSec": {
+          "title": "Defaultrestsec",
+          "type": "integer"
+        },
+        "prescription": {
+          "items": {
+            "$ref": "#/$defs/SetPrescription"
+          },
+          "title": "Prescription",
+          "type": "array"
+        },
+        "exerciseRationale": {
+          "title": "Exerciserationale",
+          "type": "string"
+        },
+        "substitutionCandidates": {
+          "items": {
+            "$ref": "#/$defs/SubstitutionCandidate"
+          },
+          "title": "Substitutioncandidates",
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        },
+        "boosts": {
+          "items": {
+            "$ref": "#/$defs/ScoreBreakdownItem"
+          },
+          "title": "Boosts",
+          "type": "array"
+        },
+        "penalties": {
+          "items": {
+            "$ref": "#/$defs/ScoreBreakdownItem"
+          },
+          "title": "Penalties",
+          "type": "array"
+        },
+        "sessionPhase": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sessionphase"
+        },
+        "executionGroupId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Executiongroupid"
+        },
+        "executionGroupType": {
+          "default": "single",
+          "title": "Executiongrouptype",
+          "type": "string"
+        },
+        "executionGroupPosition": {
+          "default": 1,
+          "title": "Executiongroupposition",
+          "type": "integer"
+        },
+        "executionGroupSize": {
+          "default": 1,
+          "title": "Executiongroupsize",
+          "type": "integer"
+        },
+        "transitionRestSec": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Transitionrestsec"
+        },
+        "groupRestSec": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Grouprestsec"
+        },
+        "adjunctOption": {
+          "anyOf": [
+            {
+              "enum": [
+                "conditioning_finisher",
+                "endurance_support",
+                "mobility_warmup",
+                "cooldown_stretch",
+                "prehab_accessory"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Adjunctoption"
+        },
+        "trainingMethod": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TrainingMethodInstruction"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "order",
+        "exerciseId",
+        "exerciseName",
+        "defaultRestSec",
+        "prescription",
+        "exerciseRationale"
+      ],
+      "title": "RoutineBlock",
+      "type": "object"
+    },
+    "RoutineDraftResponse": {
+      "properties": {
+        "routineDraftId": {
+          "title": "Routinedraftid",
+          "type": "string"
+        },
+        "generationStatus": {
+          "enum": [
+            "success",
+            "fallback",
+            "failed"
+          ],
+          "title": "Generationstatus",
+          "type": "string"
+        },
+        "statusReasonCode": {
+          "enum": [
+            "none",
+            "llmTimeout",
+            "schemaError",
+            "networkError",
+            "emptyCandidate"
+          ],
+          "title": "Statusreasoncode",
+          "type": "string"
+        },
+        "isFallback": {
+          "title": "Isfallback",
+          "type": "boolean"
+        },
+        "totalEstimatedTime": {
+          "default": 0,
+          "title": "Totalestimatedtime",
+          "type": "integer"
+        },
+        "summaryTitle": {
+          "title": "Summarytitle",
+          "type": "string"
+        },
+        "rationaleSummary": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Rationalesummary",
+          "type": "array"
+        },
+        "routineBlocks": {
+          "items": {
+            "$ref": "#/$defs/RoutineBlock"
+          },
+          "title": "Routineblocks",
+          "type": "array"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "adjunctDecisions": {
+          "items": {
+            "$ref": "#/$defs/AdjunctDecision"
+          },
+          "title": "Adjunctdecisions",
+          "type": "array"
+        },
+        "personalizationSuggestions": {
+          "items": {
+            "$ref": "#/$defs/PersonalizationSuggestion"
+          },
+          "title": "Personalizationsuggestions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "generationStatus",
+        "statusReasonCode",
+        "isFallback",
+        "summaryTitle",
+        "rationaleSummary",
+        "routineBlocks"
+      ],
+      "title": "RoutineDraftResponse",
+      "type": "object"
+    },
+    "ScoreBreakdownItem": {
+      "properties": {
+        "constraintCode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Constraintcode"
+        },
+        "ruleCode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rulecode"
+        },
+        "profileSignalCode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Profilesignalcode"
+        },
+        "score": {
+          "title": "Score",
+          "type": "integer"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "score",
+        "reason"
+      ],
+      "title": "ScoreBreakdownItem",
+      "type": "object"
+    },
+    "SetPrescription": {
+      "properties": {
+        "setIndex": {
+          "minimum": 1,
+          "title": "Setindex",
+          "type": "integer"
+        },
+        "setType": {
+          "default": "working",
+          "enum": [
+            "working",
+            "warmup",
+            "mobility",
+            "timed",
+            "interval",
+            "prehab",
+            "distance"
+          ],
+          "title": "Settype",
+          "type": "string"
+        },
+        "targetReps": {
+          "minimum": 1,
+          "title": "Targetreps",
+          "type": "integer"
+        },
+        "targetWeightKg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Targetweightkg"
+        },
+        "targetRir": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 2,
+          "title": "Targetrir"
+        },
+        "targetRestSec": {
+          "minimum": 0,
+          "title": "Targetrestsec",
+          "type": "integer"
+        },
+        "targetDurationSec": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Targetdurationsec"
+        },
+        "intervalWorkSec": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Intervalworksec"
+        },
+        "intervalRecoverySec": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Intervalrecoverysec"
+        },
+        "intervalRounds": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Intervalrounds"
+        },
+        "targetDistanceM": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Targetdistancem"
+        }
+      },
+      "required": [
+        "setIndex",
+        "targetReps",
+        "targetRestSec"
+      ],
+      "title": "SetPrescription",
+      "type": "object"
+    },
+    "ShortRoutineNotice": {
+      "additionalProperties": false,
+      "properties": {
+        "isShortRoutine": {
+          "title": "Isshortroutine",
+          "type": "boolean"
+        },
+        "requestedTimeMin": {
+          "maximum": 180,
+          "minimum": 10,
+          "title": "Requestedtimemin",
+          "type": "integer"
+        },
+        "plannedTimeMin": {
+          "minimum": 0,
+          "title": "Plannedtimemin",
+          "type": "integer"
+        },
+        "thresholdRatio": {
+          "const": 0.5,
+          "default": 0.5,
+          "title": "Thresholdratio",
+          "type": "number"
+        },
+        "messageKo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Messageko"
+        },
+        "targetExpansionOptions": {
+          "items": {
+            "$ref": "#/$defs/TargetExpansionOption"
+          },
+          "title": "Targetexpansionoptions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "isShortRoutine",
+        "requestedTimeMin",
+        "plannedTimeMin"
+      ],
+      "title": "ShortRoutineNotice",
+      "type": "object"
+    },
+    "SubstitutionCandidate": {
+      "properties": {
+        "exerciseId": {
+          "title": "Exerciseid",
+          "type": "string"
+        },
+        "exerciseName": {
+          "title": "Exercisename",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "exerciseId",
+        "exerciseName",
+        "reason"
+      ],
+      "title": "SubstitutionCandidate",
+      "type": "object"
+    },
+    "TargetExpansionOption": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "addQuadriceps",
+            "addHamstring",
+            "addCalves"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "labelKo": {
+          "title": "Labelko",
+          "type": "string"
+        },
+        "proposedTargetMuscles": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Proposedtargetmuscles",
+          "type": "array"
+        },
+        "requiresConfirmation": {
+          "const": true,
+          "default": true,
+          "title": "Requiresconfirmation",
+          "type": "boolean"
+        },
+        "requiresRegeneration": {
+          "const": true,
+          "default": true,
+          "title": "Requiresregeneration",
+          "type": "boolean"
+        },
+        "availability": {
+          "const": "notEvaluated",
+          "default": "notEvaluated",
+          "title": "Availability",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "labelKo",
+        "proposedTargetMuscles"
+      ],
+      "title": "TargetExpansionOption",
+      "type": "object"
+    },
+    "TrainingMethodInstruction": {
+      "properties": {
+        "code": {
+          "enum": [
+            "pausedReps",
+            "tempoEccentric"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "labelKo": {
+          "title": "Labelko",
+          "type": "string"
+        },
+        "purposeKo": {
+          "title": "Purposeko",
+          "type": "string"
+        },
+        "instructionKo": {
+          "title": "Instructionko",
+          "type": "string"
+        },
+        "pauseSec": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pausesec"
+        },
+        "eccentricSec": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Eccentricsec"
+        },
+        "source": {
+          "default": "manual",
+          "enum": [
+            "auto",
+            "manual",
+            "legacy"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "reasonCode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reasoncode"
+        }
+      },
+      "required": [
+        "code",
+        "labelKo",
+        "purposeKo",
+        "instructionKo"
+      ],
+      "title": "TrainingMethodInstruction",
+      "type": "object"
+    },
+    "UnilateralPrescription": {
+      "additionalProperties": false,
+      "properties": {
+        "quantityMode": {
+          "enum": [
+            "repsPerSide",
+            "durationPerSide"
+          ],
+          "title": "Quantitymode",
+          "type": "string"
+        },
+        "sideCount": {
+          "const": 2,
+          "default": 2,
+          "title": "Sidecount",
+          "type": "integer"
+        },
+        "setUnit": {
+          "const": "bothSides",
+          "default": "bothSides",
+          "title": "Setunit",
+          "type": "string"
+        },
+        "sideOrder": {
+          "default": "leftThenRight",
+          "enum": [
+            "leftThenRight",
+            "rightThenLeft"
+          ],
+          "title": "Sideorder",
+          "type": "string"
+        },
+        "sideSwitchSec": {
+          "maximum": 60,
+          "minimum": 0,
+          "title": "Sideswitchsec",
+          "type": "integer"
+        },
+        "secondsPerRep": {
+          "anyOf": [
+            {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Secondsperrep"
+        },
+        "restPlacement": {
+          "const": "afterBothSides",
+          "default": "afterBothSides",
+          "title": "Restplacement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "quantityMode",
+        "sideSwitchSec"
+      ],
+      "title": "UnilateralPrescription",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": {
+      "const": "routine-core-v4-draft-v3",
+      "default": "routine-core-v4-draft-v3",
+      "title": "Contractversion",
+      "type": "string"
+    },
+    "routine": {
+      "$ref": "#/$defs/RoutineDraftResponse"
+    },
+    "shortRoutineNotice": {
+      "$ref": "#/$defs/ShortRoutineNotice"
+    }
+  },
+  "required": [
+    "routine",
+    "shortRoutineNotice"
+  ],
+  "title": "RoutineResponseV4",
+  "type": "object"
+}

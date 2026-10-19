@@ -1,0 +1,10 @@
+{
+  "commit": "1490c91a08b674291754ced722af8dd979cf116c",
+  "sha256": {
+    "src/main/resources/db/migration/V6__seed_exercise_catalog.sql": "d54e3e68b44c72ff9478695c11bca1d867c420bc482ce12d546d849d181d02ef",
+    "src/main/java/com/fitcore/api/infrastructure/ai/dto/AiRoutineResponse.java": "d27960a44ef674a3f2435a67727e9b1b1a7cf64234a8ed61c5fde5a6e02c67cb",
+    "src/main/java/com/fitcore/api/domain/routine/dto/RoutineBlock.java": "56dc20cb6bc8aa4ba2225577c687bd3912dd8d5ec905d86e70aff81b14083cd6",
+    "src/main/java/com/fitcore/api/domain/routine/dto/Prescription.java": "2381bae3eb3ca5986ee6785550cf525e7aad8bb372c568fc5f593fdb222ac0fc",
+    "src/main/java/com/fitcore/api/domain/routine/service/RoutineService.java": "eead941ae30dbbea13eeb62beb92cde1942f7c2bb47af1bc1ded2d1a79698c75"
+  }
+}

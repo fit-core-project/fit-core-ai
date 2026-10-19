@@ -1,0 +1,179 @@
+[
+  {
+    "id": "base",
+    "request": {
+      "targetSplitLabel": "legs",
+      "timeAvailableMin": 50
+    },
+    "accepted": true,
+    "expectedInternalPayload": {
+      "targetSplitLabel": "legs",
+      "targetMuscles": [],
+      "readinessLevel": "normal",
+      "timeAvailableMin": 50,
+      "painAreas": [],
+      "domsData": {},
+      "equipment": [],
+      "availableEquipment": [],
+      "goal": "hypertrophy",
+      "experienceLevel": "intermediate",
+      "trainingStyle": "gym",
+      "sessionStructure": "standard",
+      "adjunctOptions": [],
+      "profileSignals": [],
+      "userNote": null,
+      "userId": "synthetic-server-user"
+    }
+  },
+  {
+    "id": "soleus-doms",
+    "request": {
+      "targetSplitLabel": "legs",
+      "timeAvailableMin": 50,
+      "currentDoms": [
+        {
+          "bodyPart": "left-soleus",
+          "level": 2
+        }
+      ]
+    },
+    "accepted": true,
+    "expectedInternalPayload": {
+      "targetSplitLabel": "legs",
+      "targetMuscles": [],
+      "readinessLevel": "normal",
+      "timeAvailableMin": 50,
+      "painAreas": [],
+      "domsData": {
+        "left-soleus": 2
+      },
+      "equipment": [],
+      "availableEquipment": [],
+      "goal": "hypertrophy",
+      "experienceLevel": "intermediate",
+      "trainingStyle": "gym",
+      "sessionStructure": "standard",
+      "adjunctOptions": [],
+      "profileSignals": [],
+      "userNote": null,
+      "userId": "synthetic-server-user"
+    }
+  },
+  {
+    "id": "machine-only",
+    "request": {
+      "targetSplitLabel": "push",
+      "timeAvailableMin": 50,
+      "availableEquipment": [
+        "MACHINE"
+      ],
+      "unavailableEquipment": [
+        "SMITH_MACHINE"
+      ]
+    },
+    "accepted": true,
+    "expectedInternalPayload": {
+      "targetSplitLabel": "push",
+      "targetMuscles": [],
+      "readinessLevel": "normal",
+      "timeAvailableMin": 50,
+      "painAreas": [],
+      "domsData": {},
+      "equipment": [
+        "SMITH_MACHINE"
+      ],
+      "availableEquipment": [
+        "MACHINE"
+      ],
+      "goal": "hypertrophy",
+      "experienceLevel": "intermediate",
+      "trainingStyle": "gym",
+      "sessionStructure": "standard",
+      "adjunctOptions": [],
+      "profileSignals": [],
+      "userNote": null,
+      "userId": "synthetic-server-user"
+    }
+  },
+  {
+    "id": "equipment-overlap",
+    "request": {
+      "targetSplitLabel": "push",
+      "timeAvailableMin": 50,
+      "availableEquipment": [
+        "MACHINE"
+      ],
+      "unavailableEquipment": [
+        "MACHINE"
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "id": "doms-zero",
+    "request": {
+      "targetSplitLabel": "legs",
+      "timeAvailableMin": 50,
+      "currentDoms": [
+        {
+          "bodyPart": "calves",
+          "level": 0
+        }
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "id": "knees-doms",
+    "request": {
+      "targetSplitLabel": "legs",
+      "timeAvailableMin": 50,
+      "currentDoms": [
+        {
+          "bodyPart": "knees",
+          "level": 1
+        }
+      ]
+    },
+    "accepted": false
+  },
+  {
+    "id": "soleus-target",
+    "request": {
+      "targetSplitLabel": "custom",
+      "targetMuscles": [
+        "left-soleus"
+      ],
+      "timeAvailableMin": 50
+    },
+    "accepted": false
+  },
+  {
+    "id": "forged-user",
+    "request": {
+      "targetSplitLabel": "legs",
+      "timeAvailableMin": 50,
+      "userId": "forged"
+    },
+    "accepted": false
+  },
+  {
+    "id": "internal-focus-key",
+    "request": {
+      "targetSplitLabel": "push",
+      "timeAvailableMin": 50,
+      "specializationFocus": "upperChest"
+    },
+    "accepted": false
+  },
+  {
+    "id": "low-circuit",
+    "request": {
+      "targetSplitLabel": "legs",
+      "timeAvailableMin": 50,
+      "readinessLevel": "low",
+      "sessionStructure": "circuit"
+    },
+    "accepted": false
+  }
+]
