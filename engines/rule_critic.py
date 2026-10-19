@@ -9,7 +9,28 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
-from engines.prescription.adjustments import _calculate_max_total_sets
+from engines.prescription.adjustments import (
+    _calculate_max_total_sets,
+    minimum_productive_duration_min,
+    target_exercise_count_for_session,
+    target_productive_duration_min,
+)
+from engines.prescription.adjuncts import (
+    adjunct_block_matches_profile,
+    count_main_blocks,
+    validate_adjunct_decision_contract,
+)
+from engines.candidate_ranker import _candidate_injury_overlap, _pain_tokens_from_entries
+from engines.option_resolver import (
+    ADJUNCT_OPTION_PHASE,
+    candidate_matches_adjunct_option,
+)
+from engines.routine_blueprint import build_routine_blueprint
+from engines.routine_selection import (
+    required_main_pattern_slot_specs,
+    required_main_pattern_targets,
+    routine_items_have_required_main_pattern,
+)
 from engines.schemas import PainAreaEntry, RecentSetRecord, RoutineDraftResponse, RoutineRequest
 
 logger = logging.getLogger(__name__)
@@ -27,6 +48,11 @@ class RoutineEvalContext:
     doms: Dict[str, int]
     recent_exercises: List[str]
     max_working_sets: Optional[int] = None
+    target_main_exercise_count: Optional[int] = None
+    minimum_main_exercise_count: Optional[int] = None
+    adjunct_options: List[str] = field(default_factory=list)
+    required_main_pattern_targets: List[str] = field(default_factory=list)
+    required_main_pattern_slot_specs: List[dict] = field(default_factory=list)
     overrides: dict = field(default_factory=dict)
 
     @property
@@ -73,17 +99,48 @@ def build_eval_context(
         for record in (recent_sets or [])
         if record.exercise_id
     ]
+    blueprint = build_routine_blueprint(
+        target_split_label=req.target_split_label,
+        target_muscles=db_target_muscles,
+        goal=req.goal,
+        experience_level=req.experience_level,
+        advanced_chest_focus=req.advanced_chest_focus,
+        specialization_focus=req.specialization_focus,
+        training_method=req.training_method,
+        method_mode=req.method_mode,
+        requested_method=req.requested_method,
+        recent_training_method_uses=req.recent_training_method_uses,
+        readiness_level=req.readiness_level,
+        time_available_min=req.time_available_min,
+        training_style=req.training_style,
+        session_structure=req.session_structure,
+        adjunct_options=req.adjunct_options,
+        pain_areas=req.pain_areas,
+        doms_data=req.doms_data,
+        injury_conditions=req.injury_conditions,
+    )
     return RoutineEvalContext(
         goal=req.goal or "hypertrophy",
         target_muscles=list(db_target_muscles or req.target_muscles or []),
         duration_min=req.time_available_min,
         readiness_level=req.readiness_level or "normal",
-        available_equipment=[],
+        available_equipment=list(req.available_equipment or []),
         unavailable_equipment=list(req.equipment or []),
         current_pain_areas=list(req.pain_areas or []),
         doms=dict(req.doms_data or {}),
         recent_exercises=recent_ids,
         max_working_sets=max_working_sets,
+        target_main_exercise_count=blueprint.target_main_exercise_count,
+        minimum_main_exercise_count=blueprint.minimum_main_exercise_count,
+        adjunct_options=list(blueprint.planned_adjunct_options),
+        required_main_pattern_targets=list(required_main_pattern_targets(blueprint)),
+        required_main_pattern_slot_specs=[
+            {
+                "target_muscles": list(spec["target_muscles"]),
+                "preferred_movement_types": list(spec["preferred_movement_types"]),
+            }
+            for spec in required_main_pattern_slot_specs(blueprint)
+        ],
     )
 
 
@@ -119,7 +176,112 @@ def _equipment_tokens(candidate: dict) -> set[str]:
 
 
 def _total_working_sets(blocks: List[dict]) -> int:
-    return sum(len(block.get("prescription") or []) for block in blocks)
+    return sum(
+        1
+        for block in blocks
+        for item in (block.get("prescription") or [])
+        if str(item.get("set_type") or item.get("setType") or "working").lower()
+        in {"working", "distance"}
+    )
+
+
+def _prescription_contract_violations(
+    block: dict,
+    candidate: dict,
+    context: RoutineEvalContext,
+) -> List[str]:
+    """Reject unit/phase drift that would make a block unsafe or unrenderable."""
+
+    if not candidate.get("prescription_mode"):
+        return []
+
+    exercise_id = str(block.get("exercise_id") or "")
+    phase = str(block.get("session_phase") or "").strip()
+    prescriptions = list(block.get("prescription") or [])
+    violations: List[str] = []
+    requested_adjunct_match = any(
+        phase == ADJUNCT_OPTION_PHASE.get(option)
+        and candidate_matches_adjunct_option(candidate, option)
+        for option in context.adjunct_options
+    )
+
+    if not phase:
+        violations.append(f"[PRESCRIPTION_CONTRACT] session phase missing: {exercise_id}")
+    elif phase in {"finisher_or_recovery", "cooldown"}:
+        violations.append(
+            f"[PRESCRIPTION_CONTRACT] legacy merged session phase present in {exercise_id}: {phase}"
+        )
+    elif not requested_adjunct_match:
+        allowed_phases = {
+            token.strip()
+            for token in str(candidate.get("allowed_session_phases") or "").split(",")
+            if token.strip()
+        }
+        if allowed_phases and phase not in allowed_phases:
+            violations.append(
+                f"[PRESCRIPTION_CONTRACT] phase not allowed for {exercise_id}: "
+                f"actual={phase}, allowed={sorted(allowed_phases)}"
+            )
+
+    expected_mode = str(candidate.get("prescription_mode") or "reps").strip().lower()
+    expected_types = {
+        "reps": {"working", "warmup", "mobility", "prehab"},
+        "duration": {"timed"},
+        "interval": {"interval"},
+        "distance": {"distance"},
+    }.get(expected_mode, set())
+
+    for item in prescriptions:
+        set_type = str(item.get("set_type") or item.get("setType") or "working").lower()
+        duration = item.get("target_duration_sec")
+        work = item.get("interval_work_sec")
+        recovery = item.get("interval_recovery_sec")
+        rounds = item.get("interval_rounds")
+        distance = item.get("target_distance_m")
+        if not requested_adjunct_match and expected_types and set_type not in expected_types:
+            violations.append(
+                f"[PRESCRIPTION_CONTRACT] unit mismatch in {exercise_id}: "
+                f"mode={expected_mode}, setType={set_type}"
+            )
+        if set_type == "timed":
+            valid = duration is not None and all(
+                value is None for value in (work, recovery, rounds, distance)
+            )
+        elif set_type == "interval":
+            valid = all(value is not None for value in (duration, work, recovery, rounds)) and distance is None
+        elif set_type == "distance":
+            valid = distance is not None and all(
+                value is None for value in (duration, work, recovery, rounds)
+            )
+        else:
+            valid = all(value is None for value in (duration, work, recovery, rounds, distance))
+        if not valid:
+            violations.append(
+                f"[PRESCRIPTION_CONTRACT] incomplete or mixed unit fields in {exercise_id}: {set_type}"
+            )
+
+    if phase == "conditioning_finisher" and any(
+        str(item.get("set_type") or "working").lower() != "interval"
+        for item in prescriptions
+    ):
+        violations.append(
+            f"[PRESCRIPTION_CONTRACT] conditioning finisher must use interval units: {exercise_id}"
+        )
+    if phase == "endurance_support" and any(
+        str(item.get("set_type") or "working").lower() != "timed"
+        for item in prescriptions
+    ):
+        violations.append(
+            f"[PRESCRIPTION_CONTRACT] endurance support must use timed units: {exercise_id}"
+        )
+    if phase == "cooldown_recovery" and any(
+        str(item.get("set_type") or "working").lower() == "interval"
+        for item in prescriptions
+    ):
+        violations.append(
+            f"[PRESCRIPTION_CONTRACT] interval work cannot be cooldown/recovery: {exercise_id}"
+        )
+    return violations
 
 
 def _check_hard_constraints_sanity(
@@ -127,10 +289,12 @@ def _check_hard_constraints_sanity(
     candidates_by_id: Dict[str, dict],
     context: RoutineEvalContext,
     max_working_sets: int,
+    adjunct_decisions: Optional[List[dict]] = None,
 ) -> List[str]:
     violations: List[str] = []
     blocked = {item.strip().upper() for item in context.unavailable_equipment}
-    pain_tokens = {p.body_part.lower() for p in context.current_pain_areas if p.body_part}
+    available = {item.strip().upper() for item in context.available_equipment}
+    injury_tokens = _pain_tokens_from_entries(context.current_pain_areas)
     ids = set(_block_ids(blocks))
 
     for forbidden_id in context.overrides.get("forbidden_exercise_ids", []):
@@ -147,11 +311,17 @@ def _check_hard_constraints_sanity(
         equip_tokens = _equipment_tokens(candidate) - {"BODYWEIGHT"}
         if equip_tokens & blocked:
             violations.append(f"[GUARD_BYPASS] blocked equipment in {exercise_id}: {sorted(equip_tokens & blocked)}")
+        if available and equip_tokens and not (equip_tokens & available):
+            violations.append(
+                f"[GUARD_BYPASS] unavailable whitelist equipment in {exercise_id}: {sorted(equip_tokens)}"
+            )
 
-        pain_triggers = str(candidate.get("pain_triggers") or "").lower()
-        matched = sorted(token for token in pain_tokens if token and token in pain_triggers)
-        if matched:
-            violations.append(f"[GUARD_BYPASS] pain trigger in {exercise_id}: {matched}")
+        injury_overlap = _candidate_injury_overlap(candidate, injury_tokens)
+        if injury_overlap:
+            violations.append(
+                f"[GUARD_BYPASS] registered injury overlap in {exercise_id}: "
+                f"{sorted(injury_overlap)}"
+            )
 
         for muscle in _primary_muscles(block, candidates_by_id):
             if int(context.doms.get(str(muscle), 0) or 0) >= 3:
@@ -166,9 +336,47 @@ def _check_hard_constraints_sanity(
             if weighted_sets:
                 violations.append(f"[GUARD_BYPASS] BODYWEIGHT target_weight_kg must be null: {exercise_id}")
 
+        violations.extend(_prescription_contract_violations(block, candidate, context))
+
     total_sets = _total_working_sets(blocks)
     if total_sets > max_working_sets:
         violations.append(f"[GUARD_BYPASS] working set cap exceeded: actual={total_sets}, max={max_working_sets}")
+
+    minimum_main = context.minimum_main_exercise_count
+    if minimum_main is not None:
+        actual_main = count_main_blocks(blocks)
+        adjunct_block_count = len(blocks) - actual_main
+        if context.adjunct_options and adjunct_block_count > 0 and actual_main < minimum_main:
+            violations.append(
+                "[MAIN_MINIMUM] adjunct retained before main minimum: "
+                f"mainActual={actual_main}, mainMinimum={minimum_main}, "
+                f"adjunctBlocks={adjunct_block_count}"
+            )
+
+    if adjunct_decisions is None:
+        # Backward-compatible direct helper mode used by the offline harness.
+        for adjunct_option in context.adjunct_options:
+            if not any(
+                adjunct_block_matches_profile(
+                    block,
+                    adjunct_option,
+                    candidate=candidates_by_id.get(str(block.get("exercise_id") or "")),
+                )
+                for block in blocks
+            ):
+                violations.append(
+                    f"[ADJUNCT_CONTRACT] requested adjunct missing or invalid: {adjunct_option}"
+                )
+    else:
+        violations.extend(
+            f"[ADJUNCT_CONTRACT] {item}"
+            for item in validate_adjunct_decision_contract(
+                context.adjunct_options,
+                blocks,
+                adjunct_decisions,
+                candidates_by_id=candidates_by_id,
+            )
+        )
 
     return violations
 
@@ -213,22 +421,88 @@ def _time_score(
 ) -> Tuple[int, List[str]]:
     actual = response.total_estimated_time
     requested = context.duration_min
-    error = abs(actual - requested)
-    max_error = int(context.overrides.get("max_time_error_min", 10))
+    target_exercise_count = int(
+        context.overrides.get("target_exercise_count")
+        or target_exercise_count_for_session(requested, context.goal)
+    )
+    minimum_exercise_count = int(
+        context.overrides.get("min_exercise_count")
+        or max(1, target_exercise_count - 1)
+    )
+    explicit_underfill_exception = (
+        bool(context.overrides.get("allowed_underfill", False))
+        or fallback_used
+        or context.readiness_level == "low"
+        or bool(context.overrides.get("coverage_exception", False))
+        or bool(getattr(response, "_underfill_diagnostics", {}).get("reason_code"))
+    )
+    selected_count = len(response.routine_blocks)
+    candidate_shortage = (
+        0 < candidate_count < minimum_exercise_count
+        and selected_count >= candidate_count
+    )
+    if actual > requested:
+        return 0, [f"FAIL time budget exceeded: actual={actual}, available={requested}"]
+    target = int(
+        context.overrides.get("target_productive_duration_min")
+        or target_productive_duration_min(requested)
+    )
+    floor = int(
+        context.overrides.get("minimum_productive_duration_min")
+        or minimum_productive_duration_min(requested)
+    )
+    if actual >= target:
+        return 20, []
+    if actual >= floor:
+        return 10, [f"time utilization warning: actual={actual}, target={target}, available={requested}"]
+    if explicit_underfill_exception:
+        return 10, [f"allowed underfill: actual={actual}, floor={floor}, available={requested}"]
+    if candidate_shortage:
+        return 10, [
+            f"candidate-limited underfill: actual={actual}, floor={floor}, "
+            f"available={requested}, candidates={candidate_count}, minExpected={minimum_exercise_count}"
+        ]
+    return 0, [f"FAIL time utilization too low: actual={actual}, floor={floor}, available={requested}"]
+
+
+def _exercise_count_score(
+    blocks: List[dict],
+    context: RoutineEvalContext,
+    fallback_used: bool,
+    candidate_count: int,
+    underfill_reason: Optional[str] = None,
+) -> Tuple[int, List[str]]:
+    actual = count_main_blocks(blocks)
+    has_adjunct_contract = bool(context.adjunct_options) or actual < len(blocks)
+    target = int(
+        context.overrides.get("target_exercise_count")
+        or (context.target_main_exercise_count if has_adjunct_contract else None)
+        or target_exercise_count_for_session(context.duration_min, context.goal)
+    )
+    min_expected = int(
+        context.overrides.get("min_exercise_count")
+        or (context.minimum_main_exercise_count if has_adjunct_contract else None)
+        or max(1, target - 1)
+    )
+    candidate_shortage = (
+        0 < candidate_count < min_expected
+        and actual >= candidate_count
+    )
     allowed_underfill = (
         bool(context.overrides.get("allowed_underfill", False))
         or fallback_used
         or context.readiness_level == "low"
-        or candidate_count <= 2
+        or candidate_shortage
         or bool(context.overrides.get("coverage_exception", False))
+        or bool(underfill_reason)
     )
-    if error <= 5:
-        return 20, []
-    if error <= max_error:
-        return 10, [f"time warning: actual={actual}, requested={requested}, error={error}"]
-    if allowed_underfill and actual < requested:
-        return 10, [f"allowed underfill: actual={actual}, requested={requested}, error={error}"]
-    return 0, [f"FAIL time error too large: actual={actual}, requested={requested}, error={error}, max={max_error}"]
+
+    if actual >= min_expected:
+        return 10, []
+    message = f"exercise count underfilled: actual={actual}, minExpected={min_expected}, target={target}"
+    if allowed_underfill:
+        return 5, [message]
+    return 0, ["FAIL " + message]
 
 
 def _diversity_score(
@@ -362,7 +636,30 @@ def evaluate_routine_quality(
     candidate_count = len(candidates)
     max_sets = context.max_working_sets or _calculate_max_total_sets(context.duration_min, context.goal)
 
-    hard_violations = _check_hard_constraints_sanity(blocks, candidates_by_id, context, max_sets)
+    adjunct_decisions = [
+        decision.model_dump(by_alias=False)
+        for decision in response.adjunct_decisions
+    ]
+    hard_violations = _check_hard_constraints_sanity(
+        blocks,
+        candidates_by_id,
+        context,
+        max_sets,
+        adjunct_decisions=adjunct_decisions,
+    )
+    if (
+        response.generation_status in {"success", "fallback"}
+        and context.required_main_pattern_targets
+        and not routine_items_have_required_main_pattern(
+            blocks,
+            context.required_main_pattern_targets,
+            candidates=candidates,
+            required_slot_specs=context.required_main_pattern_slot_specs,
+        )
+    ):
+        hard_violations.append(
+            "[MAIN_PATTERN] successful routine has no eligible required main pattern"
+        )
     warnings: List[str] = []
     metric_scores: Dict[str, int] = {}
 
@@ -371,6 +668,14 @@ def evaluate_routine_quality(
     )
     warnings.extend(metric_warnings)
     metric_scores["time"], metric_warnings = _time_score(response, context, fallback_used, candidate_count)
+    warnings.extend(metric_warnings)
+    metric_scores["exercise_count"], metric_warnings = _exercise_count_score(
+        blocks,
+        context,
+        fallback_used,
+        candidate_count,
+        underfill_reason=getattr(response, "_underfill_diagnostics", {}).get("reason_code"),
+    )
     warnings.extend(metric_warnings)
     metric_scores["diversity"], metric_warnings = _diversity_score(blocks, context, candidate_count)
     warnings.extend(metric_warnings)
@@ -385,7 +690,7 @@ def evaluate_routine_quality(
     )
     warnings.extend(metric_warnings)
 
-    score = 0 if hard_violations else sum(metric_scores.values())
+    score = 0 if hard_violations else min(100, sum(metric_scores.values()))
     grade = _grade(score, hard_violations)
     notes = []
     if context.overrides.get("notes"):

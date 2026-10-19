@@ -8,6 +8,7 @@ from engines.rule_critic import (
     _check_hard_constraints_sanity,
     _coverage_score,
     _diversity_score,
+    _exercise_count_score,
     _grade,
     _rationale_score,
     _repair_hygiene_score,
@@ -16,6 +17,7 @@ from engines.rule_critic import (
     evaluate_routine_quality,
 )
 from engines.schemas import (
+    AdjunctDecision,
     PainAreaEntry,
     RecentSetRecord,
     RoutineBlock,
@@ -148,6 +150,27 @@ def test_should_fallback_is_false_in_v1():
     assert result.should_fallback is False
 
 
+def test_successful_accessory_only_routine_is_a_required_main_pattern_violation():
+    pushdown = candidate(
+        "pushdown",
+        primary_muscle="triceps",
+        equipment_req="CABLE",
+        movement_type="ISOLATION",
+    )
+    result = evaluate_routine_quality(
+        response(blocks=[block(
+            "pushdown",
+            ["triceps"],
+            equipment_type="CABLE",
+        )]),
+        [pushdown],
+        context(required_main_pattern_targets=["chest"]),
+    )
+
+    assert result.grade == "FAIL"
+    assert any("MAIN_PATTERN" in item for item in result.hard_violations)
+
+
 def test_candidate_outside_candidates_is_detected():
     violations = _check_hard_constraints_sanity(
         blocks_to_dicts([block("ghost")]),
@@ -175,7 +198,19 @@ def test_pain_trigger_is_detected():
         context(current_pain_areas=[PainAreaEntry(body_part="shoulder")]),
         18,
     )
-    assert any("pain trigger" in item for item in violations)
+    assert any("registered injury overlap" in item for item in violations)
+
+
+def test_joint_load_injury_overlap_is_detected_without_trigger_text():
+    wrist_candidate = candidate("wrist_press", "chest", pain_triggers=None)
+    wrist_candidate["wrist_stress"] = "medium"
+    violations = _check_hard_constraints_sanity(
+        blocks_to_dicts([block("wrist_press")]),
+        _candidate_lookup([wrist_candidate]),
+        context(current_pain_areas=[PainAreaEntry(body_part="wrist")]),
+        18,
+    )
+    assert any("registered injury overlap" in item for item in violations)
 
 
 def test_doms_level_3_is_detected():
@@ -196,6 +231,183 @@ def test_working_set_cap_is_detected():
         3,
     )
     assert any("working set cap exceeded" in item for item in violations)
+
+
+def test_main_minimum_excludes_adjunct_blocks_from_count():
+    main_blocks = [block(f"main-{index}") for index in range(4)]
+    adjunct_blocks = [block("mobility"), block("prehab")]
+    adjunct_blocks[0].adjunct_option = "mobility_warmup"
+    adjunct_blocks[0].session_phase = "warmup_or_preparation"
+    adjunct_blocks[1].adjunct_option = "prehab_accessory"
+    adjunct_blocks[1].session_phase = "prehab_accessory"
+    candidates = [candidate(item.exercise_id) for item in [*main_blocks, *adjunct_blocks]]
+
+    violations = _check_hard_constraints_sanity(
+        blocks_to_dicts([*main_blocks, *adjunct_blocks]),
+        _candidate_lookup(candidates),
+        context(
+            minimum_main_exercise_count=5,
+            adjunct_options=["mobility_warmup", "prehab_accessory"],
+        ),
+        30,
+    )
+
+    assert any(
+        "[MAIN_MINIMUM]" in item
+        and "mainActual=4" in item
+        and "adjunctBlocks=2" in item
+        for item in violations
+    )
+
+
+def test_exercise_count_score_uses_main_count_not_total_block_count():
+    main_blocks = [block(f"main-{index}") for index in range(4)]
+    adjunct_blocks = [block("mobility"), block("prehab")]
+    adjunct_blocks[0].adjunct_option = "mobility_warmup"
+    adjunct_blocks[1].adjunct_option = "prehab_accessory"
+
+    score, warnings = _exercise_count_score(
+        blocks_to_dicts([*main_blocks, *adjunct_blocks]),
+        context(
+            target_main_exercise_count=6,
+            minimum_main_exercise_count=5,
+        ),
+        False,
+        10,
+    )
+
+    assert score == 0
+    assert any("actual=4" in item and "minExpected=5" in item for item in warnings)
+
+
+def test_requested_adjunct_requires_candidate_identity_and_exact_modality_profile():
+    adjunct_candidate = candidate(
+        "mobility",
+        "front-deltoids",
+        equipment_req="BODYWEIGHT",
+        movement_type="STATIC",
+    )
+    adjunct_candidate.update({
+        "name_kr": "문틀 흉근 동적 스트레치",
+        "name_en": "dynamic doorway chest stretch",
+        "adjunct_option_codes": ["mobility_warmup"],
+        "training_style_tags": ["mobility"],
+    })
+    adjunct_block = RoutineBlock(
+        order=1,
+        exercise_id="mobility",
+        exercise_name="문틀 흉근 동적 스트레치",
+        movement_type="STATIC",
+        primary_muscles=["front-deltoids"],
+        equipment_type="BODYWEIGHT",
+        default_rest_sec=15,
+        prescription=[
+            SetPrescription(
+                set_index=index,
+                set_type="mobility",
+                target_reps=8,
+                target_rir=None,
+                target_rest_sec=15,
+            )
+            for index in (1, 2)
+        ],
+        exercise_rationale="준비 운동",
+        session_phase="warmup_or_preparation",
+    )
+    eval_context = context(adjunct_options=["mobility_warmup"])
+
+    valid = _check_hard_constraints_sanity(
+        blocks_to_dicts([adjunct_block]),
+        _candidate_lookup([adjunct_candidate]),
+        eval_context,
+        18,
+    )
+    assert not any("ADJUNCT_CONTRACT" in item for item in valid)
+
+    invalid_block = adjunct_block.model_copy(deep=True)
+    for item in invalid_block.prescription:
+        item.set_type = "working"
+    invalid = _check_hard_constraints_sanity(
+        blocks_to_dicts([invalid_block]),
+        _candidate_lookup([adjunct_candidate]),
+        eval_context,
+        18,
+    )
+    assert any("ADJUNCT_CONTRACT" in item for item in invalid)
+
+
+def test_evaluate_quality_accepts_contract_valid_suppressed_adjunct():
+    suppressed = response(blocks=[])
+    suppressed.adjunct_decisions = [
+        AdjunctDecision(
+            option="mobility_warmup",
+            status="suppressed",
+            reason_code="insufficientTimeAfterMainMinimum",
+            slot_id="adjunct_mobility_warmup",
+        )
+    ]
+
+    result = evaluate_routine_quality(
+        suppressed,
+        [],
+        context(adjunct_options=["mobility_warmup"]),
+    )
+
+    assert not any("ADJUNCT_CONTRACT" in item for item in result.hard_violations)
+
+
+def test_evaluate_quality_rejects_suppressed_adjunct_that_remains_in_blocks():
+    adjunct_candidate = candidate(
+        "mobility",
+        "front-deltoids",
+        equipment_req="BODYWEIGHT",
+        movement_type="STATIC",
+    )
+    adjunct_candidate.update({
+        "name_kr": "문틀 흉근 동적 스트레치",
+        "name_en": "dynamic doorway chest stretch",
+        "adjunct_option_codes": ["mobility_warmup"],
+        "training_style_tags": ["mobility"],
+    })
+    adjunct_block = RoutineBlock(
+        order=1,
+        exercise_id="mobility",
+        exercise_name="문틀 흉근 동적 스트레치",
+        movement_type="STATIC",
+        primary_muscles=["front-deltoids"],
+        equipment_type="BODYWEIGHT",
+        default_rest_sec=15,
+        prescription=[
+            SetPrescription(
+                set_index=index,
+                set_type="mobility",
+                target_reps=8,
+                target_rir=None,
+                target_rest_sec=15,
+            )
+            for index in (1, 2)
+        ],
+        exercise_rationale="준비 운동",
+        session_phase="warmup_or_preparation",
+        adjunct_option="mobility_warmup",
+    )
+    contradictory = response(blocks=[adjunct_block])
+    contradictory.adjunct_decisions = [
+        AdjunctDecision(
+            option="mobility_warmup",
+            status="suppressed",
+            reason_code="postValidationRemoved",
+            slot_id="adjunct_mobility_warmup",
+        )
+    ]
+
+    result = evaluate_routine_quality(
+        contradictory,
+        [adjunct_candidate],
+        context(adjunct_options=["mobility_warmup"]),
+    )
+
+    assert any("suppressed adjunct still has a final block" in item for item in result.hard_violations)
 
 
 def test_bodyweight_weight_is_detected():
@@ -267,10 +479,44 @@ def test_time_within_five_minutes_gets_full_score():
     assert warnings == []
 
 
-def test_time_over_ten_minutes_gets_zero_and_fail_warning():
+def test_time_above_productive_floor_gets_partial_score():
     score, warnings = _time_score(response(total_time=40), context(duration_min=60), False, 4)
+    assert score == 10
+    assert any("time utilization warning" in item for item in warnings)
+
+
+def test_time_below_productive_floor_gets_zero_and_fail_warning():
+    score, warnings = _time_score(response(total_time=30), context(duration_min=60), False, 12)
     assert score == 0
     assert any(item.startswith("FAIL time") for item in warnings)
+
+
+def test_time_below_productive_floor_is_allowed_when_candidate_pool_cannot_meet_minimum_count():
+    score, warnings = _time_score(
+        response([block(str(index)) for index in range(4)], total_time=30),
+        context(duration_min=60),
+        False,
+        4,
+    )
+    assert score == 10
+    assert any("candidate-limited underfill" in item for item in warnings)
+
+
+def test_time_below_productive_floor_still_fails_when_small_candidate_pool_is_not_used():
+    score, warnings = _time_score(
+        response([block("bench")], total_time=30),
+        context(duration_min=60),
+        False,
+        4,
+    )
+    assert score == 0
+    assert any(item.startswith("FAIL time") for item in warnings)
+
+
+def test_time_above_available_budget_fails_even_if_productive_target_is_met():
+    score, warnings = _time_score(response(total_time=61), context(duration_min=60), False, 4)
+    assert score == 0
+    assert any("budget exceeded" in item for item in warnings)
 
 
 def test_allowed_underfill_gets_partial_score():
@@ -282,6 +528,55 @@ def test_allowed_underfill_gets_partial_score():
     )
     assert score == 10
     assert any("allowed underfill" in item for item in warnings)
+
+
+def test_exercise_count_underfill_fails_when_candidates_are_available():
+    score, warnings = _exercise_count_score(
+        blocks_to_dicts([block("bench"), block("incline"), block("triceps")]),
+        context(duration_min=50),
+        False,
+        12,
+    )
+    assert score == 0
+    assert any(item.startswith("FAIL exercise count underfilled") for item in warnings)
+
+
+def test_exercise_count_underfill_is_allowed_for_low_readiness():
+    score, warnings = _exercise_count_score(
+        blocks_to_dicts([block("bench"), block("incline"), block("triceps")]),
+        context(duration_min=50, readiness_level="low"),
+        False,
+        12,
+    )
+    assert score == 5
+    assert any("exercise count underfilled" in item for item in warnings)
+
+
+def test_exercise_count_near_target_passes():
+    score, warnings = _exercise_count_score(
+        blocks_to_dicts([block(str(index)) for index in range(5)]),
+        context(duration_min=50),
+        False,
+        12,
+    )
+    assert score == 10
+    assert warnings == []
+
+
+def test_strength_exercise_count_uses_goal_aware_target():
+    score, warnings = _exercise_count_score(
+        blocks_to_dicts([
+            block("squat", ["quadriceps"]),
+            block("deadlift", ["hamstring"]),
+            block("leg-curl", ["hamstring"]),
+        ]),
+        context(duration_min=60, goal="strength"),
+        False,
+        12,
+    )
+
+    assert score == 10
+    assert warnings == []
 
 
 def test_diversity_low_repetition_passes():
@@ -433,7 +728,7 @@ def test_build_eval_context_uses_request_and_recent_sets():
         target_muscles=["chest"],
         readiness_level="low",
         time_available_min=30,
-        pain_areas=[PainAreaEntry(body_part="shoulder")],
+        pain_areas=[PainAreaEntry(body_part="front-deltoids")],
         doms_data={"chest": 2},
         equipment=["BARBELL"],
         goal="fatloss",
@@ -457,7 +752,7 @@ def test_evaluate_normal_routine_passes():
         context(target_muscles=["chest", "triceps"]),
     )
     assert result.grade == "PASS"
-    assert result.score >= 80
+    assert result.score == 100
 
 
 def test_evaluate_low_score_routine_warns():

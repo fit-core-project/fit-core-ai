@@ -48,6 +48,8 @@ def _clear_provider_env(monkeypatch):
         "LOCAL_LLM_MODEL",
         "LOCAL_LLM_NUM_PREDICT",
         "LOCAL_LLM_NUM_CTX",
+        "LOCAL_LLM_SEED",
+        "LOCAL_LLM_REASONING",
         "OLLAMA_BASE_URL",
         "GOOGLE_API_KEY",
     ):
@@ -157,7 +159,8 @@ def test_local_num_predict_unset_preserves_existing_ollama_options(monkeypatch, 
 
     llm = llm_router.get_llm("routine")
 
-    assert llm.options == {}
+    # Routine-only default; non-routine isolation has its own migration tests.
+    assert llm.options == {"reasoning": False}
 
 
 def test_local_num_predict_and_num_ctx_valid_env_are_passed(monkeypatch, dummy_provider_modules):
@@ -180,7 +183,7 @@ def test_invalid_local_generation_budget_env_is_ignored(monkeypatch, dummy_provi
 
     llm = llm_router.get_llm("routine")
 
-    assert llm.options == {}
+    assert llm.options == {"reasoning": False}
 
 
 def test_gemini_path_ignores_local_generation_budget(monkeypatch, dummy_provider_modules):

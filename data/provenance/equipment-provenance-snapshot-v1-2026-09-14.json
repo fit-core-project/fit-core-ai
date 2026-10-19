@@ -1,0 +1,1190 @@
+{
+  "schemaVersion": "fit-core-equipment-provenance-snapshot-v1",
+  "sourceSha256": "22e7b98199b3ee8b1d4e880e88fe76a5ad7a8dc14430c7f94ed0143f4f234ff2",
+  "sourceSchema": [
+    "v24_row_uid",
+    "name",
+    "english",
+    "equipment"
+  ],
+  "recordCount": 168,
+  "recordsSha256": "12f84cab17475234f947415a6d56232ebbe0db168b20735b20443a07dfbf0199",
+  "records": [
+    {
+      "exerciseId": "V24ROW-000440",
+      "nameKr": "EZ바 스탠딩 뉴트럴 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 스탠딩 뉴트럴 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "a05028ec1285ac15635d7dbc54d07a78cfb161c95c5e06fdcad25f55c7b414b7"
+    },
+    {
+      "exerciseId": "V24ROW-000441",
+      "nameKr": "EZ바 스탠딩 뉴트럴 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 스탠딩 뉴트럴 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "3ba700e78644f5fdc0c27409b43fc2336bfad0c167950ce10503835152cff931"
+    },
+    {
+      "exerciseId": "V24ROW-000442",
+      "nameKr": "EZ바 스탠딩 뉴트럴 프론트 레이즈",
+      "nameEn": "EZ Bar 스탠딩 뉴트럴 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "89b4b333a615df4fb3bd2a2f9f194a6e90eb8705bdd8de5b050802e18fff609f"
+    },
+    {
+      "exerciseId": "V24ROW-000443",
+      "nameKr": "EZ바 스탠딩 언더그립 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 스탠딩 언더그립 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "7369176ef8daa6f256a2a9c6daf2ab10fb2667161950a06e365130ab966c459a"
+    },
+    {
+      "exerciseId": "V24ROW-000444",
+      "nameKr": "EZ바 스탠딩 언더그립 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 스탠딩 언더그립 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "b463dd538c4e07a9b55cebc1bbe24995ee7193eee9494a0925c64a01116c1bd0"
+    },
+    {
+      "exerciseId": "V24ROW-000445",
+      "nameKr": "EZ바 스탠딩 언더그립 프론트 레이즈",
+      "nameEn": "EZ Bar 스탠딩 언더그립 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "9e5042472079e0b725f6d5f7192e2ed924c815b5d2469a465caa7bdef532eee4"
+    },
+    {
+      "exerciseId": "V24ROW-000446",
+      "nameKr": "EZ바 스탠딩 오버그립 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 스탠딩 오버그립 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "733902c8da3df74cc296b5845908e3239ef72a8ac234b1b663f2b219e8fbaefc"
+    },
+    {
+      "exerciseId": "V24ROW-000447",
+      "nameKr": "EZ바 스탠딩 오버그립 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 스탠딩 오버그립 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "ed481def53933d5eb0e063e61b8a151c9f0e587b1ba56a4cd87c2e5e1f5d2546"
+    },
+    {
+      "exerciseId": "V24ROW-000448",
+      "nameKr": "EZ바 스탠딩 오버그립 프론트 레이즈",
+      "nameEn": "EZ Bar 스탠딩 오버그립 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "c85b6bd0446126d09a5e43424e68de10b2c5d4402b51bd4f44173c1608280ad3"
+    },
+    {
+      "exerciseId": "V24ROW-000449",
+      "nameKr": "EZ바 시티드 뉴트럴 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 시티드 뉴트럴 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "e56a0b07238caf99e79df6f6b0245dcb862afbe28545ca0144727366d952bce0"
+    },
+    {
+      "exerciseId": "V24ROW-000450",
+      "nameKr": "EZ바 시티드 뉴트럴 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 시티드 뉴트럴 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "d89fce7b2f5591302411743fc0d2406bf945e654526db4142c39ab3812cf3a43"
+    },
+    {
+      "exerciseId": "V24ROW-000451",
+      "nameKr": "EZ바 시티드 뉴트럴 프론트 레이즈",
+      "nameEn": "EZ Bar 시티드 뉴트럴 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "a6c1ab6cfb7a5f49c996adaab5ea9bd6e0d3e59a6c1c3362146ffa81758d124d"
+    },
+    {
+      "exerciseId": "V24ROW-000452",
+      "nameKr": "EZ바 시티드 언더그립 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 시티드 언더그립 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "82286e1ac3e99ddd23308f607241e0aab2aeea3824305896f39cbd19640ee222"
+    },
+    {
+      "exerciseId": "V24ROW-000453",
+      "nameKr": "EZ바 시티드 언더그립 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 시티드 언더그립 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "77319d6a592ea00259063b76f382b9ae7635ccd1f0efb01a0185698800d3bd06"
+    },
+    {
+      "exerciseId": "V24ROW-000454",
+      "nameKr": "EZ바 시티드 언더그립 프론트 레이즈",
+      "nameEn": "EZ Bar 시티드 언더그립 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "21618e7ebb82de2e91d8f1b7cb23b1213f91cd31ca4cd92a95a9a5ed2614105b"
+    },
+    {
+      "exerciseId": "V24ROW-000455",
+      "nameKr": "EZ바 시티드 오버그립 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 시티드 오버그립 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "85b9a2c435e9cd30df1b0683acb3e59cff07903a3240bcde771e0222b34010b9"
+    },
+    {
+      "exerciseId": "V24ROW-000456",
+      "nameKr": "EZ바 시티드 오버그립 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 시티드 오버그립 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "61f224f879b85ee88a88ef4e8c2d58efb9825be26b85785247fd552b31b88b8b"
+    },
+    {
+      "exerciseId": "V24ROW-000457",
+      "nameKr": "EZ바 시티드 오버그립 프론트 레이즈",
+      "nameEn": "EZ Bar 시티드 오버그립 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "9ff2bb423dcf1ff3416d1ccbdb3354f0f9d43c42a44ee8589785076d06c03f0e"
+    },
+    {
+      "exerciseId": "V24ROW-000458",
+      "nameKr": "EZ바 인클라인 뉴트럴 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 인클라인 뉴트럴 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "a0a0aa784c8f272b9811efdff9e69c8b86fde1e24d224677e4c3b4602cafb1d8"
+    },
+    {
+      "exerciseId": "V24ROW-000459",
+      "nameKr": "EZ바 인클라인 뉴트럴 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 인클라인 뉴트럴 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "6e022634be03d0d98b0cea3f34669971c725379ff36fa5cc931b99141fbc778a"
+    },
+    {
+      "exerciseId": "V24ROW-000460",
+      "nameKr": "EZ바 인클라인 뉴트럴 프론트 레이즈",
+      "nameEn": "EZ Bar 인클라인 뉴트럴 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "f79ce365ec386bd6a79e6159050ec4da4ae213fffaa293f0c9a169373fd67999"
+    },
+    {
+      "exerciseId": "V24ROW-000461",
+      "nameKr": "EZ바 인클라인 언더그립 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 인클라인 언더그립 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "f55a63e66bd4893c0e526c04f2aa6304c15d3f472505af61eb8201f0f9f4f0fb"
+    },
+    {
+      "exerciseId": "V24ROW-000462",
+      "nameKr": "EZ바 인클라인 언더그립 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 인클라인 언더그립 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "7a5f04e802894f12e5f65d909fa9214dbbc23e27faf00cc3c011a630f042e802"
+    },
+    {
+      "exerciseId": "V24ROW-000463",
+      "nameKr": "EZ바 인클라인 언더그립 프론트 레이즈",
+      "nameEn": "EZ Bar 인클라인 언더그립 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "b1036f7b730a982c128d0e9bac7e6919b450fa6469a939e2cceb8d760a4061fb"
+    },
+    {
+      "exerciseId": "V24ROW-000464",
+      "nameKr": "EZ바 인클라인 오버그립 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 인클라인 오버그립 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "4e76258f5dc7d659dbf38884319c2004a556ca693c5596a6e5eb98b4375b2eae"
+    },
+    {
+      "exerciseId": "V24ROW-000465",
+      "nameKr": "EZ바 인클라인 오버그립 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 인클라인 오버그립 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "d50caccbe378932f6dd54cc821168df1ccf091ef0b1f7b6a4d824933f09e99d4"
+    },
+    {
+      "exerciseId": "V24ROW-000466",
+      "nameKr": "EZ바 인클라인 오버그립 프론트 레이즈",
+      "nameEn": "EZ Bar 인클라인 오버그립 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "548f96599f2cd5cbb5fb2771e786326d9578db2bc6f42f6585152984dee9ef83"
+    },
+    {
+      "exerciseId": "V24ROW-000467",
+      "nameKr": "EZ바 케이블 뒤돌아 뉴트럴 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 케이블 뒤돌아 뉴트럴 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "7dfe453a2567517b2854a8728f4c6a7130ec9fb668646c4ba5157b9d389bae57"
+    },
+    {
+      "exerciseId": "V24ROW-000468",
+      "nameKr": "EZ바 케이블 뒤돌아 뉴트럴 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 케이블 뒤돌아 뉴트럴 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "96b638011c61a91dc8a3ffaae9ceec7ce847e917f07386534f413ea2b010c91c"
+    },
+    {
+      "exerciseId": "V24ROW-000469",
+      "nameKr": "EZ바 케이블 뒤돌아 뉴트럴 프론트 레이즈",
+      "nameEn": "EZ Bar 케이블 뒤돌아 뉴트럴 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "450163b227bd3917a2f8f5dd744729beff79030d8a42c0d2dff3cf5016209b47"
+    },
+    {
+      "exerciseId": "V24ROW-000470",
+      "nameKr": "EZ바 케이블 뒤돌아 언더그립 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 케이블 뒤돌아 언더그립 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "5195a00ed41f24aaaa590cffb20ba462a3f660e613a6c92cc4b1d6f729c4acbb"
+    },
+    {
+      "exerciseId": "V24ROW-000471",
+      "nameKr": "EZ바 케이블 뒤돌아 언더그립 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 케이블 뒤돌아 언더그립 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "f4069ecbaa6467f82c3abd1c02ff4615639104336bc6626320e2ea1915ab93bb"
+    },
+    {
+      "exerciseId": "V24ROW-000472",
+      "nameKr": "EZ바 케이블 뒤돌아 언더그립 프론트 레이즈",
+      "nameEn": "EZ Bar 케이블 뒤돌아 언더그립 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "a9bd84d23e2e4f4dbf6ce2d6fdf0e5e43728850990b71808e96255fb7d00a359"
+    },
+    {
+      "exerciseId": "V24ROW-000473",
+      "nameKr": "EZ바 케이블 뒤돌아 오버그립 교대 프론트 레이즈",
+      "nameEn": "EZ Bar 케이블 뒤돌아 오버그립 교대 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "2f26a0844a916f2f9b38f9fd46c47bf18f0637651a870391c259ad92ef7feb7a"
+    },
+    {
+      "exerciseId": "V24ROW-000474",
+      "nameKr": "EZ바 케이블 뒤돌아 오버그립 싱글암 프론트 레이즈",
+      "nameEn": "EZ Bar 케이블 뒤돌아 오버그립 싱글암 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "8bf3d05b641c1a93b0c5e7ebfd1919d3b873927d210985a10752aeaebb5132a5"
+    },
+    {
+      "exerciseId": "V24ROW-000475",
+      "nameKr": "EZ바 케이블 뒤돌아 오버그립 프론트 레이즈",
+      "nameEn": "EZ Bar 케이블 뒤돌아 오버그립 양측 프론트 레이즈",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "afdf7c15c615f978e3ac8ee6dbfcced35bdbb597462f880d74ebb53329406fd1"
+    },
+    {
+      "exerciseId": "V24ROW-002199",
+      "nameKr": "짐볼 덤벨 홀드 짐볼 백 익스텐션",
+      "nameEn": "Stability Ball 덤벨 홀드 짐볼 백 익스텐션",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "245457025b0a07c4b3e6687712ec20e7c97e6a0522f179a41c83cefba3d445d5"
+    },
+    {
+      "exerciseId": "V24ROW-002200",
+      "nameKr": "짐볼 맨몸 짐볼 백 익스텐션",
+      "nameEn": "Stability Ball 맨몸 짐볼 백 익스텐션",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "ee87df7d823930ddf7f9c250a19b6312e2dae2c8bba53ae1854e81a41ecfc940"
+    },
+    {
+      "exerciseId": "V24ROW-002201",
+      "nameKr": "짐볼 밴드 저항 짐볼 백 익스텐션",
+      "nameEn": "Stability Ball 밴드 저항 짐볼 백 익스텐션",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "ac797f91b12a8ba97102ddbd912f647edc52db251e5e1832703ad7cac03bbf66"
+    },
+    {
+      "exerciseId": "V24ROW-002202",
+      "nameKr": "짐볼 플레이트 허그 짐볼 백 익스텐션",
+      "nameEn": "Stability Ball 플레이트 허그 짐볼 백 익스텐션",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "c1490805d89b262986cf3dad82643d987f4ff9de279a79b4196f3f3e7b02fdc6"
+    },
+    {
+      "exerciseId": "V24ROW-002203",
+      "nameKr": "EZ바 스탠딩 드래그 컬",
+      "nameEn": "EZ Bar 스탠딩 드래그 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "ffe42ff08f6ed6f555fbd74b6f9ae762f33e656930f20455c057726ae7922ba1"
+    },
+    {
+      "exerciseId": "V24ROW-002204",
+      "nameKr": "EZ바 스탠딩 리버스 컬",
+      "nameEn": "EZ Bar 스탠딩 리버스 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "1d0ebaf674744e7de4f48081baa508bd4100c7261a486155358f7e190c3b8166"
+    },
+    {
+      "exerciseId": "V24ROW-002205",
+      "nameKr": "EZ바 스탠딩 수피네이션 컬",
+      "nameEn": "EZ Bar 스탠딩 수피네이션 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "493c890188f9bc35c051ed1ea47b63cf8d6a88762b9f80d40b8d7b09ed56d92e"
+    },
+    {
+      "exerciseId": "V24ROW-002206",
+      "nameKr": "EZ바 스탠딩 크로스바디 컬",
+      "nameEn": "EZ Bar 스탠딩 크로스바디 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "a3dc79c70e6a408cd7fdd39f31683b22acd06441ec6d2f1576b360a638ce0db6"
+    },
+    {
+      "exerciseId": "V24ROW-002207",
+      "nameKr": "EZ바 스탠딩 해머 컬",
+      "nameEn": "EZ Bar 스탠딩 해머 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "8cc07d9b60efbc442c320a5718c255ee6d9d43c2fb7f5a918804407d3da481bb"
+    },
+    {
+      "exerciseId": "V24ROW-002208",
+      "nameKr": "EZ바 스파이더 드래그 컬",
+      "nameEn": "EZ Bar 스파이더 드래그 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "39b9acff18aaf50f9e3df1e57ee3b8d70070594bb365ebc56868a2576ab699d3"
+    },
+    {
+      "exerciseId": "V24ROW-002209",
+      "nameKr": "EZ바 스파이더 리버스 컬",
+      "nameEn": "EZ Bar 스파이더 리버스 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "12ba71ff5ef3d444d019989cf2b929703d157ab1324b4bcda1f26f8408dbbaa5"
+    },
+    {
+      "exerciseId": "V24ROW-002210",
+      "nameKr": "EZ바 스파이더 수피네이션 컬",
+      "nameEn": "EZ Bar 스파이더 수피네이션 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "0cf08b20d791b7a87fd1e59c6cb69c75083c62421cd95e528fba774af5e216ec"
+    },
+    {
+      "exerciseId": "V24ROW-002211",
+      "nameKr": "EZ바 스파이더 크로스바디 컬",
+      "nameEn": "EZ Bar 스파이더 크로스바디 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "f829e6816ac895a1d4a6ac7dcdb17c7f55c0c535b65b75848af377a72ee92b1d"
+    },
+    {
+      "exerciseId": "V24ROW-002212",
+      "nameKr": "EZ바 스파이더 해머 컬",
+      "nameEn": "EZ Bar 스파이더 해머 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "b498b143fe63a04e40cda35cb146d6eda3f4dfca6ecf2ef478ae411474f4ab9a"
+    },
+    {
+      "exerciseId": "V24ROW-002213",
+      "nameKr": "EZ바 시티드 드래그 컬",
+      "nameEn": "EZ Bar 시티드 드래그 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "6fe9289319968b3794d995565400f0740b35e6fc64fdce5428031a054fbfdd58"
+    },
+    {
+      "exerciseId": "V24ROW-002214",
+      "nameKr": "EZ바 시티드 리버스 컬",
+      "nameEn": "EZ Bar 시티드 리버스 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "4ec3d51b99566a8d905f858bf85dcb4eb58171436aa5f006e22cf119bebb5ea5"
+    },
+    {
+      "exerciseId": "V24ROW-002215",
+      "nameKr": "EZ바 시티드 수피네이션 컬",
+      "nameEn": "EZ Bar 시티드 수피네이션 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "478d3fbca70fdec4554d720dbb2ccb94e0b18f0efc825d49c9bf882d457d53b8"
+    },
+    {
+      "exerciseId": "V24ROW-002216",
+      "nameKr": "EZ바 시티드 크로스바디 컬",
+      "nameEn": "EZ Bar 시티드 크로스바디 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "fd6a307226ac416a6924421cce2f8923e3667e9175296bbebe7b73aae5068ac0"
+    },
+    {
+      "exerciseId": "V24ROW-002217",
+      "nameKr": "EZ바 시티드 해머 컬",
+      "nameEn": "EZ Bar 시티드 해머 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "aed810c2a01e197cdb7c511bb8d40e3ddf927f6a0e64758950906f58474058a7"
+    },
+    {
+      "exerciseId": "V24ROW-002218",
+      "nameKr": "EZ바 인클라인 드래그 컬",
+      "nameEn": "EZ Bar 인클라인 드래그 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "26f93cbb4411dd669b38207cf4d4a1e730912ae65646e79d66cae414d11b2db4"
+    },
+    {
+      "exerciseId": "V24ROW-002219",
+      "nameKr": "EZ바 인클라인 리버스 컬",
+      "nameEn": "EZ Bar 인클라인 리버스 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "290356c76b1d5e2fb1138367fdd653344ed545b034e3ad11573d2485568a46e3"
+    },
+    {
+      "exerciseId": "V24ROW-002220",
+      "nameKr": "EZ바 인클라인 수피네이션 컬",
+      "nameEn": "EZ Bar 인클라인 수피네이션 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "caffffbd7d4d83daa287fe54749d362b6f899dacb957c91dc8bde0251df3ce34"
+    },
+    {
+      "exerciseId": "V24ROW-002221",
+      "nameKr": "EZ바 인클라인 크로스바디 컬",
+      "nameEn": "EZ Bar 인클라인 크로스바디 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "d5e83300c91346a3b960e1cc4e0224c7913b368884aa6d3ca9e498fb9df012e5"
+    },
+    {
+      "exerciseId": "V24ROW-002222",
+      "nameKr": "EZ바 인클라인 해머 컬",
+      "nameEn": "EZ Bar 인클라인 해머 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "b9b92158f9ff28f04fe20e5d0c5269365db4fb768b3469f61e329f764a713934"
+    },
+    {
+      "exerciseId": "V24ROW-002223",
+      "nameKr": "EZ바 프리처 드래그 컬",
+      "nameEn": "EZ Bar 프리처 드래그 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "44ad6735f898b3912cd3cfbf16dbb062657a398e44a3b6207120e0964db06d69"
+    },
+    {
+      "exerciseId": "V24ROW-002224",
+      "nameKr": "EZ바 프리처 리버스 컬",
+      "nameEn": "EZ Bar 프리처 리버스 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "7b0c79f712c3ac441bc3adaad413a9dd9facc792a823ea847448532d73db39a8"
+    },
+    {
+      "exerciseId": "V24ROW-002225",
+      "nameKr": "EZ바 프리처 수피네이션 컬",
+      "nameEn": "EZ Bar 프리처 수피네이션 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "97946b2ce3ea09488147057350e90a077becbd46bd40cab09e96caea125029f7"
+    },
+    {
+      "exerciseId": "V24ROW-002226",
+      "nameKr": "EZ바 프리처 크로스바디 컬",
+      "nameEn": "EZ Bar 프리처 크로스바디 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "5812189d343454b03f0a56e8449d1343b6ccd84c5fce0c53de7a3ee9ebfe11b4"
+    },
+    {
+      "exerciseId": "V24ROW-002227",
+      "nameKr": "EZ바 프리처 해머 컬",
+      "nameEn": "EZ Bar 프리처 해머 양측 Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "d7e8de254d4949a2c0cc29234384370b1c8da347dab6eba73ecd33fb41d7c6c7"
+    },
+    {
+      "exerciseId": "V24ROW-002626",
+      "nameKr": "EZ바 니링 양손 오버헤드 익스텐션",
+      "nameEn": "EZ Bar 니링 양손 오버헤드 익스텐션",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "5dfdae8a58db50a4d283e0fda41c0dd5954c0680be0eea95cf02a5b099fe7535"
+    },
+    {
+      "exerciseId": "V24ROW-002627",
+      "nameKr": "EZ바 니링 오버그립 오버헤드 익스텐션",
+      "nameEn": "EZ Bar 니링 오버그립 오버헤드 익스텐션",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "72fe49c749d65b01bea37c5205ee6d4053ab6fa2d64a68974518397933fdd96c"
+    },
+    {
+      "exerciseId": "V24ROW-002628",
+      "nameKr": "EZ바 라잉 양손 라잉 트라이셉스 익스텐션",
+      "nameEn": "EZ Bar 라잉 양손 라잉 트라이셉스 익스텐션",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "859a2fab3500c5dff11473cac425ef3cc67dd8a1cc738f25cdc171a91ea18ae7"
+    },
+    {
+      "exerciseId": "V24ROW-002629",
+      "nameKr": "EZ바 라잉 오버그립 라잉 트라이셉스 익스텐션",
+      "nameEn": "EZ Bar 라잉 오버그립 라잉 트라이셉스 익스텐션",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "fbb6b55ad3be55562877f1edef2b5de03ece55645c9c156774dcb09d51a2b70f"
+    },
+    {
+      "exerciseId": "V24ROW-002630",
+      "nameKr": "EZ바 스탠딩 양손 오버헤드 익스텐션",
+      "nameEn": "EZ Bar 스탠딩 양손 오버헤드 익스텐션",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "be31bb7cb3e09e6b940b4b4ceba8000d4ac22ffaec41f2fee6d7293b6e2d9a5a"
+    },
+    {
+      "exerciseId": "V24ROW-002631",
+      "nameKr": "EZ바 스탠딩 오버그립 오버헤드 익스텐션",
+      "nameEn": "EZ Bar 스탠딩 오버그립 오버헤드 익스텐션",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "32238195e3d7d0c7c26f7d2df4648360bd1081fe491452d8497ac3d3e0992a1b"
+    },
+    {
+      "exerciseId": "V24ROW-002632",
+      "nameKr": "EZ바 시티드 양손 오버헤드 익스텐션",
+      "nameEn": "EZ Bar 시티드 양손 오버헤드 익스텐션",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "8c02500d1f48317c3870a77faa420df3d75157cc6624eb21f8cb68f0f8f21f2c"
+    },
+    {
+      "exerciseId": "V24ROW-002633",
+      "nameKr": "EZ바 시티드 오버그립 오버헤드 익스텐션",
+      "nameEn": "EZ Bar 시티드 오버그립 오버헤드 익스텐션",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "d0dbfd20b42c8fa4759d9bca030fa09d6c548b2a1dcaffa9197581e542ac4be9"
+    },
+    {
+      "exerciseId": "V24ROW-002634",
+      "nameKr": "EZ바 인클라인 양손 오버헤드 익스텐션",
+      "nameEn": "EZ Bar 인클라인 양손 오버헤드 익스텐션",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "b5c5f0df554e72f1212cdba00dfc29d86839ca7101e23ba3d4bd43746c2c7a13"
+    },
+    {
+      "exerciseId": "V24ROW-002635",
+      "nameKr": "EZ바 인클라인 오버그립 오버헤드 익스텐션",
+      "nameEn": "EZ Bar 인클라인 오버그립 오버헤드 익스텐션",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "76d91811b2412a6aff982c9c84624a17d2a415835373479f2f1c6468d6af5bb0"
+    },
+    {
+      "exerciseId": "V24ROW-003510",
+      "nameKr": "짐볼 라잉 브릿지 레그 컬",
+      "nameEn": "Stability Ball 라잉 브릿지 양측 Leg Curl",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "417dd4ad0be53145ff342224e8402f97514de2e5f9333d56f36c73ed6b37da5b"
+    },
+    {
+      "exerciseId": "V24ROW-003511",
+      "nameKr": "짐볼 라잉 브릿지 싱글레그 레그 컬",
+      "nameEn": "Stability Ball 라잉 브릿지 싱글레그 Leg Curl",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "6aba82f494220dc77b7d0c835006acc658b204d32493e61c28fbea2007ee6fc1"
+    },
+    {
+      "exerciseId": "V24ROW-004027",
+      "nameKr": "짐볼 니링 상단 정지 크런치",
+      "nameEn": "Stability Ball 니링 상단 정지 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "ca98730f43e36690773ca7eff63e14be2302d407d749acb89fd0906e1ab9bd74"
+    },
+    {
+      "exerciseId": "V24ROW-004028",
+      "nameKr": "짐볼 니링 크런치",
+      "nameEn": "Stability Ball 니링 기본 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "0f29f66345a3b6a0c9279f73aa97738a33036d52dbcd6b5b9706240d972bb2af"
+    },
+    {
+      "exerciseId": "V24ROW-004029",
+      "nameKr": "짐볼 니링 회전 추가 크런치",
+      "nameEn": "Stability Ball 니링 회전 추가 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "809a4de8f35c66fb2bc101349b287a1ea40814d9f37106a4ad805b166a348506"
+    },
+    {
+      "exerciseId": "V24ROW-004030",
+      "nameKr": "짐볼 라잉 상단 정지 크런치",
+      "nameEn": "Stability Ball 라잉 상단 정지 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "6c7396c3e941e42956feadba517e34b4312027bf316d7cd6eea9675bb2cc8660"
+    },
+    {
+      "exerciseId": "V24ROW-004031",
+      "nameKr": "짐볼 라잉 크런치",
+      "nameEn": "Stability Ball 라잉 기본 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "11b78054acd2dfc702ba839c21dabcb7f6874ed2868c8bfadc83018301f40683"
+    },
+    {
+      "exerciseId": "V24ROW-004032",
+      "nameKr": "짐볼 라잉 회전 추가 크런치",
+      "nameEn": "Stability Ball 라잉 회전 추가 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "81b095126794c4486cd4673003f79ffb46aed96741a2a0283174443fb90838c5"
+    },
+    {
+      "exerciseId": "V24ROW-004033",
+      "nameKr": "짐볼 시티드 상단 정지 크런치",
+      "nameEn": "Stability Ball 시티드 상단 정지 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "8515253f3b0ec5f392172cbe53e608e220d7f9035e2cd0cad30c808c30581862"
+    },
+    {
+      "exerciseId": "V24ROW-004034",
+      "nameKr": "짐볼 시티드 크런치",
+      "nameEn": "Stability Ball 시티드 기본 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "ceddb4a7b5e7f2bf92394a1084c9a74f15e0e39faf9be9460e195a2c84807b31"
+    },
+    {
+      "exerciseId": "V24ROW-004035",
+      "nameKr": "짐볼 시티드 회전 추가 크런치",
+      "nameEn": "Stability Ball 시티드 회전 추가 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "a181b1b0a824fe5076b165d5f7df8aa4111b7a69f7ee30c788fc29b96b4d02f2"
+    },
+    {
+      "exerciseId": "V24ROW-004036",
+      "nameKr": "짐볼 인클라인 상단 정지 크런치",
+      "nameEn": "Stability Ball 인클라인 상단 정지 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "f808694ce70bce6c01e3b02f012544a5bcc237ad842d05a6604326b320c91ace"
+    },
+    {
+      "exerciseId": "V24ROW-004037",
+      "nameKr": "짐볼 인클라인 크런치",
+      "nameEn": "Stability Ball 인클라인 기본 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "badde0e50856ae207b6b0728f3b82ec75d778736d208d588ebd59abc41bab2f6"
+    },
+    {
+      "exerciseId": "V24ROW-004038",
+      "nameKr": "짐볼 인클라인 회전 추가 크런치",
+      "nameEn": "Stability Ball 인클라인 회전 추가 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "73526dd163ddd46e3967f26e7429e69ea4f9fd74952b35b8e90cc8504e382b03"
+    },
+    {
+      "exerciseId": "V24ROW-004039",
+      "nameKr": "짐볼 짐볼 상단 정지 크런치",
+      "nameEn": "Stability Ball 짐볼 상단 정지 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "6f4c72d8cab171fdd4584bfb2b0251339d4459f271a2e3b97083ca2c484f4e32"
+    },
+    {
+      "exerciseId": "V24ROW-004040",
+      "nameKr": "짐볼 짐볼 크런치",
+      "nameEn": "Stability Ball 짐볼 기본 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "65c57aa7fdac1a1faf394409755c912aa2b84805be393296db9f300e1834a729"
+    },
+    {
+      "exerciseId": "V24ROW-004041",
+      "nameKr": "짐볼 짐볼 회전 추가 크런치",
+      "nameEn": "Stability Ball 짐볼 회전 추가 크런치",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "444768cc442ab73975c72b58f65c969465135e9a2d76c7e589bb5ad6c55790cb"
+    },
+    {
+      "exerciseId": "V24ROW-004132",
+      "nameKr": "짐볼 롱레버 락킹 플랭크",
+      "nameEn": "Stability Ball 롱레버 락킹 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "cd9f57caf3accd5ff71eb03c4477fd73a7340e175bcf823f2b153044f1f8d83d"
+    },
+    {
+      "exerciseId": "V24ROW-004133",
+      "nameKr": "짐볼 롱레버 레그리프트 플랭크",
+      "nameEn": "Stability Ball 롱레버 레그리프트 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "f204ae025e48a029ac8dbab3d10ffb4026d7eca5dc068785fe875f16b3143b74"
+    },
+    {
+      "exerciseId": "V24ROW-004134",
+      "nameKr": "짐볼 롱레버 숄더탭 플랭크",
+      "nameEn": "Stability Ball 롱레버 숄더탭 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "7608642e86805d7763414372ecb49385e2109f12083abbfff357e2641e9bd815"
+    },
+    {
+      "exerciseId": "V24ROW-004135",
+      "nameKr": "짐볼 롱레버 플랭크",
+      "nameEn": "Stability Ball 롱레버 기본 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "f1727ed13640d246f1306a798085ec820557bce1ae9e0fb0a18d781d61aaf20f"
+    },
+    {
+      "exerciseId": "V24ROW-004136",
+      "nameKr": "짐볼 리버스 락킹 플랭크",
+      "nameEn": "Stability Ball 리버스 락킹 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "6f9558ece39d005f9e494188049fd0e18b1c4cf9efb51588c1a71d0cb2395743"
+    },
+    {
+      "exerciseId": "V24ROW-004137",
+      "nameKr": "짐볼 리버스 레그리프트 플랭크",
+      "nameEn": "Stability Ball 리버스 레그리프트 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "a0003ce381b426cde88355d19461f558a74d661f3f41b89345827f1421f12eb9"
+    },
+    {
+      "exerciseId": "V24ROW-004138",
+      "nameKr": "짐볼 리버스 숄더탭 플랭크",
+      "nameEn": "Stability Ball 리버스 숄더탭 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "d747ff95585ecdb8dc3a8274b66d867dce43ee11b2fd123c24c130a386e1859d"
+    },
+    {
+      "exerciseId": "V24ROW-004139",
+      "nameKr": "짐볼 리버스 플랭크",
+      "nameEn": "Stability Ball 리버스 기본 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "9707a5cf7c2fbc0367c2b6747fb6acd6c2ad506d9e72e36527e34676e05b94df"
+    },
+    {
+      "exerciseId": "V24ROW-004140",
+      "nameKr": "짐볼 사이드 락킹 플랭크",
+      "nameEn": "Stability Ball 사이드 락킹 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "846cd8b9722e99af7269b6fe7afc04c56c08cea244e79356b0ec81d7ed740f5b"
+    },
+    {
+      "exerciseId": "V24ROW-004141",
+      "nameKr": "짐볼 사이드 레그리프트 플랭크",
+      "nameEn": "Stability Ball 사이드 레그리프트 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "d191d222e514f7bcac52529d643af2785b1475a9c06c87e67adc383f431492fd"
+    },
+    {
+      "exerciseId": "V24ROW-004142",
+      "nameKr": "짐볼 사이드 숄더탭 플랭크",
+      "nameEn": "Stability Ball 사이드 숄더탭 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "51bdf724ffb2e97e3aff93b14223dd54ec9c33c7aa85dcb02185d25db35b3227"
+    },
+    {
+      "exerciseId": "V24ROW-004143",
+      "nameKr": "짐볼 사이드 플랭크",
+      "nameEn": "Stability Ball 사이드 기본 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "16999850238fcaf9c918872aa5a78658235cac89a5e59089fd2786fb29713420"
+    },
+    {
+      "exerciseId": "V24ROW-004144",
+      "nameKr": "짐볼 프론 락킹 플랭크",
+      "nameEn": "Stability Ball 프론 락킹 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "3dba508378bdd88daefde2b1776b1b54b85945202f400d3ed6f846ed88c323f5"
+    },
+    {
+      "exerciseId": "V24ROW-004145",
+      "nameKr": "짐볼 프론 레그리프트 플랭크",
+      "nameEn": "Stability Ball 프론 레그리프트 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "e0a1440f8d1b9dbb0b40c196ae9fb7275df2572fb52d8d5ee4f386029a0ad5e1"
+    },
+    {
+      "exerciseId": "V24ROW-004146",
+      "nameKr": "짐볼 프론 숄더탭 플랭크",
+      "nameEn": "Stability Ball 프론 숄더탭 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "9e69ac029bca15f9d8d2d0c2af4af3fdb97e7b558a373d60f836bfc5f1c7c49b"
+    },
+    {
+      "exerciseId": "V24ROW-004147",
+      "nameKr": "짐볼 프론 플랭크",
+      "nameEn": "Stability Ball 프론 기본 플랭크",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "516efcd33733946a29b087db86746a835a54507e3300208e6017735870206873"
+    },
+    {
+      "exerciseId": "V24ROW-004676",
+      "nameKr": "짐볼 롤아웃",
+      "nameEn": "Stability Ball Rollout",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "17f18c73df2ac2e0efd4771f237eea36f833435944d7acbc3729a0f30fde28ee"
+    },
+    {
+      "exerciseId": "V24ROW-004693",
+      "nameKr": "스티어 더 팟",
+      "nameEn": "Stir the Pot",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "07f772278e98650fdfcbbab59248a4275df0f4a5afceb0e6fc3130f4ba74bd60"
+    },
+    {
+      "exerciseId": "V24ROW-006012",
+      "nameKr": "EZ바 프리처 컬",
+      "nameEn": "Ez Bar Preacher Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "47714fe6fa676023573032a8a2d01ea3799764f7995a9f5a6c91b5b43bd5e313"
+    },
+    {
+      "exerciseId": "V24ROW-006013",
+      "nameKr": "EZ바 스파이더 컬",
+      "nameEn": "Ez Bar Spider Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "a32720c7f884d10ef0e989c7762293a74fd1fa8c7c85ebdaba66d47e5715a849"
+    },
+    {
+      "exerciseId": "V24ROW-006014",
+      "nameKr": "EZ바 인클라인 컬",
+      "nameEn": "Ez Bar Incline Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "1401a88d1559da6376521baab62f17efbb844c996a14af5b9d53928c0591efb5"
+    },
+    {
+      "exerciseId": "V24ROW-006015",
+      "nameKr": "EZ바 드래그 컬",
+      "nameEn": "Ez Bar Drag Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "7ede6ae6b0831e83ea03c7f894d3ee2c70d17edb6d4a13231e41dc2ef182f6e4"
+    },
+    {
+      "exerciseId": "V24ROW-006016",
+      "nameKr": "EZ바 베이지안 컬",
+      "nameEn": "Ez Bar Bayesian Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "06ba65b9bb1bb6a85068da65ceca0ad8fe3767829dc257968cfcc83e9e2a7c62"
+    },
+    {
+      "exerciseId": "V24ROW-006017",
+      "nameKr": "EZ바 컨센트레이션 컬",
+      "nameEn": "Ez Bar Concentration Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "12d92452e212067ce32a47ea457779b4753f90c59711a1f2a5a0d6f3825773b5"
+    },
+    {
+      "exerciseId": "V24ROW-006018",
+      "nameKr": "EZ바 해머 컬",
+      "nameEn": "Ez Bar Hammer Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "c68a0a6aa81fb5effe72c13809f6d7aef153f18412027ad7149dcf0259fbc9f3"
+    },
+    {
+      "exerciseId": "V24ROW-006019",
+      "nameKr": "EZ바 크로스바디 해머 컬",
+      "nameEn": "Ez Bar Cross Body Hammer Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "ed56bdcd4f1bbcde19d2465fff3eb5d2e1d4f964338d8ba2e587f7bd06736b82"
+    },
+    {
+      "exerciseId": "V24ROW-006020",
+      "nameKr": "EZ바 리버스 컬",
+      "nameEn": "Ez Bar Reverse Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "ee2c66a946dad0e29781e0422ea18090acca88978d1a6d32d9229eb0e0bc6a8b"
+    },
+    {
+      "exerciseId": "V24ROW-006021",
+      "nameKr": "EZ바 조트만 컬",
+      "nameEn": "Ez Bar Zottman Curl",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "508274cdd44e075988f67d1edfbe2d89f2fc9e6b3eabbbaab564725fb0d4299a"
+    },
+    {
+      "exerciseId": "V24ROW-006069",
+      "nameKr": "EZ바 오버헤드 익스텐션",
+      "nameEn": "Ez Bar Overhead Extension",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "c6d0996be5e4fbbbf183792af5e8fdf2d795135cdea9181bf40aef0e5e764642"
+    },
+    {
+      "exerciseId": "V24ROW-006070",
+      "nameKr": "EZ바 라잉 익스텐션",
+      "nameEn": "Ez Bar Lying Extension",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "a4712f4c2cbafeaf0ddc67f44de0cdd0af7a6d63deabf8ddacebc437811ff145"
+    },
+    {
+      "exerciseId": "V24ROW-006071",
+      "nameKr": "EZ바 스컬크러셔",
+      "nameEn": "Ez Bar Skull Crusher",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "7fe0acd68e1b87674b7a6acd52c6b13291987dc66d5f6943ebf245db979bfda7"
+    },
+    {
+      "exerciseId": "V24ROW-006072",
+      "nameKr": "EZ바 JM 프레스",
+      "nameEn": "Ez Bar JM Press",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "0dd708979411be6e343407040bdf64c412bec91afaa5ff38b8288d58211dc280"
+    },
+    {
+      "exerciseId": "V24ROW-006073",
+      "nameKr": "EZ바 테이트 프레스",
+      "nameEn": "Ez Bar Tate Press",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "da36aba29a9b332503ad2388fa7d90250e57ea6d41e0527dd4c56a29d9c20b6c"
+    },
+    {
+      "exerciseId": "V24ROW-006074",
+      "nameKr": "EZ바 PJR 풀오버 익스텐션",
+      "nameEn": "Ez Bar PJR Pullover Extension",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "b170a7651739ed42cc9478a76bac8d27f3ad7fdf167923cad2bbd14202552c6f"
+    },
+    {
+      "exerciseId": "V24ROW-006075",
+      "nameKr": "EZ바 클로즈그립 벤치프레스",
+      "nameEn": "Ez Bar Close Grip Bench Press",
+      "sourceEquipment": "EZ바",
+      "identitySha256": "e4e5b2b971e0c1697269cea728ce06475690ae95f7f9bf7aa4dd04eb8d37c9f4"
+    },
+    {
+      "exerciseId": "V24ROW-006811",
+      "nameKr": "swiss ball 라잉 레그컬",
+      "nameEn": "Swiss Ball Lying Leg Curl",
+      "sourceEquipment": "swiss ball",
+      "identitySha256": "40a9328d10a1399d4c7ec09a5818c342a03e52b417399b593f8d949c3be3508f"
+    },
+    {
+      "exerciseId": "V24ROW-006812",
+      "nameKr": "swiss ball 시티드 레그컬",
+      "nameEn": "Swiss Ball Seated Leg Curl",
+      "sourceEquipment": "swiss ball",
+      "identitySha256": "cda8b2729f511c6fd0a5e8041a21655be824c3e999ce9412bf580df027557f8f"
+    },
+    {
+      "exerciseId": "V24ROW-006813",
+      "nameKr": "swiss ball 스탠딩 레그컬",
+      "nameEn": "Swiss Ball Standing Leg Curl",
+      "sourceEquipment": "swiss ball",
+      "identitySha256": "58f79bc232ae235e1d88ced5407d1712896089c9ee245d79c0d63783e0018432"
+    },
+    {
+      "exerciseId": "V24ROW-006814",
+      "nameKr": "swiss ball 노르딕 햄스트링 컬",
+      "nameEn": "Swiss Ball Nordic Hamstring Curl",
+      "sourceEquipment": "swiss ball",
+      "identitySha256": "7eee452e534b2724cfb5387ca42ede3d1d577161af6f4f720bb8b7a24cdc8b4d"
+    },
+    {
+      "exerciseId": "V24ROW-006815",
+      "nameKr": "swiss ball 슬라이더 레그컬",
+      "nameEn": "Swiss Ball Slider Leg Curl",
+      "sourceEquipment": "swiss ball",
+      "identitySha256": "b93de6fa9950ac512a372fd438500ecd015c230558f944f5ade9b1d363839956"
+    },
+    {
+      "exerciseId": "V24ROW-006816",
+      "nameKr": "swiss ball 짐볼 레그컬",
+      "nameEn": "Swiss Ball Swiss Ball Leg Curl",
+      "sourceEquipment": "swiss ball",
+      "identitySha256": "c93661072b239a534663f73baacfce1474fa3405796da317a53ff90c3207b988"
+    },
+    {
+      "exerciseId": "V24ROW-007154",
+      "nameKr": "필라테스 헌드레드 (짐볼)",
+      "nameEn": "The Hundred",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "96106d26a4a7f0c29a2cf138d6f30a3245a09b792fb800a42650b2336f2f8cf2"
+    },
+    {
+      "exerciseId": "V24ROW-007158",
+      "nameKr": "필라테스 롤업 (짐볼)",
+      "nameEn": "Roll Up",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "4f89de6f769f2bb81f7c7c7876e782566a39e5e525368e3944c5cf0aba43c3a4"
+    },
+    {
+      "exerciseId": "V24ROW-007162",
+      "nameKr": "필라테스 롤오버 (짐볼)",
+      "nameEn": "Roll Over",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "c5fecba511ba50607a5aab6bdb2764b896f5a85fd41776740ca3a876a99e8452"
+    },
+    {
+      "exerciseId": "V24ROW-007166",
+      "nameKr": "필라테스 싱글 레그 서클 (짐볼)",
+      "nameEn": "Single Leg Circle",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "1b14b2df7663edbc26f0e2f7e92b1ca354a92697c2d245f8469c530fea2ab3cb"
+    },
+    {
+      "exerciseId": "V24ROW-007170",
+      "nameKr": "필라테스 롤링 라이크 어 볼 (짐볼)",
+      "nameEn": "Rolling Like a Ball",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "b823da7c3fe1fb8132a8c0ab1c6e003a69c4730023a8ac1af4a51cfcd98e7bab"
+    },
+    {
+      "exerciseId": "V24ROW-007174",
+      "nameKr": "필라테스 싱글 레그 스트레치 (짐볼)",
+      "nameEn": "Single Leg Stretch",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "d745883caf7f2a624cca07f1e0810d6849ae6c27e28b76a2e090d8bb8c05df63"
+    },
+    {
+      "exerciseId": "V24ROW-007178",
+      "nameKr": "필라테스 더블 레그 스트레치 (짐볼)",
+      "nameEn": "Double Leg Stretch",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "916ca5aa0a93c94030bdc5f59a9e07819f13f5eb11de98e8dfccd37d231ce51c"
+    },
+    {
+      "exerciseId": "V24ROW-007182",
+      "nameKr": "필라테스 싱글 스트레이트 레그 스트레치 (짐볼)",
+      "nameEn": "Single Straight Leg Stretch",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "e8a99635b85da80356b0db828e51df2903f5281fee05b24e54277ed36f8057d7"
+    },
+    {
+      "exerciseId": "V24ROW-007186",
+      "nameKr": "필라테스 크리스 크로스 (짐볼)",
+      "nameEn": "Criss Cross",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "57be3144c6d0382ccf4743d6d15fff33b054754a21d1a5154ff30cb9e33ba9be"
+    },
+    {
+      "exerciseId": "V24ROW-007190",
+      "nameKr": "필라테스 스파인 스트레치 포워드 (짐볼)",
+      "nameEn": "Spine Stretch Forward",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "999b1d0415c9bde8e70eb3a869f50eb91a8689769b19583330daa5ec0d3044f2"
+    },
+    {
+      "exerciseId": "V24ROW-007194",
+      "nameKr": "필라테스 오픈 레그 로커 (짐볼)",
+      "nameEn": "Open Leg Rocker",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "bbb600e98a23a3645bd3927e6481be135c67054d4910e9481b1b7edd4a8a340b"
+    },
+    {
+      "exerciseId": "V24ROW-007198",
+      "nameKr": "필라테스 코크스크류 (짐볼)",
+      "nameEn": "Corkscrew",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "1e4443b8bd20f7d707cc9683fbaa3a1625a519ccb80dfc152ab64ed60e5903c7"
+    },
+    {
+      "exerciseId": "V24ROW-007202",
+      "nameKr": "필라테스 쏘 (짐볼)",
+      "nameEn": "Saw",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "ffd41b2c126ff7855ebc52411f15d0cbf04a63ec4cce35f2e8448fb7da87ce1b"
+    },
+    {
+      "exerciseId": "V24ROW-007206",
+      "nameKr": "필라테스 스완 (짐볼)",
+      "nameEn": "Swan",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "24476468765c84d72e5396adea9e934ca05b090b92a654db8951ab141a95a7f5"
+    },
+    {
+      "exerciseId": "V24ROW-007210",
+      "nameKr": "필라테스 싱글 레그 킥 (짐볼)",
+      "nameEn": "Single Leg Kick",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "0381b6b106b4b3a4124497cb454ee23c4a927eb6fd3a4f2da1f3cae783faa849"
+    },
+    {
+      "exerciseId": "V24ROW-007214",
+      "nameKr": "필라테스 더블 레그 킥 (짐볼)",
+      "nameEn": "Double Leg Kick",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "04b2fc061548ea755aaa959f05f5c6d839354095fc759146e43c7cca17f25eac"
+    },
+    {
+      "exerciseId": "V24ROW-007218",
+      "nameKr": "필라테스 넥 풀 (짐볼)",
+      "nameEn": "Neck Pull",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "c99fed887c38f03149d66b64d752944b5aaf88af31d159a4a2cb17e5ebba8792"
+    },
+    {
+      "exerciseId": "V24ROW-007222",
+      "nameKr": "필라테스 시저스 (짐볼)",
+      "nameEn": "Scissors",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "06314be6ed9b7f9e0499b1f7fedf4b63ab1a65e0f6aa710f4bbc5ee6698a56f3"
+    },
+    {
+      "exerciseId": "V24ROW-007226",
+      "nameKr": "필라테스 바이시클 (짐볼)",
+      "nameEn": "Bicycle",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "955222d1f08b7ee8be61cc65c79bb05d7a48914c0122cc38045fb8866a1c78b1"
+    },
+    {
+      "exerciseId": "V24ROW-007230",
+      "nameKr": "필라테스 숄더 브릿지 (짐볼)",
+      "nameEn": "Shoulder Bridge",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "0cfcf0991d18ad2657d951f8ddc4d5c6c90fd80de54d65427dd936f824a82a39"
+    },
+    {
+      "exerciseId": "V24ROW-007234",
+      "nameKr": "필라테스 스파인 트위스트 (짐볼)",
+      "nameEn": "Spine Twist",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "a1f5692f64e7c8e3f766f7775225d86d446286212843264fc14634e82f8ef604"
+    },
+    {
+      "exerciseId": "V24ROW-007238",
+      "nameKr": "필라테스 잭나이프 (짐볼)",
+      "nameEn": "Jackknife",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "8cc16dcbc0c46f541558ce742b9cb44559ed5e3af2fc5a5b9beba293e52af9f1"
+    },
+    {
+      "exerciseId": "V24ROW-007242",
+      "nameKr": "필라테스 사이드 킥 (짐볼)",
+      "nameEn": "Side Kick",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "73b33ad9a05eb1b03f2d685d2ab13b94ce3cfdebba7834f7988952b11e658de9"
+    },
+    {
+      "exerciseId": "V24ROW-007246",
+      "nameKr": "필라테스 티저 (짐볼)",
+      "nameEn": "Teaser",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "05dceba2a11e92113612dc6850b446a874611cb7521b989bdd85fe03e330a11b"
+    },
+    {
+      "exerciseId": "V24ROW-007250",
+      "nameKr": "필라테스 스위밍 (짐볼)",
+      "nameEn": "Swimming",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "6eb7efcb4647e0032b8b15a63f2813ec5244dc0ddabdd8739855bd78aa6722fe"
+    },
+    {
+      "exerciseId": "V24ROW-007254",
+      "nameKr": "필라테스 레그 풀 프론트 (짐볼)",
+      "nameEn": "Leg Pull Front",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "60fda45e5c09117a576f9221806c9adbb65accf8825906205d52d20f17a9dd4d"
+    },
+    {
+      "exerciseId": "V24ROW-007258",
+      "nameKr": "필라테스 레그 풀 백 (짐볼)",
+      "nameEn": "Leg Pull Back",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "3c226e24192a226718ea390bfed508c355c68454b3cf5ef79f64b8dc109b328e"
+    },
+    {
+      "exerciseId": "V24ROW-007262",
+      "nameKr": "필라테스 사이드 벤드 (짐볼)",
+      "nameEn": "Side Bend",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "9772de91cef59508294d6bd6adc701537235bf8dc51c6f70cb13c2c8bef1d778"
+    },
+    {
+      "exerciseId": "V24ROW-007266",
+      "nameKr": "필라테스 씰 (짐볼)",
+      "nameEn": "Seal",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "10d8d82077e172287df16d3fdedb8dc3d6fc91ad12175cfe25f20348ea7cd2be"
+    },
+    {
+      "exerciseId": "V24ROW-007270",
+      "nameKr": "필라테스 필라테스 푸쉬업 (짐볼)",
+      "nameEn": "Push Up",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "c03b2600d123fc2c7de44d1c3756ed62cd4edf9d298b67e4b5882645c311e6b8"
+    },
+    {
+      "exerciseId": "V24ROW-007274",
+      "nameKr": "필라테스 머메이드 (짐볼)",
+      "nameEn": "Mermaid",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "294f6b4b562b3af720d4b10e69974cdd9f7c85773464e16a09bf57f68a1fc6a6"
+    },
+    {
+      "exerciseId": "V24ROW-007278",
+      "nameKr": "필라테스 클램쉘 (짐볼)",
+      "nameEn": "Clamshell",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "e0c883637b5989734536b18479b421fe37add99bb8bb9ea6c625dd070872ffde"
+    },
+    {
+      "exerciseId": "V24ROW-007282",
+      "nameKr": "필라테스 브릿지 (짐볼)",
+      "nameEn": "Bridge",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "40093c279e298780cf2e58e2378eb92b4bc178bfdeaa58e0e813ac65ca3409cc"
+    },
+    {
+      "exerciseId": "V24ROW-007286",
+      "nameKr": "필라테스 데드버그 (짐볼)",
+      "nameEn": "Dead Bug",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "35e4b5c69a35bf122ded9f717fa9fbe991b8af5916645b9f0f4b232b14045901"
+    },
+    {
+      "exerciseId": "V24ROW-007290",
+      "nameKr": "필라테스 사이드 플랭크 (짐볼)",
+      "nameEn": "Side Plank",
+      "sourceEquipment": "짐볼",
+      "identitySha256": "3f337bc5e4c6b2f564349b809fd1f27f8b353dff234d18bb34ed30d32d0457d8"
+    }
+  ]
+}

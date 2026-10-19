@@ -1,0 +1,50 @@
+{
+  "catalogVersion": "routine-adjunct-catalog-v1",
+  "reviewStatus": "core-reviewed",
+  "scope": "gym-routine-adjunct-only",
+  "options": {
+    "mobility_warmup": [
+      {"exerciseId": "V24ROW-023052", "displayNameKo": "월드 그레이티스트 스트레치", "purposeKo": "전신 동적 준비"},
+      {"exerciseId": "V24ROW-023004", "displayNameKo": "오픈북 스트레치", "purposeKo": "흉추 회전 준비"},
+      {"exerciseId": "V24ROW-022960", "displayNameKo": "문틀 흉근 동적 스트레치", "purposeKo": "가슴 동적 가동성 준비"},
+      {"exerciseId": "V24ROW-022968", "displayNameKo": "광배 벤치 동적 스트레치", "purposeKo": "광배 동적 가동성 준비"},
+      {"exerciseId": "V24ROW-022976", "displayNameKo": "종아리 벽 동적 스트레치", "purposeKo": "발목과 종아리 동적 준비"},
+      {"exerciseId": "V24ROW-022984", "displayNameKo": "90/90 힙 동적 스트레치", "purposeKo": "고관절 동적 준비"},
+      {"exerciseId": "V24ROW-023032", "displayNameKo": "네발기기 흉추 회전 스트레칭", "purposeKo": "흉추와 어깨 동적 준비"},
+      {"exerciseId": "V24ROW-023048", "displayNameKo": "로커 내전근 동적 스트레치", "purposeKo": "내전근과 고관절 동적 준비"}
+    ],
+    "cooldown_stretch": [
+      {"exerciseId": "V24ROW-022956", "displayNameKo": "문틀 흉근 스트레치", "purposeKo": "가슴 정적 마무리"},
+      {"exerciseId": "V24ROW-022964", "displayNameKo": "광배 벤치 스트레치", "purposeKo": "광배 정적 마무리"},
+      {"exerciseId": "V24ROW-022972", "displayNameKo": "종아리 벽 스트레치", "purposeKo": "종아리 정적 마무리"},
+      {"exerciseId": "V24ROW-022980", "displayNameKo": "90/90 힙 스트레치", "purposeKo": "고관절 정적 마무리"},
+      {"exerciseId": "V24ROW-022988", "displayNameKo": "밴드 햄스트링 스트레치", "purposeKo": "햄스트링 정적 마무리"},
+      {"exerciseId": "V24ROW-023028", "displayNameKo": "네발기기 흉추 회전 유지 스트레칭", "purposeKo": "흉추와 어깨 정적 마무리"},
+      {"exerciseId": "V24ROW-023044", "displayNameKo": "로커 내전근 스트레치", "purposeKo": "내전근 정적 마무리"}
+    ],
+    "conditioning_finisher": [
+      {"exerciseId": "V24ROW-004648", "displayNameKo": "러닝머신 스프린트 인터벌", "purposeKo": "고강도 러닝 인터벌 피니셔"},
+      {"exerciseId": "V24ROW-004659", "displayNameKo": "로잉머신 파워 인터벌", "purposeKo": "고강도 로잉 인터벌 피니셔"},
+      {"exerciseId": "V24ROW-004502", "displayNameKo": "고강도 마운틴 클라이머", "purposeKo": "고강도 맨몸 컨디셔닝 피니셔"},
+      {"exerciseId": "V24ROW-004506", "displayNameKo": "마운틴 클라이머", "purposeKo": "표준 맨몸 컨디셔닝 피니셔"}
+    ],
+    "endurance_support": [
+      {"exerciseId": "V24ROW-004645", "displayNameKo": "러닝머신 평지 걷기", "purposeKo": "저강도 평지 걷기"},
+      {"exerciseId": "V24ROW-004646", "displayNameKo": "러닝머신 경사 걷기", "purposeKo": "중저강도 경사 걷기"},
+      {"exerciseId": "V24ROW-004647", "displayNameKo": "러닝머신 조깅", "purposeKo": "지속성 조깅"},
+      {"exerciseId": "V24ROW-004658", "displayNameKo": "로잉머신 지속성 로우", "purposeKo": "지속성 로잉"},
+      {"exerciseId": "V24ROW-004508", "displayNameKo": "저강도 마운틴 클라이머", "purposeKo": "저강도 맨몸 지구력 보강"},
+      {"exerciseId": "V24ROW-024702", "displayNameKo": "저충격 마운틴 클라이머", "purposeKo": "저충격 맨몸 지구력 보강"}
+    ],
+    "prehab_accessory": [
+      {"exerciseId": "V24ROW-005031", "displayNameKo": "케이블 페이스풀 외회전", "purposeKo": "케이블 어깨 외회전 보조"},
+      {"exerciseId": "V24ROW-005037", "displayNameKo": "밴드 페이스풀 외회전", "purposeKo": "밴드 어깨 외회전 보조"},
+      {"exerciseId": "V24ROW-000853", "displayNameKo": "밴드 스탠딩 외회전", "purposeKo": "밴드 회전근개 보조"},
+      {"exerciseId": "V24ROW-000857", "displayNameKo": "케이블 스탠딩 외회전", "purposeKo": "케이블 회전근개 보조"},
+      {"exerciseId": "V24ROW-006898", "displayNameKo": "맨몸 데드버그", "purposeKo": "몸통 안정화 보조"},
+      {"exerciseId": "V24ROW-006899", "displayNameKo": "맨몸 버드독", "purposeKo": "몸통 안정화 보조"},
+      {"exerciseId": "V24ROW-006912", "displayNameKo": "케이블 데드버그", "purposeKo": "케이블 몸통 안정화 보조"},
+      {"exerciseId": "V24ROW-006913", "displayNameKo": "케이블 버드독", "purposeKo": "케이블 몸통 안정화 보조"}
+    ]
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "routine-forearm-pattern-admission-v1",
+  "decisionVersion": "forearm-pattern-admission-v1-2026-09-17",
+  "sourceCatalogSha256": "22e7b98199b3ee8b1d4e880e88fe76a5ad7a8dc14430c7f94ed0143f4f234ff2",
+  "accessedAt": "2026-09-17",
+  "evidenceScope": "anatomical movement identity and bounded product admission only; not injury safety approval, hypertrophy superiority, or clinical guidance",
+  "anatomyEvidence": [
+    {
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK545260/",
+      "publisher": "StatPearls Publishing; hosted by NCBI Bookshelf",
+      "sourceType": "anatomical reference chapter, not a primary clinical training trial or safety validation",
+      "supportedFact": "Pronator teres and pronator quadratus act in forearm pronation, while supinator acts in forearm supination."
+    },
+    {
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK551614/",
+      "publisher": "StatPearls Publishing; hosted by NCBI Bookshelf",
+      "sourceType": "anatomical reference chapter, not a primary clinical training trial or safety validation",
+      "supportedFact": "Pronation and supination are distinct proximal and distal radioulnar-joint movements with named pronator and supinator muscles."
+    }
+  ],
+  "reviews": [
+    {
+      "catalogExerciseId": "V24ROW-004724",
+      "sourceIdentity": {
+        "v24_row_uid": "V24ROW-004724",
+        "v23_row_uid": "V21ROW-004724",
+        "id": "EX04724",
+        "name": "덤벨 전완 회내/회외",
+        "english": "Dumbbell Pronation Supination",
+        "category": "이두/전완",
+        "subpart": "전완/악력",
+        "pattern": "전완/목/액세서리",
+        "equipment": "덤벨",
+        "primary_muscle": "회내근, 회외근, 전완 안정근",
+        "difficulty": "초급",
+        "v24_validation_grade_norm": "B",
+        "v24_pain_risk_norm": "low",
+        "v24_release_tier_norm": "silver",
+        "v24_license_gate_norm": "link_metadata_only_no_text_image_video_copy_terms_review_required",
+        "v24_quality_gate": "silver_release_candidate",
+        "v24_preprocess_quality_score": "70",
+        "v24_next_action": "ready_for_limited_release"
+      },
+      "catalogIdentity": {
+        "name_kr": "덤벨 전완 회내/회외",
+        "name_en": "Dumbbell Pronation Supination",
+        "primary_muscle": "upper-back",
+        "secondary_muscle": "forearm",
+        "equipment_req": "DUMBBELL",
+        "movement_type": "ISOLATION",
+        "prescription_mode": "reps"
+      },
+      "effectiveIdentityBeforeReview": {
+        "primary_muscle": "upper-back",
+        "secondary_muscle": "forearm",
+        "equipment_req": "DUMBBELL",
+        "movement_type": "ISOLATION",
+        "prescription_mode": "reps",
+        "mainstream_gym_score": 57,
+        "exercise_familiarity_tier": "specialized",
+        "commonness_level": "specialized",
+        "novelty_level": "medium",
+        "beginner_default_allowed": 0,
+        "main_routine_default_allowed": 0
+      },
+      "decision": {
+        "effectivePrimaryMuscle": "forearm",
+        "mainRoutineDefaultAllowed": true,
+        "beginnerDefaultAllowed": false,
+        "specializationFocusOnly": "forearmEmphasis"
+      },
+      "scope": "non_beginner_explicit_forearm_focus_existing_health_and_equipment_filters",
+      "reviewKind": "engineering_product_admission_and_anatomical_identity_not_clinical_clearance",
+      "preservedLimitations": {
+        "exerciseFamiliarityTier": "specialized",
+        "commonnessLevel": "specialized",
+        "noveltyLevel": "medium",
+        "injuryMovementProfileReviewRequired": 1,
+        "noNewSafetyAttributes": true
+      }
+    }
+  ]
+}

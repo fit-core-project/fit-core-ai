@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "date": "2026-10-19",
+  "suites": {
+    "core": {
+      "count": 4128,
+      "passed": 4128,
+      "exitCode": 0,
+      "failed": [],
+      "skipped": [],
+      "junitSha256": "1318c91f8bc2be9ae283ffa673231225218152e82421cd8b430ee844d787580c"
+    },
+    "collaboration": {
+      "count": 854,
+      "passed": 834,
+      "exitCode": 1,
+      "failed": [
+        {
+          "classname": "tests.test_golden_baseline",
+          "name": "test_main_path_with_deterministic_matches_pre_refactor_baseline"
+        }
+      ],
+      "skipped": [
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_rank_smoke_opt_in[\\uacc4\\ub780-\\ub2ec\\uac40-\\ub2ec\\uac40 \\uc0dd\\uac83]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_rank_smoke_opt_in[\\uc0b6\\uc740 \\uacc4\\ub780-\\ub2ec\\uac40 \\uc0b6\\uc740\\uac83-\\ub2ec\\uac40 \\uc0b6\\uc740\\uac83]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_rank_smoke_opt_in[\\uacc4\\ub780\\ud6c4\\ub77c\\uc774-\\ub2ec\\uac40\\ud6c4\\ub77c\\uc774-\\ub2ec\\uac40\\ud6c4\\ub77c\\uc774]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_rank_smoke_opt_in[\\uacc4\\ub780\\ube75-\\uacc4\\ub780\\ube75-\\uacc4\\ub780\\ube75]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_rank_smoke_opt_in[\\ub2ed\\uac00\\uc2b4\\uc0b4 \\uc0dd\\uac83-\\ub2ed\\uace0\\uae30 \\uac00\\uc2b4(\\uaecd\\uc9c8 \\uc81c\\uac70) \\uc0dd\\uac83-\\ub2ed\\uace0\\uae30 \\uac00\\uc2b4(\\uaecd\\uc9c8 \\uc81c\\uac70) \\uc0dd\\uac83]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_rank_smoke_opt_in[\\uc0b6\\uc740 \\ub2ed\\uac00\\uc2b4\\uc0b4-\\ub2ed\\uace0\\uae30 \\uac00\\uc2b4(\\uaecd\\uc9c8 \\uc81c\\uac70) \\uc0b6\\uc740\\uac83-\\ub2ed\\uace0\\uae30 \\uac00\\uc2b4(\\uaecd\\uc9c8 \\uc81c\\uac70) \\uc0b6\\uc740\\uac83]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_rank_smoke_opt_in[\\uad6c\\uc6b4 \\ub2ed\\uac00\\uc2b4\\uc0b4-\\ub2ed\\uace0\\uae30 \\uac00\\uc2b4(\\uaecd\\uc9c8 \\uc81c\\uac70) \\uad6c\\uc6b4\\uac83(\\ud32c)-\\ub2ed\\uace0\\uae30 \\uac00\\uc2b4(\\uaecd\\uc9c8 \\uc81c\\uac70) \\uad6c\\uc6b4\\uac83(\\ud32c)]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_rank_smoke_opt_in[\\uc0d0\\ub7ec\\ub4dc \\ub2ed\\uac00\\uc2b4\\uc0b4-\\uc0d0\\ub7ec\\ub4dc \\ub2ed\\uac00\\uc2b4\\uc0b4-\\uc0d0\\ub7ec\\ub4dc \\ub2ed\\uac00\\uc2b4\\uc0b4]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_full_pipeline_regression[\\ub2ed\\uac00\\uc2b4\\uc0b4-ambiguous-preserved]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_full_pipeline_regression[\\ud770\\uc300\\ubc25-canonical-equivalent]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_full_pipeline_regression[\\uacc4\\ub7802\\uac1c-quantity-strip-promoted]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_full_pipeline_regression[\\ubc14\\ub098\\ub0981\\uac1c-quantity-strip-promoted]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_full_pipeline_regression[\\ub2ed\\uac00\\uc2b4\\uc0b4100g-ambiguous-same-as-bare]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_full_pipeline_regression[\\ub450\\ubd80-raw-ingredient-added]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_full_pipeline_regression[\\uc624\\ud2b8\\ubc00-raw-ingredient-added]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_full_pipeline_regression[\\uace0\\uad6c\\ub9c8\\uc870\\ub9bc-reranker-fixed]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_full_pipeline_improvement_targets[\\uc0b6\\uc740\\ub450\\ubd80-db-gap]"
+        },
+        {
+          "classname": "tests.test_food_search_golden_queries",
+          "name": "test_food_search_full_pipeline_improvement_targets[\\ubcf6\\uc740\\ub450\\ubd80-db-gap]"
+        },
+        {
+          "classname": "tests.test_supplement_api_smoke",
+          "name": "test_live_supplement_chat_smoke_contract"
+        }
+      ],
+      "junitSha256": "71ad87d636c2f154a81815c46f5995ff31ea64a6273a3ad6327da513bf27cfc3"
+    },
+    "numeric": {
+      "count": 21,
+      "passed": 17,
+      "exitCode": 1,
+      "failed": [
+        {
+          "classname": "tests.test_numeric_id_boundary_v1",
+          "name": "test_extended_prescription_survives_declared_be_dto[timed]"
+        },
+        {
+          "classname": "tests.test_numeric_id_boundary_v1",
+          "name": "test_extended_prescription_survives_declared_be_dto[distance]"
+        },
+        {
+          "classname": "tests.test_numeric_id_boundary_v1",
+          "name": "test_extended_prescription_survives_declared_be_dto[interval]"
+        },
+        {
+          "classname": "tests.test_numeric_id_boundary_v1",
+          "name": "test_execution_group_and_method_survive_declared_be_dto"
+        }
+      ],
+      "skipped": [],
+      "junitSha256": "74e1223f5b6ff580ed67d667a57a68f1c9c3a6e201ff377bb16adb50e594b778"
+    },
+    "oracle": {
+      "count": 4,
+      "passed": 4,
+      "exitCode": 0,
+      "failed": [],
+      "skipped": [],
+      "junitSha256": "4580da228cb1380f21ba0bff7198d8a41b3118ad075a91d50a8e127b37b980ec"
+    }
+  },
+  "controls": {
+    "replay": {
+      "exitCode": 0,
+      "count": 81,
+      "changed": [],
+      "statusCounts": {
+        "success": 79,
+        "failed": 2
+      },
+      "hardViolations": {},
+      "inputsUnchanged": true,
+      "destinationResponsesSha256": "6b067be091fdc1ed829c0042397d76f5fbadbf361952af962400700e5d172c85",
+      "sourceResponsesSha256": "2eb367202aa4e3ca665e2fb1577a7f70998e1214613d24596bf4f5c19aada764",
+      "comparison": "Full JSON equality per scenario, excluding routineDraftId only"
+    },
+    "fallback": {
+      "exitCode": 0,
+      "count": 81,
+      "changed": [],
+      "statusCounts": {
+        "fallback": 79,
+        "failed": 2
+      },
+      "hardViolations": {},
+      "inputsUnchanged": true,
+      "destinationResponsesSha256": "55220f7f04d1f8a54e475cf3c24316d428576270e8ea75da5b3a9c7600ade39c",
+      "sourceResponsesSha256": "d6c6618af8b75dd7882398bcd1f03e12c01ec9642802041a13654fdb847158f7",
+      "comparison": "Full JSON equality per scenario, excluding routineDraftId only"
+    }
+  },
+  "wholeSuiteGreen": false,
+  "liveModelTested": false,
+  "beFeIntegrationTested": false,
+  "freshDependencyInstallTested": false,
+  "goldenBaselineBothSourceAndDestination": {
+    "passedEach": 12,
+    "failedEach": 1,
+    "expectedMinutes": 20,
+    "actualMinutes": 26,
+    "goldenRewritten": false
+  }
+}

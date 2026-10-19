@@ -1,0 +1,52 @@
+{
+  "coreCommit": "e0d04e7952cb8e63c36e727f51abe29d17d400f7",
+  "generatedBy": "docs/handoff/developer-handoff-v1-2026-10-16/build_assets.py (original model assets)",
+  "scope": "schemas and synthetic boundary goldens; no live generation",
+  "sourceHashes": {
+    "engines/schemas.py": "6e91c01988a815dda761d4c99b4f4626dc06925b84b99f99a80197d9fa73a69d",
+    "engines/public_contract.py": "5de81a5c7c36315dc6df8dab9663c9ccf0f53ba1cb4fd65b6cd0830d28f2b3cf",
+    "engines/routine_response_v4.py": "2a3b5cab66aac50a4f225190481a3f53d29e845a9462f02180965a529599dc99",
+    "engines/routine_connection_boundary.py": "05854550511cb79bcb32f3c67ecac7512fe5f7389cf3a8372402ab226706c944"
+  },
+  "copiedSources": [
+    {
+      "source": "tests/fixtures/stage2_fallback_oracle_v1.json",
+      "target": "fixtures/bf01-20-oracle.json",
+      "sha256": "453580601f8ba2568ecb2a33e1845ca8acf97f167c1e33acdccf514e82fd8f2f"
+    },
+    {
+      "source": "tests/fixtures/stage2_numeric_seed_v1.json",
+      "target": "fixtures/numeric-seed.json",
+      "sha256": "b9397213563d43bd0ad38823b675b30923c136ad3267f3b8b64b40ee3885abce"
+    },
+    {
+      "source": "engines/data/catalog_identity_bridge_v1.json",
+      "target": "fixtures/catalog-identity-bridge.json",
+      "sha256": "73469a16d4b23f9959d10634ef3a52ff02b6cc9e0cbc25200284c78d1dc3bab5"
+    }
+  ],
+  "upstreamDocuments": [
+    {
+      "source": "docs/contracts/routine-core-response-v4-draft-v1-2026-10-06.md",
+      "sha256": "1a22577b6523907543f2828c898f2e6936e975ede7a32c5c5c32f9dbee6b1ad7"
+    },
+    {
+      "source": "docs/contracts/routine-core-response-v4-draft-v2-2026-10-10.md",
+      "sha256": "b447fbbac018e6206684d48b0d0db95f54f279b8c3e748dc6f2acd501b23dbe8"
+    },
+    {
+      "source": "docs/contracts/routine-core-response-v4-draft-v3-2026-10-10.md",
+      "sha256": "868deff9358079e75042264570f3ab8889d7f316a119a5b03d87944cead7777e"
+    },
+    {
+      "source": "docs/contracts/routine-core-response-v4-draft-v4-2026-10-15.md",
+      "sha256": "e1d5e2cdce6ff5edb4855297ae1ef16ba87127581ab026b9d3213a68b3a19cc5"
+    }
+  ],
+  "revision": {
+    "packageVersion": "developer-handoff-v1.1-2026-10-16",
+    "decisionDate": "2026-10-16",
+    "runtimeChanged": false,
+    "externalErrorSchema": "approved implementation target, not deployed"
+  }
+}

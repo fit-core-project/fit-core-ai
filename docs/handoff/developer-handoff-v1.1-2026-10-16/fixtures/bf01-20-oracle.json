@@ -1,0 +1,192 @@
+{
+  "version": "stage2-fallback-oracle-v1",
+  "contractVersion": "routine-core-v4-draft-v3",
+  "baselineCommit": "a1e77a7",
+  "scope": "Compositional core regression oracle, not a claim of BE fallback implementation. Synthetic numeric timeout IDs do not confer catalog admission.",
+  "groups": [
+    {
+      "id": "BF01",
+      "expectation": "Numeric transport survives injected network error/timeout; approved identity/history checked separately",
+      "selectors": [
+        "tests/test_stage2_fallback_oracle_v1.py",
+        "tests/test_stage2_numeric_boundary_v1.py::test_approved11_request_enrichment_v4_substitution_json_history"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF02",
+      "expectation": "Unapproved and duplicate identity must not be silently enriched",
+      "selectors": [
+        "tests/test_stage2_numeric_boundary_v1.py::test_candidate_status_and_revoked_enrichment_fail_closed",
+        "tests/test_stage2_numeric_boundary_v1.py::test_competing_one_to_many_approvals_require_selector"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF03",
+      "expectation": "Stale source or target identity cannot enrich",
+      "selectors": [
+        "tests/test_stage2_numeric_boundary_v1.py::test_stale_identity_cannot_enrich"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF04",
+      "expectation": "Only usable equipment; MACHINE does not authorize SMITH_MACHINE",
+      "selectors": [
+        "tests/test_fallback_equipment_parity.py"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF05",
+      "expectation": "Fallback equipment alternatives cannot override injury; joint-load overlap detected",
+      "selectors": [
+        "tests/test_fallback_equipment_parity.py::test_fallback_equipment_alternative_does_not_override_injury",
+        "tests/test_rule_critic.py::test_joint_load_injury_overlap_is_detected_without_trigger_text"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF06",
+      "expectation": "Managed shoulder restriction preserves selective filtering",
+      "selectors": [
+        "tests/test_managed_shoulder_recommendation.py"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF07",
+      "expectation": "DOMS role capacity, recovery dose ordering, and public 20-area validation",
+      "selectors": [
+        "tests/test_fallback.py::TestFallbackDomsLogic",
+        "tests/test_feedback_recovery_completion.py",
+        "tests/test_stage2_input_boundary_v1.py"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF08",
+      "expectation": "Chest DOMS cannot imply a normal chest-led push; explicit shoulder/triceps target remains distinct",
+      "selectors": [
+        "tests/test_routine_blueprint.py::test_explicit_shoulder_and_triceps_targets_are_not_blocked_by_chest_doms",
+        "tests/test_pipeline.py::TestHappyPath::test_accessory_only_fallback_is_failed_instead_of_exposed_as_routine"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF09",
+      "expectation": "Mobility demand warnings are condition-specific and are not injury diagnoses",
+      "selectors": [
+        "tests/test_pipeline.py::test_selected_high_mobility_demand_adds_non_injury_guard_warning",
+        "tests/test_pipeline.py::test_selected_low_mobility_demand_does_not_add_guard_warning"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF10",
+      "expectation": "Readiness changes effort conservatively without restoring recovery volume",
+      "selectors": [
+        "tests/test_fallback.py::TestFallbackReadiness",
+        "tests/test_experience_policy.py::test_low_readiness_overrides_advanced_normal_effort",
+        "tests/test_experience_policy.py::test_high_readiness_never_turns_advanced_work_into_failure_training"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF11",
+      "expectation": "Experience changes prescription without shortening main rest",
+      "selectors": [
+        "tests/test_experience_policy.py::test_strength_prescription_triplet_changes_reps_sets_and_rir_without_shortening_rest"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF12",
+      "expectation": "Execution groups require feasible equipment occupancy and round counts",
+      "selectors": [
+        "tests/test_execution_group_feasibility.py"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF13",
+      "expectation": "Requested adjunct identity and timed/interval purposes remain distinct",
+      "selectors": [
+        "tests/test_adjunct_prescription.py",
+        "tests/test_rule_critic.py::test_requested_adjunct_requires_candidate_identity_and_exact_modality_profile"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF14",
+      "expectation": "Timed/distance/interval units survive v4 and are rejected by legacy capability check",
+      "selectors": [
+        "tests/test_stage2_connection_boundary_v1.py::test_prescription_units_round_trip_v4_but_reject_legacy"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF15",
+      "expectation": "Method modes cannot override readiness, DOMS, or managed restrictions",
+      "selectors": [
+        "tests/test_specialization_policy_v1.py::test_method_mode_off_and_manual_override_are_distinct",
+        "tests/test_specialization_policy_v1.py::test_manual_method_cannot_bypass_target_doms_or_managed_injury",
+        "tests/test_specialization_policy_v1.py::test_auto_method_is_suppressed_for_non_advanced_low_readiness_and_target_doms"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF16",
+      "expectation": "Empty/failed plans stay zero and are not a short successful plan",
+      "selectors": [
+        "tests/test_empty_candidate_preinvoke_guard.py",
+        "tests/test_short_routine_notice_v4.py"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF17",
+      "expectation": "N:1 catalog mapping never merges numeric history IDs",
+      "selectors": [
+        "tests/test_stage2_numeric_boundary_v1.py::test_duplicate_names_and_n_to_one_never_merge_numeric_history"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF18",
+      "expectation": "Public/detail values and grouped metadata cannot be silently lost",
+      "selectors": [
+        "tests/test_stage2_connection_boundary_v1.py::test_detail_and_group_meaning_cannot_be_silently_lost",
+        "tests/test_stage2_numeric_boundary_v1.py::test_approved11_request_enrichment_v4_substitution_json_history"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF19",
+      "expectation": "Tampered admission evidence and unavailable constraint lookup fail closed in checked v4",
+      "selectors": [
+        "tests/test_feedback_adversarial_completion.py::test_admission_fails_closed_when_immutable_admission_inputs_are_tampered",
+        "tests/test_feedback_adversarial_completion.py::test_admission_rejects_catalog_or_effective_identity_substitution",
+        "tests/test_stage2_connection_boundary_v1.py"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    },
+    {
+      "id": "BF20",
+      "expectation": "Model timeout or invalid schema triggers core fallback; invalid main coverage stays failed",
+      "selectors": [
+        "tests/test_stage2_fallback_oracle_v1.py::test_invalid_fallback_after_model_failure_stays_failed",
+        "tests/test_pipeline.py::TestTimeoutFallback",
+        "tests/test_pipeline.py::TestSchemaErrorRecovery::test_schema_error_unrecoverable_falls_back",
+        "tests/test_pipeline.py::TestHappyPath::test_accessory_only_fallback_is_failed_instead_of_exposed_as_routine"
+      ],
+      "scope": "core executable oracle; not Java/HTTP or persistence integration"
+    }
+  ],
+  "supplemental": [
+    "tests/test_stage2_numeric_boundary_v1.py",
+    "tests/test_stage2_connection_boundary_v1.py",
+    "tests/test_stage2_input_boundary_v1.py"
+  ]
+}

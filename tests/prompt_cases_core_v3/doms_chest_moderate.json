@@ -1,0 +1,8 @@
+{
+  "name": "doms chest moderate",
+  "request": {"target_split_label": "push", "time_available_min": 60, "doms_data": {"chest": 2}, "equipment": []},
+  "candidates": ["barbell_bench_press", "pushup"],
+  "llm": {"exercise_id": "barbell_bench_press", "sets": 4, "rest_time_sec": 120},
+  "policyVersion": "routine-recovery-dose-v2-2026-09-17",
+  "expected": {"status": "success", "max_sets": 3, "rest_sec": 120}
+}

@@ -1,0 +1,238 @@
+{
+  "$defs": {
+    "PublicDomsEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "bodyPart": {
+          "title": "Bodypart",
+          "type": "string"
+        },
+        "level": {
+          "maximum": 3,
+          "minimum": 1,
+          "title": "Level",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bodyPart",
+        "level"
+      ],
+      "title": "PublicDomsEntry",
+      "type": "object"
+    },
+    "PublicPainAreaEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "bodyPart": {
+          "title": "Bodypart",
+          "type": "string"
+        }
+      },
+      "required": [
+        "bodyPart"
+      ],
+      "title": "PublicPainAreaEntry",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Closed public request. Only camelCase product keys are accepted.",
+  "properties": {
+    "targetSplitLabel": {
+      "anyOf": [
+        {
+          "enum": [
+            "push",
+            "pull",
+            "legs",
+            "upper",
+            "chest_back",
+            "lower",
+            "chest",
+            "back",
+            "shoulder",
+            "arm",
+            "core",
+            "neck",
+            "full_body",
+            "custom"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Targetsplitlabel"
+    },
+    "targetMuscles": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Targetmuscles",
+      "type": "array"
+    },
+    "timeAvailableMin": {
+      "maximum": 180,
+      "minimum": 10,
+      "title": "Timeavailablemin",
+      "type": "integer"
+    },
+    "readinessLevel": {
+      "default": "normal",
+      "enum": [
+        "low",
+        "normal",
+        "high"
+      ],
+      "title": "Readinesslevel",
+      "type": "string"
+    },
+    "currentPainAreas": {
+      "items": {
+        "$ref": "#/$defs/PublicPainAreaEntry"
+      },
+      "title": "Currentpainareas",
+      "type": "array"
+    },
+    "currentDoms": {
+      "items": {
+        "$ref": "#/$defs/PublicDomsEntry"
+      },
+      "title": "Currentdoms",
+      "type": "array"
+    },
+    "availableEquipment": {
+      "items": {
+        "enum": [
+          "BAND",
+          "BARBELL",
+          "BODYWEIGHT",
+          "CABLE",
+          "DUMBBELL",
+          "KETTLEBELL",
+          "LANDMINE",
+          "MACHINE",
+          "PLATE",
+          "SMITH_MACHINE"
+        ],
+        "type": "string"
+      },
+      "title": "Availableequipment",
+      "type": "array"
+    },
+    "unavailableEquipment": {
+      "items": {
+        "enum": [
+          "BAND",
+          "BARBELL",
+          "BODYWEIGHT",
+          "CABLE",
+          "DUMBBELL",
+          "KETTLEBELL",
+          "LANDMINE",
+          "MACHINE",
+          "PLATE",
+          "SMITH_MACHINE"
+        ],
+        "type": "string"
+      },
+      "title": "Unavailableequipment",
+      "type": "array"
+    },
+    "goal": {
+      "anyOf": [
+        {
+          "enum": [
+            "strength",
+            "hypertrophy",
+            "endurance",
+            "fatLoss",
+            "recomposition",
+            "generalFitness"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Goal"
+    },
+    "experienceLevel": {
+      "anyOf": [
+        {
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Experiencelevel"
+    },
+    "sessionStructure": {
+      "default": "standard",
+      "enum": [
+        "standard",
+        "superset",
+        "circuit",
+        "density"
+      ],
+      "title": "Sessionstructure",
+      "type": "string"
+    },
+    "adjunctOptions": {
+      "items": {
+        "enum": [
+          "mobility_warmup",
+          "prehab_accessory",
+          "conditioning_finisher",
+          "endurance_support",
+          "cooldown_stretch"
+        ],
+        "type": "string"
+      },
+      "title": "Adjunctoptions",
+      "type": "array"
+    },
+    "profileSignals": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Profilesignals",
+      "type": "array"
+    },
+    "trainingStyle": {
+      "const": "gym",
+      "default": "gym",
+      "title": "Trainingstyle",
+      "type": "string"
+    },
+    "userNote": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Usernote"
+    }
+  },
+  "required": [
+    "timeAvailableMin"
+  ],
+  "title": "PublicRoutineGenerateRequest",
+  "type": "object"
+}

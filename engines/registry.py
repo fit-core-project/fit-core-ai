@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, Set
 
+# Legacy DOMS label adapter. Registered injuries never carry intensity.
 DOMS_LEVEL_MAP: Dict[str, int] = {
     "mild": 1,
     "moderate": 2,
@@ -31,6 +32,26 @@ MUSCLE_SLUGS: Set[str] = {
     "upper-back",
 }
 
+# Internal taxonomy can be more precise than the currently locked public input
+# shape. Do not use this set as a reason to expand FE/BE enums before core lock.
+INTERNAL_CANONICAL_MUSCLE_SLUGS: Set[str] = MUSCLE_SLUGS | {"side-deltoids"}
+
+# Public request boundaries remain on muscle-slug contract v3.1. Internal
+# canonical additions must not silently widen FE/BE request enums.
+PUBLIC_PAIN_AREA_SLUGS: Set[str] = MUSCLE_SLUGS | {
+    "head",
+    "knees",
+    "left-soleus",
+    "right-soleus",
+}
+
+# DOMS is muscle soreness, not a joint/injury channel. Soleus is retained for
+# existing left/right muscle input compatibility; head and knees stay pain-only.
+PUBLIC_DOMS_BODY_PART_SLUGS: Set[str] = MUSCLE_SLUGS | {
+    "left-soleus",
+    "right-soleus",
+}
+
 LARGE_MUSCLE_SLUGS: Set[str] = {
     "chest",
     "upper-back",
@@ -49,6 +70,7 @@ ACCESSORY_MUSCLE_SLUGS: Set[str] = {
     "calves",
     "forearm",
     "front-deltoids",
+    "side-deltoids",
     "neck",
     "obliques",
     "trapezius",
@@ -58,6 +80,7 @@ ACCESSORY_MUSCLE_SLUGS: Set[str] = {
 ACCESSORY_PRIMARY_SPLITS: Set[str] = {"arm", "core", "shoulder", "neck"}
 
 LOADED_EQUIPMENT_TOKENS: Set[str] = {
+    "BAND",
     "BARBELL",
     "DUMBBELL",
     "MACHINE",
@@ -69,14 +92,18 @@ LOADED_EQUIPMENT_TOKENS: Set[str] = {
 }
 
 SPLIT_LABEL_TO_MUSCLES: Dict[str, List[str]] = {
-    "push":      ["chest", "front-deltoids", "triceps"],
+    # side-deltoids is an internal preset target. It does not widen the locked
+    # public free-selection enum, but keeps a standard lateral-raise accessory
+    # available when overhead/front-elevation movements are constrained.
+    "push":      ["chest", "front-deltoids", "side-deltoids", "triceps"],
     "pull":      ["upper-back", "trapezius", "biceps", "forearm", "back-deltoids"],
     "legs":      ["quadriceps", "hamstring", "gluteal", "calves", "adductor", "abductors"],
     "upper":     ["chest", "upper-back", "trapezius", "front-deltoids", "back-deltoids", "biceps", "triceps"],
+    "chest_back": ["chest", "upper-back", "trapezius"],
     "lower":     ["quadriceps", "hamstring", "gluteal", "calves", "adductor", "abductors"],
     "chest":     ["chest"],
     "back":      ["upper-back", "trapezius", "lower-back"],
-    "shoulder":  ["front-deltoids", "back-deltoids", "trapezius"],
+    "shoulder":  ["front-deltoids", "side-deltoids", "back-deltoids", "trapezius"],
     "arm":       ["biceps", "triceps", "forearm"],
     "core":      ["abs", "lower-back", "obliques"],
     "neck":      ["neck"],

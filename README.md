@@ -140,3 +140,9 @@ uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 - If Gemini calls fail, confirm `GOOGLE_API_KEY` is set.
 - If local LLM calls fail, confirm Ollama is running and `LOCAL_LLM_MODEL` is installed.
 - The server loads Whisper and supplement RAG resources on startup; first startup can take longer than normal.
+
+## Routine Core Integration Branch
+
+See [routine core migration and integration status](docs/routine-core-integration-2026-10-19.md)
+before deploying this branch. It includes the reviewed catalog and core pipeline,
+but the v4 HTTP adapter and legacy fail-closed wiring remain integration work.

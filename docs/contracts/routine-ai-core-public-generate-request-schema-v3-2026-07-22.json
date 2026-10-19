@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fit-core.local/contracts/routine-ai-core-public-generate-request-v3-2026-07-22.schema.json",
+  "title": "Fit-Core Routine AI Core Public Generate Request v3",
+  "description": "Closed FE/BE product request before deterministic mapping to the internal Python RoutineRequest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "timeAvailableMin"
+  ],
+  "properties": {
+    "targetSplitLabel": {
+      "type": ["string", "null"],
+      "enum": [
+        "push",
+        "pull",
+        "legs",
+        "upper",
+        "chest_back",
+        "lower",
+        "chest",
+        "back",
+        "shoulder",
+        "arm",
+        "core",
+        "neck",
+        "full_body",
+        "custom",
+        null
+      ],
+      "default": null
+    },
+    "targetMuscles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/trainableMuscleSlug"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "timeAvailableMin": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 180
+    },
+    "readinessLevel": {
+      "type": "string",
+      "enum": ["low", "normal", "high"],
+      "default": "normal"
+    },
+    "currentPainAreas": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/injuryEntry"
+      },
+      "default": [],
+      "x-fitcore-uniqueBy": "bodyPart"
+    },
+    "currentDoms": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/domsEntry"
+      },
+      "default": [],
+      "x-fitcore-uniqueBy": "bodyPart"
+    },
+    "availableEquipment": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/equipmentCode"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "unavailableEquipment": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/equipmentCode"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "goal": {
+      "type": ["string", "null"],
+      "enum": [
+        "strength",
+        "hypertrophy",
+        "endurance",
+        "fatLoss",
+        "recomposition",
+        "generalFitness",
+        null
+      ],
+      "default": null,
+      "x-fitcore-fallback": "stored profile goal, then hypertrophy"
+    },
+    "experienceLevel": {
+      "type": ["string", "null"],
+      "enum": ["beginner", "intermediate", "advanced", null],
+      "default": null,
+      "x-fitcore-fallback": "stored profile experienceLevel, then intermediate"
+    },
+    "sessionStructure": {
+      "type": "string",
+      "enum": ["standard", "superset", "circuit", "density"],
+      "default": "standard"
+    },
+    "adjunctOptions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "mobility_warmup",
+          "prehab_accessory",
+          "conditioning_finisher",
+          "endurance_support",
+          "cooldown_stretch"
+        ]
+      },
+      "uniqueItems": true,
+      "maxItems": 2,
+      "default": [],
+      "x-fitcore-canonicalOrder": [
+        "mobility_warmup",
+        "prehab_accessory",
+        "conditioning_finisher",
+        "endurance_support",
+        "cooldown_stretch"
+      ]
+    },
+    "profileSignals": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "heel_down_deep_squat_difficult",
+          "hip_hinge_difficult",
+          "overhead_reach_difficult",
+          "loaded_wrist_extension_difficult",
+          "self_reported_long_arms",
+          "self_reported_long_thighs"
+        ]
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "trainingStyle": {
+      "const": "gym",
+      "default": "gym"
+    },
+    "userNote": {
+      "type": ["string", "null"],
+      "default": null,
+      "description": "Optional preference text with no safety, eligibility, prescription, or exclusion authority."
+    }
+  },
+  "$defs": {
+    "trainableMuscleSlug": {
+      "type": "string",
+      "enum": [
+        "abductors",
+        "abs",
+        "adductor",
+        "back-deltoids",
+        "biceps",
+        "calves",
+        "chest",
+        "forearm",
+        "front-deltoids",
+        "gluteal",
+        "hamstring",
+        "lower-back",
+        "neck",
+        "obliques",
+        "quadriceps",
+        "trapezius",
+        "triceps",
+        "upper-back"
+      ]
+    },
+    "painAreaSlug": {
+      "type": "string",
+      "enum": [
+        "abductors",
+        "abs",
+        "adductor",
+        "back-deltoids",
+        "biceps",
+        "calves",
+        "chest",
+        "forearm",
+        "front-deltoids",
+        "gluteal",
+        "hamstring",
+        "head",
+        "knees",
+        "left-soleus",
+        "lower-back",
+        "neck",
+        "obliques",
+        "quadriceps",
+        "right-soleus",
+        "trapezius",
+        "triceps",
+        "upper-back"
+      ]
+    },
+    "domsBodyPartSlug": {
+      "type": "string",
+      "enum": [
+        "abductors",
+        "abs",
+        "adductor",
+        "back-deltoids",
+        "biceps",
+        "calves",
+        "chest",
+        "forearm",
+        "front-deltoids",
+        "gluteal",
+        "hamstring",
+        "left-soleus",
+        "lower-back",
+        "neck",
+        "obliques",
+        "quadriceps",
+        "right-soleus",
+        "trapezius",
+        "triceps",
+        "upper-back"
+      ]
+    },
+    "injuryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bodyPart"],
+      "properties": {
+        "bodyPart": {
+          "$ref": "#/$defs/painAreaSlug"
+        }
+      }
+    },
+    "domsEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bodyPart", "level"],
+      "properties": {
+        "bodyPart": {
+          "$ref": "#/$defs/domsBodyPartSlug"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        }
+      }
+    },
+    "equipmentCode": {
+      "type": "string",
+      "enum": [
+        "BAND",
+        "BARBELL",
+        "BODYWEIGHT",
+        "CABLE",
+        "DUMBBELL",
+        "KETTLEBELL",
+        "LANDMINE",
+        "MACHINE",
+        "PLATE",
+        "SMITH_MACHINE"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "targetSplitLabel": {
+              "type": "string",
+              "enum": [
+                "push",
+                "pull",
+                "legs",
+                "upper",
+                "chest_back",
+                "lower",
+                "chest",
+                "back",
+                "shoulder",
+                "arm",
+                "core",
+                "neck",
+                "full_body"
+              ]
+            }
+          },
+          "required": ["targetSplitLabel"]
+        },
+        {
+          "properties": {
+            "targetMuscles": {
+              "minItems": 1
+            }
+          },
+          "required": ["targetMuscles"]
+        }
+      ]
+    },
+    {
+      "if": {
+        "properties": {
+          "targetSplitLabel": {
+            "const": "custom"
+          }
+        },
+        "required": ["targetSplitLabel"]
+      },
+      "then": {
+        "properties": {
+          "targetMuscles": {
+            "minItems": 1
+          }
+        },
+        "required": ["targetMuscles"]
+      }
+    }
+  ],
+  "x-fitcore-crossFieldRules": [
+    "availableEquipment and unavailableEquipment must be disjoint",
+    "conditioning_finisher and endurance_support cannot coexist",
+    "readinessLevel=low cannot use circuit or density",
+    "readinessLevel=low cannot request conditioning_finisher or endurance_support",
+    "resolved goal=strength cannot use circuit",
+    "each currentPainAreas/currentDoms bodyPart may appear at most once"
+  ],
+  "x-fitcore-internalMapping": {
+    "currentPainAreas": "painAreas as [{bodyPart}]",
+    "currentDoms": "domsData as {bodyPart: integerLevel}",
+    "unavailableEquipment": "equipment",
+    "availableEquipment": "availableEquipment",
+    "trainingStyle": "gym"
+  }
+}

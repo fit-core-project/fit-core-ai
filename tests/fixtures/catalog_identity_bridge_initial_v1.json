@@ -1,0 +1,1335 @@
+{
+  "version": "catalog-identity-bridge-v1-draft",
+  "sourceNamespace": "fit-core-backend.exercise_tier",
+  "backendCommit": "1490c91a08b674291754ced722af8dd979cf116c",
+  "seedSha256": "d54e3e68b44c72ff9478695c11bca1d867c420bc482ce12d546d849d181d02ef",
+  "catalogSha256": "cf0d651dbb5c6e961289467a2d4e23520cafd083f24ca0a77554bdd003cebe81",
+  "edges": [
+    {
+      "sourceId": "6",
+      "catalogId": "V24ROW-004721",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "리스트 롤러",
+        "name_en": "Wrist Roller",
+        "primary_muscle": "forearm",
+        "equipment_req": "MACHINE",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "리스트 롤러",
+        "name_en": "Wrist Roller",
+        "primary_muscle": "upper-back",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": false,
+        "equipmentOverlap": [],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "7",
+      "catalogId": "V24ROW-007417",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "데드리프트",
+        "name_en": "Deadlift",
+        "primary_muscle": "lower-back",
+        "equipment_req": "BARBELL, DUMBBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 데드리프트 (RX/표준)",
+        "name_en": "Deadlift",
+        "primary_muscle": "lower-back",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": true,
+        "equipmentOverlap": [],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "7",
+      "catalogId": "V24ROW-007418",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "데드리프트",
+        "name_en": "Deadlift",
+        "primary_muscle": "lower-back",
+        "equipment_req": "BARBELL, DUMBBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 데드리프트 (Scaled)",
+        "name_en": "Deadlift",
+        "primary_muscle": "lower-back",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": true,
+        "equipmentOverlap": [],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "7",
+      "catalogId": "V24ROW-007419",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "데드리프트",
+        "name_en": "Deadlift",
+        "primary_muscle": "lower-back",
+        "equipment_req": "BARBELL, DUMBBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 데드리프트 (Beginner)",
+        "name_en": "Deadlift",
+        "primary_muscle": "lower-back",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": true,
+        "equipmentOverlap": [],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "9",
+      "catalogId": "V24ROW-004723",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "악력기",
+        "name_en": "Hand Gripper",
+        "primary_muscle": "forearm",
+        "equipment_req": "MACHINE",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "그리퍼",
+        "name_en": "Hand Gripper",
+        "primary_muscle": "upper-back",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": false,
+        "equipmentOverlap": [],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "14",
+      "catalogId": "V24ROW-006036",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "케이블 베이지안 컬",
+        "name_en": "Cable Bayesian Curl",
+        "primary_muscle": "biceps",
+        "equipment_req": "CABLE",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "케이블 베이지안 컬",
+        "name_en": "Cable Bayesian Curl",
+        "primary_muscle": "biceps",
+        "equipment_req": "CABLE",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": true,
+        "equipmentOverlap": [
+          "CABLE"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "30",
+      "catalogId": "V24ROW-000086",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "바벨 벤치프레스",
+        "name_en": "Barbell Bench Press",
+        "primary_muscle": "chest",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "바벨 플랫 스탠다드 그립 체스트 프레스",
+        "name_en": "Barbell 플랫 스탠다드 그립 양측 Chest Press",
+        "primary_muscle": "chest",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "manual_variant_candidate",
+        "nameAmbiguous": true,
+        "samePrimary": true,
+        "equipmentOverlap": [
+          "BARBELL"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "30",
+      "catalogId": "V24ROW-005067",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "바벨 벤치프레스",
+        "name_en": "Barbell Bench Press",
+        "primary_muscle": "chest",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "바벨 플랫 일반그립 기본 체스트 프레스",
+        "name_en": "Barbell Flat Standard Grip Standard Chest Press",
+        "primary_muscle": "chest",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "manual_variant_candidate",
+        "nameAmbiguous": true,
+        "samePrimary": true,
+        "equipmentOverlap": [
+          "BARBELL"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "47",
+      "catalogId": "V24ROW-007267",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "푸시업",
+        "name_en": "Push-up",
+        "primary_muscle": "chest",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 필라테스 푸쉬업 (기본)",
+        "name_en": "Push Up",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "normalized",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "47",
+      "catalogId": "V24ROW-007268",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "푸시업",
+        "name_en": "Push-up",
+        "primary_muscle": "chest",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 필라테스 푸쉬업 (매직서클)",
+        "name_en": "Push Up",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "normalized",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "47",
+      "catalogId": "V24ROW-007269",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "푸시업",
+        "name_en": "Push-up",
+        "primary_muscle": "chest",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 필라테스 푸쉬업 (미니밴드)",
+        "name_en": "Push Up",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "normalized",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "47",
+      "catalogId": "V24ROW-007270",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "푸시업",
+        "name_en": "Push-up",
+        "primary_muscle": "chest",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 필라테스 푸쉬업 (짐볼)",
+        "name_en": "Push Up",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "normalized",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "50",
+      "catalogId": "V24ROW-007474",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "풀업",
+        "name_en": "Pull-up",
+        "primary_muscle": "upper-back",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 풀업 (RX/표준)",
+        "name_en": "Pull-up",
+        "primary_muscle": "biceps",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "50",
+      "catalogId": "V24ROW-007475",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "풀업",
+        "name_en": "Pull-up",
+        "primary_muscle": "upper-back",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 풀업 (Scaled)",
+        "name_en": "Pull-up",
+        "primary_muscle": "biceps",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "50",
+      "catalogId": "V24ROW-007476",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "풀업",
+        "name_en": "Pull-up",
+        "primary_muscle": "upper-back",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 풀업 (Beginner)",
+        "name_en": "Pull-up",
+        "primary_muscle": "biceps",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "73",
+      "catalogId": "V24ROW-004796",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "덤벨 슈러그",
+        "name_en": "Dumbbell Shrug",
+        "primary_muscle": "trapezius",
+        "equipment_req": "DUMBBELL",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "덤벨 슈러그",
+        "name_en": "Dumbbell Shrug",
+        "primary_muscle": "upper-back",
+        "equipment_req": "DUMBBELL",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "DUMBBELL"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "74",
+      "catalogId": "V24ROW-004791",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "바벨 슈러그",
+        "name_en": "Barbell Shrug",
+        "primary_muscle": "trapezius",
+        "equipment_req": "BARBELL",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "바벨 슈러그",
+        "name_en": "Barbell Shrug",
+        "primary_muscle": "upper-back",
+        "equipment_req": "BARBELL",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BARBELL"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "75",
+      "catalogId": "V24ROW-000376",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "바벨 오버헤드 프레스",
+        "name_en": "Barbell Overhead Press",
+        "primary_muscle": "front-deltoids",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "바벨 스탠딩 밀리터리 스탠다드 그립 프레스",
+        "name_en": "Barbell 스탠딩 밀리터리 스탠다드 그립 양측 Shoulder Press",
+        "primary_muscle": "front-deltoids",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "manual_variant_candidate",
+        "nameAmbiguous": true,
+        "samePrimary": true,
+        "equipmentOverlap": [
+          "BARBELL"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "75",
+      "catalogId": "V24ROW-000379",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "바벨 오버헤드 프레스",
+        "name_en": "Barbell Overhead Press",
+        "primary_muscle": "front-deltoids",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "바벨 스탠딩 숄더 스탠다드 그립 프레스",
+        "name_en": "Barbell 스탠딩 숄더 스탠다드 그립 양측 Shoulder Press",
+        "primary_muscle": "front-deltoids",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "manual_variant_candidate",
+        "nameAmbiguous": true,
+        "samePrimary": true,
+        "equipmentOverlap": [
+          "BARBELL"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "98",
+      "catalogId": "V24ROW-006191",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "백 스쿼트",
+        "name_en": "Back Squat",
+        "primary_muscle": "quadriceps",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "바벨 어깨너비 백 스쿼트",
+        "name_en": "Barbell Shoulder Width Back Squat",
+        "primary_muscle": "quadriceps",
+        "equipment_req": "BARBELL",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "manual_variant_candidate",
+        "nameAmbiguous": false,
+        "samePrimary": true,
+        "equipmentOverlap": [
+          "BARBELL"
+        ],
+        "sameMovementType": false,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "99",
+      "catalogId": "V24ROW-007402",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "프론트 스쿼트",
+        "name_en": "Front Squat",
+        "primary_muscle": "quadriceps",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 프론트 스쿼트 (RX/표준)",
+        "name_en": "Front Squat",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "99",
+      "catalogId": "V24ROW-007403",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "프론트 스쿼트",
+        "name_en": "Front Squat",
+        "primary_muscle": "quadriceps",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 프론트 스쿼트 (Scaled)",
+        "name_en": "Front Squat",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "99",
+      "catalogId": "V24ROW-007404",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "프론트 스쿼트",
+        "name_en": "Front Squat",
+        "primary_muscle": "quadriceps",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 프론트 스쿼트 (Beginner)",
+        "name_en": "Front Squat",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "115",
+      "catalogId": "V24ROW-006763",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "아웃 타이 (머신 힙 어브덕션)",
+        "name_en": "Machine Hip Abduction",
+        "primary_muscle": "abductors",
+        "equipment_req": "MACHINE",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "머신 힙 어브덕션",
+        "name_en": "Machine Hip Abduction",
+        "primary_muscle": "abductors",
+        "equipment_req": "MACHINE",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": true,
+        "equipmentOverlap": [
+          "MACHINE"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "116",
+      "catalogId": "V24ROW-006771",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "케이블 힙 어브덕션",
+        "name_en": "Cable Hip Abduction",
+        "primary_muscle": "abductors",
+        "equipment_req": "CABLE",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "케이블 힙 어브덕션",
+        "name_en": "Cable Hip Abduction",
+        "primary_muscle": "abductors",
+        "equipment_req": "CABLE",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": true,
+        "equipmentOverlap": [
+          "CABLE"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "117",
+      "catalogId": "V24ROW-007267",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "푸시업",
+        "name_en": "Push-up",
+        "primary_muscle": "chest",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 필라테스 푸쉬업 (기본)",
+        "name_en": "Push Up",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "normalized",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "117",
+      "catalogId": "V24ROW-007268",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "푸시업",
+        "name_en": "Push-up",
+        "primary_muscle": "chest",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 필라테스 푸쉬업 (매직서클)",
+        "name_en": "Push Up",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "normalized",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "117",
+      "catalogId": "V24ROW-007269",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "푸시업",
+        "name_en": "Push-up",
+        "primary_muscle": "chest",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 필라테스 푸쉬업 (미니밴드)",
+        "name_en": "Push Up",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "normalized",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "117",
+      "catalogId": "V24ROW-007270",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "푸시업",
+        "name_en": "Push-up",
+        "primary_muscle": "chest",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 필라테스 푸쉬업 (짐볼)",
+        "name_en": "Push Up",
+        "primary_muscle": "abs",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "normalized",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "124",
+      "catalogId": "V24ROW-004791",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "바벨 슈러그",
+        "name_en": "Barbell Shrug",
+        "primary_muscle": "trapezius",
+        "equipment_req": "BARBELL",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "바벨 슈러그",
+        "name_en": "Barbell Shrug",
+        "primary_muscle": "upper-back",
+        "equipment_req": "BARBELL",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BARBELL"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "125",
+      "catalogId": "V24ROW-006742",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "바벨 힙 쓰러스트",
+        "name_en": "Barbell Hip Thrust",
+        "primary_muscle": "gluteal",
+        "equipment_req": "BARBELL",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "바벨 힙 쓰러스트",
+        "name_en": "Barbell Hip Thrust",
+        "primary_muscle": "abductors",
+        "equipment_req": "BARBELL",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BARBELL"
+        ],
+        "sameMovementType": false,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "130",
+      "catalogId": "V24ROW-006028",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "덤벨 해머 컬",
+        "name_en": "Dumbbell Hammer Curl",
+        "primary_muscle": "biceps",
+        "equipment_req": "DUMBBELL",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "덤벨 해머 컬",
+        "name_en": "Dumbbell Hammer Curl",
+        "primary_muscle": "upper-back",
+        "equipment_req": "DUMBBELL",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "DUMBBELL"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "135",
+      "catalogId": "V24ROW-004692",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "버드 독",
+        "name_en": "Bird Dog",
+        "primary_muscle": "lower-back",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "STATIC"
+      },
+      "catalogIdentity": {
+        "name_kr": "버드독",
+        "name_en": "Bird Dog",
+        "primary_muscle": "gluteal",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": false,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "140",
+      "catalogId": "V24ROW-004722",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "플레이트 핀치 홀드",
+        "name_en": "Plate Pinch Hold",
+        "primary_muscle": "forearm",
+        "equipment_req": "PLATE",
+        "movement_type": "STATIC"
+      },
+      "catalogIdentity": {
+        "name_kr": "플레이트 핀치 홀드",
+        "name_en": "Plate Pinch Hold",
+        "primary_muscle": "upper-back",
+        "equipment_req": "PLATE",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "PLATE"
+        ],
+        "sameMovementType": false,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "144",
+      "catalogId": "V24ROW-006904",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "케이블 크런치",
+        "name_en": "Cable Crunch",
+        "primary_muscle": "abs",
+        "equipment_req": "CABLE",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "케이블 크런치",
+        "name_en": "Cable Crunch",
+        "primary_muscle": "abs",
+        "equipment_req": "CABLE",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": true,
+        "equipmentOverlap": [
+          "CABLE"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "151",
+      "catalogId": "V24ROW-004710",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "클램셸",
+        "name_en": "Clamshell",
+        "primary_muscle": "abductors",
+        "equipment_req": "BAND, BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "클램쉘",
+        "name_en": "Clamshell",
+        "primary_muscle": "adductor",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "151",
+      "catalogId": "V24ROW-007275",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "클램셸",
+        "name_en": "Clamshell",
+        "primary_muscle": "abductors",
+        "equipment_req": "BAND, BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 클램쉘 (기본)",
+        "name_en": "Clamshell",
+        "primary_muscle": "gluteal",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "151",
+      "catalogId": "V24ROW-007276",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "클램셸",
+        "name_en": "Clamshell",
+        "primary_muscle": "abductors",
+        "equipment_req": "BAND, BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 클램쉘 (매직서클)",
+        "name_en": "Clamshell",
+        "primary_muscle": "gluteal",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "151",
+      "catalogId": "V24ROW-007277",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "클램셸",
+        "name_en": "Clamshell",
+        "primary_muscle": "abductors",
+        "equipment_req": "BAND, BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 클램쉘 (미니밴드)",
+        "name_en": "Clamshell",
+        "primary_muscle": "gluteal",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "151",
+      "catalogId": "V24ROW-007278",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "클램셸",
+        "name_en": "Clamshell",
+        "primary_muscle": "abductors",
+        "equipment_req": "BAND, BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "필라테스 클램쉘 (짐볼)",
+        "name_en": "Clamshell",
+        "primary_muscle": "gluteal",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "161",
+      "catalogId": "V24ROW-007456",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "박스 점프",
+        "name_en": "Box Jump",
+        "primary_muscle": "quadriceps",
+        "equipment_req": "BOX",
+        "movement_type": "PLYOMETRIC"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 박스 점프 (RX/표준)",
+        "name_en": "Box Jump",
+        "primary_muscle": "calves",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [],
+        "sameMovementType": false,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "161",
+      "catalogId": "V24ROW-007457",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "박스 점프",
+        "name_en": "Box Jump",
+        "primary_muscle": "quadriceps",
+        "equipment_req": "BOX",
+        "movement_type": "PLYOMETRIC"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 박스 점프 (Scaled)",
+        "name_en": "Box Jump",
+        "primary_muscle": "calves",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [],
+        "sameMovementType": false,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "161",
+      "catalogId": "V24ROW-007458",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "박스 점프",
+        "name_en": "Box Jump",
+        "primary_muscle": "quadriceps",
+        "equipment_req": "BOX",
+        "movement_type": "PLYOMETRIC"
+      },
+      "catalogIdentity": {
+        "name_kr": "크로스핏 박스 점프 (Beginner)",
+        "name_en": "Box Jump",
+        "primary_muscle": "calves",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "COMPOUND"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": true,
+        "samePrimary": false,
+        "equipmentOverlap": [],
+        "sameMovementType": false,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "165",
+      "catalogId": "V24ROW-004712",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "프로그 펌프",
+        "name_en": "Frog Pump",
+        "primary_muscle": "gluteal",
+        "equipment_req": "BODYWEIGHT, BAND",
+        "movement_type": "ISOLATION"
+      },
+      "catalogIdentity": {
+        "name_kr": "프로그 펌프",
+        "name_en": "Frog Pump",
+        "primary_muscle": "adductor",
+        "equipment_req": "DUMBBELL, BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": false,
+        "equipmentOverlap": [
+          "BODYWEIGHT"
+        ],
+        "sameMovementType": true,
+        "approvalRequired": true
+      },
+      "review": null
+    },
+    {
+      "sourceId": "171",
+      "catalogId": "V24ROW-004703",
+      "status": "candidate",
+      "sourceIdentity": {
+        "name_kr": "스패니시 스쿼트",
+        "name_en": "Spanish Squat",
+        "primary_muscle": "quadriceps",
+        "equipment_req": "BAND",
+        "movement_type": "COMPOUND"
+      },
+      "catalogIdentity": {
+        "name_kr": "스페니시 스쿼트",
+        "name_en": "Spanish Squat",
+        "primary_muscle": "quadriceps",
+        "equipment_req": "BODYWEIGHT",
+        "movement_type": "ISOLATION"
+      },
+      "evidence": {
+        "matchKind": "exact",
+        "nameAmbiguous": false,
+        "samePrimary": true,
+        "equipmentOverlap": [],
+        "sameMovementType": false,
+        "approvalRequired": true
+      },
+      "review": null
+    }
+  ]
+}

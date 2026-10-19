@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-
 import pytest
 
 from engines.candidate_ranker import score_candidate_exercises
@@ -194,6 +193,36 @@ def test_feedback_cannot_restore_pain_trigger():
     )
 
     assert "shoulder_press" not in ids(ranked)
+
+
+def test_pain_area_excludes_secondary_muscle_overlap():
+    fly = candidate("machine_fly", primary="front-deltoids", movement_type="ISOLATION")
+    fly["secondary_muscle"] = "chest"
+
+    ranked = score_candidate_exercises(
+        [fly, candidate("pushdown", primary="triceps", movement_type="ISOLATION")],
+        ["front-deltoids", "triceps"],
+        pain_areas=[PainAreaEntry(body_part="chest")],
+        top_n=5,
+    )
+
+    assert "machine_fly" not in ids(ranked)
+    assert "pushdown" in ids(ranked)
+
+
+def test_generic_shoulder_pain_excludes_deltoid_primary():
+    ranked = score_candidate_exercises(
+        [
+            candidate("front_raise", primary="front-deltoids", movement_type="ISOLATION"),
+            candidate("pushdown", primary="triceps", movement_type="ISOLATION"),
+        ],
+        ["front-deltoids", "triceps"],
+        pain_areas=[PainAreaEntry(body_part="shoulder")],
+        top_n=5,
+    )
+
+    assert "front_raise" not in ids(ranked)
+    assert "pushdown" in ids(ranked)
 
 
 def test_feedback_cannot_restore_doms3():

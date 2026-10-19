@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "routine-core-admission-review-v1",
+  "decisionVersion": "shoulder-main-admission-v1-2026-09-14",
+  "sourceCatalogPath": "data/provenance/v25_canonical_filter_core.csv",
+  "sourceCatalogSha256": "22e7b98199b3ee8b1d4e880e88fe76a5ad7a8dc14430c7f94ed0143f4f234ff2",
+  "reviewEvidencePath": "docs/evidence/routine-shoulder-core-closure-2026-09-14/shoulder-source-review-v1.md",
+  "reviewEvidenceSha256": "c60b53946bbec0f871f23b5fb6ae6b6bd4a4ab0ea07d7ac63389d75d00eed90a",
+  "reviewSupplements": [
+    {
+      "path": "docs/evidence/routine-shoulder-core-closure-2026-09-14/shoulder-source-review-v2.md",
+      "sha256": "6e6189c2ef04fd172a499edc6b635d03a4d31565d829b2b211896b5e20929209"
+    }
+  ],
+  "reviewSources": [
+    {
+      "url": "https://www.acefitness.org/resources/everyone/exercise-library/45/seated-overhead-press/",
+      "supports": ["standard_gym_identity", "seated_bench_support", "dumbbell_equipment", "overhead_position"],
+      "licenseUse": "factual_metadata_only_no_asset_or_instruction_copy"
+    },
+    {
+      "url": "https://csiontario.ca/resource/sc-with-csio-neutral-grip-dumbbell-shoulder-press/",
+      "supports": ["seated_dumbbell_overhead_variant_corroboration"],
+      "doesNotSupport": ["neutral_grip_identity_for_catalog_row", "machine_or_smith_identity"],
+      "licenseUse": "factual_metadata_only_no_asset_or_instruction_copy"
+    }
+  ],
+  "reviews": [
+    {
+      "catalogExerciseId": "V24ROW-005748",
+      "sourceIdentity": {
+        "v24_row_uid": "V24ROW-005748",
+        "v23_row_uid": "V21ROW-005748",
+        "id": "EX05748",
+        "name": "덤벨 시티드 덤벨 숄더 프레스",
+        "english": "Dumbbell Seated Dumbbell Shoulder Press",
+        "category": "어깨",
+        "subpart": "프레스",
+        "pattern": "수직/사선 밀기",
+        "equipment": "덤벨",
+        "primary_muscle": "전면삼각근, 측면삼각근",
+        "difficulty": "초급~중급",
+        "v24_validation_grade_norm": "A",
+        "v24_pain_risk_norm": "high",
+        "v24_release_tier_norm": "hold",
+        "v24_license_gate_norm": "link_metadata_only_no_text_image_video_copy_terms_review_required",
+        "v24_quality_gate": "hold_manual_review",
+        "v24_preprocess_quality_score": "100",
+        "v24_next_action": "url_license_safety_review"
+      },
+      "catalogIdentity": {
+        "catalog_name_kr": "덤벨 시티드 덤벨 숄더 프레스",
+        "catalog_name_en": "Dumbbell Seated Dumbbell Shoulder Press",
+        "catalog_primary_muscle": "front-deltoids",
+        "catalog_secondary_muscle": "upper-back, triceps, trapezius",
+        "equipment_req": "DUMBBELL",
+        "canonical_movement_type": "COMPOUND"
+      },
+      "decision": {
+        "mainRoutineDefaultAllowed": true,
+        "mainRoleReviewed": true,
+        "beginnerDefaultAllowed": false
+      },
+      "reviewedFacts": {
+        "standardGymIdentity": true,
+        "seatedBenchSupported": true,
+        "overheadPositionRequired": true,
+        "conservativeSafetyInvolvementMuscles": ["side-deltoids"],
+        "directLateralRaiseCredit": false
+      },
+      "preservedSourceState": {
+        "painRiskLevel": "high",
+        "releaseTier": "hold",
+        "qualityGate": "hold_manual_review",
+        "licenseGate": "link_metadata_only_no_text_image_video_copy_terms_review_required"
+      }
+    }
+  ]
+}

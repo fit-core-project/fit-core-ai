@@ -24,6 +24,7 @@ HARD_VIOLATION_CATEGORIES = {
     "time_budget",
     "rationale_missing",
     "schema_malformed",
+    "prescription_contract",
     "unknown",
 }
 
@@ -42,7 +43,15 @@ def get_rule_critic_telemetry_enabled() -> bool:
 
 
 def count_guard_repairs(warnings: list[str]) -> int:
-    return len([w for w in warnings if "Guard:" in w and "replaced" in w])
+    return len([
+        w for w in warnings
+        if (
+            (("Guard:" in w or "후보 검증:" in w) and ("replaced" in w or "교체" in w))
+            or ("현재 조건을 반영해" in w and "대신" in w and "조정" in w)
+            or ("현재 통증·장비·루틴 구성 조건에 맞지 않아" in w and "제외했습니다" in w)
+            or ("비슷한 운동이 겹치지 않도록" in w and "제외했습니다" in w)
+        )
+    ])
 
 
 def classify_hard_violation_category(value: Any) -> str:
@@ -65,6 +74,8 @@ def classify_hard_violation_category(value: Any) -> str:
         return "rationale_missing"
     if any(token in text for token in ("schema", "parse", "malformed", "validation")):
         return "schema_malformed"
+    if any(token in text for token in ("prescription_contract", "adjunct_contract", "phase not allowed", "unit mismatch")):
+        return "prescription_contract"
     return "unknown"
 
 
@@ -146,6 +157,19 @@ def build_routine_quality_telemetry_payload(
     json_decode_recovery_attempted: bool = False,
     json_decode_recovery_succeeded: bool = False,
     json_decode_recovery_strategy: Optional[str] = None,
+    schema_root_type: Optional[str] = None,
+    schema_top_level_keys: Optional[list[str]] = None,
+    schema_exercises_value_type: Optional[str] = None,
+    schema_exercises_nested_keys: Optional[list[str]] = None,
+    schema_exercises_list_length: Optional[int] = None,
+    schema_first_exercise_item_type: Optional[str] = None,
+    schema_first_exercise_keys: Optional[list[str]] = None,
+    schema_first_exercise_field_types: Optional[dict[str, str]] = None,
+    schema_exercise_item_types: Optional[list[str]] = None,
+    schema_exercise_key_union: Optional[list[str]] = None,
+    schema_exercise_field_type_sets: Optional[dict[str, list[str]]] = None,
+    schema_validation_loc_summaries: Optional[list[str]] = None,
+    schema_validation_error_types: Optional[list[str]] = None,
     local_raw_json_invoke_enabled: bool = False,
     local_raw_json_invoke_used: bool = False,
     local_raw_json_invoke_succeeded: bool = False,
@@ -169,12 +193,14 @@ def build_routine_quality_telemetry_payload(
     feedback_query_latency_ms: Optional[int] = None,
     feedback_query_failed: bool = False,
     feedback_query_error_category: Optional[str] = None,
+    selection_diagnostics: Optional[dict[str, Any]] = None,
     created_at: Optional[datetime] = None,
 ) -> dict[str, Any]:
     payload_created_at = created_at or datetime.now(timezone.utc)
     candidate_payload_char_count = len(candidate_payload)
     hard_violations = list(getattr(critic_result, "hard_violations", []) or [])
     hard_violation_category_counts = _hard_violation_category_counts(hard_violations)
+    selection = selection_diagnostics or {}
     return {
         "event": "routine_generation_quality",
         "routine_draft_id": response.routine_draft_id,
@@ -216,6 +242,19 @@ def build_routine_quality_telemetry_payload(
         "json_decode_recovery_attempted": json_decode_recovery_attempted,
         "json_decode_recovery_succeeded": json_decode_recovery_succeeded,
         "json_decode_recovery_strategy": json_decode_recovery_strategy,
+        "schema_root_type": schema_root_type,
+        "schema_top_level_keys": schema_top_level_keys or [],
+        "schema_exercises_value_type": schema_exercises_value_type,
+        "schema_exercises_nested_keys": schema_exercises_nested_keys or [],
+        "schema_exercises_list_length": schema_exercises_list_length,
+        "schema_first_exercise_item_type": schema_first_exercise_item_type,
+        "schema_first_exercise_keys": schema_first_exercise_keys or [],
+        "schema_first_exercise_field_types": schema_first_exercise_field_types or {},
+        "schema_exercise_item_types": schema_exercise_item_types or [],
+        "schema_exercise_key_union": schema_exercise_key_union or [],
+        "schema_exercise_field_type_sets": schema_exercise_field_type_sets or {},
+        "schema_validation_loc_summaries": schema_validation_loc_summaries or [],
+        "schema_validation_error_types": schema_validation_error_types or [],
         "local_raw_json_invoke_enabled": local_raw_json_invoke_enabled,
         "local_raw_json_invoke_used": local_raw_json_invoke_used,
         "local_raw_json_invoke_succeeded": local_raw_json_invoke_succeeded,
@@ -239,6 +278,51 @@ def build_routine_quality_telemetry_payload(
         "feedback_query_latency_ms": feedback_query_latency_ms,
         "feedback_query_failed": feedback_query_failed,
         "feedback_query_error_category": feedback_query_error_category,
+        "selection_contract_version": selection.get("contract_version"),
+        "model_selection_count": int(selection.get("model_selection_count") or 0),
+        "model_accepted_selection_count": int(selection.get("model_accepted_count") or 0),
+        "rejected_selection_count": int(selection.get("rejected_selection_count") or 0),
+        "required_slot_repair_count": int(selection.get("required_slot_repair_count") or 0),
+        "requested_slot_repair_count": int(selection.get("requested_slot_repair_count") or 0),
+        "minimum_fill_count": int(selection.get("minimum_fill_count") or 0),
+        "duplicate_key_repair_count": int(selection.get("duplicate_key_repair_count") or 0),
+        "duplicate_family_skip_count": int(selection.get("duplicate_family_skip_count") or 0),
+        "distribution_cap_relax_count": int(selection.get("distribution_cap_relax_count") or 0),
+        "fallback_selection_measured": bool(selection.get("fallback_selection_measured", False)),
+        "fallback_candidate_pool_count": int(selection.get("fallback_candidate_pool_count") or 0),
+        "fallback_selected_count": int(selection.get("fallback_selected_count") or 0),
+        "fallback_existing_family_skip_count": int(selection.get("fallback_existing_family_skip_count") or 0),
+        "fallback_existing_pattern_skip_count": int(selection.get("fallback_existing_pattern_skip_count") or 0),
+        "fallback_selection_shortfall": int(selection.get("fallback_selection_shortfall") or 0),
+        "fallback_composition_limit_observed": bool(
+            selection.get("fallback_composition_limit_observed", False)
+        ),
+        "productive_fill_requested": bool(selection.get("productive_fill_requested", False)),
+        "productive_fill_target_count": int(selection.get("productive_fill_target_count") or 0),
+        "productive_fill_initial_count": int(selection.get("productive_fill_initial_count") or 0),
+        "productive_fill_added_count": int(selection.get("productive_fill_added_count") or 0),
+        "productive_fill_final_count": int(selection.get("productive_fill_final_count") or 0),
+        "productive_fill_exhausted": bool(selection.get("productive_fill_exhausted", False)),
+        "productive_fill_exhaustion_reason": selection.get("productive_fill_exhaustion_reason"),
+        "productive_fill_floor_min": int(selection.get("productive_fill_floor_min") or 0),
+        "productive_fill_estimated_time_before": int(
+            selection.get("productive_fill_estimated_time_before") or 0
+        ),
+        "productive_fill_estimated_time_after": int(
+            selection.get("productive_fill_estimated_time_after") or 0
+        ),
+        "underfill_policy_version": selection.get("underfill_policy_version"),
+        "underfill_status": selection.get("underfill_status"),
+        "underfill_reason_code": selection.get("underfill_reason_code"),
+        "underfill_detected": bool(selection.get("underfill_underfilled", False)),
+        "underfill_severe": bool(selection.get("underfill_severe_underfill", False)),
+        "underfill_utilization_pct": float(selection.get("underfill_utilization_pct") or 0.0),
+        "underfill_reference_duration_min": int(
+            selection.get("underfill_reference_duration_min") or 0
+        ),
+        "underfill_minimum_productive_duration_min": int(
+            selection.get("underfill_minimum_productive_duration_min") or 0
+        ),
         "exercise_count": len(response.routine_blocks),
         "total_estimated_time": response.total_estimated_time,
         "target_duration_min": target_duration_min,
@@ -290,6 +374,19 @@ def observe_routine_quality(
     json_decode_recovery_attempted: bool = False,
     json_decode_recovery_succeeded: bool = False,
     json_decode_recovery_strategy: Optional[str] = None,
+    schema_root_type: Optional[str] = None,
+    schema_top_level_keys: Optional[list[str]] = None,
+    schema_exercises_value_type: Optional[str] = None,
+    schema_exercises_nested_keys: Optional[list[str]] = None,
+    schema_exercises_list_length: Optional[int] = None,
+    schema_first_exercise_item_type: Optional[str] = None,
+    schema_first_exercise_keys: Optional[list[str]] = None,
+    schema_first_exercise_field_types: Optional[dict[str, str]] = None,
+    schema_exercise_item_types: Optional[list[str]] = None,
+    schema_exercise_key_union: Optional[list[str]] = None,
+    schema_exercise_field_type_sets: Optional[dict[str, list[str]]] = None,
+    schema_validation_loc_summaries: Optional[list[str]] = None,
+    schema_validation_error_types: Optional[list[str]] = None,
     local_raw_json_invoke_enabled: bool = False,
     local_raw_json_invoke_used: bool = False,
     local_raw_json_invoke_succeeded: bool = False,
@@ -313,6 +410,7 @@ def observe_routine_quality(
     feedback_query_latency_ms: Optional[int] = None,
     feedback_query_failed: bool = False,
     feedback_query_error_category: Optional[str] = None,
+    selection_diagnostics: Optional[dict[str, Any]] = None,
 ) -> RoutineDraftResponse:
     if not get_rule_critic_telemetry_enabled():
         return response
@@ -362,6 +460,19 @@ def observe_routine_quality(
             json_decode_recovery_attempted=json_decode_recovery_attempted,
             json_decode_recovery_succeeded=json_decode_recovery_succeeded,
             json_decode_recovery_strategy=json_decode_recovery_strategy,
+            schema_root_type=schema_root_type,
+            schema_top_level_keys=schema_top_level_keys,
+            schema_exercises_value_type=schema_exercises_value_type,
+            schema_exercises_nested_keys=schema_exercises_nested_keys,
+            schema_exercises_list_length=schema_exercises_list_length,
+            schema_first_exercise_item_type=schema_first_exercise_item_type,
+            schema_first_exercise_keys=schema_first_exercise_keys,
+            schema_first_exercise_field_types=schema_first_exercise_field_types,
+            schema_exercise_item_types=schema_exercise_item_types,
+            schema_exercise_key_union=schema_exercise_key_union,
+            schema_exercise_field_type_sets=schema_exercise_field_type_sets,
+            schema_validation_loc_summaries=schema_validation_loc_summaries,
+            schema_validation_error_types=schema_validation_error_types,
             local_raw_json_invoke_enabled=local_raw_json_invoke_enabled,
             local_raw_json_invoke_used=local_raw_json_invoke_used,
             local_raw_json_invoke_succeeded=local_raw_json_invoke_succeeded,
@@ -385,6 +496,7 @@ def observe_routine_quality(
             feedback_query_latency_ms=feedback_query_latency_ms,
             feedback_query_failed=feedback_query_failed,
             feedback_query_error_category=feedback_query_error_category,
+            selection_diagnostics=selection_diagnostics,
         )
         emit_routine_quality_telemetry(payload)
     except Exception as exc:

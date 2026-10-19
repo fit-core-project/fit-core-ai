@@ -11,7 +11,8 @@ import pytest
 from engines.candidate_ranker import format_candidates_for_prompt, score_candidate_exercises
 from engines.schemas import PainAreaEntry, RecentSetRecord
 
-FIXTURES_PATH = Path(__file__).parent / "pool_size_fixtures.json"
+# Keep the legacy fixture intact; injury severity is absent in the core contract.
+FIXTURES_PATH = Path(__file__).parent / "pool_size_fixtures_core_v3.json"
 REPORT_PATH = Path(__file__).parent / ".artifacts" / "candidate_pool_size_report.json"
 POOL_SIZES = (12, 18)
 ALLOWED_VERDICTS = {"promote_pool_18_to_default", "keep_pool_12_as_default"}
