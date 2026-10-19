@@ -12,6 +12,7 @@ from engines.routine_pipeline import generate_smart_routine
 GOLDEN_DIR = Path(__file__).parent / "golden"
 V2_GOLDEN_PATH = GOLDEN_DIR / "main_path_with_deterministic_v2.json"
 V3_GOLDEN_PATH = GOLDEN_DIR / "main_path_with_deterministic_v3.json"
+V4_GOLDEN_PATH = GOLDEN_DIR / "main_path_with_deterministic_v4.json"
 V2_GOLDEN_SHA256 = "bfc3823f279a863f3430bb5f4de0e49804568c261ee85a5c64bb7ad73ae7cd30"
 
 
@@ -93,7 +94,7 @@ def test_main_path_with_deterministic_matches_pre_refactor_baseline(
     mock_candidates,
 ):
     """
-    Regression guard: 안전 검증된 대체 후보만 남기는 v3 main-path 출력을 고정한다.
+    Regression guard: 회복 분량 v2 정책을 반영한 v4 main-path 출력을 고정한다.
     점수 근거, DOMS 경고, 세션 실행 메타데이터가 의도치 않게 바뀌면 실패한다.
     """
     db = _make_db_mock()
@@ -107,7 +108,8 @@ def test_main_path_with_deterministic_matches_pre_refactor_baseline(
 
     masked = result.model_copy(update={"routine_draft_id": "<UUID>"})
     actual = _behavior_projection(masked.model_dump(mode="json"))
-    expected = json.loads(V3_GOLDEN_PATH.read_text(encoding="utf-8"))
+    # Policy v2 (2026-09-17); preserve v3 history. See docs/reviews/golden-recovery-reconciliation-v1-2026-10-19.md.
+    expected = json.loads(V4_GOLDEN_PATH.read_text(encoding="utf-8"))
 
     assert actual == expected, f"Behavior regression detected: {_pretty_diff(expected, actual)}"
 

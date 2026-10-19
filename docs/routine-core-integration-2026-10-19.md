@@ -45,4 +45,4 @@
 | 구 prompt/평가/golden | 원본 보존, 승인 코어 fixture를 새 버전 이름으로 추가 |
 | 로그 보안 검사 | develop의 LogRecord 기반 검사 유지 |
 
-검증 결과는 [이식 검증 보고서](reviews/routine-core-migration-validation-v1-2026-10-19.md)를 따른다. 합성 재생/강제 장애는 실제 모델 호출 성능으로 계산하지 않는다. 보존된 골든 1건과 BE DTO 경계 4건의 실패가 있으므로 전체 테스트 통과 또는 운영 준비 완료로 해석하지 않는다.
+이식 시점 결과는 [이식 검증 보고서](reviews/routine-core-migration-validation-v1-2026-10-19.md)에 보존한다. 이후 골든 1건의 불일치는 [회복 분량 골든 정합화](reviews/golden-recovery-reconciliation-v1-2026-10-19.md)에서 기존 정책과 대조하고 v4 기대값으로 검증했다. 역사 골든 v1~v3과 이식 시점 manifest는 덮어쓰지 않았다. BE DTO 경계 F02~F05와 legacy HTTP D1은 여전히 연결 작업 대상이다. 합성 재생/강제 장애는 실제 모델 호출 성능으로 계산하지 않으며, 전체 테스트 통과 또는 운영 준비 완료로 해석하지 않는다.
