@@ -98,7 +98,7 @@ class LLMExercisePlan(BaseModel):
 
 class LLMRoutineOutput(BaseModel):
     total_estimated_time: int = Field(description="루틴 예상 소요 시간(분)")
-    summary_title: str = Field(description="루틴 요약 제목 (예: '다음 push 세션 추천')")
+    summary_title: str = Field(description="루틴 요약 제목 (예: '다음 밀기 세션 추천')")
     rationale_summary: List[str] = Field(description="루틴 생성 근거 요약 (2~3개 항목)")
     exercises: List[LLMExercisePlan]
     warnings: List[str] = Field(default_factory=list, description="주의사항 목록")

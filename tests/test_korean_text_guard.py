@@ -52,7 +52,7 @@ def test_generated_response_user_facing_text_is_guarded_to_korean():
     assert block.prescription[0].set_type == "working"
 
 
-def test_korean_text_with_schema_tokens_is_preserved():
+def test_korean_text_with_schema_tokens_is_translated_to_korean():
     output = LLMRoutineOutput(
         total_estimated_time=30,
         summary_title="푸시 근비대 루틴",
@@ -76,6 +76,6 @@ def test_korean_text_with_schema_tokens_is_preserved():
     response = build_routine_draft(output, "success", "none", False)
 
     assert response.summary_title == "푸시 근비대 루틴"
-    assert response.rationale_summary == ["BARBELL 제한을 고려해 chest 후보 중 안전한 운동을 선택했습니다."]
+    assert response.rationale_summary == ["바벨 제한을 고려해 가슴 후보 중 안전한 운동을 선택했습니다."]
     assert response.warnings == ["통증이 있으면 세트를 줄이세요."]
-    assert response.routine_blocks[0].exercise_rationale == "BODYWEIGHT 후보이며 chest 목표에 맞아 선택했습니다."
+    assert response.routine_blocks[0].exercise_rationale == "맨몸 후보이며 가슴 목표에 맞아 선택했습니다."

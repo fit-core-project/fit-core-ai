@@ -560,13 +560,57 @@ def normalize_llm_response(raw_text: str, llm=None) -> LLMRoutineOutput:
 def _candidate_to_plan(candidate: dict, template: LLMExercisePlan) -> LLMExercisePlan:
     return template.model_copy(update={
         "exercise_id": str(candidate["id"]),
-        "exercise_name": candidate.get("name_kr") or candidate.get("name_en") or template.exercise_name,
+        "exercise_name": catalog_display_name(candidate, template.exercise_name),
         "movement_pattern": candidate.get("movement_pattern") or template.movement_pattern,
         "movement_type": candidate.get("movement_type") or template.movement_type,
         "primary_muscles": [candidate["primary_muscle"]] if candidate.get("primary_muscle") else [],
         "equipment_type": candidate.get("equipment_req"),
-        "exercise_rationale": f"{template.exercise_rationale} (guard repair: replaced with safe candidate)",
+        "exercise_rationale": "요청 조건에 맞지 않는 운동 대신, 서버가 걸러낸 안전한 후보에서 고른 대체 운동입니다.",
+        "substitution_candidates": [],
     })
+
+
+# User-visible warning for a guard replacement. Telemetry counts it through
+# is_guard_replacement_warning(); keep the marker phrase stable.
+GUARD_REPLACEMENT_WARNING_MARKER = "조건에 맞지 않는 운동을 안전한 후보"
+
+
+def guard_replacement_warning(replacement_name: str) -> str:
+    return f"{GUARD_REPLACEMENT_WARNING_MARKER}인 '{replacement_name}' 운동으로 바꿨습니다."
+
+
+def is_guard_replacement_warning(warning: str) -> bool:
+    """True for a guard replacement warning (current Korean form or legacy 'Guard: ... replaced')."""
+    if not isinstance(warning, str):
+        return False
+    return GUARD_REPLACEMENT_WARNING_MARKER in warning or ("Guard:" in warning and "replaced" in warning)
+
+
+def catalog_display_name(candidate: dict, default: str) -> str:
+    """Korean catalog name (exercise_tier.name_kr), then name_en, then the given default."""
+    for key in ("name_kr", "name_en"):
+        value = candidate.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return default
+
+
+def _align_substitutions(exercise: LLMExercisePlan, safe_by_id: Dict[str, dict]) -> None:
+    """Keep only substitutions that are safe catalog candidates, named from the catalog."""
+    aligned = []
+    seen: set[str] = set()
+    for substitution in exercise.substitution_candidates:
+        sub_id = str(substitution.exercise_id)
+        candidate = safe_by_id.get(sub_id)
+        if candidate is None or sub_id == exercise.exercise_id or sub_id in seen:
+            if candidate is None:
+                logger.info("[Guard] dropped substitution outside safe candidates: %s", sub_id)
+            continue
+        seen.add(sub_id)
+        aligned.append(substitution.model_copy(update={
+            "exercise_name": catalog_display_name(candidate, substitution.exercise_name),
+        }))
+    exercise.substitution_candidates = aligned
 
 
 def trim_routine_to_time_budget(output: LLMRoutineOutput, time_available_min: int) -> bool:
@@ -652,6 +696,7 @@ def validate_and_repair_routine_output(
         candidate = safe_by_id.get(exercise.exercise_id)
         if candidate is not None:
             used_ids.add(exercise.exercise_id)
+            exercise.exercise_name = catalog_display_name(candidate, exercise.exercise_name)
             if candidate.get("movement_type"):
                 exercise.movement_type = candidate["movement_type"]
             if candidate.get("primary_muscle"):
@@ -677,9 +722,8 @@ def validate_and_repair_routine_output(
             used_ids.add(str(replacement["id"]))
             exercise = repaired.exercises[index]
             candidate = replacement
-            guard_warning_messages.append(
-                f"Guard: '{original_id}' -> '{replacement['id']}' 제약 위반으로 replaced 처리했습니다."
-            )
+            logger.warning("[Guard] replaced %s -> %s", original_id, replacement["id"])
+            guard_warning_messages.append(guard_replacement_warning(exercise.exercise_name))
 
         primary = str(candidate.get("primary_muscle") or "").strip()
         doms_level = doms.get(primary, 0)
@@ -693,6 +737,9 @@ def validate_and_repair_routine_output(
             exercise.sets = min(exercise.sets, 2)
         elif doms_level == 1:
             exercise.sets = max(1, exercise.sets - 1)
+
+    for exercise in repaired.exercises:
+        _align_substitutions(exercise, safe_by_id)
 
     if max_total_sets is not None:
         total_sets = sum(exercise.sets for exercise in repaired.exercises)
@@ -735,14 +782,7 @@ def validate_and_repair_routine_output(
             trimmed_sets,
             removed_exercises,
         )
-        repaired.warnings = [
-            *repaired.warnings,
-            (
-                "Guard 진단: "
-                f"repairCount={violations}, trimmedSetCount={trimmed_sets}, "
-                f"removedExerciseCount={removed_exercises}"
-            ),
-        ]
+        # Diagnostics stay in logs only; they are not user-facing warnings.
 
     if guard_warning_messages:
         repaired.warnings = [*repaired.warnings, *guard_warning_messages]

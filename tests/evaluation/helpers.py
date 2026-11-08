@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from engines.candidate_ranker import score_candidate_exercises
+from engines.llm_parser import is_guard_replacement_warning
 from engines.prescription.adjustments import _calculate_max_total_sets
 from engines.routine_pipeline import _validate_or_fallback
 from engines.rule_critic import (
@@ -130,7 +131,7 @@ class EvalHarness:
         repair_count = len([
             warning
             for warning in response.warnings
-            if "Guard:" in warning and "replaced" in warning
+            if is_guard_replacement_warning(warning)
         ])
         fallback_used = response.is_fallback or response.generation_status == "fallback"
         critic = evaluate_routine_quality(

@@ -107,7 +107,7 @@ def test_prompt_v2_mentions_hard_constraints_and_ranked_candidates():
     assert "[SET ALLOCATION POLICY]" in prompt
     assert "[EXERCISE ORDER POLICY]" in prompt
     assert "[RATIONALE POLICY]" in prompt
-    assert "Every exercise_rationale must cite at least one concrete input value" in prompt
+    assert "Every exercise_rationale must mention at least one concrete input" in prompt
     assert "Avoid generic explanations" in prompt
     assert "[OUTPUT SCHEMA]" in prompt
     assert "[PROHIBITED BEHAVIOR]" in prompt
@@ -121,7 +121,17 @@ def test_prompt_requires_korean_user_facing_text():
 
     assert "All user-facing natural language fields must be Korean." in language_policy
     assert "summary_title, rationale_summary, exercise_rationale, and warnings must be Korean." in language_policy
-    assert "Do not output English explanations unless the field is an enum, id, equipment key, or muscle key." in language_policy
+    assert "exercise_name must be the Korean catalog name" in language_policy
+    assert "Never put raw codes inside Korean text." in language_policy
+    assert "push->밀기" in language_policy
+
+
+def test_prompt_examples_do_not_teach_raw_code_tokens():
+    prompt = _build_system_prompt(profile=None, recent_sets=None)
+    examples = _section(prompt, "[EXAMPLES]")
+
+    for token in ("primary_muscles가", "COMPOUND 유형", "ISOLATION 유형", "BARBELL 제한", "BODYWEIGHT 후보", "푸시 근비대"):
+        assert token not in examples
 
 
 def test_prompt_weight_policy_delegates_prescription_to_server():

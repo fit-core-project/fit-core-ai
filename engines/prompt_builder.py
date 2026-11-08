@@ -95,8 +95,12 @@ def build_system_prompt(
         "[LANGUAGE POLICY]\n"
         "- All user-facing natural language fields must be Korean.\n"
         "- summary_title, rationale_summary, exercise_rationale, and warnings must be Korean.\n"
-        "- Exercise names may use catalog Korean names.\n"
-        "- Do not output English explanations unless the field is an enum, id, equipment key, or muscle key.\n"
+        "- exercise_name must be the Korean catalog name exactly as listed in [RANKED CANDIDATES].\n"
+        "- Never put raw codes inside Korean text. Write Korean words instead, for example: "
+        "push->밀기, pull->당기기, legs->하체, chest->가슴, triceps->삼두, front-deltoids->전면 어깨, "
+        "BARBELL->바벨, DUMBBELL->덤벨, MACHINE->머신, CABLE->케이블, BODYWEIGHT->맨몸, "
+        "COMPOUND->복합 운동, ISOLATION->고립 운동, DOMS moderate->근육통 중간, hypertrophy->근비대.\n"
+        "- Never write field names such as primary_muscles, movement_type, readinessLevel, or exercise ids inside Korean text.\n"
         "- Keep schema field names, muscle ids, equipment enums, set types, and exercise ids exactly as required; translate only user-facing explanation text.\n\n"
         "[READINESS POLICY]\n"
         "- If readinessLevel is low, avoid overloading the plan with heavy COMPOUND choices when reasonable alternatives exist.\n"
@@ -129,7 +133,7 @@ def build_system_prompt(
         "[RATIONALE POLICY]\n"
         "- The candidates are pre-ranked by the server.\n"
         "- When writing exercise_rationale, use only visible candidate fields: primary, secondary, equipment, movement_type, pain_triggers, and reason.\n"
-        "- Every exercise_rationale must cite at least one concrete input value from [REQUEST CONTEXT], [DOMS], [USER PROFILE], [RECENT SETS], or that candidate's visible fields.\n"
+        "- Every exercise_rationale must mention at least one concrete input from [REQUEST CONTEXT], [DOMS], [USER PROFILE], [RECENT SETS], or that candidate's visible fields, written as Korean words (see [LANGUAGE POLICY]), not as raw codes.\n"
         "- Prefer rationale text that ties the selected exercise to the actual goal, readinessLevel, timeAvailableMin, target_split_label, target_muscles, equipment, DOMS, pain, candidate primary/secondary, and candidate reason values.\n"
         "- Mention readiness, time pressure, target muscles, DOMS, pain, or equipment only when those values are present in [REQUEST CONTEXT] or [DOMS].\n"
         "- Avoid generic explanations such as 'good exercise' or 'effective movement' unless they are anchored to a visible candidate or request value.\n"
@@ -143,9 +147,9 @@ def build_system_prompt(
         "[EXAMPLES]\n"
         "Note: EXAMPLE_A/B/C IDs are illustration only; use only IDs from [RANKED CANDIDATES].\n\n"
         "Example 1 - hypertrophy / push / barbell available / no constraints:\n"
-        '{{"total_estimated_time":45,"summary_title":"푸시 근비대 루틴","rationale_summary":["가슴 중심의 복합 운동을 먼저 배치해 목표 근육을 우선 자극합니다.","보조 운동은 어깨와 팔 볼륨을 보완하도록 뒤에 배치했습니다."],"warnings":[],"exercises":[{{"exercise_id":"EXAMPLE_A","exercise_name":"바벨 벤치프레스","primary_muscles":["chest"],"target_reps":10,"sets":3,"rest_time_sec":90,"target_weight_kg":null,"exercise_rationale":"COMPOUND 유형이고 primary_muscles가 chest인 후보라서 push 목표와 근비대 목표에 맞습니다."}},{{"exercise_id":"EXAMPLE_B","exercise_name":"덤벨 레터럴 레이즈","primary_muscles":["side-deltoids"],"target_reps":12,"sets":2,"rest_time_sec":60,"target_weight_kg":null,"exercise_rationale":"ISOLATION 유형의 어깨 보조 운동으로, 주요 복합 운동 뒤에 배치해 부담을 조절했습니다."}}]}}\n\n'
+        '{{"total_estimated_time":45,"summary_title":"밀기 근비대 루틴","rationale_summary":["가슴 중심의 복합 운동을 먼저 배치해 목표 근육을 우선 자극합니다.","보조 운동은 어깨와 팔 볼륨을 보완하도록 뒤에 배치했습니다."],"warnings":[],"exercises":[{{"exercise_id":"EXAMPLE_A","exercise_name":"바벨 벤치프레스","primary_muscles":["chest"],"target_reps":10,"sets":3,"rest_time_sec":90,"target_weight_kg":null,"exercise_rationale":"가슴을 주로 쓰는 바벨 복합 운동이라 밀기 루틴의 근비대 목표에 맞습니다."}},{{"exercise_id":"EXAMPLE_B","exercise_name":"덤벨 레터럴 레이즈","primary_muscles":["side-deltoids"],"target_reps":12,"sets":2,"rest_time_sec":60,"target_weight_kg":null,"exercise_rationale":"측면 어깨를 다듬는 고립 보조 운동으로, 주요 복합 운동 뒤에 배치해 부담을 조절했습니다."}}]}}\n\n'
         "Example 2 - barbell blocked + shoulder pain -> BODYWEIGHT substitute, reduced volume:\n"
-        '{{"total_estimated_time":30,"summary_title":"제한 조건 반영 푸시 루틴","rationale_summary":["BARBELL 제한이 있어 서버가 필터링한 후보 안에서 구성했습니다.","어깨 통증 맥락을 고려해 운동 수와 부담을 줄였습니다."],"warnings":["컨디션에 따라 반복 수와 휴식 시간을 조절하세요."],"exercises":[{{"exercise_id":"EXAMPLE_C","exercise_name":"푸시업","primary_muscles":["chest"],"target_reps":10,"sets":3,"rest_time_sec":75,"target_weight_kg":null,"exercise_rationale":"BODYWEIGHT 후보 중 chest를 주로 쓰는 운동이며, 장비 제한과 통증 조건을 고려해 선택했습니다."}}]}}\n\n'
+        '{{"total_estimated_time":30,"summary_title":"제한 조건 반영 밀기 루틴","rationale_summary":["바벨을 쓸 수 없어 서버가 걸러낸 후보 안에서 구성했습니다.","어깨 통증 맥락을 고려해 운동 수와 부담을 줄였습니다."],"warnings":["컨디션에 따라 반복 수와 휴식 시간을 조절하세요."],"exercises":[{{"exercise_id":"EXAMPLE_C","exercise_name":"푸시업","primary_muscles":["chest"],"target_reps":10,"sets":3,"rest_time_sec":75,"target_weight_kg":null,"exercise_rationale":"맨몸 후보 중 가슴을 주로 쓰는 운동이며, 장비 제한과 어깨 통증을 고려해 골랐습니다."}}]}}\n\n'
         "[FINAL SELECTION REMINDER]\n"
         "In the actual response, never use EXAMPLE_* ids. Use only exercise_id values from [RANKED CANDIDATES].\n\n"
         "[PROHIBITED BEHAVIOR]\n"

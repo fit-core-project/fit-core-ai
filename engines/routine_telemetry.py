@@ -8,6 +8,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+from .llm_parser import is_guard_replacement_warning
 from .schemas import RecentSetRecord, RoutineDraftResponse, RoutineRequest
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ def get_rule_critic_telemetry_enabled() -> bool:
 
 
 def count_guard_repairs(warnings: list[str]) -> int:
-    return len([w for w in warnings if "Guard:" in w and "replaced" in w])
+    return len([w for w in warnings if is_guard_replacement_warning(w)])
 
 
 def classify_hard_violation_category(value: Any) -> str:

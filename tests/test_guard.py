@@ -9,7 +9,7 @@ Scenarios:
 """
 import pytest
 
-from engines.llm_parser import validate_and_repair_routine_output
+from engines.llm_parser import is_guard_replacement_warning, validate_and_repair_routine_output
 from engines.post_validation_guard import GuardReport, Violation, audit_routine_output
 from engines.schemas import LLMExercisePlan, LLMRoutineOutput, PainAreaEntry
 
@@ -169,5 +169,7 @@ class TestValidateAndRepair:
         )
 
         assert result is not None
-        assert any("Guard" in w for w in result.warnings), "guard 교체 경고가 warnings에 없음"
+        assert any(is_guard_replacement_warning(w) for w in result.warnings), "guard 교체 경고가 warnings에 없음"
+        # User-facing warnings carry the Korean catalog name, never raw ids or English internals.
+        assert not any("Guard" in w or "replaced" in w or "repairCount" in w for w in result.warnings)
         assert reason == "none"

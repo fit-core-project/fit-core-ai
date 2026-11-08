@@ -4,10 +4,10 @@
   "status_reason_code": "none",
   "is_fallback": false,
   "total_estimated_time": 12,
-  "summary_title": "Push 세션 추천 루틴",
+  "summary_title": "밀기 세션 추천 루틴",
   "rationale_summary": [
     "상체 밀기 패턴 중심",
-    "DOMS 고려 볼륨 조정"
+    "근육통 고려 볼륨 조정"
   ],
   "routine_blocks": [
     {
@@ -47,13 +47,7 @@
         }
       ],
       "exercise_rationale": "주요 복합 운동",
-      "substitution_candidates": [
-        {
-          "exercise_id": "dumbbell_bench_press",
-          "exercise_name": "덤벨 벤치프레스",
-          "reason": "바벨 없을 때 대체"
-        }
-      ]
+      "substitution_candidates": []
     }
   ],
   "warnings": []

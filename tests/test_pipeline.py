@@ -17,6 +17,7 @@ from langchain_core.runnables import RunnableLambda
 from sqlalchemy.orm import Session
 
 from engines.db_queries import get_user_profile_context
+from engines.llm_parser import is_guard_replacement_warning
 from engines.routine_pipeline import generate_smart_routine
 from engines.schemas import (
     LLMExercisePlan,
@@ -194,7 +195,7 @@ class TestHappyPath:
 
         assert result.generation_status == "success"
         assert result.routine_blocks[0].exercise_id == "barbell_bench_press"
-        assert any("replaced" in warning for warning in result.warnings)
+        assert any(is_guard_replacement_warning(warning) for warning in result.warnings)
 
     def test_too_many_invalid_candidates_fall_back(
         self, sample_request, sample_profile, sample_llm_output, mock_candidates
