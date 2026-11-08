@@ -1,0 +1,172 @@
+{
+  "routineDraftId": "f0f1a9cd-a3bc-4f49-9184-a4072266e64e",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 33,
+  "summaryTitle": "팔 근육 강화 루틴",
+  "rationaleSummary": [
+    "목표 근육인 이두근과 삼두근을 중심으로 고립 운동 위주로 구성했습니다.",
+    "시간 제한(45분) 내에 충분한 볼륨을 확보하고, 복합 운동 중 트라이셉스 비중이 높은 클로즈드 그립 바벨 벤치프레스를 배치하여 근력 목표를 충족합니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "33",
+      "exerciseName": "클로즈드 그립 바벨 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "BARBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "근력 향상을 목표로 하며, 주요 타겟 근육인 삼두를 주동근으로 하는 복합 운동을 먼저 배치했습니다. 이는 시간 제한(45분) 내에 높은 강도로 시작하기 위함입니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "131",
+      "exerciseName": "트라이셉스 로프 푸시다운",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 25.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 25.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "삼두근을 고립적으로 타겟하는 케이블 운동으로, 근력 목표에 맞춰 충분한 볼륨을 확보했습니다. 장비가 다양하고 효율성이 높은 후보 중 하나입니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "94",
+      "exerciseName": "오버헤드 덤벨 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 15.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 15.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "삼두근을 고립적으로 자극하는 덤벨 운동입니다. 다양한 장비가 사용 가능하고, 삼두를 주요 타겟으로 하는 후보 중 하나로 선택했습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 4,
+      "exerciseId": "12",
+      "exerciseName": "인클라인 덤벨 컬",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "biceps"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 7.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "이두근을 고립적으로 타겟하는 운동으로, 목표 근육에 직접적인 자극을 주기 위해 배치했습니다. 덤벨 장비가 사용 가능합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 5,
+      "exerciseId": "11",
+      "exerciseName": "서포티드 인클라인 컬",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "biceps"
+      ],
+      "equipmentType": "DUMBBELL, CABLE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 7.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "이두근을 보조적으로 자극하는 케이블 운동입니다. 시간 제한과 근력 목표를 고려하여 마무리 볼륨으로 배치했습니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "컨디션에 맞춰 중량과 반복 수를 조절하세요."
+  ]
+}

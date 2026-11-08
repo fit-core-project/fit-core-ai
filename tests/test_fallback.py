@@ -116,7 +116,9 @@ class TestFallbackGoalParams:
         )
         fly = next(block for block in result.routine_blocks if block.exercise_id == "dumbbell_fly")
 
-        assert fly.prescription[0].target_weight_kg == 72.5
+        # 100kg x5 on another chest exercise -> a dumbbell (per hand) isolation fly is scaled down,
+        # not copied (the old rule prescribed a 72.5kg dumbbell fly).
+        assert fly.prescription[0].target_weight_kg == 15.0
 
 
 class TestFallbackReadiness:

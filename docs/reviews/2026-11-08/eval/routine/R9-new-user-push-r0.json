@@ -1,0 +1,249 @@
+{
+  "routineDraftId": "d507ce89-66ff-4269-9cde-f6fe839c1fde",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 57,
+  "summaryTitle": "가슴-삼두근 근비대 밀기 루틴",
+  "rationaleSummary": [
+    "목표인 가슴과 삼두근을 주 타겟으로 하는 복합 운동들을 배치하여 높은 부하로 시작합니다.",
+    "머신, 덤벨, 케이블 등 다양한 장비를 활용해 전면 어깨와 삼두근까지 충분한 볼륨을 확보했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "41",
+      "exerciseName": "인클라인 스미스 머신 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 120,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        }
+      ],
+      "exerciseRationale": "가슴을 주 타겟으로 하는 복합 운동 중, 인클라인 각도를 활용하여 가슴 근비대 목표에 맞는 높은 효율의 머신 운동입니다. 전면 어깨와 삼두근까지 보조적으로 자극합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "34",
+      "exerciseName": "덤벨 체스트프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 120,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        }
+      ],
+      "exerciseRationale": "가슴을 주 타겟으로 하며, 덤벨을 사용하여 가동 범위 확보와 근비대 목표에 적합한 복합 운동입니다. 스미스 머신 다음 단계로 배치하여 부하를 조절합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "43",
+      "exerciseName": "케이블 체스트프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 120,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        }
+      ],
+      "exerciseRationale": "가슴을 주 타겟으로 하는 케이블 운동은 근육의 수축과 이완에 집중하기 좋아, 루틴 후반부에서 충분한 볼륨을 쌓는 데 효과적입니다. 전면 어깨와 삼두근까지 자극합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 4,
+      "exerciseId": "128",
+      "exerciseName": "인클라인 덤벨 프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 120,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        }
+      ],
+      "exerciseRationale": "가슴을 주 타겟으로 하는 복합 운동이며, 인클라인 각도를 통해 가슴 근비대 목표를 달성하는 데 도움을 줍니다. 덤벨 사용으로 다양한 자극을 제공합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 5,
+      "exerciseId": "37",
+      "exerciseName": "머신 체스트프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 120,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        }
+      ],
+      "exerciseRationale": "가슴 근비대 목표를 위한 머신 운동으로, 안정적인 부하와 높은 효율성을 제공합니다. 전면 어깨와 삼두근까지 보조적으로 자극하여 볼륨을 채웁니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 6,
+      "exerciseId": "42",
+      "exerciseName": "디클라인 스미스 머신 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 120,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 120
+        }
+      ],
+      "exerciseRationale": "가슴을 주 타겟으로 하는 복합 운동 중, 디클라인 각도를 활용하여 가슴 근비대 목표를 달성합니다. 마지막에 배치하여 다양한 자극과 볼륨을 추가합니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": []
+}

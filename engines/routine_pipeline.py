@@ -389,6 +389,7 @@ def _validate_or_fallback(
         doms_db=doms_db,
         max_total_sets=max_total_sets,
         time_available_min=req.time_available_min,
+        target_muscles=db_target_muscles,
     )
     if validated is None:
         if on_validation_failed is not None:
@@ -411,16 +412,31 @@ def _validate_or_fallback(
     )
 
 
+def _merge_profile_pain_areas(req: RoutineRequest, profile: Optional[UserProfileContext]) -> RoutineRequest:
+    """Long-term injuries saved on the profile are hard filters too, not just prompt text."""
+    if not profile or not profile.pain_areas:
+        return req
+    seen = {p.body_part.strip().lower() for p in req.pain_areas}
+    extra = [p for p in profile.pain_areas if p.body_part and p.body_part.strip().lower() not in seen]
+    if not extra:
+        return req
+    logger.info("[매핑] profile pain areas added -> %s", [p.body_part for p in extra])
+    return req.model_copy(update={"pain_areas": [*req.pain_areas, *extra]})
+
+
 def generate_smart_routine(
     req: RoutineRequest,
     db: Session,
     profile: Optional[UserProfileContext] = None,
     recent_sets: Optional[List[RecentSetRecord]] = None,
 ) -> RoutineDraftResponse:
-    if req.target_split_label:
-        db_target_muscles = split_label_to_muscles(req.target_split_label)
+    req = _merge_profile_pain_areas(req, profile)
+    split_muscles = split_label_to_muscles(req.target_split_label) if req.target_split_label else []
+    if split_muscles:
+        db_target_muscles = split_muscles
         logger.info("[매핑] split_label=%s -> %s", req.target_split_label, db_target_muscles)
     elif req.target_muscles:
+        # "custom" (FE muscle picker) and other unmapped labels carry the real targets in target_muscles.
         _, db_target_muscles = get_mapped_targets(req.target_muscles)
         logger.info("[매핑] DB 타겟 -> %s", db_target_muscles)
     else:

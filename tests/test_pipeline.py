@@ -242,7 +242,8 @@ class TestHappyPath:
 
         first_set = result.routine_blocks[0].prescription[0]
         assert first_set.target_reps == 8
-        assert first_set.target_weight_kg == 85.0
+        # 100kg x5 -> e1RM 116.7 -> 8 reps at RIR 2 (10-rep effort)
+        assert first_set.target_weight_kg == 87.5
         assert first_set.target_rest_sec == 120
 
     def test_recent_sets_match_by_exercise_id_before_name(
@@ -267,7 +268,7 @@ class TestHappyPath:
                 sample_request, db, profile=sample_profile, recent_sets=recent_sets
             )
 
-        assert result.routine_blocks[0].prescription[0].target_weight_kg == 85.0
+        assert result.routine_blocks[0].prescription[0].target_weight_kg == 87.5
 
     def test_fat_loss_goal_uses_compound_conditioning_reps(
         self, sample_request, sample_profile, sample_llm_output, mock_candidates
@@ -462,7 +463,8 @@ class TestHappyPath:
             )
 
         assert result.generation_status == "success"
-        assert result.routine_blocks[0].prescription[0].target_weight_kg == 80.0
+        # squat 1RM 170 x 0.65 (leg press ratio) solved for 8 reps at RIR 2
+        assert result.routine_blocks[0].prescription[0].target_weight_kg == 82.5
 
     def test_push_split_caps_accessory_isolation_sets(
         self, sample_request, sample_profile, mock_candidates

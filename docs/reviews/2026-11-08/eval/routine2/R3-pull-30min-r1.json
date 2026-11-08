@@ -1,0 +1,110 @@
+{
+  "routineDraftId": "cbb556fd-1244-412f-9715-2cb623d349a0",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 24,
+  "summaryTitle": "당기기 근력 루틴",
+  "rationaleSummary": [
+    "목표 근육인 등 상부, 승모근, 이두근을 중심으로 복합 운동 위주로 구성했습니다.",
+    "최근 랫풀다운과 시티드 로우를 진행했으나, 높은 효율성과 목표 근육 일치도를 가진 머신 기반의 클로즈드 그립 시티드 로우와 체스트 서포티드 로우를 메인으로 배치하여 충분한 자극을 유지했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "61",
+      "exerciseName": "체스트 서포티드 로우",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "upper-back"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 107.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 107.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 107.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "당기기 루틴의 목표 근육인 등 상부(등)를 주 타겟으로 하는 복합 운동입니다. 최근 씰 로우와 시티드 로우를 진행했음에도 불구하고, 높은 효율성(efficiency 1)과 머신 장비 사용이 가능하여 메인 운동으로 적합합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "53",
+      "exerciseName": "리버스 그립 랫풀다운",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "upper-back"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 107.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 107.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "등 상부(등)와 이두근을 목표로 하는 복합 운동입니다. 높은 효율성(efficiency 2)과 머신 장비 사용이 가능하여, 메인 운동 다음 순서에 배치해 충분한 볼륨을 확보했습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "142",
+      "exerciseName": "리어 델트 로우",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "back-deltoids"
+      ],
+      "equipmentType": "DUMBBELL, CABLE, MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 17.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "목표 근육 중 하나인 후면 어깨(후면 어깨)를 집중적으로 자극하는 복합 운동입니다. 전반적인 목표 근육을 보완하며, 비교적 낮은 볼륨으로 루틴의 균형을 맞추었습니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "컨디션에 맞춰 중량과 반복 수를 조절하세요."
+  ]
+}

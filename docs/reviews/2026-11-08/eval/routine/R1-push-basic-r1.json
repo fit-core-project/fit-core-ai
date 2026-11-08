@@ -1,0 +1,211 @@
+{
+  "routineDraftId": "98ca5f62-8ad8-4fda-a2f3-3569ca470f04",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 49,
+  "summaryTitle": "밀기 근력 루틴",
+  "rationaleSummary": [
+    "가슴, 전면 어깨, 삼두를 주요 타겟으로 하는 복합 운동을 먼저 배치하여 최대의 힘을 발휘할 수 있도록 구성했습니다.",
+    "머신과 덤벨 등 다양한 장비를 활용하여 목표 근육군에 대한 충분한 볼륨을 확보하고, 마지막에는 고립 운동으로 마무리합니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "40",
+      "exerciseName": "스미스 머신 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "가슴을 주 타겟으로 하는 복합 운동 중, 장비 우선순위와 효율성 측면에서 가장 높은 점수를 받은 스미스 머신 벤치프레스를 배치했습니다. 목표 근육인 가슴과 삼두를 모두 자극합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "41",
+      "exerciseName": "인클라인 스미스 머신 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "가슴을 주 타겟으로 하는 복합 운동 중, 첫 번째 메인 리프트로 적절합니다. 스미스 머신 장비를 활용하여 안정적으로 가슴 근육에 힘을 집중할 수 있습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "34",
+      "exerciseName": "덤벨 체스트프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "가슴 중심의 복합 운동을 이어갑니다. 덤벨 장비를 활용하여 가동 범위와 안정성을 높이며, 목표 근육인 전면 어깨와 삼두까지 보조적으로 자극합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 4,
+      "exerciseId": "35",
+      "exerciseName": "인클라인 덤벨 체스트프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "가슴을 주 타겟으로 하는 복합 운동입니다. 인클라인 각도를 활용하여 가슴 상부를 집중적으로 자극하며, 목표 근육군에 적합한 볼륨을 제공합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 5,
+      "exerciseId": "37",
+      "exerciseName": "머신 체스트프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "가슴 근육에 대한 고립 운동으로, 머신 장비를 활용하여 안정적으로 목표 볼륨을 채웁니다. 전면 어깨와 삼두까지 보조적인 자극이 가능합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 6,
+      "exerciseId": "43",
+      "exerciseName": "케이블 체스트프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "마지막으로 가슴을 마무리하는 고립 운동입니다. 케이블 장비를 활용하여 지속적인 긴장감을 유지하며, 목표 근육군에 대한 충분한 자극을 제공합니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "컨디션에 맞춰 중량과 반복 수를 조절하세요."
+  ]
+}

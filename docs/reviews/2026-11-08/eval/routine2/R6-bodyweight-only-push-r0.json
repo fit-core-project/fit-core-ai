@@ -1,0 +1,110 @@
+{
+  "routineDraftId": "a82227d1-4421-44e2-a53d-78d986dfb53f",
+  "generationStatus": "fallback",
+  "statusReasonCode": "networkError",
+  "isFallback": true,
+  "totalEstimatedTime": 33,
+  "summaryTitle": "기본 밀기 루틴",
+  "rationaleSummary": [
+    "AI 코치 연결이 원활하지 않아 규칙 기반 기본 루틴으로 대신했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "48",
+      "exerciseName": "딥스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 5,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "117",
+      "exerciseName": "푸시업",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "중량은 본인의 컨디션에 맞게 조절하세요."
+  ]
+}

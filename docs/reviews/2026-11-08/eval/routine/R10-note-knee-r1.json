@@ -1,0 +1,213 @@
+{
+  "routineDraftId": "bdb646c4-53ac-4f17-8898-40c0d859085c",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 49,
+  "summaryTitle": "하체 근력 강화 루틴 (무릎 보호 고려)",
+  "rationaleSummary": [
+    "사용자의 목표인 근력 강화를 위해 하체 중심의 복합 운동을 배치했습니다.",
+    "무릎 부담을 줄이기 위해 힙 쓰러스트와 데드리프트 계열의 동작 위주로 구성하고, 무릎에 직접적인 스트레스를 주는 운동은 피했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "107",
+      "exerciseName": "힙 쓰러스트",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "gluteal"
+      ],
+      "equipmentType": "BARBELL, DUMBBELL, MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 102.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 102.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 102.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 102.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "하체 근력 강화가 목표이며, 엉덩이(둔근)와 햄스트링을 주 타겟으로 하는 복합 운동입니다. 특히 무릎 부담을 줄이는 것이 중요하여, 이 동작은 고관절 위주로 자극할 수 있어 적합합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "126",
+      "exerciseName": "루마니안 데드리프트",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "hamstring"
+      ],
+      "equipmentType": "BARBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 60.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 60.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 60.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "햄스트링과 둔근을 주 타겟으로 하는 복합 운동입니다. 무릎 관절에 부담이 적으면서도 하체 근력 강화 목표를 달성하는 데 매우 효과적이며, 최근 스모 스쿼트나 런지 등 다양한 하체 운동 경험을 고려하여 배치했습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "159",
+      "exerciseName": "싱글 레그 루마니안 데드리프트",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "hamstring"
+      ],
+      "equipmentType": "DUMBBELL, BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "한쪽 다리씩 진행하는 싱글 레그 동작은 밸런스와 코어 안정성을 높여주며, 무릎에 가해지는 부하를 분산시키면서도 하체 근력 강화 목표를 충족합니다. 특히 무릎 부담을 줄이려는 사용자 요청과 일치하여 선택했습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 4,
+      "exerciseId": "164",
+      "exerciseName": "글루트 브릿지",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "gluteal"
+      ],
+      "equipmentType": "BODYWEIGHT, BARBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주요 복합 운동 후 마무리로 둔근(둔근)을 고립하여 자극하는 동작입니다. 무릎에 부담이 적은 맨몸 운동으로, 하체 근력 목표를 보조적으로 채우면서도 안전하게 진행할 수 있습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 5,
+      "exerciseId": "105",
+      "exerciseName": "라잉 레그 컬",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "hamstring"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 60.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "햄스트링을 고립하여 자극하는 머신 운동입니다. 하체 근력 목표를 보조적으로 채우면서도, 무릎 관절에 직접적인 스트레스를 주는 동작보다는 기구의 도움을 받아 안전하게 훈련할 수 있습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 6,
+      "exerciseId": "127",
+      "exerciseName": "라잉 레그 컬",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "hamstring"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 60.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "마지막으로 햄스트링을 마무리하는 고립 운동입니다. 무릎 부담이 적은 머신 기반의 동작을 선택하여, 전반적인 하체 근력 목표를 안전하게 달성하도록 구성했습니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "무릎이 시큰한 상태이므로 모든 세트에서 통증을 느끼지 않는 범위 내에서 무게를 조절하는 것이 중요합니다.",
+    "근력 목표가 있으나, 부상 방지를 위해 충분한 워밍업과 웜다운에 집중하세요.",
+    "컨디션에 맞춰 중량과 반복 수를 조절하세요."
+  ]
+}

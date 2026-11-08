@@ -1,0 +1,172 @@
+{
+  "routineDraftId": "4b63e523-71e1-401f-9954-41f77d87e02f",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 33,
+  "summaryTitle": "팔 근육 강화 루틴",
+  "rationaleSummary": [
+    "목표 근육인 이두근과 삼두근을 중심으로 고립 운동 위주로 구성했습니다.",
+    "전체적으로 복합적인 움직임보다는 특정 부위를 집중적으로 자극하는 방식으로, 목표한 45분 내에 안전하게 강도를 높일 수 있도록 설계되었습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "33",
+      "exerciseName": "클로즈드 그립 바벨 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "BARBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주요 목표 근육인 삼두근을 주 타겟으로 하는 복합 운동입니다. 이 동작은 전면 어깨와 가슴까지 보조적으로 사용하며, 강도 높은 스트<0xEB><0xA0><0x9D>스 훈련의 시작점으로 적절합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "93",
+      "exerciseName": "케이블 오버헤드 트라이셉스 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 25.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 25.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "삼두근을 고립적으로 자극하는 케이블 운동입니다. 목표 근육인 삼두근에 집중하여 충분한 볼륨을 확보하며, 45분 시간 제한 내에서 효율적인 강도 유지가 가능합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "95",
+      "exerciseName": "원암 오버헤드 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "DUMBBELL, CABLE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 15.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "삼두근을 고립적으로 자극하는 운동입니다. 목표 근육인 삼두근에 대한 마지막 볼륨을 채우며, 45분 시간 제한과 스트<0xEB><0xA0><0x9D>스 목표를 고려하여 적절한 마무리 동작으로 선정했습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 4,
+      "exerciseId": "12",
+      "exerciseName": "인클라인 덤벨 컬",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "biceps"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 7.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 7.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "이두근을 주 타겟으로 하는 고립 운동입니다. 목표 근육에 집중하여 스트<0xEB><0xA0><0x9D>스 향상에 기여하며, 덤벨 장비를 활용해 안전하게 수행할 수 있습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 5,
+      "exerciseId": "130",
+      "exerciseName": "덤벨 해머 컬",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "biceps"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 7.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "이두근을 보조적으로 자극하는 덤벨 운동입니다. 이두근에 대한 충분한 볼륨 확보를 위해 배치했으며, 전반적인 팔 근육의 균형 발달에 도움을 줄 것입니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "컨디션에 맞춰 중량과 반복 수를 조절하세요."
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "routineDraftId": "242ab1ab-f624-4501-bb14-accedc9bc5ea",
+  "generationStatus": "fallback",
+  "statusReasonCode": "networkError",
+  "isFallback": true,
+  "totalEstimatedTime": 34,
+  "summaryTitle": "기본 맞춤형 루틴",
+  "rationaleSummary": [
+    "AI 코치 연결이 원활하지 않아 규칙 기반 기본 루틴으로 대신했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "33",
+      "exerciseName": "클로즈드 그립 바벨 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "BARBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 5,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "11",
+      "exerciseName": "서포티드 인클라인 컬",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "biceps"
+      ],
+      "equipmentType": "DUMBBELL, CABLE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 7.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 7.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 7.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 7.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 5,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 7.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "목표 근육의 수축과 이완을 의식하며 천천히 수행하세요.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "중량은 본인의 컨디션에 맞게 조절하세요."
+  ]
+}

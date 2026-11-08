@@ -1,0 +1,180 @@
+{
+  "routineDraftId": "647ad8d1-f575-4cf6-aa6b-7a56610893d1",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 42,
+  "summaryTitle": "하체 근력 강화 루틴",
+  "rationaleSummary": [
+    "사용자의 목표인 근력 강화를 위해 복합 운동 위주로 하체를 구성했습니다.",
+    "무릎과 고관절에 부담을 줄 수 있는 요소를 고려하여 덤벨이나 맨몸으로 진행 가능한 후보군에서 선택했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "114",
+      "exerciseName": "와이드 스탠스 고블릿 스쿼트",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "하체 근력 강화가 목표이며, 덤벨을 이용한 복합 운동으로 대퇴사두근과 둔근을 주 타겟합니다. 무릎에 부담이 적은 와이드 스탠스 고블릿 스쿼트를 선택했습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "154",
+      "exerciseName": "스텝 업",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "equipmentType": "DUMBBELL, BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "두 번째 복합 운동으로, 덤벨을 이용해 대퇴사두근과 둔근에 자극을 주며 근력 목표를 달성하는 데 도움을 줍니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "174",
+      "exerciseName": "ATG 스플릿 스쿼트",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "equipmentType": "BODYWEIGHT, DUMBBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "맨몸으로 진행 가능한 복합 운동 중, 대퇴사두근과 햄스트링을 모두 자극하여 하체 근력 목표를 충족합니다. 낮은 난이도와 높은 효율성을 고려했습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 4,
+      "exerciseId": "152",
+      "exerciseName": "커티시 런지",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "abductors"
+      ],
+      "equipmentType": "DUMBBELL, BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 40.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 40.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "최근에 하체 운동을 진행한 이력이 있지만, 아<0xEB><0x94><0xAF>터와 둔근까지 자극하는 복합 운동으로 근력 목표를 보조합니다. 덤벨과 맨몸 옵션이 있어 안전하게 수행 가능합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 5,
+      "exerciseId": "108",
+      "exerciseName": "케이블 킥백",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "gluteal"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 32.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "분할의 다른 목표 근육도 한 번은 자극하도록 넣은 운동입니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "컨디션에 맞춰 중량과 반복 수를 조절하세요."
+  ]
+}

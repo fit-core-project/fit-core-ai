@@ -1,18 +1,9 @@
-"""목표 중량 추정 — 5단계 폴백 로직."""
+"""목표 중량 추정 — 같은 운동 기록 > 본인 기준 > 같은 근육 기록 > 빅4 기준 > LLM 힌트."""
 from typing import List, Optional, Tuple
 
 from ..schemas import LLMExercisePlan, RecentSetRecord, UserProfileContext
 from .estimator import _movement_type_key, calculate_1rm
-from .params import _round_to_nearest_2_5, _goal_key
-
-_GOAL_INTENSITY = {
-    "strength": 0.85,
-    "hypertrophy": 0.72,
-    "endurance": 0.60,
-    "fatloss": 0.60,
-    "recomposition": 0.72,
-    "generalfitness": 0.65,
-}
+from .params import _round_to_nearest_2_5
 
 _BIG_FOUR_BASELINE = {
     "overhead_press": {"ids": {"75", "barbell_overhead_press"}, "ratio": 0.70},
@@ -36,25 +27,6 @@ _MUSCLE_TO_BIG_FOUR = {
     "abductors":      "squat",
     "calves":         "squat",
 }
-
-
-def _find_recent_reference(
-    exercise: LLMExercisePlan,
-    recent_sets: Optional[List[RecentSetRecord]],
-) -> Optional[RecentSetRecord]:
-    if not recent_sets:
-        return None
-    exercise_id = exercise.exercise_id.strip().lower()
-    for record in recent_sets:
-        if record.exercise_id and record.exercise_id.strip().lower() == exercise_id and record.weight_kg:
-            return record
-
-    normalized_names = {exercise.exercise_name.strip().lower(), exercise_id}
-    matching = [
-        record for record in recent_sets
-        if record.exercise_name.strip().lower() in normalized_names and record.weight_kg
-    ]
-    return matching[0] if matching else None
 
 
 def _find_same_muscle_recent_reference(
@@ -137,38 +109,125 @@ def _find_big_four_baseline_reference(
     return None
 
 
+# Load an implement carries relative to a barbell for the same muscle (dumbbell = per hand).
+_EQUIPMENT_LOAD_FACTOR = {
+    "BARBELL": 1.0,
+    "SMITH_MACHINE": 0.95,
+    "MACHINE": 1.0,
+    "CABLE": 0.65,
+    "DUMBBELL": 0.4,
+    "KETTLEBELL": 0.4,
+    "PLATE": 0.3,
+}
+_MOVEMENT_LOAD_FACTOR = {"COMPOUND": 1.0, "ISOLATION": 0.55, "STATIC": 0.55}
+# A borrowed estimate (other exercise, same muscle) starts a little conservative.
+_BORROWED_SAFETY = 0.9
+# Plain-number guard: no single implement prescription above this.
+_MAX_TARGET_KG = 400.0
+
+
+def _primary_equipment(raw: Optional[str]) -> str:
+    tokens = [t.strip().upper() for t in str(raw or "").split(",") if t.strip()]
+    return tokens[0] if tokens else ""
+
+
+def _load_factor(equipment: Optional[str], movement_type: Optional[str]) -> float:
+    eq = _EQUIPMENT_LOAD_FACTOR.get(_primary_equipment(equipment), 1.0)
+    mv = _MOVEMENT_LOAD_FACTOR.get(_movement_type_key(movement_type), 1.0)
+    return eq * mv
+
+
+def _record_rir(record: RecentSetRecord) -> float:
+    if record.is_failure:
+        return 0.0
+    if record.rir is not None:
+        return max(0.0, float(record.rir))
+    if record.rpe is not None:
+        return max(0.0, 10.0 - float(record.rpe))
+    return 0.0
+
+
+def _estimated_1rm(weight: float, reps: int, rir: float = 0.0) -> float:
+    """Epley with reps in reserve: a set of 8 at RIR 2 is treated as a 10-rep max."""
+    return calculate_1rm(weight, int(round(reps + rir)))
+
+
+def _weight_for_reps(one_rm: float, target_reps: int, target_rir: Optional[int]) -> float:
+    effort = max(1, int(target_reps) + int(target_rir if target_rir is not None else 2))
+    if effort <= 1:
+        return one_rm
+    return one_rm / (1 + effort / 30.0)
+
+
+def _best_exact_record(exercise: LLMExercisePlan, recent_sets: Optional[List[RecentSetRecord]]) -> Optional[RecentSetRecord]:
+    """Strongest recent set of this exact exercise (not the tired last set)."""
+    if not recent_sets:
+        return None
+    exercise_id = exercise.exercise_id.strip().lower()
+    names = {exercise.exercise_name.strip().lower(), exercise_id}
+    matches = [
+        r for r in recent_sets
+        if r.weight_kg and (
+            (r.exercise_id and r.exercise_id.strip().lower() == exercise_id)
+            or r.exercise_name.strip().lower() in names
+        )
+    ]
+    if not matches:
+        return None
+    return max(matches, key=lambda r: _estimated_1rm(r.weight_kg or 0, r.reps, _record_rir(r)))
+
+
+def _finish(weight: float) -> Optional[float]:
+    if weight <= 0:
+        return None
+    return min(_MAX_TARGET_KG, _round_to_nearest_2_5(weight))
+
+
 def _resolve_target_weight(
     exercise: LLMExercisePlan,
     goal: str,
     recent_sets: Optional[List[RecentSetRecord]],
     profile: Optional[UserProfileContext],
 ) -> Optional[float]:
-    equipment = (exercise.equipment_type or "").upper()
-    if "BODYWEIGHT" in equipment:
+    """Order: same exercise history > own baseline > same-muscle history > big-four baseline > LLM hint.
+
+    Weight is solved from an estimated 1RM for this exercise's target reps + RIR, so
+    a lighter rep target never drops below what the user just lifted for those reps.
+    """
+    if _primary_equipment(exercise.equipment_type) in ("", "BODYWEIGHT", "BAND", "BALL", "BOX"):
         return None
 
-    intensity = _GOAL_INTENSITY.get(_goal_key(goal), _GOAL_INTENSITY["hypertrophy"])
-    exact_recent = _find_recent_reference(exercise, recent_sets)
-    if exact_recent and exact_recent.weight_kg:
-        base = _round_to_nearest_2_5(calculate_1rm(exact_recent.weight_kg, exact_recent.reps) * intensity)
-        # 점진적 과부하: 마지막 세트 RIR >= 2이고 실패하지 않았으면 +2.5kg 제안
-        if exact_recent.rir is not None and exact_recent.rir >= 2.0 and not exact_recent.is_failure:
-            return base + 2.5
-        return base
+    target_reps = exercise.target_reps
+    target_rir = exercise.target_rir
+    target_factor = _load_factor(exercise.equipment_type, exercise.movement_type)
 
-    same_muscle_recent = _find_same_muscle_recent_reference(exercise, recent_sets)
-    if same_muscle_recent and same_muscle_recent.weight_kg:
-        return _round_to_nearest_2_5(calculate_1rm(same_muscle_recent.weight_kg, same_muscle_recent.reps) * intensity * 0.85)
+    exact = _best_exact_record(exercise, recent_sets)
+    if exact and exact.weight_kg:
+        one_rm = _estimated_1rm(exact.weight_kg, exact.reps, _record_rir(exact))
+        weight = _weight_for_reps(one_rm, target_reps, target_rir)
+        # Progressive overload: a clean set with reps in reserve earns a small step up.
+        if not exact.is_failure and _record_rir(exact) >= 2.0:
+            weight += 2.5
+        return _finish(weight)
 
     exact_baseline = _find_baseline_reference(exercise, profile)
     if exact_baseline:
-        return _round_to_nearest_2_5(calculate_1rm(exact_baseline[0], exact_baseline[1]) * intensity)
+        return _finish(_weight_for_reps(_estimated_1rm(*exact_baseline), target_reps, target_rir))
+
+    same_muscle = _find_same_muscle_recent_reference(exercise, recent_sets)
+    if same_muscle and same_muscle.weight_kg:
+        source_factor = _load_factor(same_muscle.equipment_type, same_muscle.movement_type)
+        one_rm = _estimated_1rm(same_muscle.weight_kg, same_muscle.reps, _record_rir(same_muscle))
+        scaled = one_rm * (target_factor / source_factor) * _BORROWED_SAFETY
+        return _finish(_weight_for_reps(scaled, target_reps, target_rir))
 
     big_four = _find_big_four_baseline_reference(exercise, profile)
     if big_four:
         weight, reps, ratio = big_four
-        return _round_to_nearest_2_5(calculate_1rm(weight, reps) * intensity * ratio)
+        # ratio already holds the compound/isolation step; add the implement step only.
+        implement = _EQUIPMENT_LOAD_FACTOR.get(_primary_equipment(exercise.equipment_type), 1.0)
+        return _finish(_weight_for_reps(_estimated_1rm(weight, reps) * ratio * implement, target_reps, target_rir))
 
     if exercise.target_weight_kg is not None:
-        return max(0, _round_to_nearest_2_5(exercise.target_weight_kg))
+        return _finish(exercise.target_weight_kg)
     return None

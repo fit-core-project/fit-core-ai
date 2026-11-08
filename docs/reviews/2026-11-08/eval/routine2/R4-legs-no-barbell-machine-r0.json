@@ -1,0 +1,149 @@
+{
+  "routineDraftId": "bbe44251-0520-4692-89f5-b1efa08d9d7e",
+  "generationStatus": "fallback",
+  "statusReasonCode": "networkError",
+  "isFallback": true,
+  "totalEstimatedTime": 44,
+  "summaryTitle": "기본 하체 루틴",
+  "rationaleSummary": [
+    "AI 코치 연결이 원활하지 않아 규칙 기반 기본 루틴으로 대신했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "114",
+      "exerciseName": "와이드 스탠스 고블릿 스쿼트",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 5,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "154",
+      "exerciseName": "스텝 업",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "equipmentType": "DUMBBELL, BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 5,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "174",
+      "exerciseName": "ATG 스플릿 스쿼트",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "equipmentType": "BODYWEIGHT, DUMBBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "중량은 본인의 컨디션에 맞게 조절하세요."
+  ]
+}

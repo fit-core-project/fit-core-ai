@@ -1,0 +1,94 @@
+{
+  "routineDraftId": "a421ff38-9c07-48bc-acc1-ef0d110bc7e0",
+  "generationStatus": "fallback",
+  "statusReasonCode": "networkError",
+  "isFallback": true,
+  "totalEstimatedTime": 25,
+  "summaryTitle": "기본 당기기 루틴",
+  "rationaleSummary": [
+    "AI 코치 연결이 원활하지 않아 규칙 기반 기본 루틴으로 대신했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "61",
+      "exerciseName": "체스트 서포티드 로우",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "upper-back"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 107.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 107.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 107.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 107.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 5,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 107.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "132",
+      "exerciseName": "씰 로우",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "upper-back"
+      ],
+      "equipmentType": "BARBELL, MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 122.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "중량은 본인의 컨디션에 맞게 조절하세요."
+  ]
+}

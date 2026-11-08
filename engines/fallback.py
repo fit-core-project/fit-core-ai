@@ -240,6 +240,17 @@ def _debug_print_draft(label: str, draft: RoutineDraftResponse) -> None:
     logger.debug("========== [AI DEBUG] END %s ==========\n", label)
 
 
+_FALLBACK_RATIONALE = {
+    "llmTimeout": "AI 코치 응답이 늦어 규칙 기반 기본 루틴으로 대신했습니다.",
+    "networkError": "AI 코치 연결이 원활하지 않아 규칙 기반 기본 루틴으로 대신했습니다.",
+    "schemaError": "AI가 만든 루틴이 시간·세트·안전 조건을 다 맞추지 못해 규칙 기반 기본 루틴으로 대신했습니다.",
+}
+
+
+def _fallback_rationale(status_reason_code: StatusReasonCode) -> str:
+    return _FALLBACK_RATIONALE.get(status_reason_code, _FALLBACK_RATIONALE["networkError"])
+
+
 def generate_fallback_routine(
     req: RoutineRequest,
     candidates: List[dict],
@@ -266,12 +277,9 @@ def generate_fallback_routine(
 
     params = _GOAL_PARAMS.get(goal.lower(), _GOAL_PARAMS["hypertrophy"])
     doms = doms_db or {}
-    if req.target_split_label:
-        fallback_target_muscles = split_label_to_muscles(req.target_split_label)
-    elif req.target_muscles:
+    fallback_target_muscles = split_label_to_muscles(req.target_split_label) if req.target_split_label else []
+    if not fallback_target_muscles and req.target_muscles:
         _, fallback_target_muscles = get_mapped_targets(req.target_muscles)
-    else:
-        fallback_target_muscles = []
 
     sorted_candidates = sorted(
         candidates,
@@ -327,6 +335,8 @@ def generate_fallback_routine(
         )
         _apply_readiness_to_exercise(plan, req.readiness_level)
         _apply_large_muscle_volume_guard(plan, req.target_split_label, fallback_target_muscles)
+        if fallback_plans and estimate_routine_time_min([*fallback_plans, plan]) > req.time_available_min:
+            break
         plan.target_weight_kg = _resolve_target_weight(plan, goal, recent_sets, profile)
         sets = plan.sets
         remaining_sets -= sets
@@ -372,7 +382,7 @@ def generate_fallback_routine(
         is_fallback=True,
         total_estimated_time=estimate_routine_time_min(fallback_plans),
         summary_title=f"기본 {req.target_split_label or '맞춤형'} 루틴",
-        rationale_summary=["AI 코치 연결이 원활하지 않아 기본 루틴으로 대체되었습니다."],
+        rationale_summary=[_fallback_rationale(status_reason_code)],
         routine_blocks=blocks,
         warnings=["중량은 본인의 컨디션에 맞게 조절하세요."],
     ))

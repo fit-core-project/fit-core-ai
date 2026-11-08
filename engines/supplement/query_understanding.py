@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import Enum
 
@@ -124,9 +125,7 @@ def _extract_entities(query: str) -> list[ParsedEntity]:
     alias_candidates.sort(key=lambda item: len(item[1]), reverse=True)
 
     for entry, alias in alias_candidates:
-        haystack = lowered if _is_ascii(alias) else query
-        needle = alias.lower() if _is_ascii(alias) else alias
-        if needle not in haystack:
+        if not _alias_matches(alias, query, lowered):
             continue
         key = (entry.entity_type, entry.canonical)
         if key in seen:
@@ -194,3 +193,39 @@ def _dedupe_intents(intents: list[IntentType]) -> list[IntentType]:
 
 def _is_ascii(value: str) -> bool:
     return all(ord(ch) < 128 for ch in value)
+
+
+# Short element symbols are matched case-sensitively so "500mg" / "30 mg" never become magnesium
+# and "Caffeine" / "coffee" never become calcium / iron.
+_CASE_SENSITIVE_ALIASES = {"Mg", "Fe", "Ca", "Zn"}
+# Hangul syllables whose preceding syllable changes the word, e.g. "수술", "기술", "시술", "마술".
+_HANGUL_PREFIX_GUARDED_ALIASES = {"술"}
+# Korean aliases that are prefixes of unrelated words, e.g. "웨이" in "웨이트".
+_KOREAN_SUFFIX_GUARDS = {"웨이": "트"}
+
+
+def _alias_matches(alias: str, query: str, lowered: str) -> bool:
+    if _is_ascii(alias):
+        if alias in _CASE_SENSITIVE_ALIASES:
+            haystack, needle = query, alias
+        else:
+            haystack, needle = lowered, alias.lower()
+        # Digits may follow ("vitamin d3") but not precede ("500mg") an alias.
+        pattern = rf"(?<![A-Za-z0-9]){re.escape(needle)}(?![A-Za-z])"
+        return re.search(pattern, haystack) is not None
+
+    if alias not in query:
+        return False
+    for match in re.finditer(re.escape(alias), query):
+        start, end = match.start(), match.end()
+        if alias in _HANGUL_PREFIX_GUARDED_ALIASES and start > 0 and _is_hangul_syllable(query[start - 1]):
+            continue
+        suffix_guard = _KOREAN_SUFFIX_GUARDS.get(alias)
+        if suffix_guard and query.startswith(suffix_guard, end):
+            continue
+        return True
+    return False
+
+
+def _is_hangul_syllable(ch: str) -> bool:
+    return "가" <= ch <= "힣"

@@ -790,10 +790,11 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         else:
             stage_start = time.perf_counter()
             if "WEB_SEARCH_REQUIRED" in answer.strip().upper():
-                answer = (
-                    "확보된 로컬 근거 문서만으로 답변합니다. 개인의 질환, 복용 중인 약, 증상에 따라 달라질 수 있으므로 "
-                    "보충제 복용 전에는 의사 또는 약사와 상담하세요."
-                )
+                # Do not replace with a content-free disclaimer: leave the answer empty so the
+                # composer builds a grounded answer from the retrieved KB docs (or asks for the
+                # product label when the ingredient is unknown).
+                answer = ""
+                counts["llmAnswerFallbackReason"] = "web_search_required"
             sources = []
             seen_keys = set()
             for doc in final_docs:

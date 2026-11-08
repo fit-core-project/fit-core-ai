@@ -21,9 +21,18 @@ from typing import Optional
 from engines.food.food_canonical_index import load_food_canonical_index
 from engines.food.food_query_normalization import analyze_food_query_for_search
 from engines.food.food_query_normalization import build_food_search_queries
+from engines.food.food_units import (
+    FOOD_UNIT_GRAMS,
+    GRAM_UNITS,
+    UNIT_DEFAULT_GRAMS,
+    preferred_basis_unit,
+    resolve_portion_grams,
+    unit_to_grams,
+)
 from engines.food.food_reranker import (
     FoodSearchCandidate,
     build_food_candidate_dedupe_key,
+    get_food_candidate_name,
     rerank_food_candidates,
 )
 
@@ -48,18 +57,10 @@ FOOD_SEARCH_FETCH_K = max(
     FOOD_SEARCH_FINAL_K,
 )
 
-# ── 단위 → 그램 변환 테이블 (diet_parser 와 의미상 동일. 추후 단일 출처로 통합 권장) ──
-_GRAM_UNITS = {"g", "gram", "grams", "그램", "ml", "밀리리터", "cc"}
-_UNIT_DEFAULT_GRAMS: dict[str, float] = {
-    "공기": 210.0, "그릇": 400.0, "인분": 200.0,
-    "스쿱": 30.0, "모": 300.0, "컵": 200.0,
-    "장": 20.0, "쪽": 10.0, "봉지": 100.0, "팩": 100.0,
-}
-_FOOD_UNIT_GRAMS: dict[str, dict[str, float]] = {
-    "계란": {"개": 50.0}, "달걀": {"개": 50.0}, "삶은 달걀": {"개": 50.0},
-    "바나나": {"개": 120.0}, "사과": {"개": 200.0}, "고구마": {"개": 150.0},
-    "감자": {"개": 130.0}, "오렌지": {"개": 180.0},
-}
+# ── 단위 → 그램 변환: engines/food/food_units.py 가 단일 출처 ──────────────
+_GRAM_UNITS = GRAM_UNITS
+_UNIT_DEFAULT_GRAMS = UNIT_DEFAULT_GRAMS
+_FOOD_UNIT_GRAMS = FOOD_UNIT_GRAMS
 
 
 def resolve_device() -> str:
@@ -157,26 +158,33 @@ class FoodSearchEngine:
     # ── 단위 → 그램 ─────────────────────────────────────────────
     @staticmethod
     def _unit_to_grams(food_name, unit):
-        if unit is None:
-            return None
-        u = unit.lower().strip()
-        overrides = _FOOD_UNIT_GRAMS.get((food_name or "").strip(), {})
-        if u in overrides:
-            return overrides[u]
-        return _UNIT_DEFAULT_GRAMS.get(u)
+        return unit_to_grams(food_name, unit)
 
     def _resolve_grams(self, food_name, amount, unit):
-        """섭취량을 basis(보통 100g) 기준 수치로 환산. 불가 시 None."""
-        if amount is None:
-            return None
-        u = (unit or "").lower().strip()
-        # g/ml 계열이거나 단위 미지정 → amount 를 그대로 사용
-        if u in _GRAM_UNITS or u == "":
-            return float(amount)
-        per_unit = self._unit_to_grams(food_name, unit)
-        if per_unit is None:
-            return None
-        return float(amount) * per_unit
+        """섭취량을 g(ml≈g) 로 환산. amount 가 없으면 None (basis 기준값 사용).
+
+        개/조각/캔/병/그릇/인분/봉지/팩/컵/장/모 등 개수 단위는 식품별 기본값,
+        없으면 단위별 일반 기본값으로 환산한다 (더 이상 100g 고정 폴백 없음).
+        단위 없는 숫자("계란 2")는 셀 수 있는 식품이면 개수로 본다.
+        """
+        return resolve_portion_grams(food_name, amount, unit)
+
+    @staticmethod
+    def _prefer_basis_unit(candidates, unit):
+        """같은 이름의 g/ml 중복 행 중 단위 성격에 맞는 행을 선택."""
+        if not candidates:
+            return candidates
+        top_name = get_food_candidate_name(candidates[0].document)
+        want = preferred_basis_unit(unit)
+        for index, candidate in enumerate(candidates):
+            if get_food_candidate_name(candidate.document) != top_name:
+                break
+            meta = candidate.document.metadata or {}
+            if (meta.get("basis_unit") or "g") == want:
+                if index:
+                    return [candidate] + candidates[:index] + candidates[index + 1:]
+                return candidates
+        return candidates
 
     # ── 메인 검색 ───────────────────────────────────────────────
     @staticmethod
@@ -284,6 +292,7 @@ class FoodSearchEngine:
         candidates = rerank_food_candidates(analysis, candidates, final_k=FOOD_SEARCH_FINAL_K)
         if not candidates:
             return None
+        candidates = self._prefer_basis_unit(candidates, unit)
 
         # cosine space: score=거리(작을수록 유사), 코사인 유사도 = 1 - 거리
         doc = candidates[0].document
@@ -308,14 +317,16 @@ class FoodSearchEngine:
 
         grams = self._resolve_grams(food_name, amount, unit)
         if grams is None:
-            # 수량 환산 불가 → basis(예:100g) 기준값 그대로, 수량은 basis 로 명시
+            # 수량 없음 → basis(예:100g) 기준값 그대로, 수량은 basis 로 명시
             factor = 1.0
             resolved_amount = float(basis_value)
             resolved_unit = basis_unit
+            resolved_grams = float(basis_value)
         else:
             factor = grams / float(basis_value)
             resolved_amount = float(amount)
             resolved_unit = unit
+            resolved_grams = float(grams)
 
         def _scale(v):
             return round(v * factor, 1) if v is not None else None
@@ -336,6 +347,7 @@ class FoodSearchEngine:
             "basis_unit": basis_unit,
             "resolved_amount": resolved_amount,
             "resolved_unit": resolved_unit,
+            "resolved_grams": round(resolved_grams, 1),
         }
 
 

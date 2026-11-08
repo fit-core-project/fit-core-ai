@@ -1,0 +1,165 @@
+{
+  "routineDraftId": "659a4cea-ee73-403d-9416-06415b443dcc",
+  "generationStatus": "fallback",
+  "statusReasonCode": "networkError",
+  "isFallback": true,
+  "totalEstimatedTime": 52,
+  "summaryTitle": "기본 밀기 루틴",
+  "rationaleSummary": [
+    "AI 코치 연결이 원활하지 않아 규칙 기반 기본 루틴으로 대신했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "40",
+      "exerciseName": "스미스 머신 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 5,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "41",
+      "exerciseName": "인클라인 스미스 머신 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 5,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 75.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "30",
+      "exerciseName": "바벨 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "BARBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 102.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 102.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 102.5,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "중량은 본인의 컨디션에 맞게 조절하세요."
+  ]
+}

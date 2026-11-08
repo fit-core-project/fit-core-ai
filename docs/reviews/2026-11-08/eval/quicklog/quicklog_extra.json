@@ -1,0 +1,514 @@
+[
+  {
+    "kind": "diet",
+    "id": "D1-two-items",
+    "text": "점심에 김치찌개 한 그릇이랑 공기밥 먹었어",
+    "latency_s": 9.8,
+    "kcal": 573,
+    "issues": [],
+    "resp": {
+      "items": [
+        {
+          "food_name": "김치찌개",
+          "amount": 350.0,
+          "unit": "g",
+          "protein_g": 13.3,
+          "carbs_g": 10.5,
+          "fat_g": 13.3,
+          "kcal": 213.5,
+          "source": "db",
+          "meal_type": "lunch",
+          "time_of_day": null
+        },
+        {
+          "food_name": "공기밥",
+          "amount": 210.0,
+          "unit": "g",
+          "protein_g": 10.9,
+          "carbs_g": 66.8,
+          "fat_g": 4.6,
+          "kcal": 359.1,
+          "source": "db",
+          "meal_type": "lunch",
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D2-half-bowl",
+    "text": "밥 반 공기",
+    "latency_s": 3.4,
+    "kcal": 171,
+    "issues": [],
+    "resp": {
+      "items": [
+        {
+          "food_name": "밥",
+          "amount": 100.0,
+          "unit": "g",
+          "protein_g": 5.2,
+          "carbs_g": 31.8,
+          "fat_g": 2.2,
+          "kcal": 171.0,
+          "source": "db",
+          "meal_type": null,
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D3-pieces",
+    "text": "치킨 두 조각이랑 콜라 한 캔",
+    "latency_s": 3.2,
+    "kcal": 1500,
+    "issues": [
+      "kcal 1500 outside 450-900"
+    ],
+    "resp": {
+      "items": [
+        {
+          "food_name": "치킨",
+          "amount": 150.0,
+          "unit": "g",
+          "protein_g": 11.2,
+          "carbs_g": 20.9,
+          "fat_g": 6.1,
+          "kcal": 184.5,
+          "source": "db",
+          "meal_type": "snack",
+          "time_of_day": null
+        },
+        {
+          "food_name": "콜라",
+          "amount": 350.0,
+          "unit": "ml",
+          "protein_g": 24.8,
+          "carbs_g": null,
+          "fat_g": null,
+          "kcal": 1316.0,
+          "source": "db",
+          "meal_type": "snack",
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D4-ml",
+    "text": "우유 300ml 마셨어",
+    "latency_s": 2.3,
+    "kcal": 201,
+    "issues": [],
+    "resp": {
+      "items": [
+        {
+          "food_name": "우유",
+          "amount": 300.0,
+          "unit": "ml",
+          "protein_g": 9.3,
+          "carbs_g": 14.7,
+          "fat_g": 11.4,
+          "kcal": 201.0,
+          "source": "db",
+          "meal_type": "null",
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D5-typo-spacing",
+    "text": "닭가슴 살 150그램",
+    "latency_s": 2.4,
+    "kcal": 202,
+    "issues": [],
+    "resp": {
+      "items": [
+        {
+          "food_name": "닭가슴살",
+          "amount": 150.0,
+          "unit": "g",
+          "protein_g": 10.8,
+          "carbs_g": 8.1,
+          "fat_g": 14.2,
+          "kcal": 202.5,
+          "source": "db",
+          "meal_type": null,
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D6-protein-scoop",
+    "text": "운동 끝나고 프로틴 한 스쿱",
+    "latency_s": 2.4,
+    "kcal": 130,
+    "issues": [],
+    "resp": {
+      "items": [
+        {
+          "food_name": "프로틴",
+          "amount": 100.0,
+          "unit": "g",
+          "protein_g": 25.0,
+          "carbs_g": 3.0,
+          "fat_g": 2.0,
+          "kcal": null,
+          "source": null,
+          "meal_type": "snack",
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D7-three-items",
+    "text": "아침: 계란 2개, 바나나 1개, 아메리카노",
+    "latency_s": 4.3,
+    "kcal": 359,
+    "issues": [
+      "kcal 359 outside 200-330"
+    ],
+    "resp": {
+      "items": [
+        {
+          "food_name": "계란",
+          "amount": 200.0,
+          "unit": "g",
+          "protein_g": 25.8,
+          "carbs_g": 1.6,
+          "fat_g": 16.4,
+          "kcal": 272.0,
+          "source": "db",
+          "meal_type": "breakfast",
+          "time_of_day": null
+        },
+        {
+          "food_name": "바나나",
+          "amount": 100.0,
+          "unit": "g",
+          "protein_g": 1.1,
+          "carbs_g": 20.0,
+          "fat_g": 0.2,
+          "kcal": 77.0,
+          "source": "db",
+          "meal_type": "breakfast",
+          "time_of_day": null
+        },
+        {
+          "food_name": "아메리카노",
+          "amount": 250.0,
+          "unit": "ml",
+          "protein_g": 0.5,
+          "carbs_g": 1.2,
+          "fat_g": 0.0,
+          "kcal": 10.0,
+          "source": "db",
+          "meal_type": "breakfast",
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D8-snack-brand",
+    "text": "편의점 삼각김밥 참치마요 하나",
+    "latency_s": 2.2,
+    "kcal": 186,
+    "issues": [],
+    "resp": {
+      "items": [
+        {
+          "food_name": "삼각김밥 참치마요",
+          "amount": 100.0,
+          "unit": "개",
+          "protein_g": 4.9,
+          "carbs_g": 28.7,
+          "fat_g": 5.7,
+          "kcal": 186.0,
+          "source": "db",
+          "meal_type": "snack",
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D9-ramen",
+    "text": "라면 하나 끓여 먹음",
+    "latency_s": 2.3,
+    "kcal": 124,
+    "issues": [
+      "kcal 124 outside 450-600"
+    ],
+    "resp": {
+      "items": [
+        {
+          "food_name": "라면",
+          "amount": 1.0,
+          "unit": "개",
+          "protein_g": 2.8,
+          "carbs_g": 18.3,
+          "fat_g": 4.1,
+          "kcal": 124.0,
+          "source": "db",
+          "meal_type": "snack",
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D10-noise",
+    "text": "오늘 너무 피곤했다 그래도 저녁엔 샐러드 먹음",
+    "latency_s": 1.2,
+    "kcal": 0,
+    "issues": [
+      "missing item 샐러드",
+      "kcal 0 outside 30-400"
+    ],
+    "resp": {
+      "items": []
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D11-negation",
+    "text": "저녁은 안 먹고 사과 하나만 먹었어",
+    "latency_s": 1.5,
+    "kcal": 114,
+    "issues": [],
+    "resp": {
+      "items": [
+        {
+          "food_name": "사과",
+          "amount": 1.0,
+          "unit": "개",
+          "protein_g": 0.4,
+          "carbs_g": 28.2,
+          "fat_g": 1.4,
+          "kcal": 114.0,
+          "source": "db",
+          "meal_type": "snack",
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "diet",
+    "id": "D12-english-mix",
+    "text": "subway 터키 샌드위치 15cm",
+    "latency_s": 2.4,
+    "kcal": 250,
+    "issues": [],
+    "resp": {
+      "items": [
+        {
+          "food_name": "터키 샌드위치",
+          "amount": 15.0,
+          "unit": "cm",
+          "protein_g": 16.3,
+          "carbs_g": 20.9,
+          "fat_g": 11.2,
+          "kcal": 250.0,
+          "source": "db",
+          "meal_type": "null",
+          "time_of_day": null
+        }
+      ]
+    }
+  },
+  {
+    "kind": "workout",
+    "id": "W1-basic",
+    "text": "벤치프레스 60키로 10개 3세트",
+    "latency_s": 1.9,
+    "issues": [],
+    "resp": {
+      "diet_logs": [],
+      "workout_logs": [
+        {
+          "exercise_name": "벤치프레스",
+          "weight_kg": 60.0,
+          "sets": 3,
+          "reps": 10
+        }
+      ],
+      "overall_summary": "Workout completed."
+    }
+  },
+  {
+    "kind": "workout",
+    "id": "W2-two-ex",
+    "text": "스쿼트 100kg 5회 5세트 하고 레그프레스 150kg 12회 3세트",
+    "latency_s": 1.5,
+    "issues": [],
+    "resp": {
+      "diet_logs": [],
+      "workout_logs": [
+        {
+          "exercise_name": "스쿼트",
+          "weight_kg": 100.0,
+          "sets": 5,
+          "reps": 5
+        },
+        {
+          "exercise_name": "레그프레스",
+          "weight_kg": 150.0,
+          "sets": 3,
+          "reps": 12
+        }
+      ],
+      "overall_summary": "Workout log recorded."
+    }
+  },
+  {
+    "kind": "workout",
+    "id": "W3-bodyweight",
+    "text": "턱걸이 8개씩 4세트",
+    "latency_s": 1.0,
+    "issues": [],
+    "resp": {
+      "diet_logs": [],
+      "workout_logs": [
+        {
+          "exercise_name": "턱걸이",
+          "weight_kg": null,
+          "sets": 4,
+          "reps": 8
+        }
+      ],
+      "overall_summary": "Workout completed."
+    }
+  },
+  {
+    "kind": "workout",
+    "id": "W4-lbs",
+    "text": "덤벨컬 25lbs 12개 3세트",
+    "latency_s": 1.1,
+    "issues": [],
+    "resp": {
+      "diet_logs": [],
+      "workout_logs": [
+        {
+          "exercise_name": "덤벨컬",
+          "weight_kg": 11.34,
+          "sets": 3,
+          "reps": 12
+        }
+      ],
+      "overall_summary": "Workout log recorded."
+    }
+  },
+  {
+    "kind": "workout",
+    "id": "W5-slang",
+    "text": "데드 140 5개 3셋",
+    "latency_s": 1.0,
+    "issues": [],
+    "resp": {
+      "diet_logs": [],
+      "workout_logs": [
+        {
+          "exercise_name": "데드",
+          "weight_kg": 140.0,
+          "sets": 3,
+          "reps": 5
+        }
+      ],
+      "overall_summary": "null"
+    }
+  },
+  {
+    "kind": "workout",
+    "id": "W6-mixed-diet",
+    "text": "오늘 벤치 80kg 5x5 했고 저녁에 닭가슴살 200g 먹음",
+    "latency_s": 1.8,
+    "issues": [],
+    "resp": {
+      "diet_logs": [
+        {
+          "food_name": "닭가슴살",
+          "amount": 200.0,
+          "unit": "g",
+          "estimated_calories": 330,
+          "protein_g": 62,
+          "carbs_g": 0,
+          "fat_g": 7
+        }
+      ],
+      "workout_logs": [
+        {
+          "exercise_name": "벤치",
+          "weight_kg": 80.0,
+          "sets": 5,
+          "reps": 5
+        }
+      ],
+      "overall_summary": "오늘 벤치 운동과 저녁 식사 기록"
+    }
+  },
+  {
+    "kind": "workout",
+    "id": "W7-english",
+    "text": "OHP 40kg 8 reps 4 sets",
+    "latency_s": 1.0,
+    "issues": [],
+    "resp": {
+      "diet_logs": [],
+      "workout_logs": [
+        {
+          "exercise_name": "OHP",
+          "weight_kg": 40.0,
+          "sets": 4,
+          "reps": 8
+        }
+      ],
+      "overall_summary": "Workout completed."
+    }
+  },
+  {
+    "kind": "workout",
+    "id": "W8-pyramid",
+    "text": "벤치 60kg 12개, 70kg 10개, 80kg 8개",
+    "latency_s": 1.8,
+    "issues": [],
+    "resp": {
+      "diet_logs": [],
+      "workout_logs": [
+        {
+          "exercise_name": "벤치",
+          "weight_kg": 60.0,
+          "sets": null,
+          "reps": 12
+        },
+        {
+          "exercise_name": "벤치",
+          "weight_kg": 70.0,
+          "sets": null,
+          "reps": 10
+        },
+        {
+          "exercise_name": "벤치",
+          "weight_kg": 80.0,
+          "sets": null,
+          "reps": 8
+        }
+      ],
+      "overall_summary": "Workout log recorded."
+    }
+  }
+]

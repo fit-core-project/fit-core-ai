@@ -74,7 +74,7 @@ def get_user_profile_context(db: Session, user_id: str) -> Optional[UserProfileC
     )
 
 
-def get_recent_sets(db: Session, user_id: str, limit: int = 30) -> List[RecentSetRecord]:
+def get_recent_sets(db: Session, user_id: str, limit: int = 90) -> List[RecentSetRecord]:
     """최근 3회 세션의 working 세트를 최신 순으로 반환한다."""
     session_rows = db.execute(
         text("""
@@ -98,7 +98,8 @@ def get_recent_sets(db: Session, user_id: str, limit: int = 30) -> List[RecentSe
     rows = db.execute(
         text(f"""
             SELECT ws.exercise_id, ws.exercise_name_snapshot, et.primary_muscle,
-                   ws.weight_kg, ws.reps, ws.rir, ws.rpe, ws.is_failure
+                   ws.weight_kg, ws.reps, ws.rir, ws.rpe, ws.is_failure,
+                   et.equipment_req, et.movement_type
             FROM workout_sets ws
             LEFT JOIN exercise_tier et
               ON CAST(et.id AS CHAR CHARACTER SET utf8mb4) COLLATE utf8mb4_unicode_ci = ws.exercise_id COLLATE utf8mb4_unicode_ci
@@ -122,6 +123,8 @@ def get_recent_sets(db: Session, user_id: str, limit: int = 30) -> List[RecentSe
             rir=float(r[5]) if r[5] is not None else None,
             rpe=float(r[6]) if r[6] is not None else None,
             is_failure=bool(r[7]) if r[7] is not None else False,
+            equipment_type=str(r[8]) if r[8] is not None else None,
+            movement_type=str(r[9]) if r[9] is not None else None,
         )
         for r in rows
     ]

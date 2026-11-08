@@ -570,6 +570,90 @@ def _candidate_to_plan(candidate: dict, template: LLMExercisePlan) -> LLMExercis
     })
 
 
+# Muscles a split should touch at least once before a second exercise for the same muscle.
+# Minor muscles (trapezius, forearm, calves, adductor, abductors, neck, lower-back) only count
+# when the user picked them directly (custom targets).
+_MAJOR_COVERAGE_MUSCLES = {
+    "chest", "front-deltoids", "triceps", "upper-back", "biceps", "back-deltoids",
+    "quadriceps", "hamstring", "gluteal", "abs", "obliques",
+}
+_MIN_SETS_PER_EXERCISE = 2
+
+
+def _coverage_targets(target_muscles: List[str]) -> List[str]:
+    major = [m for m in target_muscles if m in _MAJOR_COVERAGE_MUSCLES]
+    # A short custom list (e.g. biceps+forearm) is the user's own choice: cover all of it.
+    return major if len(target_muscles) > 3 else list(target_muscles)
+
+
+def _rebalance_muscle_coverage(
+    routine: LLMRoutineOutput,
+    safe_candidates: List[dict],
+    used_ids: set,
+    target_muscles: List[str],
+    doms: Dict[str, int],
+) -> None:
+    """Swap repeat-muscle picks for uncovered target muscles (e.g. 6 chest moves in a push day)."""
+    wanted = [m for m in _coverage_targets(target_muscles) if doms.get(m, 0) < 3]
+    swaps_left = len(routine.exercises) // 2
+    while swaps_left > 0:
+        primaries = [(e.primary_muscles or [""])[0] for e in routine.exercises]
+        covered = set(primaries)
+        missing = [m for m in wanted if m not in covered]
+        if not missing:
+            return
+        # Replace the last exercise whose muscle already appears more than once.
+        victim_index = next(
+            (i for i in range(len(primaries) - 1, -1, -1) if primaries.count(primaries[i]) > 1),
+            None,
+        )
+        if victim_index is None:
+            return
+        replacement = None
+        for muscle in missing:
+            replacement = next(
+                (c for c in safe_candidates
+                 if str(c["id"]) not in used_ids and str(c.get("primary_muscle") or "") == muscle),
+                None,
+            )
+            if replacement is not None:
+                break
+        if replacement is None:
+            return
+        old = routine.exercises[victim_index]
+        new_plan = _candidate_to_plan(replacement, old)
+        new_plan.exercise_rationale = "분할의 다른 목표 근육도 한 번은 자극하도록 넣은 운동입니다."
+        used_ids.discard(old.exercise_id)
+        used_ids.add(str(replacement["id"]))
+        routine.exercises[victim_index] = new_plan
+        logger.info("[Guard] coverage swap %s -> %s", old.exercise_id, replacement["id"])
+        swaps_left -= 1
+
+
+def _fit_set_budget(routine: LLMRoutineOutput, max_total_sets: int) -> bool:
+    """Fit the routine into the set budget without leaving 1-set exercises when avoidable.
+
+    Order: trim sets down to 2 from the back, then drop trailing exercises, then allow 1 set.
+    """
+    def overflow() -> int:
+        return sum(e.sets for e in routine.exercises) - max_total_sets
+
+    if overflow() <= 0:
+        return True
+    for floor in (_MIN_SETS_PER_EXERCISE, None):
+        if floor is None:
+            while overflow() > 0 and len(routine.exercises) > 1:
+                routine.exercises.pop()
+            floor = 1
+        for exercise in reversed(routine.exercises):
+            excess = overflow()
+            if excess <= 0:
+                return True
+            reduction = min(max(0, exercise.sets - floor), excess)
+            exercise.sets -= reduction
+    return overflow() <= 0
+
+
 # User-visible warning for a guard replacement. Telemetry counts it through
 # is_guard_replacement_warning(); keep the marker phrase stable.
 GUARD_REPLACEMENT_WARNING_MARKER = "조건에 맞지 않는 운동을 안전한 후보"
@@ -664,6 +748,7 @@ def validate_and_repair_routine_output(
     max_total_sets: Optional[int] = None,
     time_available_min: Optional[int] = None,
     max_repairs: Optional[int] = None,
+    target_muscles: Optional[List[str]] = None,
 ) -> Tuple[Optional[LLMRoutineOutput], StatusReasonCode]:
     """
     Validate LLM success output against the safe candidate set.
@@ -691,9 +776,16 @@ def validate_and_repair_routine_output(
     doms = doms_db or {}
     guard_warning_messages: List[str] = []
     repair_limit = max_repairs if max_repairs is not None else max(2, len(repaired.exercises))
+    planned_ids = {e.exercise_id for e in repaired.exercises}
+    drop_indices: set[int] = set()
 
     for index, exercise in enumerate(repaired.exercises):
         candidate = safe_by_id.get(exercise.exercise_id)
+        is_duplicate = candidate is not None and exercise.exercise_id in used_ids
+        if is_duplicate:
+            # Same exercise picked twice: replace the repeat, or drop it when nothing is left.
+            logger.warning("[Guard] duplicate exercise_id %s -> replacing", exercise.exercise_id)
+            candidate = None
         if candidate is not None:
             used_ids.add(exercise.exercise_id)
             exercise.exercise_name = catalog_display_name(candidate, exercise.exercise_name)
@@ -709,10 +801,24 @@ def validate_and_repair_routine_output(
                 logger.warning("[Guard] repair attempt limit exceeded (%s > %s) -> fallback", violations, repair_limit)
                 return None, "emptyCandidate"
 
+            # Prefer a candidate the LLM did not already plan and that DOMS allows,
+            # so a repair never creates a duplicate further down the list.
             replacement = next(
-                (c for c in safe_candidates if str(c["id"]) not in used_ids),
+                (c for c in safe_candidates
+                 if str(c["id"]) not in used_ids
+                 and str(c["id"]) not in planned_ids
+                 and doms.get(str(c.get("primary_muscle") or ""), 0) < 3),
                 None,
             )
+            if replacement is None:
+                replacement = next(
+                    (c for c in safe_candidates if str(c["id"]) not in used_ids),
+                    None,
+                )
+            if replacement is None and is_duplicate:
+                logger.warning("[Guard] no spare candidate for duplicate %s -> dropping it", exercise.exercise_id)
+                drop_indices.add(index)
+                continue
             if replacement is None:
                 logger.warning("[Guard] safe candidate exhausted -> fallback")
                 return None, "emptyCandidate"
@@ -738,23 +844,19 @@ def validate_and_repair_routine_output(
         elif doms_level == 1:
             exercise.sets = max(1, exercise.sets - 1)
 
+    if drop_indices:
+        repaired.exercises = [e for i, e in enumerate(repaired.exercises) if i not in drop_indices]
+
+    if target_muscles:
+        _rebalance_muscle_coverage(repaired, safe_candidates, used_ids, target_muscles, doms)
+
     for exercise in repaired.exercises:
         _align_substitutions(exercise, safe_by_id)
 
     if max_total_sets is not None:
-        total_sets = sum(exercise.sets for exercise in repaired.exercises)
-        overflow = total_sets - max_total_sets
-        if overflow > 0:
-            for exercise in reversed(repaired.exercises):
-                reducible = max(0, exercise.sets - 1)
-                reduction = min(reducible, overflow)
-                exercise.sets -= reduction
-                overflow -= reduction
-                if overflow == 0:
-                    break
-            if overflow > 0:
-                logger.warning("[Guard] set budget overflow cannot be reduced -> fallback")
-                return None, "schemaError"
+        if not _fit_set_budget(repaired, max_total_sets):
+            logger.warning("[Guard] set budget overflow cannot be reduced -> fallback")
+            return None, "schemaError"
 
     pre_time_trim_exercise_count = len(repaired.exercises)
     pre_time_trim_set_count = sum(exercise.sets for exercise in repaired.exercises)

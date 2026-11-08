@@ -1,0 +1,172 @@
+{
+  "routineDraftId": "60f28c76-ba34-4825-9040-ef3174298269",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 33,
+  "summaryTitle": "팔 근력 강화 루틴",
+  "rationaleSummary": [
+    "목표 근육인 이두근과 삼두근을 중심으로 고립 운동 위주로 구성했습니다.",
+    "전체적으로 복합적인 움직임보다는 특정 부위를 집중적으로 자극하는 방식으로, 주어진 시간(45분) 내에 충분한 강도 높은 훈련이 가능하도록 설계되었습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "33",
+      "exerciseName": "클로즈드 그립 바벨 벤치프레스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "BARBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 80.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주요 목표 근육인 삼두근을 주 타겟으로 하는 복합 운동입니다. 주어진 시간(45분) 내에 높은 강도로 전신적인 힘과 함께 삼두근의 근력 강화라는 목표를 달성하는 데 가장 효율적입니다. 바벨 장비를 활용하여 최대 부하를 걸 수 있습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "131",
+      "exerciseName": "트라이셉스 로프 푸시다운",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 45.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 45.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 45.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "삼두근을 고립적으로 자극하는 케이블 운동입니다. 근력 강화 목표에 맞춰 충분한 볼륨을 확보하며, 장비로 인해 부하를 조절하기 용이하여 안전하게 훈련할 수 있습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "94",
+      "exerciseName": "오버헤드 덤벨 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 45.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "삼두근을 주 타겟으로 하는 고립 운동입니다. 덤벨 장비를 사용하여 삼두근의 다양한 각도에서 자극을 줄 수 있으며, 근력 강화 목표에 부합하는 적절한 볼륨과 강도를 제공합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 4,
+      "exerciseId": "14",
+      "exerciseName": "케이블 베이지안 컬",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "biceps"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 17.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "이두근을 주 타겟으로 하는 케이블 고립 운동입니다. 목표 근육인 이두근에 집중적인 자극을 주기 위해 선택되었으며, 장비의 특성상 부하 조절이 용이하여 안전하게 훈련할 수 있습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 5,
+      "exerciseId": "12",
+      "exerciseName": "인클라인 덤벨 컬",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "biceps"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 17.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "이두근을 주 타겟으로 하는 고립 운동입니다. 덤벨 장비를 활용하여 이두근의 근력 강화 목표를 달성하는 데 적합하며, 다른 케이블 운동과 병행하여 다양한 자극을 줄 수 있습니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "컨디션에 맞춰 중량과 반복 수를 조절하세요."
+  ]
+}

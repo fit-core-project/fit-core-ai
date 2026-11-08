@@ -1,0 +1,110 @@
+{
+  "routineDraftId": "a1dd790e-363a-4890-81b6-9c1633d973dc",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 24,
+  "summaryTitle": "당기기 근력 루틴",
+  "rationaleSummary": [
+    "목표 근육인 등 상부, 이두근, 후면 어깨를 중심으로 복합 운동을 배치하여 근력 향상에 초점을 맞췄습니다.",
+    "최신 세트 기록과 장비 선호도를 고려하여 덤벨 및 머신 기반의 다양한 각도 접근 방식을 활용했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "58",
+      "exerciseName": "덤벨 로우",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "upper-back"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 100.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 100.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 100.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 100.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "등 상부와 이두근을 주 타겟으로 하는 덤벨 복합 운동입니다. 높은 효율성과 주요 근육군 일치도가 높아 루틴의 시작에 배치하여 근력 향상 목표를 달성하는 데 적합합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "61",
+      "exerciseName": "체스트 서포티드 로우",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "upper-back"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 100.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "머신을 이용한 복합 운동으로, 등 상부와 이두근에 집중하여 근력 향상 목표를 지원합니다. 덤벨 로우 다음 순서로 배치하여 다양한 자극 각도를 제공합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "53",
+      "exerciseName": "리버스 그립 랫풀다운",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "upper-back"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 100.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "등 상부와 이두근을 효과적으로 자극하는 머신 운동입니다. 목표 근육군에 대한 높은 일치도와 복합 운동의 특성을 고려하여 마무리 보조 운동으로 배치했습니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "컨디션에 맞춰 중량과 반복 수를 조절하세요."
+  ]
+}

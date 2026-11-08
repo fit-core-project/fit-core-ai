@@ -25,11 +25,14 @@ _WEAK_ANSWER_NEEDLES = (
     "자료 없음",
     "답변할 수 없습니다",
     "WEB_SEARCH_REQUIRED",
+    "확보된 로컬 근거 문서만으로",
 )
 _UNSAFE_PHRASES = (
     "먹어도 됩니다",
+    "복용해도 됩니다",
     "문제 없습니다",
     "안전합니다",
+    "무조건 안전",
     "걱정하지 않아도 됩니다",
     "무조건 괜찮습니다",
 )
@@ -59,14 +62,20 @@ def compose_supplement_response(
     caution_parts = [generated_caution, parsed_caution]
     caution_parts.extend(_caution_parts_from_docs(selected_docs, parsed_query, answer))
 
-    used_kb_fallback = False
-    if _is_weak_answer(answer):
-        answer = _fallback_answer_from_docs(selected_docs, parsed_query)
-        used_kb_fallback = True
-
     risk_query = bool(set(parsed_query.intents) & _RISK_INTENTS)
     if risk_query:
+        # Soften sentence-by-sentence before the weak check so an answer made only of unsafe
+        # claims falls back to KB-grounded content instead of a spliced fragment.
         answer = _soften_unsafe_answer(answer)
+
+    used_kb_fallback = False
+    if _is_weak_answer(answer):
+        answer = _fallback_answer_from_docs(selected_docs, parsed_query, question)
+        # KB text phrases recommendations as "...것이 안전합니다"; keep the advice, drop the safety claim.
+        answer = _soften_recommendation_phrasing(answer)
+        used_kb_fallback = True
+
+    if risk_query and not any(_is_consult_sentence(part) for part in _split_caution_sentences(caution_parts)):
         caution_parts.append(_CONSULT_TEXT)
 
     caution = _compact_caution(caution_parts, parsed_query, selected_docs, risk_query=risk_query)
@@ -76,12 +85,13 @@ def compose_supplement_response(
         caution = _COMPACT_CONSULT_TEXT
 
     answer = _enhance_answer(
-        answer or _fallback_answer_from_docs(selected_docs, parsed_query),
+        answer or _fallback_answer_from_docs(selected_docs, parsed_query, question),
         question,
         parsed_query,
         selected_docs,
         allow_follow_up=used_kb_fallback,
     )
+    answer, caution = _dedupe_answer_and_caution(answer, caution, parsed_query, risk_query=risk_query)
 
     return ComposedSupplementResponse(
         answer=answer,
@@ -380,13 +390,25 @@ def _truncate_by_sentence(text: str, max_chars: int) -> str:
     return text[:max_chars].rsplit(" ", 1)[0].strip()
 
 
-def _fallback_answer_from_docs(docs: list[Any], parsed_query: ParsedSupplementQuery | None = None) -> str:
+def _fallback_answer_from_docs(
+    docs: list[Any],
+    parsed_query: ParsedSupplementQuery | None = None,
+    question: str = "",
+) -> str:
     source_types = {(getattr(doc, "metadata", {}) or {}).get("source") for doc in docs}
     intents = set(parsed_query.intents) if parsed_query else set()
     if parsed_query:
         direct = _direct_answer_from_query_and_docs(parsed_query, docs)
         if direct:
             return direct
+        grounded = _grounded_answer_from_entity_docs(question or parsed_query.raw_query, parsed_query, docs)
+        if grounded:
+            return grounded
+        if not parsed_query.entities and IntentType.GOAL_BASED_RECOMMENDATION not in intents:
+            if any(needle in (question or "") for needle in _GOAL_CONTEXT_NEEDLES):
+                return _GOAL_RECOMMENDATION_ANSWER
+            # Truly unknown ingredient/product: never build an answer from unrelated retrieved docs.
+            return _UNKNOWN_INGREDIENT_ANSWER
     if IntentType.TIMING in intents and not (intents & _RISK_INTENTS) and "ingredient_profile" in source_types:
         return (
             "일반적인 복용 타이밍은 성분과 목적에 따라 달라질 수 있습니다. 검색된 성분 프로필의 복용 가이드와 "
@@ -416,7 +438,219 @@ def _fallback_answer_from_docs(docs: list[Any], parsed_query: ParsedSupplementQu
             "일반적인 복용 타이밍은 성분과 목적에 따라 달라질 수 있습니다. 검색된 성분 프로필의 복용 가이드와 "
             "주의사항을 기준으로 식사 여부, 운동 전후, 다른 약물과의 간격을 함께 확인하는 것이 좋습니다."
         )
-    return "검색된 근거만으로는 충분하지 않습니다. 확인 가능한 제품명, 성분표, 함량, 복용 중인 약과 질환 정보를 알려주면 범위를 좁혀 안내할 수 있습니다."
+    return _UNKNOWN_INGREDIENT_ANSWER
+
+
+_UNKNOWN_INGREDIENT_ANSWER = (
+    "확보된 근거 문서에서 확인되지 않는 성분이나 제품이라 복용 가능 여부를 단정하기 어렵습니다. "
+    "제품명, 성분표, 함량, 복용량과 함께 복용 중인 약이나 질환 정보를 알려주면 확인 가능한 범위에서 나눠서 안내할 수 있습니다."
+)
+_TIMING_LABEL_KEYS = (
+    ("General:", "general"),
+    ("With food:", "with_food"),
+    ("Before bed:", "before_bed"),
+    ("Exercise related:", "exercise_related"),
+)
+_MEAL_NEEDLES = ("공복", "식후", "식전", "식사", "밥")
+_EXERCISE_NEEDLES = ("운동",)
+_BEDTIME_NEEDLES = ("자기 전", "저녁", "밤", "수면", "잠")
+_PAIRING_NEEDLES = ("같이", "함께", "병용", "동시에", "한번에", "간격")
+_DAILY_NEEDLES = ("매일", "장기", "계속", "오래")
+_COMPARISON_NEEDLES = ("중 뭐", "중에 뭐", "뭐가 나아", "뭘 봐야", "비교", "어떤 게 나")
+_GOAL_CONTEXT_NEEDLES = ("근육", "근비대", "운동 전", "운동 후", "프리워크아웃", "잠", "수면", "피곤", "집중", "보충제로 뭐", "영양제로 뭐")
+_CANONICAL_EQUIVALENTS = {
+    "warfarin": {"anticoagulant"},
+    "anticoagulant": {"warfarin"},
+    "coffee": {"caffeine"},
+    "caffeine": {"coffee"},
+    "levothyroxine": {"thyroid medication"},
+    "thyroid medication": {"levothyroxine"},
+    "alcohol": {"alcohol use"},
+    "alcohol use": {"alcohol"},
+    "probiotics": {"probiotic"},
+    "probiotic": {"probiotics"},
+    "whey protein": {"protein"},
+}
+
+
+def _expand_canonical(value: str) -> set[str]:
+    normalized = (value or "").strip().lower()
+    if not normalized:
+        return set()
+    return {normalized, *_CANONICAL_EQUIVALENTS.get(normalized, set())}
+
+
+def _query_canonicals(parsed_query: ParsedSupplementQuery, entity_types: set[EntityType] | None = None) -> set[str]:
+    values: set[str] = set()
+    for entity in parsed_query.entities:
+        if entity_types is None or entity.type in entity_types:
+            values.update(_expand_canonical(entity.canonical))
+    return values
+
+
+def _list_items(text: str, label: str) -> list[str]:
+    items: list[str] = []
+    in_block = False
+    for line in (text or "").splitlines():
+        stripped = line.strip()
+        if stripped == f"{label}:":
+            in_block = True
+            continue
+        if in_block:
+            if stripped.startswith("- "):
+                items.append(stripped.removeprefix("- ").strip())
+                continue
+            if stripped and not line.startswith(" "):
+                break
+    return [item for item in items if item]
+
+
+def _as_sentence(text: str) -> str:
+    stripped = (text or "").strip()
+    if stripped and stripped[-1] not in ".!?。":
+        stripped = f"{stripped}."
+    return stripped
+
+
+def _profile_doc_for(canonical: str, docs: list[Any]) -> Any | None:
+    keys = _expand_canonical(canonical)
+    for doc in docs:
+        meta = getattr(doc, "metadata", {}) or {}
+        if (meta.get("source") or meta.get("type")) != "ingredient_profile":
+            continue
+        doc_canonical = str(meta.get("canonical") or "").strip().lower()
+        id_canonical = str(meta.get("id") or "").removeprefix("ING_").lower().replace("_", " ").strip()
+        if (doc_canonical and _expand_canonical(doc_canonical) & keys) or (id_canonical and _expand_canonical(id_canonical) & keys):
+            return doc
+    return None
+
+
+def _profile_timing(text: str) -> dict[str, str]:
+    timing: dict[str, str] = {}
+    for item in _list_items(text, "Timing"):
+        for label, key in _TIMING_LABEL_KEYS:
+            if item.startswith(label):
+                value = item.removeprefix(label).strip()
+                if value:
+                    timing.setdefault(key, value)
+                break
+        else:
+            timing.setdefault("general", item)
+    return timing
+
+
+def _select_timing_lines(question: str, timing: dict[str, str]) -> list[str]:
+    keys: list[str] = []
+    if any(needle in question for needle in _MEAL_NEEDLES):
+        keys.extend(["general", "with_food"])
+    if any(needle in question for needle in _EXERCISE_NEEDLES):
+        keys.extend(["exercise_related", "general"])
+    if any(needle in question for needle in _BEDTIME_NEEDLES):
+        keys.extend(["general", "before_bed"])
+    if not keys:
+        keys.append("general")
+    lines = [timing[key] for key in dict.fromkeys(keys) if timing.get(key)]
+    return list(dict.fromkeys(lines))[:2]
+
+
+def _caution_keywords(question: str, parsed_query: ParsedSupplementQuery) -> set[str]:
+    keywords: set[str] = set()
+    intents = set(parsed_query.intents)
+    if any(needle in question for needle in _MEAL_NEEDLES):
+        keywords.update({"공복", "위장", "속 불편", "식후"})
+    if any(needle in question for needle in _EXERCISE_NEEDLES):
+        keywords.update({"운동", "총 단백질", "총량"})
+    if IntentType.LONG_TERM_USE in intents or any(needle in question for needle in _DAILY_NEEDLES):
+        keywords.update({"중복", "고함량", "고용량", "장기"})
+    risk_canonicals = _query_canonicals(parsed_query, {EntityType.RISK_CONTEXT, EntityType.CONDITION, EntityType.DRUG_OR_DRUG_CLASS})
+    if "pregnancy" in risk_canonicals:
+        keywords.update({"임신", "임산부"})
+    if "kidney disease" in risk_canonicals:
+        keywords.add("신장")
+    if "liver disease" in risk_canonicals:
+        keywords.add("간")
+    if "antibiotics" in risk_canonicals:
+        keywords.add("항생제")
+    if "thyroid medication" in risk_canonicals:
+        keywords.add("갑상선")
+    return keywords
+
+
+def _rule_entities(doc: Any, label: str, meta_key: str) -> set[str]:
+    meta = getattr(doc, "metadata", {}) or {}
+    values = _expand_canonical(str(meta.get(meta_key) or ""))
+    match = re.search(rf"^{re.escape(label)}:\s*(.+)$", getattr(doc, "page_content", "") or "", re.MULTILINE)
+    if match:
+        for part in match.group(1).split("/"):
+            values.update(_expand_canonical(part))
+    return values
+
+
+def _matched_rule_recommendations(question: str, parsed_query: ParsedSupplementQuery, docs: list[Any]) -> list[str]:
+    supplement_canonicals = _query_canonicals(parsed_query, {EntityType.SUPPLEMENT_INGREDIENT})
+    all_canonicals = _query_canonicals(parsed_query)
+    lowered_question = (question or "").lower()
+    recommendations: list[str] = []
+    for doc in docs:
+        meta = getattr(doc, "metadata", {}) or {}
+        source = meta.get("source") or meta.get("type")
+        text = getattr(doc, "page_content", "") or ""
+        if source == "interaction_rule":
+            entity_a = _rule_entities(doc, "Entity A", "entity_a_canonical")
+            entity_b = _rule_entities(doc, "Entity B", "entity_b_canonical")
+            if entity_a & all_canonicals and entity_b & all_canonicals and (entity_a | entity_b) & supplement_canonicals:
+                recommendations.append(_field(text, "Recommendation") or "")
+        elif source == "safety_rule":
+            affected: set[str] = set()
+            for value in str(meta.get("affected_entities") or "").split(","):
+                affected.update(_expand_canonical(value))
+            for value in _list_items(text, "Affected entities"):
+                affected.update(_expand_canonical(value))
+            triggers = [item.lower() for item in _list_items(text, "Trigger conditions")]
+            if affected & supplement_canonicals and any(trigger and trigger in lowered_question for trigger in triggers):
+                recommendations.append(_field(text, "Recommendation") or "")
+    return [_as_sentence(item) for item in dict.fromkeys(recommendations) if item]
+
+
+def _grounded_answer_from_entity_docs(question: str, parsed_query: ParsedSupplementQuery, docs: list[Any]) -> str:
+    """Build a doc-grounded answer from KB docs that match the detected entities."""
+    entities = _supplement_entities(parsed_query)
+    if not entities or not docs:
+        return ""
+    question = question or ""
+    rule_lines = _matched_rule_recommendations(question, parsed_query, docs)
+    keywords = _caution_keywords(question, parsed_query)
+    wants_spacing = any(needle in question for needle in _PAIRING_NEEDLES) or IntentType.LONG_TERM_USE in set(parsed_query.intents)
+
+    profile_lines: list[str] = []
+    for entity in entities[:2]:
+        profile = _profile_doc_for(entity.canonical, docs)
+        if profile is None:
+            continue
+        text = getattr(profile, "page_content", "") or ""
+        lines = _select_timing_lines(question, _profile_timing(text))
+        matched_cautions = [item for item in _list_items(text, "Cautions") if keywords and _contains_any(item, keywords)]
+        lines.extend(matched_cautions[: 2 if len(lines) < 2 else 1])
+        if wants_spacing:
+            lines.extend(_list_items(text, "Spacing")[:1])
+        lines = [_as_sentence(line) for line in dict.fromkeys(lines) if line]
+        if not lines:
+            continue
+        if len(entities) > 1:
+            label = _entity_label(entity.canonical)
+            profile_lines.append(f"{label}: " + " ".join(lines))
+        else:
+            profile_lines.extend(lines)
+
+    if not rule_lines and not profile_lines:
+        return ""
+    lead: list[str] = []
+    if any(needle in question for needle in _COMPARISON_NEEDLES):
+        labels = ", ".join(_entity_label(entity.canonical) for entity in entities)
+        lead.append(
+            f"비교 후보 중 확보된 근거 문서로 확인할 수 있는 것은 {labels}이고, 나머지 후보는 제품 성분표와 함량을 확인한 뒤 비교하는 것이 좋습니다."
+        )
+    return " ".join([*lead, *rule_lines, *profile_lines][:6]).strip()
 
 
 def _enhance_answer(
@@ -446,6 +680,7 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
     entities = _supplement_entities(parsed_query)
     doc_ids = _doc_ids(docs)
     intents = set(parsed_query.intents)
+    canonicals = _query_canonicals(parsed_query)
 
     if IntentType.SYMPTOM_AFTER_INTAKE in intents:
         return (
@@ -453,47 +688,52 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
             "증상이 심하거나 지속되거나 알레르기 의심 증상이 있으면 복용을 중단하고 의료진과 상담하세요."
         )
 
-    if "SAFE_KIDNEY_PROTEIN" in doc_ids:
+    # Doc-specific answers fire only when the question carries the co-entity the doc is about;
+    # priority retrieval pulls these docs for any mention of the supplement alone.
+    if "SAFE_KIDNEY_PROTEIN" in doc_ids and "kidney disease" in canonicals:
         return (
-            "신장질환이 있다면 프로틴은 임의로 시작하거나 늘리기보다 하루 총 단백질 섭취량을 의료진과 확인하는 것이 안전합니다. "
+            "신장질환이 있다면 프로틴은 임의로 시작하거나 늘리기보다 하루 총 단백질 섭취량을 의료진과 확인하는 편이 좋습니다. "
             "식사 단백질, 보충제 1회 함량, 신장 기능 상태를 함께 봐야 합니다."
         )
 
     if len(entities) >= 2:
-        checks = _component_checks(entities, doc_ids)
+        checks = _component_checks(entities, doc_ids, docs)
         if checks:
             labels = ", ".join(_entity_label(entity.canonical) for entity in entities)
             return (
-                f"확인된 성분은 {labels}입니다. 함께 복용 가능 여부는 제품 함량과 개인 상태에 따라 달라질 수 있어 안전하다고 단정하지 않습니다. "
+                f"{labels} 조합은 성분별로 확인할 점이 다르고, 제품 함량과 개인 상태에 따라 달라질 수 있어 안전하다고 단정하지 않습니다. "
                 + " ".join(checks)
-                + " 복용 중인 약, 질환, 수술 예정 여부가 있으면 먼저 확인하세요."
+                + " 복용 중인 약이나 진단받은 질환이 있으면 우선 확인하세요."
             )
 
-    if "SAFE_PREGNANCY_MULTIVITAMIN" in doc_ids:
+    if "SAFE_PREGNANCY_MULTIVITAMIN" in doc_ids and canonicals & {"pregnancy", "breastfeeding"}:
         return (
             "임산부의 종합비타민 복용은 제품에 따라 달라집니다. 임산부용 제품인지, 비타민A 등 고함량 지용성 비타민과 미네랄 중복이 없는지 확인하고 "
             "의료진 또는 약사와 상담하는 것이 좋습니다."
         )
 
-    if "INT_PROBIOTIC_ANTIBIOTICS" in doc_ids:
+    if "INT_PROBIOTIC_ANTIBIOTICS" in doc_ids and "antibiotics" in canonicals:
         return (
             "유산균은 항생제와 동시에 먹으면 효과가 줄 수 있어 복용 간격을 확인하는 편이 좋습니다. 항생제 치료를 대체하지 않으며, "
             "처방받은 항생제 종류와 유산균 제품 지침에 따라 의사 또는 약사에게 간격을 확인하세요."
         )
 
-    if "INT_ZINC_IRON_CALCIUM" in doc_ids:
+    if "INT_ZINC_IRON_CALCIUM" in doc_ids and "zinc" in canonicals and canonicals & {"iron", "calcium"}:
         return (
             "아연과 철분 또는 칼슘은 미네랄끼리 흡수 경쟁이 생길 수 있어 같은 시간에 고함량으로 몰아 먹는 것은 피하는 편이 좋습니다. "
             "둘 다 필요하면 제품 함량과 복용 목적을 확인해 간격을 두는 방식을 의사 또는 약사에게 확인하세요."
         )
 
     if IntentType.GOAL_BASED_RECOMMENDATION in intents:
-        return (
-            "목적 기반 보충제 추천은 현재 확인된 corpus 범위 안에서만 조심스럽게 볼 수 있습니다. 운동 전인지 운동 후인지, 수면 목적이면 카페인 민감도와 "
-            "복용 중인 약, 질환, 현재 먹는 제품을 알려주면 안전 범위 안에서 후보를 좁혀볼 수 있습니다."
-        )
+        return _GOAL_RECOMMENDATION_ANSWER
 
     return ""
+
+
+_GOAL_RECOMMENDATION_ANSWER = (
+    "목적 기반 보충제 추천은 현재 확인된 corpus 범위 안에서만 조심스럽게 볼 수 있습니다. 운동 전인지 운동 후인지, 수면 목적이면 카페인 민감도와 "
+    "복용 중인 약, 질환, 현재 먹는 제품을 알려주면 안전 범위 안에서 후보를 좁혀볼 수 있습니다."
+)
 
 
 def _should_prefer_deterministic_answer(parsed_query: ParsedSupplementQuery, docs: list[Any]) -> bool:
@@ -512,23 +752,33 @@ def _should_prefer_deterministic_answer(parsed_query: ParsedSupplementQuery, doc
     )
 
 
-def _component_checks(entities: list[Any], doc_ids: set[str]) -> list[str]:
+_COMPONENT_CHECK_TEXT = {
+    "multivitamin": "종합비타민은 비타민A, 비타민D, 철분, 아연 등 성분 중복과 고함량 여부를 확인하세요.",
+    "omega3": "오메가3는 출혈 위험과 관련해 항응고제 복용이나 예정된 수술·시술이 있는지 확인하세요.",
+    "silymarin": "실리마린은 간질환이나 처방약 복용 여부를 확인하세요.",
+    "probiotics": "유산균은 항생제와 동시에 복용하면 효과가 줄 수 있어 간격 확인이 필요합니다.",
+    "zinc": "아연은 철분, 칼슘, 일부 항생제와 흡수 경쟁이나 간섭 가능성이 있어 복용 간격을 확인하세요.",
+    "protein": "프로틴은 식사 단백질까지 합친 하루 총량과 신장질환 여부를 확인하세요.",
+    "creatine": "크레아틴은 신장 기능 이상 여부, 충분한 수분 섭취, 제품 권장량을 확인하세요.",
+    "magnesium": "마그네슘은 신장질환 여부와 갑상선약·일부 항생제와의 복용 간격을 확인하세요.",
+    "iron": "철분은 칼슘, 커피·차, 일부 항생제와 흡수 간섭이 있을 수 있어 복용 간격을 확인하세요.",
+    "calcium": "칼슘은 철분, 아연 등 다른 미네랄과 흡수 경쟁이 있을 수 있어 복용 간격을 확인하세요.",
+}
+
+
+def _component_checks(entities: list[Any], doc_ids: set[str], docs: list[Any] | None = None) -> list[str]:
     checks: list[str] = []
-    canonicals = {entity.canonical for entity in entities}
-    if "multivitamin" in canonicals:
-        checks.append("종합비타민은 비타민A, 비타민D, 철분, 아연 등 성분 중복과 고함량 여부를 확인하세요.")
-    if "omega3" in canonicals:
-        checks.append("오메가3는 항응고제 복용, 출혈 위험, 수술 예정 여부를 확인하세요.")
-    if "silymarin" in canonicals:
-        checks.append("실리마린은 간질환이나 처방약 복용 여부를 확인하세요.")
-    if "probiotics" in canonicals or "INT_PROBIOTIC_ANTIBIOTICS" in doc_ids:
-        checks.append("유산균은 항생제와 동시에 복용하면 효과가 줄 수 있어 간격 확인이 필요합니다.")
-    if "zinc" in canonicals:
-        checks.append("아연은 철분, 칼슘, 일부 항생제와 흡수 경쟁이나 간섭 가능성이 있어 복용 간격을 확인하세요.")
-    if "protein" in canonicals:
-        checks.append("프로틴은 식사 단백질까지 합친 하루 총량과 신장질환 여부를 확인하세요.")
-    if "creatine" in canonicals:
-        checks.append("크레아틴은 신장 기능 이상 여부, 충분한 수분 섭취, 제품 권장량을 확인하세요.")
+    for canonical in dict.fromkeys(entity.canonical for entity in entities):
+        text = _COMPONENT_CHECK_TEXT.get(canonical)
+        if not text and docs:
+            profile = _profile_doc_for(canonical, docs)
+            if profile is not None:
+                profile_text = getattr(profile, "page_content", "") or ""
+                bullet = (_list_items(profile_text, "Spacing") or _list_items(profile_text, "Cautions") or [""])[0]
+                if bullet:
+                    text = f"{_entity_label(canonical)}: {_as_sentence(bullet)}"
+        if text:
+            checks.append(text)
     return checks
 
 
@@ -576,6 +826,7 @@ def _entity_label(canonical: str) -> str:
         "protein": "프로틴",
         "magnesium": "마그네슘",
         "creatine": "크레아틴",
+        "caffeine": "카페인",
         "vitamin a": "비타민A",
         "vitamin c": "비타민C",
         "vitamin d": "비타민D",
@@ -623,20 +874,100 @@ def _needs_follow_up(parsed_query: ParsedSupplementQuery, docs: list[Any]) -> bo
     return not docs
 
 
+_RECOMMENDATION_SAFE_RE = re.compile(r"(것이|편이|방식이|게)\s*안전합니다")
+_ANSWER_HEDGE_TEXT = "다만 개인 상태와 제품 함량에 따라 달라질 수 있어 안전하다고 단정하기는 어렵습니다."
+_CONSULT_SENTENCE_RE = re.compile(r"(의사|약사|의료진|전문가)[^.!?]{0,20}(상담|확인)")
+
+
+def _split_answer_sentences(text: str) -> list[str]:
+    return [part.strip() for part in re.split(r"(?<=[.!?。])\s+", (text or "").strip()) if part.strip()]
+
+
 def _soften_unsafe_answer(answer: str) -> str:
-    softened = answer or ""
-    found = False
-    for phrase in _UNSAFE_PHRASES:
-        if phrase in softened:
-            softened = softened.replace(phrase, "개인 상태에 따라 달라질 수 있습니다")
-            found = True
-    if found and _CONSULT_TEXT not in softened:
-        softened = f"{softened.strip()} {_CONSULT_TEXT}"
-    return softened
+    """Soften unsafe claims sentence-by-sentence; never splice a phrase into the middle of a sentence."""
+    text = _RECOMMENDATION_SAFE_RE.sub(lambda match: f"{match.group(1)} 좋습니다", answer or "")
+    sentences = _split_answer_sentences(text)
+    kept = [sentence for sentence in sentences if not any(phrase in sentence for phrase in _UNSAFE_PHRASES)]
+    if len(kept) == len(sentences):
+        return text.strip()
+    if not kept:
+        return ""
+    return " ".join([*kept, _ANSWER_HEDGE_TEXT]).strip()
+
+
+def _is_consult_sentence(sentence: str) -> bool:
+    return bool(_CONSULT_SENTENCE_RE.search(sentence or "")) or _contains_any(sentence or "", {"상담하세요", "consult"})
+
+
+def _is_boilerplate_consult(sentence: str, parsed_query: ParsedSupplementQuery) -> bool:
+    """A consult-only sentence that carries no entity-specific content."""
+    if not _is_consult_sentence(sentence) or _caution_category(sentence) != "consult":
+        return False
+    return not any(entity.text and entity.text.lower() in sentence.lower() for entity in parsed_query.entities)
+
+
+def _normalized_sentence_key(sentence: str) -> str:
+    return re.sub(r"[\s.!?。,]", "", sentence or "")
+
+
+def _dedupe_answer_and_caution(
+    answer: str,
+    caution: str | None,
+    parsed_query: ParsedSupplementQuery,
+    *,
+    risk_query: bool = False,
+) -> tuple[str, str | None]:
+    """Keep at most one generic consult sentence across answer + caution and drop caution
+    sentences that merely repeat the answer."""
+    answer_sentences = _split_answer_sentences(answer)
+    caution_sentences = _split_answer_sentences(caution or "")
+    caution_has_consult = any(_is_consult_sentence(sentence) for sentence in caution_sentences)
+
+    kept_answer: list[str] = []
+    seen_answer: set[str] = set()
+    consult_seen = False
+    for sentence in answer_sentences:
+        key = _normalized_sentence_key(sentence)
+        if key in seen_answer:
+            continue
+        if _is_boilerplate_consult(sentence, parsed_query):
+            if consult_seen or caution_has_consult:
+                continue
+            consult_seen = True
+        seen_answer.add(key)
+        kept_answer.append(sentence)
+    if not kept_answer:
+        kept_answer = answer_sentences[:1]
+
+    kept_caution: list[str] = []
+    seen_caution: set[str] = set()
+    caution_consult_seen = False
+    for sentence in caution_sentences:
+        key = _normalized_sentence_key(sentence)
+        # Risk cautions keep their safety sentences even when the answer already states them.
+        if key in seen_caution or (key in seen_answer and not risk_query):
+            continue
+        if _is_boilerplate_consult(sentence, parsed_query):
+            if caution_consult_seen:
+                continue
+            caution_consult_seen = True
+        seen_caution.add(key)
+        kept_caution.append(sentence)
+    if caution_sentences and not kept_caution:
+        # High-risk cautions must stay non-empty; keep the first original sentence.
+        kept_caution = caution_sentences[:1]
+
+    deduped_answer = " ".join(kept_answer).strip() if answer_sentences else (answer or "")
+    deduped_caution = " ".join(kept_caution).strip() if caution_sentences else caution
+    return deduped_answer, deduped_caution or None
+
+
+def _soften_recommendation_phrasing(text: str) -> str:
+    return _RECOMMENDATION_SAFE_RE.sub(lambda match: f"{match.group(1)} 좋습니다", text or "")
 
 
 def _soften_unsafe_caution(caution: str) -> str:
-    sentences = _split_caution_sentences([caution])
+    sentences = _split_caution_sentences([_soften_recommendation_phrasing(caution)])
     softened_sentences: list[str] = []
     for sentence in sentences:
         if not any(phrase in sentence for phrase in _UNSAFE_PHRASES):

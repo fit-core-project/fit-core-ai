@@ -1,0 +1,46 @@
+{
+  "routineDraftId": "2caea401-dc59-49ca-b1e7-f12edca871e9",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 8,
+  "summaryTitle": "코어 근력 강화 루틴",
+  "rationaleSummary": [
+    "요청하신 코어(코어) 분할에 맞춰 복합적인 움직임과 고립 운동을 조합했습니다.",
+    "낮은 준비 상태와 20분이라는 시간 제약을 고려하여, 핵심 목표 근육인 복근, 하부 요추, 외복사근에 집중하는 효율적인 루틴으로 구성했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "21",
+      "exerciseName": "업도미널",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "abs"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "코어 분할의 주요 목표 근육인 복근(복부)을 강화하는 고립 운동입니다. 낮은 준비 상태와 20분이라는 시간 제약을 고려하여, 기구 사용이 가능하고 효율성이 높은 이 운동을 첫 번째로 배치했습니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": []
+}

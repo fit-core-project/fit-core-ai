@@ -1,0 +1,295 @@
+{
+  "routineDraftId": "99a1918f-2e32-4126-89d2-119d27963fe6",
+  "generationStatus": "fallback",
+  "statusReasonCode": "networkError",
+  "isFallback": true,
+  "totalEstimatedTime": 45,
+  "summaryTitle": "기본 밀기 루틴",
+  "rationaleSummary": [
+    "AI 코치 연결이 원활하지 않아 규칙 기반 기본 루틴으로 대신했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "95",
+      "exerciseName": "원암 오버헤드 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "DUMBBELL, CABLE",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 15.0,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 15.0,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "목표 근육의 수축과 이완을 의식하며 천천히 수행하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "131",
+      "exerciseName": "트라이셉스 로프 푸시다운",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 22.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 22.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "목표 근육의 수축과 이완을 의식하며 천천히 수행하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "91",
+      "exerciseName": "라잉 트라이셉스 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "BARBELL, DUMBBELL, CABLE",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 35.0,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 35.0,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "목표 근육의 수축과 이완을 의식하며 천천히 수행하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 4,
+      "exerciseId": "92",
+      "exerciseName": "스탠딩 트라이셉스 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "BARBELL, DUMBBELL, CABLE",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 35.0,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 35.0,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "목표 근육의 수축과 이완을 의식하며 천천히 수행하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 5,
+      "exerciseId": "93",
+      "exerciseName": "케이블 오버헤드 트라이셉스 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 22.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 22.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "목표 근육의 수축과 이완을 의식하며 천천히 수행하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 6,
+      "exerciseId": "94",
+      "exerciseName": "오버헤드 덤벨 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "DUMBBELL",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 15.0,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 15.0,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "목표 근육의 수축과 이완을 의식하며 천천히 수행하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 7,
+      "exerciseId": "97",
+      "exerciseName": "케이블 트라이셉스 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 22.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 22.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "목표 근육의 수축과 이완을 의식하며 천천히 수행하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 8,
+      "exerciseId": "138",
+      "exerciseName": "스컬 크러셔",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "BARBELL, DUMBBELL",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 35.0,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 35.0,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "목표 근육의 수축과 이완을 의식하며 천천히 수행하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 9,
+      "exerciseId": "96",
+      "exerciseName": "케이블 푸시다운",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 22.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 22.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "목표 근육의 수축과 이완을 의식하며 천천히 수행하세요.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "중량은 본인의 컨디션에 맞게 조절하세요."
+  ]
+}

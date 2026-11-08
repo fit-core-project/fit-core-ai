@@ -1,0 +1,213 @@
+{
+  "routineDraftId": "fedd6baa-2655-4458-85b4-479169fc000a",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 42,
+  "summaryTitle": "하체 근력 강화 루틴",
+  "rationaleSummary": [
+    "주요 복합 운동을 먼저 배치하여 하체의 큰 근육군(둔근, 대퇴사두근)에 최대의 힘으로 자극을 줍니다.",
+    "근육통과 통증 우려가 있는 대퇴사두근은 고립 운동 위주로 구성하고, 후면 사슬과 외전근/내전근을 보조적으로 강화했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "149",
+      "exerciseName": "스모 스쿼트",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "adductor"
+      ],
+      "equipmentType": "DUMBBELL, BARBELL, BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 40.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 40.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 40.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 40.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 5,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 40.0,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "하체 근력 강화가 목표이며, 복합 운동 중 가장 높은 점수를 받은 후보입니다. 특히 내전근과 둔근을 주 타겟으로 하여 전반적인 하체 근육 발달에 도움을 줄 수 있습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "105",
+      "exerciseName": "라잉 레그 컬",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "hamstring"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 57.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 57.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 57.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "후면 사슬을 강화하는 고립 운동으로, 최근 시티드 레그 컬과 데드리프트로 이미 충분한 자극을 받았지만, 하체 근력 목표를 위해 추가했습니다. 대퇴사두근의 통증 우려가 있어 후면 위주로 구성했습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "108",
+      "exerciseName": "케이블 킥백",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "gluteal"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 32.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "둔근(둔근)을 고립적으로 타겟하며, 스쿼트와 레그 컬로 자극된 하체 근육의 균형 잡힌 발달에 기여합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 4,
+      "exerciseId": "113",
+      "exerciseName": "이너 타이 (머신 힙 어덕션)",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "adductor"
+      ],
+      "equipmentType": "MACHINE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 50.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "내전근(내전근)을 보조적으로 강화하여 하체 전체의 안정성을 높입니다. 스모 스쿼트와 함께 내전근 타겟팅이 가능합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 5,
+      "exerciseId": "111",
+      "exerciseName": "스탠딩 카프 레이즈",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "calves"
+      ],
+      "equipmentType": "MACHINE, SMITH_MACHINE, DUMBBELL",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 50.0,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "하체 루틴의 마지막에 종아리(종아리)를 고립적으로 마무리하는 운동입니다. 전반적인 하체 근력 목표 달성을 위해 포함했습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 6,
+      "exerciseId": "116",
+      "exerciseName": "케이블 힙 어브덕션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "abductors"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 90,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 32.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 8,
+          "targetWeightKg": 32.5,
+          "targetRir": 2,
+          "targetRestSec": 90
+        }
+      ],
+      "exerciseRationale": "하체 운동의 보조적인 볼륨을 채우기 위해 외전근(외전근)에 초점을 맞춘 고립 운동입니다. 이는 하체의 전반적인 안정성과 근력을 높이는 데 도움을 줍니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "대퇴사두근 부위의 근육통이 있으므로, 무리한 가동 범위나 과도한 볼륨은 피해주세요.",
+    "하체는 큰 운동량이므로 컨디션에 따라 세트 수와 휴식 시간을 조절하세요.",
+    "컨디션에 맞춰 중량과 반복 수를 조절하세요."
+  ]
+}

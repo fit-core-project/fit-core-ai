@@ -1,0 +1,126 @@
+{
+  "routineDraftId": "28e76df3-53a2-4077-b3c6-579e05e1642f",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 32,
+  "summaryTitle": "밀기 근력 루틴",
+  "rationaleSummary": [
+    "목표하는 가슴, 전면 어깨, 삼두근을 모두 자극할 수 있는 맨몸 복합 운동 위주로 구성했습니다.",
+    "시간과 장비 제한(덤벨, 머신 등)을 고려하여 5가지 후보 중 가장 효율적인 3가지 동작으로 루틴을 압축했습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "48",
+      "exerciseName": "딥스",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 4,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "가슴과 삼두근을 주 타겟으로 하는 복합 운동이며, 목표 근육에 가장 높은 우선순위를 가진 후보입니다. 전면 어깨까지 보조적으로 자극하여 밀기 루틴의 근력 목표를 달성하는 데 적합합니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "137",
+      "exerciseName": "디피싯 푸시업",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "chest"
+      ],
+      "equipmentType": "BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 3,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "가슴을 주 타겟으로 하며, 전면 어깨와 삼두근까지 자극하는 복합 운동입니다. 딥스 다음으로 높은 효율성을 가진 후보를 선택하여 시간 제한과 근력 목표에 맞게 배치했습니다.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "141",
+      "exerciseName": "파이크 푸시업",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "front-deltoids"
+      ],
+      "equipmentType": "BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 2,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "전면 어깨와 삼두근을 주 타겟으로 하는 복합 운동입니다. 주요 가슴 운동 후 전면 어깨 볼륨을 채우고, 목표 근육인 삼두근까지 효과적으로 자극하여 루틴의 균형을 맞추었습니다.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "컨디션에 맞춰 중량과 반복 수를 조절하세요."
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "routineDraftId": "df6582fb-719a-4081-8319-4b36a07ea61e",
+  "generationStatus": "fallback",
+  "statusReasonCode": "schemaError",
+  "isFallback": true,
+  "totalEstimatedTime": 13,
+  "summaryTitle": "기본 코어 루틴",
+  "rationaleSummary": [
+    "AI 코치 연결이 원활하지 않아 기본 루틴으로 대체되었습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "66",
+      "exerciseName": "컨벤셔널 데드리프트",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "lower-back"
+      ],
+      "equipmentType": "BARBELL",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 120.0,
+          "targetRir": 4,
+          "targetRestSec": 180
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": 120.0,
+          "targetRir": 4,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "134",
+      "exerciseName": "굿모닝",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "lower-back"
+      ],
+      "equipmentType": "BARBELL, BODYWEIGHT",
+      "defaultRestSec": 180,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 5,
+          "targetWeightKg": null,
+          "targetRir": 4,
+          "targetRestSec": 180
+        }
+      ],
+      "exerciseRationale": "주동근에 집중하며 정확한 자세를 유지하세요.",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "중량은 본인의 컨디션에 맞게 조절하세요."
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "routineDraftId": "2cf6dfc2-93c9-4971-9bac-abfe5ec136e9",
+  "generationStatus": "success",
+  "statusReasonCode": "none",
+  "isFallback": false,
+  "totalEstimatedTime": 17,
+  "summaryTitle": "삼두근 집중 근비대 루틴",
+  "rationaleSummary": [
+    "전면 어깨 부담을 최소화하면서 삼두근에 고립적인 자극을 줄 수 있는 운동들로 구성했습니다.",
+    "주요 복합 운동이 없어, 트라이셉스 부위의 다양한 장비를 활용하여 충분한 볼륨을 확보하는 데 중점을 두었습니다."
+  ],
+  "routineBlocks": [
+    {
+      "order": 1,
+      "exerciseId": "93",
+      "exerciseName": "케이블 오버헤드 트라이셉스 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "사용자가 어깨에 무리를 주고 싶지 않다는 요청과 삼두근 근비대 목표를 고려하여, 케이블을 이용한 고립 운동으로 전면 어깨 부담 없이 트라이셉스를 효과적으로 자극할 수 있습니다. (케이블 장비 사용)",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 2,
+      "exerciseId": "95",
+      "exerciseName": "원암 오버헤드 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "DUMBBELL, CABLE",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "덤벨을 이용한 고립 운동으로, 전면 어깨에 부담이 적으면서도 삼두근의 다양한 각도를 활용하여 근비대 목표를 달성하는 데 도움을 줍니다. (덤벨 장비 사용)",
+      "substitutionCandidates": []
+    },
+    {
+      "order": 3,
+      "exerciseId": "97",
+      "exerciseName": "케이블 트라이셉스 익스텐션",
+      "movementPattern": null,
+      "primaryMuscles": [
+        "triceps"
+      ],
+      "equipmentType": "CABLE",
+      "defaultRestSec": 75,
+      "prescription": [
+        {
+          "setIndex": 1,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        },
+        {
+          "setIndex": 2,
+          "setType": "working",
+          "targetReps": 12,
+          "targetWeightKg": 37.5,
+          "targetRir": 2,
+          "targetRestSec": 75
+        }
+      ],
+      "exerciseRationale": "삼두근을 주 타겟으로 하는 케이블 고립 운동입니다. 전면 어깨에 부담이 적고, 근비대 목표를 위해 다양한 장비를 활용하여 충분한 볼륨을 확보했습니다. (케이블 장비 사용)",
+      "substitutionCandidates": []
+    }
+  ],
+  "warnings": [
+    "어깨 무리가 가지 않도록 가동 범위와 무게에 주의하며 진행하세요."
+  ]
+}

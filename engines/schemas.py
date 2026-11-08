@@ -56,6 +56,9 @@ class RecentSetRecord(BaseModel):
     rir: Optional[float] = None
     rpe: Optional[float] = None
     is_failure: bool = False
+    # From exercise_tier; used to scale weights borrowed across exercises.
+    equipment_type: Optional[str] = None
+    movement_type: Optional[str] = None
 
 
 class UserProfileContext(BaseModel):
