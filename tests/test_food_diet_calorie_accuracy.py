@@ -234,12 +234,31 @@ def test_llm_impossible_kcal_is_dropped(no_food_db):
     assert out.kcal is None and out.fat_g is None
 
 
-def test_db_hit_without_amount_reports_basis_amount(monkeypatch):
+def test_db_hit_without_amount_reports_one_serving(monkeypatch):
+    # 2026-11-10: no amount = one usual serving (a 355 ml cup), not the 100 ml DB basis.
     engine = _engine([_doc("커피 아메리카노", "커피", kcal=4.0, basis_unit="ml")], distance=0.0)
     monkeypatch.setattr(diet_parser, "get_food_engine", lambda: engine)
     out = _enrich_macros(ParsedDietLog(items=[DietParseItem(food_name="아메리카노")])).items[0]
     assert out.source == "db"
-    assert (out.amount, out.unit) == (100.0, "ml")
+    assert (out.amount, out.unit) == (1.0, "인분")
+    assert out.kcal == pytest.approx(14.2)
+
+
+def test_food_without_serving_data_keeps_basis_amount(monkeypatch):
+    engine = _engine([_doc("모시풀 잎", "모시풀", kcal=40.0)], distance=0.0)
+    monkeypatch.setattr(diet_parser, "get_food_engine", lambda: engine)
+    out = _enrich_macros(ParsedDietLog(items=[DietParseItem(food_name="모시풀 잎")])).items[0]
+    assert (out.amount, out.unit) == (100.0, "g")
+
+
+def test_llm_placeholder_100g_without_amount_in_text_becomes_one_serving():
+    from engines.quicklog.diet_parser import _drop_placeholder_amounts
+    parsed = ParsedDietLog(items=[DietParseItem(food_name="된장찌개", amount=100, unit="g", protein_g=3.0, carbs_g=4.0, fat_g=1.6)])
+    out = _drop_placeholder_amounts(parsed, "된장찌개 먹었어").items[0]
+    assert (out.amount, out.unit) == (None, None)
+    assert out.protein_g == pytest.approx(12.0)  # 100 g estimate scaled to a 400 g serving
+    kept = _drop_placeholder_amounts(parsed, "된장찌개 100g").items[0]
+    assert kept.amount == 100
 
 
 def test_llm_converted_egg_count_is_restored_to_pieces():
@@ -352,3 +371,45 @@ def test_parse_diet_log_cola_can_uses_355ml(monkeypatch):
 def test_deterministic_keeps_foods_with_predicate_like_endings(text, expected):
     items = _deterministic_diet_parse(text).items
     assert [(i.food_name, i.amount, i.unit) for i in items] == expected
+
+
+def test_rice_bowl_is_one_gonggi_not_soup_bowl():
+    from engines.food.food_units import food_unit_overrides
+    assert food_unit_overrides("공기밥").get("그릇") == 210.0
+    assert food_unit_overrides("밥").get("그릇") == 210.0
+
+
+def test_length_size_is_pieces_not_count():
+    from engines.food.food_units import resolve_portion_grams
+    # "터키 샌드위치 15cm" used to become 15 servings (1.5 kg, 3750 kcal).
+    assert resolve_portion_grams("터키 샌드위치", 15, "cm") == 200.0
+    assert resolve_portion_grams("터키 샌드위치", 30, "cm") == 400.0
+
+
+@pytest.mark.parametrize(("text", "expected"), [
+    ("밥 한 공기", [("밥", 1.0, "공기")]),
+    ("우유 반 팩", [("우유", 0.5, "팩")]),
+    ("밥 1/3공기만 먹었어요", [("밥", 0.333, "공기")]),
+    ("잡곡밥 반공기에 계란후라이 2개", [("잡곡밥", 0.5, "공기"), ("계란후라이", 2.0, "개")]),
+    ("방울토마토 한 열댓개", [("방울토마토", 12.0, "개")]),
+    ("치킨 한 마리 반", [("치킨", 1.5, "마리")]),
+    ("햄버거 하나랑 콜라", [("햄버거", 1.0, "개"), ("콜라", None, None)]),
+])
+def test_deterministic_parser_reads_korean_number_words(text, expected):
+    items = diet_parser._deterministic_diet_parse(text).items
+    assert [(i.food_name, i.amount, i.unit) for i in items] == expected
+
+
+@pytest.mark.parametrize(("amount", "unit", "expected"), [
+    (None, "한 컵", (1.0, "컵")),
+    (1.0, "반공기", (0.5, "공기")),
+    (None, "두 조각", (2.0, "조각")),
+    (None, "30cm", (30.0, "cm")),
+    (1.0, "작은 컵", (1.0, "컵")),
+    (None, "공기", (1.0, "공기")),
+    (200.0, "g", (200.0, "g")),
+])
+def test_llm_unit_strings_with_numbers_are_split(amount, unit, expected):
+    parsed = ParsedDietLog(items=[DietParseItem(food_name="x", amount=amount, unit=unit)])
+    item = diet_parser._normalize_llm_units(parsed).items[0]
+    assert (item.amount, item.unit) == expected

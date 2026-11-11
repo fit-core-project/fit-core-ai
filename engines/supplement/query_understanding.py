@@ -53,17 +53,17 @@ ALIAS_REGISTRY: tuple[AliasEntry, ...] = (
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "magnesium", ("마그네슘", "magnesium", "Mg")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "iron", ("철분", "iron", "Fe")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin a", ("비타민A", "비타민 A", "vitamin a")),
-    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin c", ("비타민C", "비타민 C", "vitamin c")),
-    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin d", ("비타민D", "비타민 D", "vitamin d")),
+    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin c", ("비타민C", "비타민 C", "비타민씨", "vitamin c")),
+    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin d", ("비타민D", "비타민 D", "비타민디", "비타민 디", "vitamin d")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "vitamin e", ("비타민E", "비타민 E", "vitamin e")),
-    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "omega3", ("오메가3", "오메가-3", "omega3", "omega-3", "fish oil")),
+    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "omega3", ("오메가3", "오메가-3", "오메가 3", "피쉬오일", "피시오일", "omega3", "omega-3", "fish oil")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "creatine", ("크레아틴", "creatine")),
-    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "multivitamin", ("종합비타민", "멀티비타민", "multivitamin", "multi vitamin")),
+    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "multivitamin", ("종합비타민", "종합 비타민", "멀티비타민", "멀티 비타민", "multivitamin", "multi vitamin")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "silymarin", ("실리마린", "밀크씨슬", "밀크시슬", "silymarin", "milk thistle")),
-    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "probiotics", ("유산균", "프로바이오틱스", "probiotic", "probiotics")),
+    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "probiotics", ("유산균", "프로바이오틱스", "프로바이오틱", "probiotic", "probiotics")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "zinc", ("아연", "zinc", "Zn")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "calcium", ("칼슘", "calcium", "Ca")),
-    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "protein", ("프로틴", "단백질 보충제", "웨이", "whey", "whey protein", "protein powder")),
+    AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "protein", ("프로틴", "프로테인", "단백질 보충제", "단백질 쉐이크", "단백질 파우더", "웨이", "whey", "whey protein", "protein powder")),
     AliasEntry(EntityType.SUPPLEMENT_INGREDIENT, "caffeine", ("카페인", "caffeine")),
     AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "antibiotics", ("항생제", "antibiotics")),
     AliasEntry(EntityType.DRUG_OR_DRUG_CLASS, "medication", ("처방약", "복용 중인 약", "약물", "medication", "medicine")),
@@ -98,12 +98,18 @@ ALIAS_REGISTRY: tuple[AliasEntry, ...] = (
     AliasEntry(EntityType.RISK_CONTEXT, "digestive symptom", ("속이 안 좋음", "속이 안 좋은", "메스꺼움", "설사", "복통", "위장 불편")),
 )
 
-_TIMING_NEEDLES = ("언제", "먹는 시간", "복용 시간", "식후", "공복", "자기 전", "운동 전후", "운동 전", "운동 후")
+_TIMING_NEEDLES = (
+    "언제", "먹는 시간", "복용 시간", "식후", "식전", "공복", "빈속", "자기 전", "자기전", "취침 전",
+    "운동 전후", "운동 전", "운동 후", "운동 직후", "직후", "아침에", "저녁에", "밤에", "밥 먹고", "식사",
+)
 _INTERACTION_NEEDLES = ("같이", "함께", "병용", "먹어도", "복용해도", "한번에", "동시에")
-_SIDE_EFFECT_NEEDLES = ("부작용", "속이 안", "메스꺼움", "설사", "복통", "위장 불편", "불편")
+_SIDE_EFFECT_NEEDLES = (
+    "부작용", "속이 안", "메스꺼", "속쓰", "설사", "복통", "위장 불편", "불편", "비린", "트림",
+    "더부룩", "가스", "변비", "두드러기",
+)
 _LONG_TERM_NEEDLES = ("장기복용", "장기 복용", "오래 먹", "계속 먹", "매일 먹")
 _GOAL_NEEDLES = ("추천", "뭐 먹", "무엇을 먹", "좋은 거", "먹을 만한", "도움")
-_SYMPTOM_AFTER_INTAKE_NEEDLES = ("먹고 속", "복용 후", "섭취 후", "먹었는데", "계속 먹어도")
+_SYMPTOM_AFTER_INTAKE_NEEDLES = ("먹고 속", "복용 후", "섭취 후", "먹었는데", "먹고 나서", "먹으면 속")
 
 
 def parse_supplement_query(raw_query: str | None) -> ParsedSupplementQuery:
@@ -162,7 +168,10 @@ def _infer_intents(query: str, entities: list[ParsedEntity]) -> list[IntentType]
     if any(needle in query for needle in _LONG_TERM_NEEDLES) or "long-term use" in canonical_set:
         intents.append(IntentType.LONG_TERM_USE)
 
-    if any(needle in query for needle in _GOAL_NEEDLES):
+    goal_hits = [needle for needle in _GOAL_NEEDLES if needle in query]
+    # "마그네슘 수면에 도움 돼요?" asks whether a named supplement works (efficacy), not for a
+    # recommendation; only "도움" with a named supplement is not a goal question.
+    if goal_hits and not (supplement_entities and goal_hits == ["도움"]):
         intents.append(IntentType.GOAL_BASED_RECOMMENDATION)
 
     if supplement_entities and drug_entities:

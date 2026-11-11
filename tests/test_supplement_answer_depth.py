@@ -319,3 +319,63 @@ def test_consult_sentence_is_not_repeated_across_answer_and_caution():
     assert result.caution
     assert any(word in result.caution for word in ("상담", "의사", "약사", "의료진"))
     assert result.answer.startswith("종합비타민은 임산부용 제품인지")
+
+
+def test_caution_doc_relevance_uses_whole_tokens():
+    from types import SimpleNamespace
+    from engines.supplement.response_composer import _doc_is_relevant_for_caution
+    doc = SimpleNamespace(metadata={"source": "interaction_rule", "id": "INT_IRON_CAFFEINE"}, page_content="")
+    no_entities = SimpleNamespace(entities=())
+    # "int" (rule prefix) and "iron" inside "environment" used to count as a match.
+    assert not _doc_is_relevant_for_caution(doc, no_entities, "environment point mint")
+    assert _doc_is_relevant_for_caution(doc, no_entities, "iron과 caffeine은 간격을 두세요")
+
+
+def test_curated_kb_replaces_stale_index_copies():
+    from pathlib import Path
+    from types import SimpleNamespace
+    from engines.supplement.kb_documents import merge_curated_kb_documents
+
+    class Doc(SimpleNamespace):
+        pass
+
+    stale = [
+        Doc(page_content="old magnesium", metadata={"source": "ingredient_profile", "id": "ING_MAGNESIUM"}),
+        Doc(page_content="drug card", metadata={"source": "drugs", "id": "D1"}),
+    ]
+    merged = merge_curated_kb_documents(stale, Path("data/documents"), Doc)
+    ids = [d.metadata["id"] for d in merged if d.metadata["source"] == "ingredient_profile"]
+    assert "ING_ZINC" in ids and "ING_PROTEIN" in ids  # missing from the 2026-11 index
+    assert ids.count("ING_MAGNESIUM") == 1
+    assert not any(d.page_content == "old magnesium" for d in merged)
+    assert any(d.metadata["id"] == "D1" for d in merged)
+
+
+def _curated_docs():
+    from pathlib import Path
+    from types import SimpleNamespace
+    from engines.supplement.kb_documents import load_curated_kb_records
+    return [SimpleNamespace(page_content=t, metadata=m) for t, m, _ in load_curated_kb_records(Path("data/documents"))]
+
+
+def test_efficacy_question_without_kb_evidence_says_so_first():
+    from engines.supplement.query_understanding import parse_supplement_query
+    from engines.supplement.response_composer import _apply_efficacy_policy
+    q = "마그네슘 수면에 도움 돼요?"
+    out = _apply_efficacy_policy("마그네슘은 숙면을 돕습니다.", q, parse_supplement_query(q), _curated_docs())
+    assert out.startswith("확보된 근거 문서에서는 마그네슘의 그런 효과를 확인할 수 없습니다.")
+
+
+def test_efficacy_question_with_documented_use_names_the_use_only():
+    from engines.supplement.query_understanding import parse_supplement_query
+    from engines.supplement.response_composer import _apply_efficacy_policy
+    q = "비타민D 뼈 건강에 도움 되나요?"
+    out = _apply_efficacy_policy("A", q, parse_supplement_query(q), _curated_docs())
+    assert "'뼈 건강 관련 영양 보충' 용도로 안내" in out and "직접 확인한 근거는 없습니다" in out
+
+
+def test_non_efficacy_question_is_untouched():
+    from engines.supplement.query_understanding import parse_supplement_query
+    from engines.supplement.response_composer import _apply_efficacy_policy
+    q = "마그네슘 언제 먹어?"
+    assert _apply_efficacy_policy("A", q, parse_supplement_query(q), _curated_docs()) == "A"

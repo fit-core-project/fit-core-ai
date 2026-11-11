@@ -3,7 +3,7 @@
   "generation_status": "success",
   "status_reason_code": "none",
   "is_fallback": false,
-  "total_estimated_time": 12,
+  "total_estimated_time": 23,
   "summary_title": "밀기 세션 추천 루틴",
   "rationale_summary": [
     "상체 밀기 패턴 중심",
@@ -47,6 +47,68 @@
         }
       ],
       "exercise_rationale": "주요 복합 운동",
+      "substitution_candidates": []
+    },
+    {
+      "order": 2,
+      "exercise_id": "pushup",
+      "exercise_name": "푸시업",
+      "movement_pattern": "horizontalPush",
+      "primary_muscles": [
+        "chest"
+      ],
+      "equipment_type": "BODYWEIGHT",
+      "default_rest_sec": 120,
+      "prescription": [
+        {
+          "set_index": 1,
+          "set_type": "working",
+          "target_reps": 8,
+          "target_weight_kg": null,
+          "target_rir": 2,
+          "target_rest_sec": 120
+        },
+        {
+          "set_index": 2,
+          "set_type": "working",
+          "target_reps": 8,
+          "target_weight_kg": null,
+          "target_rir": 2,
+          "target_rest_sec": 120
+        }
+      ],
+      "exercise_rationale": "남은 운동 시간을 채우도록 같은 목표 부위의 안전한 후보에서 추가한 운동입니다.",
+      "substitution_candidates": []
+    },
+    {
+      "order": 3,
+      "exercise_id": "dumbbell_fly",
+      "exercise_name": "덤벨 플라이",
+      "movement_pattern": "horizontalPush",
+      "primary_muscles": [
+        "chest"
+      ],
+      "equipment_type": "DUMBBELL",
+      "default_rest_sec": 75,
+      "prescription": [
+        {
+          "set_index": 1,
+          "set_type": "working",
+          "target_reps": 12,
+          "target_weight_kg": null,
+          "target_rir": 2,
+          "target_rest_sec": 75
+        },
+        {
+          "set_index": 2,
+          "set_type": "working",
+          "target_reps": 12,
+          "target_weight_kg": null,
+          "target_rir": 2,
+          "target_rest_sec": 75
+        }
+      ],
+      "exercise_rationale": "남은 운동 시간을 채우도록 같은 목표 부위의 안전한 후보에서 추가한 운동입니다.",
       "substitution_candidates": []
     }
   ],

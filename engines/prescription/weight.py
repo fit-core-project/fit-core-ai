@@ -131,6 +131,17 @@ def _primary_equipment(raw: Optional[str]) -> str:
     return tokens[0] if tokens else ""
 
 
+def _source_equipment_for(source_raw: Optional[str], target_raw: Optional[str]) -> Optional[str]:
+    """A history row that allows several implements ("BARBELL, DUMBBELL, CABLE") was most
+    likely done with the target's implement when that implement is one of its options;
+    reading the first token treated a 15 kg dumbbell curl as a barbell lift (-> 5 kg)."""
+    options = [t.strip().upper() for t in str(source_raw or "").split(",") if t.strip()]
+    target = _primary_equipment(target_raw)
+    if len(options) > 1 and target in options:
+        return target
+    return source_raw
+
+
 def _load_factor(equipment: Optional[str], movement_type: Optional[str]) -> float:
     eq = _EQUIPMENT_LOAD_FACTOR.get(_primary_equipment(equipment), 1.0)
     mv = _MOVEMENT_LOAD_FACTOR.get(_movement_type_key(movement_type), 1.0)
@@ -216,7 +227,10 @@ def _resolve_target_weight(
 
     same_muscle = _find_same_muscle_recent_reference(exercise, recent_sets)
     if same_muscle and same_muscle.weight_kg:
-        source_factor = _load_factor(same_muscle.equipment_type, same_muscle.movement_type)
+        source_factor = _load_factor(
+            _source_equipment_for(same_muscle.equipment_type, exercise.equipment_type),
+            same_muscle.movement_type,
+        )
         one_rm = _estimated_1rm(same_muscle.weight_kg, same_muscle.reps, _record_rir(same_muscle))
         scaled = one_rm * (target_factor / source_factor) * _BORROWED_SAFETY
         return _finish(_weight_for_reps(scaled, target_reps, target_rir))

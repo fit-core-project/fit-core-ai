@@ -1,0 +1,75 @@
+{
+ "all": {
+  "n": 109,
+  "pass": 72,
+  "first_failing_stage": {
+   "PASS": 72,
+   "S2": 1,
+   "S1": 18,
+   "S3": 18
+  },
+  "stage_pass_independent": {
+   "s0": 109,
+   "s1": 91,
+   "s2": 104,
+   "s3": 84
+  },
+  "composer_paths": {
+   "llm_kept": 58,
+   "llm_softened": 41,
+   "unknown_ingredient_template": 8,
+   "llm_rejected->direct:rule_specific": 1,
+   "goal_template": 1
+  },
+  "s3_pass_but_answer_only_include_fails": [
+   "fe_antibiotics"
+  ]
+ },
+ "dev": {
+  "n": 65,
+  "pass": 49,
+  "first_failing_stage": {
+   "PASS": 49,
+   "S3": 10,
+   "S1": 6
+  },
+  "stage_pass_independent": {
+   "s0": 65,
+   "s1": 59,
+   "s2": 63,
+   "s3": 53
+  },
+  "composer_paths": {
+   "llm_kept": 38,
+   "llm_softened": 20,
+   "llm_rejected->direct:rule_specific": 1,
+   "unknown_ingredient_template": 6
+  },
+  "s3_pass_but_answer_only_include_fails": [
+   "fe_antibiotics"
+  ]
+ },
+ "test": {
+  "n": 44,
+  "pass": 23,
+  "first_failing_stage": {
+   "PASS": 23,
+   "S2": 1,
+   "S1": 12,
+   "S3": 8
+  },
+  "stage_pass_independent": {
+   "s0": 44,
+   "s1": 32,
+   "s2": 41,
+   "s3": 31
+  },
+  "composer_paths": {
+   "llm_kept": 20,
+   "llm_softened": 21,
+   "unknown_ingredient_template": 2,
+   "goal_template": 1
+  },
+  "s3_pass_but_answer_only_include_fails": []
+ }
+}

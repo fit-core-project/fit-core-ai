@@ -1,0 +1,899 @@
+{
+ "overall": {
+  "n": 266,
+  "scored": 266,
+  "pass": 75,
+  "acc": 0.282,
+  "total_kcal_acc": 0.579,
+  "first_fail": {
+   "S1_parse": 39,
+   "S2_match": 83,
+   "S3_grams": 60,
+   "S4_kcal": 9,
+   "pass": 75
+  }
+ },
+ "by_split": {
+  "dev": {
+   "n": 129,
+   "scored": 129,
+   "pass": 38,
+   "acc": 0.295,
+   "total_kcal_acc": 0.574,
+   "first_fail": {
+    "S1_parse": 19,
+    "S2_match": 45,
+    "S3_grams": 23,
+    "S4_kcal": 4,
+    "pass": 38
+   }
+  },
+  "test": {
+   "n": 137,
+   "scored": 137,
+   "pass": 37,
+   "acc": 0.27,
+   "total_kcal_acc": 0.584,
+   "first_fail": {
+    "S1_parse": 20,
+    "S2_match": 38,
+    "S3_grams": 37,
+    "S4_kcal": 5,
+    "pass": 37
+   }
+  }
+ },
+ "by_tag": {
+  "flag:brand": {
+   "n": 1,
+   "scored": 1,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 0.0,
+   "first_fail": {
+    "S2_match": 1
+   }
+  },
+  "flag:invalid": {
+   "n": 12,
+   "scored": 12,
+   "pass": 2,
+   "acc": 0.167,
+   "total_kcal_acc": 0.917,
+   "first_fail": {
+    "S1_parse": 10,
+    "pass": 2
+   }
+  },
+  "flag:noncaloric": {
+   "n": 2,
+   "scored": 2,
+   "pass": 1,
+   "acc": 0.5,
+   "total_kcal_acc": 1.0,
+   "first_fail": {
+    "S1_parse": 1,
+    "pass": 1
+   }
+  },
+  "group:계란유제품": {
+   "n": 33,
+   "scored": 33,
+   "pass": 13,
+   "acc": 0.394,
+   "total_kcal_acc": 0.758,
+   "first_fail": {
+    "S1_parse": 7,
+    "S2_match": 5,
+    "S3_grams": 6,
+    "S4_kcal": 2,
+    "pass": 13
+   }
+  },
+  "group:고기": {
+   "n": 22,
+   "scored": 22,
+   "pass": 7,
+   "acc": 0.318,
+   "total_kcal_acc": 0.591,
+   "first_fail": {
+    "S2_match": 11,
+    "S3_grams": 4,
+    "pass": 7
+   }
+  },
+  "group:과일": {
+   "n": 29,
+   "scored": 29,
+   "pass": 12,
+   "acc": 0.414,
+   "total_kcal_acc": 0.793,
+   "first_fail": {
+    "S1_parse": 5,
+    "S2_match": 9,
+    "S3_grams": 3,
+    "pass": 12
+   }
+  },
+  "group:국찌개": {
+   "n": 23,
+   "scored": 23,
+   "pass": 2,
+   "acc": 0.087,
+   "total_kcal_acc": 0.478,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 7,
+    "S3_grams": 12,
+    "pass": 2
+   }
+  },
+  "group:면": {
+   "n": 22,
+   "scored": 22,
+   "pass": 2,
+   "acc": 0.091,
+   "total_kcal_acc": 0.455,
+   "first_fail": {
+    "S1_parse": 1,
+    "S2_match": 1,
+    "S3_grams": 18,
+    "pass": 2
+   }
+  },
+  "group:밥": {
+   "n": 47,
+   "scored": 47,
+   "pass": 8,
+   "acc": 0.17,
+   "total_kcal_acc": 0.511,
+   "first_fail": {
+    "S1_parse": 4,
+    "S2_match": 19,
+    "S3_grams": 16,
+    "pass": 8
+   }
+  },
+  "group:배달": {
+   "n": 18,
+   "scored": 18,
+   "pass": 8,
+   "acc": 0.444,
+   "total_kcal_acc": 0.5,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 6,
+    "S3_grams": 2,
+    "pass": 8
+   }
+  },
+  "group:보충제": {
+   "n": 8,
+   "scored": 8,
+   "pass": 3,
+   "acc": 0.375,
+   "total_kcal_acc": 0.75,
+   "first_fail": {
+    "S2_match": 3,
+    "S3_grams": 1,
+    "S4_kcal": 1,
+    "pass": 3
+   }
+  },
+  "group:빵과자": {
+   "n": 31,
+   "scored": 31,
+   "pass": 6,
+   "acc": 0.194,
+   "total_kcal_acc": 0.613,
+   "first_fail": {
+    "S1_parse": 4,
+    "S2_match": 11,
+    "S3_grams": 8,
+    "S4_kcal": 2,
+    "pass": 6
+   }
+  },
+  "group:생선": {
+   "n": 9,
+   "scored": 9,
+   "pass": 4,
+   "acc": 0.444,
+   "total_kcal_acc": 0.444,
+   "first_fail": {
+    "S1_parse": 1,
+    "S2_match": 4,
+    "pass": 4
+   }
+  },
+  "group:음료": {
+   "n": 31,
+   "scored": 31,
+   "pass": 8,
+   "acc": 0.258,
+   "total_kcal_acc": 0.71,
+   "first_fail": {
+    "S1_parse": 7,
+    "S2_match": 7,
+    "S3_grams": 8,
+    "S4_kcal": 1,
+    "pass": 8
+   }
+  },
+  "group:주류": {
+   "n": 14,
+   "scored": 14,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 0.071,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 7,
+    "S4_kcal": 5
+   }
+  },
+  "group:채소샐러드": {
+   "n": 24,
+   "scored": 24,
+   "pass": 9,
+   "acc": 0.375,
+   "total_kcal_acc": 0.75,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 8,
+    "S3_grams": 5,
+    "pass": 9
+   }
+  },
+  "group:패스트푸드": {
+   "n": 10,
+   "scored": 10,
+   "pass": 1,
+   "acc": 0.1,
+   "total_kcal_acc": 0.3,
+   "first_fail": {
+    "S1_parse": 1,
+    "S2_match": 4,
+    "S3_grams": 3,
+    "S4_kcal": 1,
+    "pass": 1
+   }
+  },
+  "group:편의점브랜드": {
+   "n": 19,
+   "scored": 19,
+   "pass": 6,
+   "acc": 0.316,
+   "total_kcal_acc": 0.421,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 11,
+    "pass": 6
+   }
+  },
+  "items:0": {
+   "n": 14,
+   "scored": 14,
+   "pass": 3,
+   "acc": 0.214,
+   "total_kcal_acc": 0.929,
+   "first_fail": {
+    "S1_parse": 11,
+    "pass": 3
+   }
+  },
+  "items:1": {
+   "n": 174,
+   "scored": 174,
+   "pass": 58,
+   "acc": 0.333,
+   "total_kcal_acc": 0.534,
+   "first_fail": {
+    "S1_parse": 19,
+    "S2_match": 49,
+    "S3_grams": 42,
+    "S4_kcal": 6,
+    "pass": 58
+   }
+  },
+  "items:2": {
+   "n": 62,
+   "scored": 62,
+   "pass": 9,
+   "acc": 0.145,
+   "total_kcal_acc": 0.548,
+   "first_fail": {
+    "S1_parse": 6,
+    "S2_match": 29,
+    "S3_grams": 15,
+    "S4_kcal": 3,
+    "pass": 9
+   }
+  },
+  "items:3+": {
+   "n": 16,
+   "scored": 16,
+   "pass": 5,
+   "acc": 0.312,
+   "total_kcal_acc": 0.875,
+   "first_fail": {
+    "S1_parse": 3,
+    "S2_match": 5,
+    "S3_grams": 3,
+    "pass": 5
+   }
+  },
+  "noise:끼니": {
+   "n": 31,
+   "scored": 31,
+   "pass": 5,
+   "acc": 0.161,
+   "total_kcal_acc": 0.419,
+   "first_fail": {
+    "S1_parse": 5,
+    "S2_match": 8,
+    "S3_grams": 13,
+    "pass": 5
+   }
+  },
+  "noise:띄어쓰기": {
+   "n": 15,
+   "scored": 15,
+   "pass": 5,
+   "acc": 0.333,
+   "total_kcal_acc": 0.8,
+   "first_fail": {
+    "S1_parse": 4,
+    "S2_match": 4,
+    "S3_grams": 1,
+    "S4_kcal": 1,
+    "pass": 5
+   }
+  },
+  "noise:부정": {
+   "n": 12,
+   "scored": 12,
+   "pass": 6,
+   "acc": 0.5,
+   "total_kcal_acc": 0.75,
+   "first_fail": {
+    "S1_parse": 1,
+    "S2_match": 1,
+    "S3_grams": 4,
+    "pass": 6
+   }
+  },
+  "noise:슬랭": {
+   "n": 8,
+   "scored": 8,
+   "pass": 2,
+   "acc": 0.25,
+   "total_kcal_acc": 0.875,
+   "first_fail": {
+    "S2_match": 6,
+    "pass": 2
+   }
+  },
+  "noise:시간": {
+   "n": 5,
+   "scored": 5,
+   "pass": 3,
+   "acc": 0.6,
+   "total_kcal_acc": 0.6,
+   "first_fail": {
+    "S2_match": 1,
+    "S3_grams": 1,
+    "pass": 3
+   }
+  },
+  "noise:없음": {
+   "n": 193,
+   "scored": 193,
+   "pass": 54,
+   "acc": 0.28,
+   "total_kcal_acc": 0.57,
+   "first_fail": {
+    "S1_parse": 30,
+    "S2_match": 62,
+    "S3_grams": 39,
+    "S4_kcal": 8,
+    "pass": 54
+   }
+  },
+  "noise:영어": {
+   "n": 7,
+   "scored": 7,
+   "pass": 2,
+   "acc": 0.286,
+   "total_kcal_acc": 0.571,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 2,
+    "S3_grams": 1,
+    "pass": 2
+   }
+  },
+  "noise:오타": {
+   "n": 6,
+   "scored": 6,
+   "pass": 3,
+   "acc": 0.5,
+   "total_kcal_acc": 0.667,
+   "first_fail": {
+    "S1_parse": 1,
+    "S2_match": 1,
+    "S3_grams": 1,
+    "pass": 3
+   }
+  },
+  "noise:이모지": {
+   "n": 5,
+   "scored": 5,
+   "pass": 2,
+   "acc": 0.4,
+   "total_kcal_acc": 0.4,
+   "first_fail": {
+    "S2_match": 2,
+    "S3_grams": 1,
+    "pass": 2
+   }
+  },
+  "noise:잡담": {
+   "n": 12,
+   "scored": 12,
+   "pass": 3,
+   "acc": 0.25,
+   "total_kcal_acc": 0.583,
+   "first_fail": {
+    "S2_match": 2,
+    "S3_grams": 7,
+    "pass": 3
+   }
+  },
+  "unit:g": {
+   "n": 25,
+   "scored": 25,
+   "pass": 15,
+   "acc": 0.6,
+   "total_kcal_acc": 0.92,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 5,
+    "S3_grams": 2,
+    "S4_kcal": 1,
+    "pass": 15
+   }
+  },
+  "unit:ml": {
+   "n": 11,
+   "scored": 11,
+   "pass": 5,
+   "acc": 0.455,
+   "total_kcal_acc": 0.818,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 2,
+    "S3_grams": 2,
+    "pass": 5
+   }
+  },
+  "unit:갑": {
+   "n": 1,
+   "scored": 1,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 0.0,
+   "first_fail": {
+    "S2_match": 1
+   }
+  },
+  "unit:개": {
+   "n": 87,
+   "scored": 87,
+   "pass": 34,
+   "acc": 0.391,
+   "total_kcal_acc": 0.678,
+   "first_fail": {
+    "S1_parse": 5,
+    "S2_match": 31,
+    "S3_grams": 16,
+    "S4_kcal": 1,
+    "pass": 34
+   }
+  },
+  "unit:공기": {
+   "n": 14,
+   "scored": 14,
+   "pass": 4,
+   "acc": 0.286,
+   "total_kcal_acc": 0.714,
+   "first_fail": {
+    "S1_parse": 4,
+    "S2_match": 1,
+    "S3_grams": 5,
+    "pass": 4
+   }
+  },
+  "unit:그릇": {
+   "n": 23,
+   "scored": 23,
+   "pass": 3,
+   "acc": 0.13,
+   "total_kcal_acc": 0.696,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 7,
+    "S3_grams": 11,
+    "pass": 3
+   }
+  },
+  "unit:마리": {
+   "n": 5,
+   "scored": 5,
+   "pass": 2,
+   "acc": 0.4,
+   "total_kcal_acc": 0.4,
+   "first_fail": {
+    "S1_parse": 1,
+    "S2_match": 1,
+    "S3_grams": 1,
+    "pass": 2
+   }
+  },
+  "unit:모": {
+   "n": 2,
+   "scored": 2,
+   "pass": 2,
+   "acc": 1.0,
+   "total_kcal_acc": 1.0,
+   "first_fail": {
+    "pass": 2
+   }
+  },
+  "unit:반": {
+   "n": 20,
+   "scored": 20,
+   "pass": 9,
+   "acc": 0.45,
+   "total_kcal_acc": 0.65,
+   "first_fail": {
+    "S1_parse": 6,
+    "S2_match": 3,
+    "S3_grams": 2,
+    "pass": 9
+   }
+  },
+  "unit:범위": {
+   "n": 4,
+   "scored": 4,
+   "pass": 2,
+   "acc": 0.5,
+   "total_kcal_acc": 0.75,
+   "first_fail": {
+    "S1_parse": 1,
+    "S2_match": 1,
+    "pass": 2
+   }
+  },
+  "unit:병": {
+   "n": 5,
+   "scored": 5,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 0.0,
+   "first_fail": {
+    "S2_match": 4,
+    "S4_kcal": 1
+   }
+  },
+  "unit:봉지": {
+   "n": 3,
+   "scored": 3,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 0.0,
+   "first_fail": {
+    "S2_match": 3
+   }
+  },
+  "unit:분수": {
+   "n": 1,
+   "scored": 1,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 1.0,
+   "first_fail": {
+    "S1_parse": 1
+   }
+  },
+  "unit:송이": {
+   "n": 1,
+   "scored": 1,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 1.0,
+   "first_fail": {
+    "S1_parse": 1
+   }
+  },
+  "unit:숫자없음": {
+   "n": 65,
+   "scored": 65,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 0.385,
+   "first_fail": {
+    "S1_parse": 4,
+    "S2_match": 29,
+    "S3_grams": 28,
+    "S4_kcal": 4
+   }
+  },
+  "unit:스쿱": {
+   "n": 4,
+   "scored": 4,
+   "pass": 2,
+   "acc": 0.5,
+   "total_kcal_acc": 0.75,
+   "first_fail": {
+    "S3_grams": 1,
+    "S4_kcal": 1,
+    "pass": 2
+   }
+  },
+  "unit:인분": {
+   "n": 21,
+   "scored": 21,
+   "pass": 1,
+   "acc": 0.048,
+   "total_kcal_acc": 0.571,
+   "first_fail": {
+    "S1_parse": 3,
+    "S2_match": 8,
+    "S3_grams": 9,
+    "pass": 1
+   }
+  },
+  "unit:잔": {
+   "n": 13,
+   "scored": 13,
+   "pass": 3,
+   "acc": 0.231,
+   "total_kcal_acc": 0.462,
+   "first_fail": {
+    "S1_parse": 4,
+    "S2_match": 3,
+    "S4_kcal": 3,
+    "pass": 3
+   }
+  },
+  "unit:장": {
+   "n": 4,
+   "scored": 4,
+   "pass": 1,
+   "acc": 0.25,
+   "total_kcal_acc": 0.75,
+   "first_fail": {
+    "S2_match": 3,
+    "pass": 1
+   }
+  },
+  "unit:조각": {
+   "n": 17,
+   "scored": 17,
+   "pass": 8,
+   "acc": 0.471,
+   "total_kcal_acc": 0.647,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 6,
+    "S3_grams": 1,
+    "pass": 8
+   }
+  },
+  "unit:줄": {
+   "n": 4,
+   "scored": 4,
+   "pass": 2,
+   "acc": 0.5,
+   "total_kcal_acc": 0.5,
+   "first_fail": {
+    "S3_grams": 2,
+    "pass": 2
+   }
+  },
+  "unit:줌": {
+   "n": 3,
+   "scored": 3,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 0.667,
+   "first_fail": {
+    "S1_parse": 2,
+    "S3_grams": 1
+   }
+  },
+  "unit:캔": {
+   "n": 11,
+   "scored": 11,
+   "pass": 4,
+   "acc": 0.364,
+   "total_kcal_acc": 0.455,
+   "first_fail": {
+    "S1_parse": 1,
+    "S2_match": 6,
+    "pass": 4
+   }
+  },
+  "unit:컵": {
+   "n": 5,
+   "scored": 5,
+   "pass": 1,
+   "acc": 0.2,
+   "total_kcal_acc": 0.2,
+   "first_fail": {
+    "S1_parse": 3,
+    "S3_grams": 1,
+    "pass": 1
+   }
+  },
+  "unit:크기": {
+   "n": 11,
+   "scored": 11,
+   "pass": 1,
+   "acc": 0.091,
+   "total_kcal_acc": 0.182,
+   "first_fail": {
+    "S1_parse": 2,
+    "S2_match": 2,
+    "S3_grams": 5,
+    "S4_kcal": 1,
+    "pass": 1
+   }
+  },
+  "unit:통": {
+   "n": 1,
+   "scored": 1,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 0.0,
+   "first_fail": {
+    "S1_parse": 1
+   }
+  },
+  "unit:판": {
+   "n": 1,
+   "scored": 1,
+   "pass": 0,
+   "acc": 0.0,
+   "total_kcal_acc": 0.0,
+   "first_fail": {
+    "S3_grams": 1
+   }
+  },
+  "unit:팩": {
+   "n": 6,
+   "scored": 6,
+   "pass": 1,
+   "acc": 0.167,
+   "total_kcal_acc": 0.5,
+   "first_fail": {
+    "S1_parse": 1,
+    "S2_match": 2,
+    "S3_grams": 2,
+    "pass": 1
+   }
+  },
+  "unit:한글숫자": {
+   "n": 125,
+   "scored": 125,
+   "pass": 37,
+   "acc": 0.296,
+   "total_kcal_acc": 0.544,
+   "first_fail": {
+    "S1_parse": 16,
+    "S2_match": 40,
+    "S3_grams": 27,
+    "S4_kcal": 5,
+    "pass": 37
+   }
+  }
+ },
+ "item_stage": {
+  "S1_parse": {
+   "pass": 317,
+   "fail": 32
+  },
+  "S2_match": {
+   "pass": 223,
+   "fail": 94
+  },
+  "S3_grams": {
+   "pass": 128,
+   "fail": 75,
+   "n/a": 20
+  },
+  "S4_kcal": {
+   "pass": 139,
+   "fail": 9
+  }
+ },
+ "branches": {
+  "llm": 250,
+  "llm_empty->deterministic+enrich": 14,
+  "exception->deterministic(no enrich)": 2
+ },
+ "s1_causes": {
+  "llm": 26,
+  "reconcile": 1,
+  "deterministic": 6,
+  "case:extra_items:llm": 3,
+  "case:extra_items:deterministic": 10,
+  "case:too_many": 10
+ },
+ "s1_reasons": {
+  "fail:amount_mismatch": 8,
+  "fail:amount_missing": 16,
+  "fail:missing": 7,
+  "fail:merged_items": 2
+ },
+ "reconcile_changed_items": 10,
+ "s2_fail_reasons": {
+  "db:음식_017295": 4,
+  "db:음식_013425": 1,
+  "db:음식_009943": 1,
+  "db:음식_010143": 1,
+  "db:음식_009984": 2,
+  "llm_estimate(below_threshold)": 3,
+  "db:음식_016963": 1,
+  "db:음식_010030": 1,
+  "llm_estimate(no_candidates_after_rerank)": 24,
+  "db:음식_010251": 1,
+  "db:원재_001820": 3,
+  "db:원재_001349": 1,
+  "db:음식_013429": 1,
+  "db:음식_010691": 1,
+  "db:음식_014242": 4,
+  "db:음식_017897": 1,
+  "db:음식_007100": 3,
+  "db:원재_001728": 1,
+  "db:음식_007534": 1,
+  "db:음식_016255": 1,
+  "db:원재_000048": 5,
+  "db:원재_000049": 1,
+  "db:음식_010813": 1,
+  "db:음식_017012": 1,
+  "db:음식_013141": 2,
+  "db:원재_001730": 1,
+  "db:음식_015336": 2,
+  "db:음식_016442": 1,
+  "db:음식_013703": 1,
+  "no_macros(no_candidates_after_rerank)": 2,
+  "db:음식_009942": 1,
+  "db:음식_008967": 1,
+  "db:원재_001776": 1,
+  "db:음식_012472": 1,
+  "db:음식_014383": 1,
+  "db:원재_001183": 2,
+  "db:음식_016380": 1,
+  "db:음식_002304": 1,
+  "db:음식_012059": 1,
+  "db:음식_013182": 1,
+  "db:음식_012107": 1,
+  "db:음식_017266": 1,
+  "db:음식_007822": 1,
+  "db:음식_012919": 1,
+  "no_macros(below_threshold)": 1,
+  "db:음식_013088": 1,
+  "db:음식_007662": 1,
+  "db:음식_016314": 1,
+  "db:음식_010942": 1,
+  "db:음식_010021": 1
+ },
+ "item_sources": {
+  "curated": 57,
+  "db": 231,
+  "llm": 55,
+  "none": 6
+ }
+}

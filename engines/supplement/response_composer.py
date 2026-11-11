@@ -62,7 +62,12 @@ def compose_supplement_response(
     caution_parts = [generated_caution, parsed_caution]
     caution_parts.extend(_caution_parts_from_docs(selected_docs, parsed_query, answer))
 
-    risk_query = bool(set(parsed_query.intents) & _RISK_INTENTS)
+    # A medication in the question is a risk question even when the other ingredient is not in
+    # the KB (아쉬와간다 + 갑상선약): no DRUG_INTERACTION intent is inferred then, but the user
+    # still needs the consult advice.
+    risk_query = bool(set(parsed_query.intents) & _RISK_INTENTS) or any(
+        entity.type == EntityType.DRUG_OR_DRUG_CLASS for entity in parsed_query.entities
+    )
     if risk_query:
         # Soften sentence-by-sentence before the weak check so an answer made only of unsafe
         # claims falls back to KB-grounded content instead of a spliced fragment.
@@ -91,6 +96,7 @@ def compose_supplement_response(
         selected_docs,
         allow_follow_up=used_kb_fallback,
     )
+    answer = _apply_efficacy_policy(answer, question, parsed_query, selected_docs)
     answer, caution = _dedupe_answer_and_caution(answer, caution, parsed_query, risk_query=risk_query)
 
     return ComposedSupplementResponse(
@@ -220,12 +226,27 @@ def _doc_is_relevant_for_caution(doc: Any, parsed_query: ParsedSupplementQuery, 
         elif isinstance(value, list):
             doc_values.update(str(part).strip().lower() for part in value if str(part).strip())
 
+    doc_values -= _GENERIC_DOC_ID_PARTS
     if query_values and doc_values & query_values:
         return True
     doc_text = (getattr(doc, "page_content", "") or "").lower()
-    if query_values and any(value and value in doc_text for value in query_values):
+    if query_values and any(_contains_token(doc_text, value) for value in query_values):
         return True
-    return any(value and value in answer_text for value in doc_values)
+    return any(_contains_token(answer_text, value) for value in doc_values)
+
+
+# Doc-id fragments that name the rule type, not an ingredient ("INT_IRON_CAFFEINE" -> "int").
+_GENERIC_DOC_ID_PARTS = {
+    "int", "rule", "rules", "safety", "interaction", "profile", "ingredient",
+    "medication", "medications", "mineral", "overlap", "and", "with",
+}
+
+
+def _contains_token(text: str, value: str) -> bool:
+    """Whole-token match so 'c' (vitamin_c) or 'iron' does not hit inside other words."""
+    if not value or len(value) < 2:
+        return False
+    return re.search(rf"(?<![a-z0-9]){re.escape(value)}(?![a-z0-9])", text) is not None
 
 
 def _compact_caution(
@@ -1054,3 +1075,67 @@ def _dict_get(data: dict[str, Any], *keys: str) -> Any:
         if value is not None:
             return value
     return None
+
+
+# ---------- Efficacy questions without KB evidence (policy 2026-11-11) ----------
+# "마그네슘 수면에 도움 돼요?" / "비타민D 먹으면 골다공증 예방되나요?": the curated KB lists what an
+# ingredient is used for, not whether it achieves a health outcome. The answer must say that
+# first; anything after it is general reference information, not a documented effect.
+_EFFICACY_NEEDLES = (
+    "도움 돼", "도움돼", "도움 되", "도움되", "효과", "좋아지", "좋아져", "예방", "치료", "완치",
+    "낫", "나아", "개선", "커지", "커져", "보호", "안 걸리", "잘 와", "회복", "빠지", "늘어",
+)
+_EFFICACY_STOPWORDS = frozenset({
+    "먹으면", "먹고", "먹어도", "되나요", "돼요", "되죠", "되요", "하나요", "있나요", "정말", "확실히",
+    "무조건", "바로", "많이", "계속", "매일", "같이", "그냥", "진짜", "효과", "도움",
+})
+_HONEST_LEAD_MARKERS = ("근거 문서에서", "근거 문서에는", "확인되지 않", "확인할 수 없")
+
+
+def _josa(word: str, with_final: str, without_final: str) -> str:
+    last = word[-1] if word else ""
+    if "가" <= last <= "힣":
+        return with_final if (ord(last) - 0xAC00) % 28 else without_final
+    return without_final
+
+
+def _is_efficacy_question(question: str) -> bool:
+    return any(needle in (question or "") for needle in _EFFICACY_NEEDLES)
+
+
+def _claim_words(question: str, entity_texts: set[str]) -> list[str]:
+    words = re.findall(r"[가-힣]{2,}", question or "")
+    out = []
+    for word in words:
+        if word in _EFFICACY_STOPWORDS or any(word in text or text in word for text in entity_texts if text):
+            continue  # the ingredient's own name ("비타민" of 비타민D) is not a claimed effect
+        if any(word.startswith(n) or n.startswith(word) for n in _EFFICACY_NEEDLES):
+            continue
+        out.append(re.sub(r"(에|에는|을|를|이|가|은|는|도|으로|로)$", "", word))
+    return [w for w in out if len(w) >= 1]
+
+
+def _apply_efficacy_policy(answer: str, question: str, parsed_query: ParsedSupplementQuery, docs: list[Any]) -> str:
+    if not answer or not _is_efficacy_question(question):
+        return answer
+    entities = _supplement_entities(parsed_query)
+    if not entities:
+        return answer  # out-of-KB ingredient: the unknown-ingredient template already says so
+    if any(marker in answer for marker in _HONEST_LEAD_MARKERS):
+        return answer
+    entity = entities[0]
+    label = _entity_label(entity.canonical)
+    entity_texts = {getattr(e, "text", "") for e in parsed_query.entities}
+    profile = _profile_doc_for(entity.canonical, docs)
+    uses = _list_items(getattr(profile, "page_content", "") or "", "Common uses") if profile is not None else []
+    claims = _claim_words(question, entity_texts)
+    documented = [use for use in uses if any(claim and claim in use for claim in claims)]
+    if documented:
+        lead = (
+            f"근거 문서에는 {label}{_josa(label, '이', '가')} '{documented[0]}' 용도로 안내되어 있지만, "
+            "질문하신 효과를 직접 확인한 근거는 없습니다."
+        )
+    else:
+        lead = f"확보된 근거 문서에서는 {label}의 그런 효과를 확인할 수 없습니다."
+    return f"{lead} 아래 내용은 일반적인 참고 정보이며 개인에 따라 다를 수 있습니다. {answer}"
+

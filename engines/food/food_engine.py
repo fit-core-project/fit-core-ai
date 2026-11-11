@@ -27,6 +27,7 @@ from engines.food.food_units import (
     UNIT_DEFAULT_GRAMS,
     preferred_basis_unit,
     resolve_portion_grams,
+    serving_grams,
     unit_to_grams,
 )
 from engines.food.food_reranker import (
@@ -34,6 +35,7 @@ from engines.food.food_reranker import (
     build_food_candidate_dedupe_key,
     get_food_candidate_name,
     rerank_food_candidates,
+    has_lexical_relation,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,6 +48,8 @@ EMBEDDING_MODEL_ID = os.getenv("FOOD_EMBEDDING_MODEL", "dragonkue/BGE-m3-ko")
 FOOD_DB_DIR = PROJECT_ROOT / "data" / "food_chroma_db"
 FOOD_COLLECTION_NAME = "food_db"
 FOOD_CSV_PATH = PROJECT_ROOT / "data" / "food_db" / "food_db_clean.csv"
+# Below this similarity a top hit must also share wording with the query.
+LEXICAL_GUARD_SIMILARITY = 0.9
 
 # 코사인 유사도 임계값. 이 값 미만이면 매칭 실패로 간주(오탐 방지). 캘리브레이션 필요.
 SIMILARITY_THRESHOLD = float(os.getenv("FOOD_SIM_THRESHOLD", "0.55"))
@@ -64,6 +68,11 @@ _FOOD_UNIT_GRAMS = FOOD_UNIT_GRAMS
 
 
 def resolve_device() -> str:
+    # AI_EMBEDDING_DEVICE=cpu keeps embeddings off a small GPU that the local LLM (Ollama) needs;
+    # on 8GB cards sharing it made gemma4 swap out and requests hang for minutes.
+    forced = (os.getenv("AI_EMBEDDING_DEVICE") or "").strip().lower()
+    if forced in {"cpu", "cuda", "mps"}:
+        return forced
     try:
         import torch
         if torch.cuda.is_available():
@@ -301,6 +310,14 @@ class FoodSearchEngine:
         if similarity < SIMILARITY_THRESHOLD:
             logger.debug("[food_engine] 임계값 미달: '%s' sim=%.3f", search_queries, similarity)
             return None
+        meta_top = doc.metadata or {}
+        if similarity < LEXICAL_GUARD_SIMILARITY and not has_lexical_relation(
+            analysis.normalized_query, meta_top.get("name") or "", meta_top.get("rep_name") or ""
+        ):
+            # Embedding neighbour only (맥주 -> 맥치킨 버거, 소주 -> 소금): not this food. Let the
+            # LLM estimate stand instead of logging another food's macros.
+            logger.debug("[food_engine] 어휘 불일치: '%s' -> '%s' sim=%.3f", food_name, meta_top.get("name"), similarity)
+            return None
 
         meta = doc.metadata or {}
         protein = meta.get("protein_g")
@@ -316,7 +333,14 @@ class FoodSearchEngine:
         basis_unit = meta.get("basis_unit") or "g"
 
         grams = self._resolve_grams(food_name, amount, unit)
-        if grams is None:
+        serving = serving_grams(food_name) if amount is None else None
+        if grams is None and serving is not None:
+            # 수량 미기재 → 1인분 기준 ("된장찌개 먹었어" 는 100g 이 아니라 한 그릇)
+            factor = serving / float(basis_value)
+            resolved_amount = 1.0
+            resolved_unit = "인분"
+            resolved_grams = serving
+        elif grams is None:
             # 수량 없음 → basis(예:100g) 기준값 그대로, 수량은 basis 로 명시
             factor = 1.0
             resolved_amount = float(basis_value)

@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 from ..schemas import LLMExercisePlan, LLMRoutineOutput
 from ..registry import ACCESSORY_MUSCLE_SLUGS, LARGE_MUSCLE_SLUGS, ACCESSORY_PRIMARY_SPLITS
+from .trim import trim_to_budget
 from .estimator import _movement_type_key, estimate_routine_time_min, _work_seconds_for_movement
 from .params import _goal_key, GOAL_PARAMS
 
@@ -144,27 +145,15 @@ def enforce_total_set_cap(
         target_bonus = 1 if primary in target_set else 0
         return (movement_bonus + target_bonus, movement_bonus, -index)
 
-    trim_order = sorted(
-        enumerate(output.exercises),
-        key=lambda item: priority(item[0], item[1]),
+    def lowest_priority_first(items: List[LLMExercisePlan]) -> List[LLMExercisePlan]:
+        ranked = sorted(enumerate(items), key=lambda item: priority(item[0], item[1]))
+        return [exercise for _, exercise in ranked]
+
+    trim_to_budget(
+        output.exercises,
+        lambda: sum(max(0, e.sets) for e in output.exercises) > max_total_sets,
+        reduce_order=lowest_priority_first,
     )
-    overflow = total_sets - max_total_sets
-
-    for _, exercise in trim_order:
-        if overflow <= 0:
-            break
-        reducible = max(0, exercise.sets - 1)
-        reduction = min(reducible, overflow)
-        exercise.sets -= reduction
-        overflow -= reduction
-
-    while overflow > 0 and len(output.exercises) > 1:
-        removable_index, removable = min(
-            enumerate(output.exercises),
-            key=lambda item: priority(item[0], item[1]),
-        )
-        overflow -= max(1, removable.sets)
-        output.exercises.pop(removable_index)
 
     output.warnings = [*output.warnings, "set cap enforced"]
     return True

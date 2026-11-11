@@ -156,3 +156,91 @@ def test_loadable_bodyweight_option_gets_weight():
     assert _resolve_target_weight(split_squat, "hypertrophy", recent, None) is not None
     pure = _plan("47", "chest", equipment="BODYWEIGHT")
     assert _resolve_target_weight(pure, "hypertrophy", [], None) is None
+
+
+# --- 2026-11-09 follow-up: pool diversity and under-budget fill ---------------
+
+def test_candidate_pool_keeps_slots_for_every_push_muscle():
+    from engines.candidate_ranker import score_candidate_exercises
+    cands = [_cand(f"chest{i}", "chest") for i in range(20)] + [
+        _cand(f"delt{i}", "front-deltoids", "DUMBBELL", "ISOLATION") for i in range(5)] + [
+        _cand(f"tri{i}", "triceps", "CABLE", "ISOLATION") for i in range(5)]
+    pool = score_candidate_exercises(cands, ["chest", "front-deltoids", "triceps"], top_n=12)
+    muscles = [c["primary_muscle"] for c in pool]
+    assert len(pool) == 12
+    assert muscles.count("front-deltoids") >= 2 and muscles.count("triceps") >= 2
+
+
+def test_candidate_pool_does_not_reserve_minor_muscles_for_broad_splits():
+    from engines.candidate_ranker import score_candidate_exercises
+    legs = ["quadriceps", "hamstring", "gluteal", "calves", "adductor", "abductors"]
+    cands = [_cand(f"{m}{i}", m) for m in legs for i in range(4)]
+    pool = score_candidate_exercises(cands, legs, top_n=12)
+    assert sum(c["primary_muscle"] in {"calves", "adductor", "abductors"} for c in pool) < 6
+
+
+def test_under_budget_routine_is_filled_from_unused_candidates():
+    cands = [_cand("crunch", "abs", "BODYWEIGHT", "ISOLATION"),
+             _cand("plank", "abs", "BODYWEIGHT", "STATIC"),
+             _cand("twist", "obliques", "BODYWEIGHT", "ISOLATION")]
+    plan = _plan("crunch", "abs", sets=2, equipment="BODYWEIGHT", movement="ISOLATION")
+    result, reason = validate_and_repair_routine_output(
+        _output(plan), cands, [], [], time_available_min=20, target_muscles=["abs", "obliques"])
+    assert reason == "none"
+    from engines.prescription.estimator import estimate_routine_time_min
+    assert len(result.exercises) > 1
+    assert estimate_routine_time_min(result.exercises) <= 20
+    assert len({e.exercise_id for e in result.exercises}) == len(result.exercises)
+
+
+def test_empty_candidates_skip_llm_and_fail_cleanly():
+    req = RoutineRequest(target_split_label="push", time_available_min=30)
+    llm_factory = MagicMock()
+    with patch("engines.routine_pipeline.get_candidate_exercises", return_value=[]), \
+         patch("engines.routine_pipeline.get_llm", llm_factory):
+        result = generate_smart_routine(req, MagicMock(spec=Session), profile=None, recent_sets=[])
+    llm_factory.assert_not_called()
+    assert result.generation_status == "failed"
+    assert result.status_reason_code == "emptyCandidate"
+
+
+def test_low_readiness_keeps_short_session():
+    cands = [_cand("crunch", "abs", "BODYWEIGHT", "ISOLATION"),
+             _cand("plank", "abs", "BODYWEIGHT", "STATIC")]
+    plan = _plan("crunch", "abs", sets=2, equipment="BODYWEIGHT", movement="ISOLATION")
+    result, reason = validate_and_repair_routine_output(
+        _output(plan), cands, [], [], time_available_min=20, target_muscles=["abs"], readiness_level="low")
+    assert reason == "none"
+    assert [e.exercise_id for e in result.exercises] == ["crunch"]
+
+
+def test_multi_implement_history_is_read_as_target_implement():
+    recent = [RecentSetRecord(exercise_id="18", exercise_name="스파이더 컬", primary_muscle="biceps",
+                              weight_kg=15, reps=15, rir=2, equipment_type="BARBELL, DUMBBELL, CABLE",
+                              movement_type="ISOLATION")]
+    curl = _plan("12", "biceps", equipment="DUMBBELL", movement="ISOLATION", reps=8)
+    weight = _resolve_target_weight(curl, "hypertrophy", recent, None)
+    assert weight is not None and weight >= 12.5  # was 5.0 (history read as barbell)
+
+
+def test_custom_fallback_title_is_korean():
+    req = RoutineRequest(target_split_label="custom", target_muscles=["biceps"], time_available_min=30)
+    result = generate_fallback_routine(req, [_cand("curl", "biceps", "DUMBBELL", "ISOLATION")], 10)
+    assert "custom" not in result.summary_title
+
+
+def test_fill_prefers_uncovered_target_muscle():
+    cands = [_cand("glute1", "gluteal"), _cand("glute2", "gluteal"), _cand("ham1", "hamstring"),
+             _cand("quad1", "quadriceps")]
+    plan = _plan("glute1", "gluteal", sets=2)
+    result, reason = validate_and_repair_routine_output(
+        _output(plan), cands, [], [], time_available_min=45,
+        target_muscles=["quadriceps", "hamstring", "gluteal", "calves", "adductor", "abductors"])
+    assert reason == "none"
+    assert "quadriceps" in {e.primary_muscles[0] for e in result.exercises}
+
+
+def test_pain_only_slug_knees_is_translated_in_user_text():
+    from engines.korean_text_guard import translate_code_tokens
+    assert "knees" not in translate_code_tokens("무릎(knees) 부담이 적은 운동").lower()
+    assert "overhead" in translate_code_tokens("overhead press 자세")  # no partial-word replacement

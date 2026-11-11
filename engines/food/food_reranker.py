@@ -155,27 +155,63 @@ def _is_category_variant(query: str, name: str, rep_name: str) -> bool:
     )
 
 
-def is_implausible_food_candidate(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> bool:
-    """True when the candidate only matches the query as a substring of an
-    unrelated longer dish name (콜라 -> 쇼콜라 케이크, 치킨 -> 햄버거 치킨).
+# Composite dishes: "<rep> <variant>" rows are that dish, so a variant token only names
+# the query when the query is itself that dish ("불고기버거" -> 햄버거 소불고기버거) — not
+# "치킨" -> 햄버거 치킨 or "콜라" -> 케이크 쇼콜라 케이크.
+_COMPOSITE_DISH_REPS = frozenset({
+    "햄버거", "버거", "피자", "피자빵", "케이크", "페이스트리", "크로플", "샐러드", "샌드위치",
+    "김밥", "토스트", "도시락", "덮밥", "볶음밥", "비빔밥", "크로와상", "머핀", "와플", "롤",
+    "스무디", "에이드", "빵", "쿠키", "비스킷/쿠키/크래커",
+})
+# "<query><suffix>" is still the query food, cooked a certain way (삼겹살 -> 삼겹살구이).
+_COOKING_SUFFIXES = ("구이", "볶음", "찜", "튀김", "무침", "조림", "전", "수육", "회", "말이")
 
-    Protected queries keep their legacy substring behaviour (닭가슴살 ->
-    샐러드 닭가슴살 is an intentional golden mapping). Candidates without any
-    lexical overlap are left to the vector similarity threshold.
+
+def _composite_heads(rep_name: str) -> tuple[str, ...]:
+    heads = {rep_name}
+    if len(rep_name) >= 3:
+        heads.add(rep_name[-2:])  # 햄버거 -> 버거
+    return tuple(heads)
+
+
+def _token_match_is_plausible(query: str, token: str, rep_name: str, data_type: str) -> bool:
+    """Korean compounds put the head last: 멥쌀밥 is a kind of 밥, 치킨치즈마요버거 is not 치킨."""
+    composite = rep_name in _COMPOSITE_DISH_REPS
+    names_composite = composite and query.endswith(_composite_heads(rep_name))
+    if token == query:
+        if data_type.startswith("원재료") or rep_name in _CATEGORY_REP_NAMES:
+            return True  # 돼지고기 삼겹살, 토마토 방울토마토, 커피 바닐라라떼
+        return names_composite if composite else True  # 감자 찐감자, 닭튀김 너겟
+    if token.endswith(query):
+        return names_composite if composite else True  # 멥쌀밥 for 밥
+    if token.startswith(query) and token[len(query):] in _COOKING_SUFFIXES:
+        return not composite
+    return False
+
+
+def is_implausible_food_candidate(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> bool:
+    """True when the query only appears in the candidate as a modifier or substring of a
+    different food (콜라 -> 쇼콜라 케이크, 치킨 -> 햄버거 치킨치즈마요버거), not as its head noun.
+
+    Protected queries keep their legacy substring behaviour (닭가슴살 -> 샐러드 닭가슴살 is an
+    intentional golden mapping). Candidates without lexical overlap are left to the vector
+    similarity threshold.
     """
     if analysis.protected:
         return False
     if _canonical_match_score(analysis, candidate) > 0:
         return False
     queries = {q for q in (analysis.normalized_query, analysis.cleaned_query) if q}
-    names = [
-        get_food_candidate_name(candidate.document),
-        get_food_candidate_rep_name(candidate.document),
-    ]
+    name = get_food_candidate_name(candidate.document)
+    rep_name = get_food_candidate_rep_name(candidate.document)
+    data_type = get_food_candidate_data_type(candidate.document) or ""
     for query in queries:
-        for name in names:
-            if _forward_match_kind(query, name) in {"token", "infix"}:
-                return True
+        kind = _forward_match_kind(query, name)
+        if kind in {"", "prefix", "paren"}:
+            continue
+        tokens = [t for t in _food_tokens(name) if query in t]
+        if not any(_token_match_is_plausible(query, t, rep_name, data_type) for t in tokens):
+            return True
     return False
 
 
@@ -306,6 +342,31 @@ def _non_cooking_token_overlap_score(analysis: FoodQueryAnalysis, candidate: Foo
     return min(sum(1 for token in tokens if token in text), 2)
 
 
+# Processed forms a bare food name should not resolve to (귤 -> 귤 착즙, 사과 -> 사과 잼).
+_PROCESSED_MARKERS = ("착즙", "주스", "에이드", "시럽", "잼", "통조림", "분말", "말린것", "칩", "청", "농축", "건조")
+
+
+def _plainness_score(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> int:
+    """For a bare generic query, prefer the plain row over named variants.
+
+    "귤" should land on 귤 생것, not 귤 착즙; "샐러드" on 샐러드 채소, not a branded salad.
+    Only applies when the query names no variant itself (single token, no cooking state).
+    """
+    query = analysis.normalized_query
+    if not query or analysis.cooking_state or len(_food_tokens(query)) != 1:
+        return 0
+    name = get_food_candidate_name(candidate.document)
+    if _forward_match_kind(query, name) != "prefix":
+        return 0
+    extra = _food_tokens(name)[1:]
+    if any(marker in token for token in extra for marker in _PROCESSED_MARKERS) and not any(
+        marker in query for marker in _PROCESSED_MARKERS
+    ):
+        return -3
+    plain_state = [t for t in extra if t not in _COOKING_STATES]
+    return -min(len(plain_state), 2)
+
+
 def _rerank_key(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> tuple:
     canonical = _canonical_match_score(analysis, candidate)
     cooking = _cooking_state_score(analysis, candidate)
@@ -325,12 +386,29 @@ def _rerank_key(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> 
         _protected_dish_score(analysis, candidate),
         canonical,
         cooking,
+        _plainness_score(analysis, candidate),
         _compound_score(analysis, candidate),
         _data_type_score(analysis, candidate),
         token_overlap,
         -candidate.source_query_index,
         -candidate.original_rank,
     )
+
+
+def has_lexical_relation(query: str, name: str, rep_name: str = "") -> bool:
+    """Whether a DB row names the queried food at all, ignoring spaces.
+
+    True when one contains the other ("양념치킨" ~ "닭튀김 양념 치킨", "저지방 우유" ~ "우유") or
+    every query word appears in the name. "맥주" vs "버거 맥치킨 버거" or "소주" vs "소금" are
+    only embedding neighbours and fail this check.
+    """
+    qc, nc, rc = _compact_food_text(query or ""), _compact_food_text(name or ""), _compact_food_text(rep_name or "")
+    if not qc or not nc:
+        return False
+    if qc in nc or nc in qc or (len(rc) >= 2 and rc in qc):
+        return True
+    words = [w for w in _food_tokens(query) if len(w) >= 2]
+    return bool(words) and all(w in nc for w in words)
 
 
 def rerank_food_candidates(
@@ -345,6 +423,8 @@ def rerank_food_candidates(
     if len(plausible) < len(candidates) and not any(
         _canonical_match_score(analysis, candidate) > 0
         or _token_overlap_score(analysis, candidate) > 0
+        or has_lexical_relation(analysis.normalized_query, get_food_candidate_name(candidate.document),
+                                get_food_candidate_rep_name(candidate.document))
         for candidate in plausible
     ):
         # Every lexical hit was a false substring match (콜라 -> 쇼콜라 케이크) and

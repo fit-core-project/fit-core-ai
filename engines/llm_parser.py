@@ -1,5 +1,6 @@
 """Normalize raw LLM output into LLMRoutineOutput."""
 import json
+from collections import Counter
 import logging
 import re
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from .candidate_ranker import _candidate_is_safe
 from .llm_router import StatusReasonCode
 from .post_validation_guard import audit_routine_output, log_guard_report
 from .prescription.estimator import estimate_routine_time_min
+from .prescription.trim import trim_to_budget
 from .schemas import LLMExercisePlan, LLMRoutineOutput, PainAreaEntry
 
 logger = logging.getLogger(__name__)
@@ -623,6 +625,12 @@ def _rebalance_muscle_coverage(
         old = routine.exercises[victim_index]
         new_plan = _candidate_to_plan(replacement, old)
         new_plan.exercise_rationale = "분할의 다른 목표 근육도 한 번은 자극하도록 넣은 운동입니다."
+        new_plan.target_weight_kg = None  # the replaced exercise's LLM hint does not fit this one
+        incoming_doms = doms.get(str(replacement.get("primary_muscle") or ""), 0)
+        if incoming_doms == 2:
+            new_plan.sets = min(new_plan.sets, 2)
+        elif incoming_doms == 1:
+            new_plan.sets = max(1, new_plan.sets - 1)
         used_ids.discard(old.exercise_id)
         used_ids.add(str(replacement["id"]))
         routine.exercises[victim_index] = new_plan
@@ -630,28 +638,71 @@ def _rebalance_muscle_coverage(
         swaps_left -= 1
 
 
+# A routine that uses less than this share of the user's time gets unused safe candidates added.
+_MIN_TIME_USAGE = 0.5
+_FILL_SETS = 3
+
+
+def _fill_under_budget(
+    routine: LLMRoutineOutput,
+    safe_candidates: List[dict],
+    used_ids: set,
+    target_muscles: List[str],
+    doms: Dict[str, int],
+    time_available_min: int,
+    max_total_sets: Optional[int],
+) -> None:
+    """Add unused safe candidates when the LLM left most of the session empty (e.g. 8 of 20 min)."""
+    if not routine.exercises:
+        return
+    floor_min = time_available_min * _MIN_TIME_USAGE
+    targets = set(target_muscles)
+    coverage = set(_coverage_targets(list(target_muscles)))
+    rejected: set = set()
+    while estimate_routine_time_min(routine.exercises) < floor_min:
+        counts = Counter((e.primary_muscles or [""])[0] for e in routine.exercises)
+        uncovered = coverage - set(counts)
+        # Re-ranked after every addition: uncovered split muscles first, then the least-used
+        # muscle, then pool order (sorted() is stable).
+        def rank(c: dict) -> tuple:
+            m = str(c.get("primary_muscle") or "")
+            return (0 if m in uncovered else 1, counts.get(m, 0))
+
+        candidate = next(
+            (c for c in sorted(safe_candidates, key=rank)
+             if str(c["id"]) not in used_ids and str(c["id"]) not in rejected),
+            None,
+        )
+        if candidate is None:
+            return
+        cid = str(candidate["id"])
+        muscle = str(candidate.get("primary_muscle") or "")
+        if (targets and muscle not in targets) or doms.get(muscle, 0) >= 3:
+            rejected.add(cid)
+            continue
+        template = routine.exercises[-1]
+        plan = _candidate_to_plan(candidate, template)
+        # DOMS policy: level 1 -> one set less, level 2 -> light work only (max 2 sets).
+        plan.sets = {0: _FILL_SETS, 1: _FILL_SETS - 1, 2: 2}[doms.get(muscle, 0)]
+        plan.target_weight_kg = None
+        plan.exercise_rationale = "남은 운동 시간을 채우도록 같은 목표 부위의 안전한 후보에서 추가한 운동입니다."
+        routine.exercises.append(plan)
+        too_long = estimate_routine_time_min(routine.exercises) > time_available_min
+        too_many = max_total_sets is not None and sum(e.sets for e in routine.exercises) > max_total_sets
+        if too_long or too_many:
+            routine.exercises.pop()
+            rejected.add(cid)
+            continue
+        used_ids.add(cid)
+        logger.info("[Guard] under-budget fill +%s", cid)
+
+
 def _fit_set_budget(routine: LLMRoutineOutput, max_total_sets: int) -> bool:
-    """Fit the routine into the set budget without leaving 1-set exercises when avoidable.
-
-    Order: trim sets down to 2 from the back, then drop trailing exercises, then allow 1 set.
-    """
-    def overflow() -> int:
-        return sum(e.sets for e in routine.exercises) - max_total_sets
-
-    if overflow() <= 0:
-        return True
-    for floor in (_MIN_SETS_PER_EXERCISE, None):
-        if floor is None:
-            while overflow() > 0 and len(routine.exercises) > 1:
-                routine.exercises.pop()
-            floor = 1
-        for exercise in reversed(routine.exercises):
-            excess = overflow()
-            if excess <= 0:
-                return True
-            reduction = min(max(0, exercise.sets - floor), excess)
-            exercise.sets -= reduction
-    return overflow() <= 0
+    """Fit the routine into the set budget (shared order: 2-set floor, drop repeats, then 1 set)."""
+    return trim_to_budget(
+        routine.exercises,
+        lambda: sum(e.sets for e in routine.exercises) > max_total_sets,
+    )
 
 
 # User-visible warning for a guard replacement. Telemetry counts it through
@@ -698,32 +749,23 @@ def _align_substitutions(exercise: LLMExercisePlan, safe_by_id: Dict[str, dict])
 
 
 def trim_routine_to_time_budget(output: LLMRoutineOutput, time_available_min: int) -> bool:
-    """Reduce sets, then trailing exercises, until the routine fits the time budget."""
+    """Reduce sets, then repeat-muscle exercises, until the routine fits the time budget."""
     if estimate_routine_time_min(output.exercises) <= time_available_min:
         return True
-
-    changed = True
-    while changed and estimate_routine_time_min(output.exercises) > time_available_min:
-        changed = False
-        for exercise in reversed(output.exercises):
-            if exercise.sets > 1:
-                exercise.sets -= 1
-                changed = True
-                if estimate_routine_time_min(output.exercises) <= time_available_min:
-                    output.warnings = [
-                        *output.warnings,
-                        "시간 예산에 맞추기 위해 일부 세트 수를 줄였습니다.",
-                    ]
-                    return True
-
-    while len(output.exercises) > 1 and estimate_routine_time_min(output.exercises) > time_available_min:
-        removed = output.exercises.pop()
-        output.warnings = [
-            *output.warnings,
-            f"시간 예산에 맞추기 위해 {removed.exercise_name} 운동을 제외했습니다.",
-        ]
-
-    return bool(output.exercises) and estimate_routine_time_min(output.exercises) <= time_available_min
+    sets_before = sum(e.sets for e in output.exercises)
+    removed_names: List[str] = []
+    fits = trim_to_budget(
+        output.exercises,
+        lambda: estimate_routine_time_min(output.exercises) > time_available_min,
+        on_remove=lambda ex: removed_names.append(ex.exercise_name),
+    )
+    warnings = list(output.warnings)
+    if removed_names:
+        warnings.extend(f"시간 예산에 맞추기 위해 {name} 운동을 제외했습니다." for name in removed_names)
+    elif sum(e.sets for e in output.exercises) < sets_before:
+        warnings.append("시간 예산에 맞추기 위해 일부 세트 수를 줄였습니다.")
+    output.warnings = warnings
+    return bool(output.exercises) and fits
 
 
 def _has_minimum_success_quality(output: LLMRoutineOutput) -> bool:
@@ -749,6 +791,7 @@ def validate_and_repair_routine_output(
     time_available_min: Optional[int] = None,
     max_repairs: Optional[int] = None,
     target_muscles: Optional[List[str]] = None,
+    readiness_level: Optional[str] = None,
 ) -> Tuple[Optional[LLMRoutineOutput], StatusReasonCode]:
     """
     Validate LLM success output against the safe candidate set.
@@ -868,6 +911,13 @@ def validate_and_repair_routine_output(
             if not trim_routine_to_time_budget(repaired, time_available_min):
                 logger.warning("[Guard] time budget trim failed -> fallback")
                 return None, "schemaError"
+
+    # Low readiness keeps the short session on purpose (same rule as _fill_available_time).
+    if time_available_min is not None and (readiness_level or "normal").lower() != "low":
+        _fill_under_budget(
+            repaired, safe_candidates, used_ids, target_muscles or [], doms,
+            time_available_min, max_total_sets,
+        )
 
     if not _has_minimum_success_quality(repaired):
         logger.warning("[Guard] trimmed/repaired routine below minimum quality -> fallback")

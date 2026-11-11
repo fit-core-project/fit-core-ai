@@ -22,6 +22,7 @@ from engines.food.food_units import (
     FOOD_UNIT_GRAMS as _SHARED_FOOD_UNIT_GRAMS,
     UNIT_DEFAULT_GRAMS as _SHARED_UNIT_DEFAULT_GRAMS,
     resolve_portion_grams,
+    serving_grams,
     unit_to_grams as _shared_unit_to_grams,
 )
 
@@ -72,6 +73,17 @@ _FOOD_PER_100G: dict[str, dict[str, float]] = {
     "콜라":    {"protein_g": 0.0,  "carbs_g": 10.6, "fat_g": 0.0},
     "사이다":  {"protein_g": 0.0,  "carbs_g": 10.0, "fat_g": 0.0},
     "치킨":    {"protein_g": 19.0, "carbs_g": 9.0,  "fat_g": 15.0},
+    # 주류: 알코올 열량(7 kcal/g)은 P/C/F(4/4/9)로 표현되지 않아 kcal 를 명시 (라벨 기준, per 100 ml).
+    # 이 값이 없으면 LLM 이 매크로 0 을 써서 소주 1병이 0 kcal 로 기록됐다.
+    "맥주":    {"protein_g": 0.4, "carbs_g": 3.5, "fat_g": 0.0, "kcal": 43.0},
+    "생맥주":  {"protein_g": 0.4, "carbs_g": 3.5, "fat_g": 0.0, "kcal": 43.0},
+    "생맥":    {"protein_g": 0.4, "carbs_g": 3.5, "fat_g": 0.0, "kcal": 43.0},
+    "소주":    {"protein_g": 0.0, "carbs_g": 0.5, "fat_g": 0.0, "kcal": 113.0},
+    "막걸리":  {"protein_g": 1.3, "carbs_g": 3.0, "fat_g": 0.0, "kcal": 50.0},
+    "와인":    {"protein_g": 0.1, "carbs_g": 2.6, "fat_g": 0.0, "kcal": 83.0},
+    "레드와인": {"protein_g": 0.1, "carbs_g": 2.6, "fat_g": 0.0, "kcal": 85.0},
+    "화이트와인": {"protein_g": 0.1, "carbs_g": 2.6, "fat_g": 0.0, "kcal": 82.0},
+    "소맥":    {"protein_g": 0.3, "carbs_g": 2.8, "fat_g": 0.0, "kcal": 60.0},
 }
 
 _GRAM_UNITS = {"g", "gram", "grams", "그램", "ml", "밀리리터", "cc"}
@@ -98,13 +110,53 @@ _MEAL_PATTERNS = [
 
 _TIME_RE = re.compile(r"(\d{1,2})시\s*(\d{1,2})?\s*분?|(\d{1,2}):(\d{2})")
 
+_UNIT_WORDS = (
+    "g|그램|ml|공기|개|알|인분|스쿱|조각|캔|병|그릇|봉지|팩|컵|잔|장|모|줄|쪽|"
+    "줌|접시|마리|판|송이|통|봉|입|사발|대접"
+)
 _AMOUNT_UNIT_RE = re.compile(
     r"(?P<food>[가-힣A-Za-z][가-힣A-Za-z0-9\s]{0,20}?)"
     r"\s*(?P<amount>\d+(?:\.\d+)?)\s*"
-    r"(?P<unit>g|그램|ml|공기|개|알|인분|스쿱|조각|캔|병|그릇|봉지|팩|컵|잔|장|모|줄|쪽)?"
-    r"(?![가-힣A-Za-z0-9])",
+    rf"(?P<unit>{_UNIT_WORDS})?"
+    # a particle may follow the unit ("반공기에", "1/3공기만", "2개씩")
+    r"(?=[\s,.!?~)]|$|만|씩|정도|쯤|이랑|랑|에|을|를|은|는|도|하고|과|와|이|가)",
     re.IGNORECASE,
 )
+
+# Korean number words before a unit ("한 공기", "두 조각", "반 팩", "열댓 개").
+_KOREAN_NUMBERS = {
+    "한": 1, "하나": 1, "두": 2, "둘": 2, "세": 3, "셋": 3, "석": 3, "네": 4, "넷": 4, "넉": 4,
+    "다섯": 5, "여섯": 6, "일곱": 7, "여덟": 8, "아홉": 9, "열": 10, "열댓": 12, "스무": 20,
+    "반": 0.5,
+}
+_KOREAN_NUMBER_UNIT_RE = re.compile(
+    r"(?<![가-힣])(?P<num>열댓|다섯|여섯|일곱|여덟|아홉|하나|스무|한|두|둘|세|셋|석|네|넷|넉|열|반)"
+    rf"\s*(?P<unit>{_UNIT_WORDS})"
+    r"(?=[\s,.!?~)]|$|만|씩|정도|쯤|이랑|랑|에|을|를|은|는|도|하고|과|와|이|가)"
+)
+# "한 열댓개" / "한 3개": 한 = "about", not one.
+_APPROX_HAN_RE = re.compile(r"(?<![가-힣])한\s+(?=\d|열댓|다섯|여섯|일곱|여덟|아홉|스무|열)")
+_FRACTION_UNIT_RE = re.compile(rf"(?P<a>\d+)\s*/\s*(?P<b>\d+)\s*(?P<unit>{_UNIT_WORDS})")
+# "1개 반", "한 공기 반" -> +0.5
+_AND_HALF_RE = re.compile(rf"(?P<n>\d+(?:\.\d+)?)\s*(?P<unit>{_UNIT_WORDS})\s*반(?![가-힣])")
+
+
+def _fmt_number(value: float) -> str:
+    return str(int(value)) if float(value).is_integer() else f"{value:.3f}".rstrip("0")
+
+
+def _normalize_number_words(text: str) -> str:
+    """Rewrite Korean number words / fractions before a unit as digits for the regex parser."""
+    text = _APPROX_HAN_RE.sub("", text)
+    # Bare counting words without a unit ("햄버거 하나", "사과 둘") are pieces.
+    text = re.sub(r"(?<![가-힣])(하나|둘|셋|넷)(?=[\s,.!?~)]|$|랑|이랑|하고|만|씩|도|를|을|는|은|와|과|에|만)",
+                  lambda m: f"{_KOREAN_NUMBERS[m.group(1)]}개", text)
+    text = _FRACTION_UNIT_RE.sub(
+        lambda m: f"{_fmt_number(int(m['a']) / max(1, int(m['b'])))}{m['unit']}", text)
+    text = _KOREAN_NUMBER_UNIT_RE.sub(
+        lambda m: f"{_fmt_number(_KOREAN_NUMBERS[m['num']])}{m['unit']}", text)
+    text = _AND_HALF_RE.sub(lambda m: f"{_fmt_number(float(m['n']) + 0.5)}{m['unit']}", text)
+    return text
 
 _CONNECTOR_RE = re.compile(r"랑|이랑|하고|그리고|와\s+|,\s*")
 _MEAL_WORD_RE = re.compile(r"(?:아침|조식|점심|중식|저녁|석식|간식|야식)(?:으로는|에는|으론|엔|에|은|는|으로|로)?")
@@ -143,17 +195,24 @@ def _r1(v: float) -> float:
 
 def _macros_from_table(food_name: str, amount: float | None, unit: str | None) -> dict[str, float | None]:
     nutrition = _FOOD_PER_100G.get(food_name.strip())
-    if not nutrition or not amount:
+    if not nutrition:
         return {"protein_g": None, "carbs_g": None, "fat_g": None}
-    grams = resolve_portion_grams(food_name.strip(), amount, unit)
+    if not amount:
+        # 수량 미기재 → 1인분 ("콜라", "밥" 만 적어도 기본 한 잔 / 한 공기)
+        grams = serving_grams(food_name.strip())
+    else:
+        grams = resolve_portion_grams(food_name.strip(), amount, unit)
     if grams is None:
         return {"protein_g": None, "carbs_g": None, "fat_g": None}
     factor = grams / 100
-    return {
+    macros = {
         "protein_g": _r1(nutrition["protein_g"] * factor),
         "carbs_g":   _r1(nutrition["carbs_g"]   * factor),
         "fat_g":     _r1(nutrition["fat_g"]      * factor),
     }
+    if nutrition.get("kcal") is not None:
+        macros["kcal"] = _r1(nutrition["kcal"] * factor)
+    return macros
 
 
 # ---------- Deterministic fallback ----------
@@ -176,6 +235,7 @@ _CHATTER_WORDS = frozenset({
     "나", "난", "내가", "저", "전", "제가", "우리", "다", "또", "안", "못", "같이",
     "엔", "에", "때", "후", "전에", "후에", "다음", "먼저", "대충", "간단히", "든든하게",
     "아", "어", "음", "잘", "다시", "혼자", "많이", "배부르게",
+    "만", "씩", "정도", "쯤",
 })
 # Workout / non-food words that may share a sentence with food.
 _NON_FOOD_WORDS = frozenset({
@@ -232,7 +292,7 @@ def _deterministic_diet_parse(user_text: str) -> ParsedDietLog:
 
     items: list[DietParseItem] = []
 
-    text_for_food = _FILLER_RE.sub(" ", _strip_context_words(text))
+    text_for_food = _FILLER_RE.sub(" ", _strip_context_words(_normalize_number_words(text)))
     for segment in _CONNECTOR_RE.split(text_for_food):
         segment = segment.strip(" :;.!?~")
         if not segment or _WORKOUT_QTY_RE.search(segment):
@@ -326,7 +386,10 @@ def _enrich_macros(parsed: ParsedDietLog) -> ParsedDietLog:
         if item.food_name.strip() in _FOOD_PER_100G:
             macros = _macros_from_table(item.food_name.strip(), item.amount, item.unit)
             if macros["protein_g"] is not None:
-                enriched.append(item.model_copy(update={**macros, "source": "db"}))
+                update = {**macros, "source": "db"}
+                if item.amount is None:
+                    update.update({"amount": 1.0, "unit": "인분"})
+                enriched.append(item.model_copy(update=update))
                 continue
         db_hit = None
         if engine is not None and getattr(engine, "available", False):
@@ -364,6 +427,53 @@ def _enrich_macros(parsed: ParsedDietLog) -> ParsedDietLog:
             item = _sanity_check_llm_macros(item)
         enriched.append(item)
     return ParsedDietLog(items=enriched)
+
+
+_SIZE_WORDS_RE = re.compile(r"^(?:작은|큰|중간|큰거|작은거|라지|레귤러|톨|그란데|벤티)\s*")
+_UNIT_WITH_NUMBER_RE = re.compile(r"^(?P<n>\d+(?:\.\d+)?)\s*(?P<unit>[^\d\s][^\d]*)$")
+_COUNT_UNITS = frozenset(_UNIT_WORDS.split("|")) - {"g", "그램", "ml"}
+
+
+def _normalize_llm_units(parsed: ParsedDietLog) -> ParsedDietLog:
+    """LLM 이 수량을 단위 문자열에 넣은 경우("한 컵", "반공기", "두 조각", "30cm") 분리한다."""
+    fixed = []
+    for item in parsed.items:
+        unit = (item.unit or "").strip()
+        amount = item.amount
+        if unit:
+            unit = _SIZE_WORDS_RE.sub("", unit).strip() or unit
+            m = _UNIT_WITH_NUMBER_RE.match(_normalize_number_words(unit).replace(" ", ""))
+            if m:
+                amount, unit = float(m["n"]), m["unit"].strip()
+            elif amount is None and unit in _COUNT_UNITS:
+                amount = 1.0  # "쌀밥 공기", "녹차 잔": a unit without a number is one of it
+        if amount != item.amount or unit != (item.unit or ""):
+            item = item.model_copy(update={"amount": amount, "unit": unit or None})
+        fixed.append(item)
+    return ParsedDietLog(items=fixed)
+
+
+_PLACEHOLDER_AMOUNT_RE = re.compile(r"100|백\s*(?:g|그램|ml|미리)")
+
+
+def _drop_placeholder_amounts(parsed: ParsedDietLog, user_text: str) -> ParsedDietLog:
+    """LLM 이 수량 없는 입력("된장찌개 먹었어")에 100 g/ml 를 채운 경우 수량 미기재로 되돌린다.
+
+    그래야 enrichment 가 1인분 기준으로 계산한다. LLM 매크로(100g 기준)는 1인분으로 재환산."""
+    if _PLACEHOLDER_AMOUNT_RE.search(user_text or ""):
+        return parsed
+    fixed = []
+    for item in parsed.items:
+        unit = (item.unit or "").strip().lower()
+        if item.amount == 100 and unit in {"g", "ml", "그램"}:
+            serving = serving_grams(item.food_name)
+            update: dict = {"amount": None, "unit": None}
+            for key in ("protein_g", "carbs_g", "fat_g", "kcal"):
+                value = getattr(item, key)
+                update[key] = _r1(value * serving / 100.0) if (value is not None and serving) else value
+            item = item.model_copy(update=update)
+        fixed.append(item)
+    return ParsedDietLog(items=fixed)
 
 
 def _reconcile_amounts_with_text(parsed: ParsedDietLog, user_text: str) -> ParsedDietLog:
@@ -438,6 +548,17 @@ def _parse_payload(payload) -> ParsedDietLog:
 
 # ---------- Public API ----------
 
+def _food_engine_available() -> bool:
+    engine = get_food_engine() if get_food_engine is not None else None
+    return bool(engine is not None and getattr(engine, "available", False))
+
+
+def _has_nutrition(item: DietParseItem) -> bool:
+    return item.source is not None or any(
+        getattr(item, key) is not None for key in ("protein_g", "carbs_g", "fat_g", "kcal")
+    )
+
+
 def parse_diet_log(user_text: str) -> str:
     """Parse natural-language diet input into a JSON string (ParsedDietLog).
 
@@ -461,11 +582,22 @@ def parse_diet_log(user_text: str) -> str:
                 parsed = _parse_payload(structured_llm.invoke({"text": user_text}))
 
         if not parsed.items:
-            # LLM 이 잡담 섞인 입력에서 음식을 놓친 경우 → 결정론 추출로 보강
-            parsed = _deterministic_diet_parse(user_text)
-        else:
-            parsed = _reconcile_amounts_with_text(parsed, user_text)
+            # LLM 이 잡담 섞인 입력에서 음식을 놓친 경우 → 결정론 추출로 보강하되, DB/식품표에
+            # 실제로 매칭되는 항목만 남긴다 ("점심 굶음", "ㅋㅋㅋ" 가 음식으로 기록되지 않도록).
+            enriched = _enrich_macros(_deterministic_diet_parse(user_text))
+            if not _food_engine_available():
+                return enriched.model_dump_json()  # nothing to verify against: keep old behaviour
+            return ParsedDietLog(items=[i for i in enriched.items if _has_nutrition(i)]).model_dump_json()
+        parsed = _normalize_llm_units(parsed)
+        parsed = _drop_placeholder_amounts(parsed, user_text)
+        parsed = _reconcile_amounts_with_text(parsed, user_text)
         return _enrich_macros(parsed).model_dump_json()
     except Exception as exc:
         logger.warning("[LLM diet parsing fallback] %s", sanitize_exception_for_log(exc))
-        return _deterministic_diet_parse(user_text).model_dump_json()
+    # LLM down: deterministic parse still gets DB / curated macros (previously none at all).
+    parsed = _deterministic_diet_parse(user_text)
+    try:
+        parsed = _enrich_macros(parsed)
+    except Exception as exc:  # enrichment must never break the fallback
+        logger.warning("[diet fallback enrich failed] %s", sanitize_exception_for_log(exc))
+    return parsed.model_dump_json()

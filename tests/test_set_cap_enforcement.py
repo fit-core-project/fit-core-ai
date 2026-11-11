@@ -100,7 +100,8 @@ def test_compound_target_lower_movement_is_preserved_before_accessory():
     enforce_total_set_cap(output, 9, ["quadriceps", "hamstring"])
 
     by_id = {exercise.exercise_id: exercise for exercise in output.exercises}
-    assert by_id["leg_curl"].sets == 1
+    # 2026-11-09: accessories stop at 2 sets before any exercise is cut further (no 1-set tails).
+    assert by_id["leg_curl"].sets == 2
     assert by_id["back_squat"].sets >= by_id["leg_curl"].sets
     assert _total_sets(output) <= 9
 

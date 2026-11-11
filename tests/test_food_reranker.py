@@ -211,7 +211,7 @@ def test_rerank_key_does_not_boost_cooking_state_without_food_token_overlap():
 
     assert key[1] == 0
     assert key[2] == 2
-    assert key[5] == 1
+    assert key[6] == 1  # data_type score (index shifted by the plainness score, 2026-11-10)
 
 
 def test_rerank_key_does_not_boost_without_query_cooking_state():

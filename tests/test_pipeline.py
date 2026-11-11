@@ -104,7 +104,8 @@ class TestHappyPath:
         assert result.generation_status == "success"
         assert result.is_fallback is False
         assert result.status_reason_code == "none"
-        assert len(result.routine_blocks) == 1
+        # 60 min with one LLM pick: the server tops up from unused safe candidates (2026-11-09).
+        assert len(result.routine_blocks) >= 1
         assert result.routine_blocks[0].exercise_id == "barbell_bench_press"
 
     def test_success_routine_blocks_have_prescriptions(
@@ -174,8 +175,12 @@ class TestHappyPath:
 
         assert result.routine_blocks[0].exercise_id == "barbell_bench_press"
         assert result.routine_blocks[0].order == 1
-        assert result.routine_blocks[1].exercise_id == "dumbbell_fly"
-        assert result.routine_blocks[1].order == 2
+        # Under-budget fill may add another compound; isolation still comes after every compound.
+        ids = [b.exercise_id for b in result.routine_blocks]
+        assert "dumbbell_fly" in ids
+        movement = {str(c["id"]): c.get("movement_type") for c in mock_candidates}
+        assert all(movement.get(i) == "COMPOUND" for i in ids[: ids.index("dumbbell_fly")])
+        assert [b.order for b in result.routine_blocks] == list(range(1, len(ids) + 1))
 
     def test_invalid_candidate_is_repaired_to_safe_candidate(
         self, sample_request, sample_profile, sample_llm_output, mock_candidates

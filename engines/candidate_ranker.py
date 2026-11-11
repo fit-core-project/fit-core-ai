@@ -162,14 +162,41 @@ def score_candidate_exercises(
             "score_reasons": reasons,
         })
 
-    return sorted(
+    ranked = sorted(
         scored,
         key=lambda ex: (
             -ex["score"],
             int(ex.get("efficiency_tier") or 99),
             str(ex.get("id") or ""),
         ),
-    )[:top_n]
+    )
+    return _select_diverse_pool(ranked, target_muscles, top_n)
+
+
+# Each target muscle keeps this many pool slots (when it has candidates), so a
+# large-muscle bonus cannot fill a push pool with chest only.
+_MIN_POOL_SLOTS_PER_TARGET = 2
+
+
+def _select_diverse_pool(ranked: List[dict], target_muscles: List[str], top_n: int) -> List[dict]:
+    if len(ranked) <= top_n:
+        return ranked
+    from .llm_parser import _coverage_targets  # same muscles the repair step tries to cover
+
+    targets = list(dict.fromkeys(_coverage_targets(list(target_muscles))))
+    per_target = _MIN_POOL_SLOTS_PER_TARGET if targets and len(targets) * _MIN_POOL_SLOTS_PER_TARGET <= top_n else 1
+    reserved: set = set()
+    for muscle in targets:
+        picks = [i for i, ex in enumerate(ranked) if str(ex.get("primary_muscle") or "").strip() == muscle]
+        reserved.update(picks[:per_target])
+        if len(reserved) >= top_n:
+            break
+    chosen = set(list(sorted(reserved))[:top_n])
+    for i in range(len(ranked)):
+        if len(chosen) >= top_n:
+            break
+        chosen.add(i)
+    return [ranked[i] for i in sorted(chosen)]
 
 
 def _resolve_feedback_score(adjustment) -> float:

@@ -390,6 +390,7 @@ def _validate_or_fallback(
         max_total_sets=max_total_sets,
         time_available_min=req.time_available_min,
         target_muscles=db_target_muscles,
+        readiness_level=req.readiness_level,
     )
     if validated is None:
         if on_validation_failed is not None:
@@ -630,6 +631,13 @@ def generate_smart_routine(
             feedback_query_failed=feedback_query_failed,
             feedback_query_error_category=feedback_query_error_category,
         )
+
+    if not ranked_candidates:
+        # Nothing the LLM may pick from: answer failed/emptyCandidate without an LLM round trip.
+        logger.info("[Pipeline] no safe candidates -> emptyCandidate without LLM call")
+        return _observe(_fallback(
+            req, ranked_candidates, max_total_sets, doms_db, goal, "emptyCandidate", recent_sets, profile,
+        ))
 
     try:
         llm = get_llm("routine", temperature=generation_temp)

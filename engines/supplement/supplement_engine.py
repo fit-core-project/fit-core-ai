@@ -293,6 +293,9 @@ class SupplementRAGEngine:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         except Exception:
             self.device = "cpu"
+        forced_device = (os.getenv("AI_EMBEDDING_DEVICE") or "").strip().lower()
+        if forced_device in {"cpu", "cuda"}:
+            self.device = forced_device
 
         self.Document = Document
         self.StrOutputParser = StrOutputParser
@@ -319,6 +322,13 @@ class SupplementRAGEngine:
         ]
         if not self.original_docs:
             raise RuntimeError("chroma_db_empty")
+        # The index can lag the curated KB JSON (it held 5 of 10 ingredient profiles on
+        # 2026-11-09), so profiles / interaction rules / safety rules come from JSON directly.
+        from engines.supplement.kb_documents import merge_curated_kb_documents
+
+        self.original_docs = merge_curated_kb_documents(
+            self.original_docs, Path(db_path).parent / "documents", Document
+        )
 
         clean_texts = [(doc.page_content or "").strip() for doc in self.original_docs]
         tokenized_corpus = [self._tokenize_kiwi(text) for text in clean_texts]

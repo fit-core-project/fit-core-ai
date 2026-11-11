@@ -1,0 +1,562 @@
+{
+ "overall": {
+  "n": 71,
+  "passed": 29,
+  "accuracy": 0.408
+ },
+ "bySplit": {
+  "dev": {
+   "n": 50,
+   "passed": 22,
+   "accuracy": 0.44
+  },
+  "test": {
+   "n": 21,
+   "passed": 7,
+   "accuracy": 0.333
+  }
+ },
+ "firstFailingStage": {
+  "S2": 42,
+  "pass": 29
+ },
+ "cacheMissCases": [],
+ "stageFailAnyCount": {
+  "S1": 0,
+  "S2": 42,
+  "S3": 4,
+  "S4": 2,
+  "S5": 0
+ },
+ "softNotes": {
+  "single-set exercises": 17,
+  "muscle dominance": 7,
+  "light vs same-muscle history": 8
+ },
+ "byTag": {
+  "custom-n:0": {
+   "n": 1,
+   "passed": 1,
+   "accuracy": 1.0,
+   "firstFailingStage": {
+    "pass": 1
+   }
+  },
+  "custom-n:1": {
+   "n": 7,
+   "passed": 5,
+   "accuracy": 0.714,
+   "firstFailingStage": {
+    "S2": 2,
+    "pass": 5
+   }
+  },
+  "custom-n:2": {
+   "n": 7,
+   "passed": 4,
+   "accuracy": 0.571,
+   "firstFailingStage": {
+    "S2": 3,
+    "pass": 4
+   }
+  },
+  "doms:abs=2": {
+   "n": 1,
+   "passed": 1,
+   "accuracy": 1.0,
+   "firstFailingStage": {
+    "pass": 1
+   }
+  },
+  "doms:biceps=2": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "doms:chest=1": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "doms:chest=2": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "doms:chest=2+upper-back=1": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "doms:chest=3": {
+   "n": 1,
+   "passed": 1,
+   "accuracy": 1.0,
+   "firstFailingStage": {
+    "pass": 1
+   }
+  },
+  "doms:front-deltoids=2": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "doms:gluteal=2": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "doms:hamstring=1": {
+   "n": 1,
+   "passed": 1,
+   "accuracy": 1.0,
+   "firstFailingStage": {
+    "pass": 1
+   }
+  },
+  "doms:none": {
+   "n": 59,
+   "passed": 23,
+   "accuracy": 0.39,
+   "firstFailingStage": {
+    "S2": 36,
+    "pass": 23
+   }
+  },
+  "doms:quadriceps=3": {
+   "n": 1,
+   "passed": 1,
+   "accuracy": 1.0,
+   "firstFailingStage": {
+    "pass": 1
+   }
+  },
+  "doms:triceps=3": {
+   "n": 1,
+   "passed": 1,
+   "accuracy": 1.0,
+   "firstFailingStage": {
+    "pass": 1
+   }
+  },
+  "doms:upper-back=3": {
+   "n": 1,
+   "passed": 1,
+   "accuracy": 1.0,
+   "firstFailingStage": {
+    "pass": 1
+   }
+  },
+  "equip:barbell+machine": {
+   "n": 7,
+   "passed": 2,
+   "accuracy": 0.286,
+   "firstFailingStage": {
+    "pass": 2,
+    "S2": 5
+   }
+  },
+  "equip:bodyweight-only": {
+   "n": 7,
+   "passed": 3,
+   "accuracy": 0.429,
+   "firstFailingStage": {
+    "S2": 4,
+    "pass": 3
+   }
+  },
+  "equip:machine": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "equip:no-cable": {
+   "n": 6,
+   "passed": 4,
+   "accuracy": 0.667,
+   "firstFailingStage": {
+    "S2": 2,
+    "pass": 4
+   }
+  },
+  "equip:none": {
+   "n": 50,
+   "passed": 20,
+   "accuracy": 0.4,
+   "firstFailingStage": {
+    "S2": 30,
+    "pass": 20
+   }
+  },
+  "expect:empty": {
+   "n": 4,
+   "passed": 4,
+   "accuracy": 1.0,
+   "firstFailingStage": {
+    "pass": 4
+   }
+  },
+  "goal:endurance": {
+   "n": 4,
+   "passed": 1,
+   "accuracy": 0.25,
+   "firstFailingStage": {
+    "S2": 3,
+    "pass": 1
+   }
+  },
+  "goal:fatLoss": {
+   "n": 4,
+   "passed": 1,
+   "accuracy": 0.25,
+   "firstFailingStage": {
+    "S2": 3,
+    "pass": 1
+   }
+  },
+  "goal:hypertrophy": {
+   "n": 41,
+   "passed": 23,
+   "accuracy": 0.561,
+   "firstFailingStage": {
+    "pass": 23,
+    "S2": 18
+   }
+  },
+  "goal:profile-default": {
+   "n": 18,
+   "passed": 3,
+   "accuracy": 0.167,
+   "firstFailingStage": {
+    "S2": 15,
+    "pass": 3
+   }
+  },
+  "goal:strength": {
+   "n": 4,
+   "passed": 1,
+   "accuracy": 0.25,
+   "firstFailingStage": {
+    "S2": 3,
+    "pass": 1
+   }
+  },
+  "golden": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "note": {
+   "n": 5,
+   "passed": 1,
+   "accuracy": 0.2,
+   "firstFailingStage": {
+    "pass": 1,
+    "S2": 4
+   }
+  },
+  "pain:chest+front-deltoids": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "pain:front-deltoids": {
+   "n": 4,
+   "passed": 1,
+   "accuracy": 0.25,
+   "firstFailingStage": {
+    "pass": 1,
+    "S2": 3
+   }
+  },
+  "pain:knees": {
+   "n": 3,
+   "passed": 2,
+   "accuracy": 0.667,
+   "firstFailingStage": {
+    "pass": 2,
+    "S2": 1
+   }
+  },
+  "pain:lower-back": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "pain:neck": {
+   "n": 1,
+   "passed": 1,
+   "accuracy": 1.0,
+   "firstFailingStage": {
+    "pass": 1
+   }
+  },
+  "pain:none": {
+   "n": 60,
+   "passed": 25,
+   "accuracy": 0.417,
+   "firstFailingStage": {
+    "S2": 35,
+    "pass": 25
+   }
+  },
+  "pain:quadriceps": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "profile-pain:lower-back": {
+   "n": 38,
+   "passed": 12,
+   "accuracy": 0.316,
+   "firstFailingStage": {
+    "S2": 26,
+    "pass": 12
+   }
+  },
+  "readiness:high": {
+   "n": 6,
+   "passed": 3,
+   "accuracy": 0.5,
+   "firstFailingStage": {
+    "pass": 3,
+    "S2": 3
+   }
+  },
+  "readiness:low": {
+   "n": 5,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 5
+   }
+  },
+  "readiness:normal": {
+   "n": 60,
+   "passed": 26,
+   "accuracy": 0.433,
+   "firstFailingStage": {
+    "S2": 34,
+    "pass": 26
+   }
+  },
+  "split:arm": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "split:core": {
+   "n": 5,
+   "passed": 2,
+   "accuracy": 0.4,
+   "firstFailingStage": {
+    "S2": 3,
+    "pass": 2
+   }
+  },
+  "split:custom": {
+   "n": 14,
+   "passed": 9,
+   "accuracy": 0.643,
+   "firstFailingStage": {
+    "S2": 5,
+    "pass": 9
+   }
+  },
+  "split:full_body": {
+   "n": 5,
+   "passed": 1,
+   "accuracy": 0.2,
+   "firstFailingStage": {
+    "S2": 4,
+    "pass": 1
+   }
+  },
+  "split:legs": {
+   "n": 11,
+   "passed": 5,
+   "accuracy": 0.455,
+   "firstFailingStage": {
+    "S2": 6,
+    "pass": 5
+   }
+  },
+  "split:lower": {
+   "n": 4,
+   "passed": 1,
+   "accuracy": 0.25,
+   "firstFailingStage": {
+    "S2": 3,
+    "pass": 1
+   }
+  },
+  "split:none": {
+   "n": 1,
+   "passed": 1,
+   "accuracy": 1.0,
+   "firstFailingStage": {
+    "pass": 1
+   }
+  },
+  "split:pull": {
+   "n": 10,
+   "passed": 5,
+   "accuracy": 0.5,
+   "firstFailingStage": {
+    "S2": 5,
+    "pass": 5
+   }
+  },
+  "split:push": {
+   "n": 13,
+   "passed": 4,
+   "accuracy": 0.308,
+   "firstFailingStage": {
+    "S2": 9,
+    "pass": 4
+   }
+  },
+  "split:shoulder": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "split:upper": {
+   "n": 6,
+   "passed": 1,
+   "accuracy": 0.167,
+   "firstFailingStage": {
+    "S2": 5,
+    "pass": 1
+   }
+  },
+  "stub-fault": {
+   "n": 4,
+   "passed": 2,
+   "accuracy": 0.5,
+   "firstFailingStage": {
+    "S2": 2,
+    "pass": 2
+   }
+  },
+  "time:20": {
+   "n": 8,
+   "passed": 2,
+   "accuracy": 0.25,
+   "firstFailingStage": {
+    "S2": 6,
+    "pass": 2
+   }
+  },
+  "time:30": {
+   "n": 18,
+   "passed": 7,
+   "accuracy": 0.389,
+   "firstFailingStage": {
+    "S2": 11,
+    "pass": 7
+   }
+  },
+  "time:45": {
+   "n": 20,
+   "passed": 11,
+   "accuracy": 0.55,
+   "firstFailingStage": {
+    "pass": 11,
+    "S2": 9
+   }
+  },
+  "time:60": {
+   "n": 18,
+   "passed": 6,
+   "accuracy": 0.333,
+   "firstFailingStage": {
+    "S2": 12,
+    "pass": 6
+   }
+  },
+  "time:70": {
+   "n": 1,
+   "passed": 0,
+   "accuracy": 0.0,
+   "firstFailingStage": {
+    "S2": 1
+   }
+  },
+  "time:90": {
+   "n": 6,
+   "passed": 3,
+   "accuracy": 0.5,
+   "firstFailingStage": {
+    "pass": 3,
+    "S2": 3
+   }
+  },
+  "user:demo": {
+   "n": 38,
+   "passed": 12,
+   "accuracy": 0.316,
+   "firstFailingStage": {
+    "S2": 26,
+    "pass": 12
+   }
+  },
+  "user:new": {
+   "n": 23,
+   "passed": 12,
+   "accuracy": 0.522,
+   "firstFailingStage": {
+    "pass": 12,
+    "S2": 11
+   }
+  },
+  "user:synthetic": {
+   "n": 10,
+   "passed": 5,
+   "accuracy": 0.5,
+   "firstFailingStage": {
+    "pass": 5,
+    "S2": 5
+   }
+  }
+ }
+}

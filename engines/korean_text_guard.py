@@ -45,6 +45,11 @@ _MUSCLE_LABELS = {
     "abductors": "외전근",
     "calves": "종아리",
     "neck": "목",
+    # Pain-only slugs (exercise_tier.pain_triggers) that can echo into LLM text.
+    "knees": "무릎",
+    "left-soleus": "왼쪽 종아리",
+    "right-soleus": "오른쪽 종아리",
+    "head": "머리",
 }
 
 _EQUIPMENT_LABELS = {
@@ -71,6 +76,7 @@ _SPLIT_LABELS = {
     "core": "코어",
     "shoulder": "어깨",
     "arm": "팔",
+    "custom": "맞춤형",  # BE default label when the user picks muscles directly
 }
 
 _GOAL_LABELS = {
