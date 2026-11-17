@@ -58,6 +58,7 @@ LEXICAL_GUARD_SIMILARITY = 0.9
 LITERAL_HIT_SIMILARITY = 0.45
 _DISH_SERVING_G = 300.0
 _REORDERED_SOURCE_INDEX = -10
+_LEXICAL_SOURCE_INDEX = 99  # lexical-index rows rank after every vector / canonical hit on ties
 
 
 def _compact_name(candidate) -> str:
@@ -426,6 +427,36 @@ class FoodSearchEngine:
                 )
         return self._dedupe_candidates(candidates)
 
+    def _lookup_lexical_candidates(self, analysis):
+        """Rows that name the query only as a parenthetical alias or a raw variety word, which the
+        embedding search can miss. Appended last: a row already in the pool keeps its own rank.
+
+        Each row carries its real embedding distance to the query (a vector search restricted to
+        those rows), so a lexical hit still has to pass the similarity and lexical guards; when
+        that distance is unavailable the rows are not offered at all."""
+        index = getattr(self, "_canonical_index", None)
+        store = getattr(self, "_vector_store", None)
+        if index is None or store is None or not hasattr(index, "lookup_lexical") or analysis.protected:
+            return []
+        records = index.lookup_lexical(analysis.normalized_query, limit=TOP_K)
+        ids = [r.metadata.get("food_id") for r in records if r.metadata.get("food_id")]
+        if not ids:
+            return []
+        try:
+            with self._lock:
+                scored = store.similarity_search_with_score(
+                    analysis.normalized_query, k=len(ids), filter={"food_id": {"$in": ids}})
+        except Exception as exc:
+            logger.debug("[food_engine] lexical rescoring failed: %s", exc)
+            return []
+        candidates = []
+        for original_rank, (doc, distance) in enumerate(scored):
+            candidates.append(FoodSearchCandidate(
+                document=doc, vector_score=float(distance), source_query=analysis.normalized_query,
+                source_query_index=_LEXICAL_SOURCE_INDEX, original_rank=original_rank,
+                dedupe_key=build_food_candidate_dedupe_key(doc)))
+        return candidates
+
     def _cooked_sibling(self, meta: dict, food_name: str) -> dict | None:
         """A dried pulse / pasta row ("병아리콩 ... 말린것") for a food the user ate cooked: its
         "말린것을 삶은 것" sibling row, unless the user said it was dried."""
@@ -480,7 +511,8 @@ class FoodSearchEngine:
             return None
         canonical_candidates = self._lookup_canonical_candidates(analysis)
         vector_candidates = self._collect_candidates(result_groups, search_queries)
-        candidates = self._dedupe_candidates(canonical_candidates + vector_candidates)
+        candidates = self._dedupe_candidates(
+            canonical_candidates + vector_candidates + self._lookup_lexical_candidates(analysis))
         candidates = rerank_food_candidates(analysis, candidates, final_k=FOOD_SEARCH_FINAL_K)
         reordered = [c for c in canonical_candidates if c.source_query_index == _REORDERED_SOURCE_INDEX]
         if reordered and not any(_compact_name(c) == "".join(analysis.normalized_query.split()) for c in candidates):
@@ -497,7 +529,7 @@ class FoodSearchEngine:
         meta_first = doc.metadata or {}
         query_compact = "".join((analysis.normalized_query or "").split())
         raw_name = meta_first.get("name") or ""
-        paren_words = [w for part in re.findall(r"\(([^()]*)\)", raw_name) for w in part.split()]
+        paren_words = [w for part in re.findall(r"\(([^()]*)\)", raw_name) for w in re.split(r"[\s/,·]+", part)]
         head_words = [w for w in re.sub(r"\([^()]*\)", " ", raw_name).split()
                       if w not in {"생것", "구운것", "삶은것", "찐것", "볶은것", "튀긴것", "말린것", "데친것"}]
         # the queried name IS the row's food ("항정살" = "돼지고기 앞다리(항정살) 생것", "x" as the

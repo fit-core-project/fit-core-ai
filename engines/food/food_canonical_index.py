@@ -79,10 +79,48 @@ def _append_unique(target: list[FoodCanonicalRecord], record: FoodCanonicalRecor
 
 
 _PAREN_TEXT_RE = re.compile(r"\([^()]*\)")
+# produce whose raw row is what a bare name means (한라봉 = 귤 한라봉 생것); a bare 삼겹살 is
+# eaten cooked, so meat / grain varieties are not indexed
+_EATEN_RAW_CATEGORIES = frozenset({"과일류", "채소류"})
 
 
 def _compact(value: str | None) -> str:
     return "".join((value or "").split())
+
+
+# Parenthetical words that qualify a row instead of naming it: origin (국내산, 수입산, 일본),
+# count / form (조각, 낱개, 마른것) and "X만" (멸치볶음(멸치만): only the anchovies).
+_ALIAS_QUALIFIER_RE = re.compile(r"^(?:.+산|일본|중국|미국|조각|낱개|마른것|.+만)$")
+
+
+# Second words of raw produce rows that name a colour, plant part, growing method or grade
+# (파프리카 빨간색 생것, 무 잎줄기 생것, 부추 재래종 생것), not a variety someone eats by name.
+_VARIETY_QUALIFIER_RE = re.compile(
+    r"^(?:.+색|.+종|.+질|껍질|과육|뿌리|.*줄기|열매|어린잎|전체|구근|야생|재배|유기재배|하우스|노지|미숙|완숙"
+    r"|그린|골드|화이트|레드)$"
+)
+
+
+def _dish_alias_keys(name: str) -> set[str]:
+    """Other names of a plain dish row given as its closing parenthetical: 완자전 소고기(동그랑땡/
+    육원전) -> 동그랑땡, 육원전; 개피떡(바람떡) -> 바람떡. Only a short (one or two word) dish name
+    whose single parenthetical ends the name: in a branded menu row (피자 차슈(불갈비) 피자 (M),
+    케이크 ...(선샤인) 6호, 아이스크림 미니 스노우모찌(그린티 스트로베리 망고)) the parenthetical is
+    a topping, flavour, size or brand word. Each "/"-separated alias is one key, never a single
+    word of a multi-word alias (제육(돼지고기 수육) is not 돼지고기)."""
+    parens = re.findall(r"\(([^()]*)\)", name)
+    text = name.rstrip()
+    if len(parens) != 1 or not text.endswith(")"):
+        return set()
+    before = text[:text.rindex("(")]
+    if not before or before.endswith(" ") or len(before.split()) > 2:
+        return set()
+    keys = set()
+    for alias in re.split(r"[/,·]+", parens[0]):
+        key = _compact(alias)
+        if len(key) >= 2 and re.fullmatch(r"[가-힣]+", key) and not _ALIAS_QUALIFIER_RE.match(key):
+            keys.add(key)
+    return keys
 
 
 def reordered_dish_key(name: str | None, rep_name: str | None) -> str:
@@ -117,6 +155,33 @@ class FoodCanonicalIndex:
             key: rows[0] for key, rows in reorder.items()
             if key not in exact and len({r.metadata.get("name") for r in rows}) == 1
         }
+
+        # lexical retrieval keys for rows the embedding search misses:
+        # - a plain dish's parenthetical alias: 완자전 소고기(동그랑땡/육원전) for 동그랑땡
+        # - the variety word of a raw fruit / vegetable row: 귤 한라봉 생것 for 한라봉
+        self.lexical: dict[str, list[FoodCanonicalRecord]] = {}
+        generic_names = {_compact(r.metadata.get("rep_name")) for r in records} | {
+            _compact(_PAREN_TEXT_RE.sub(" ", r.metadata.get("name") or "")) for r in records}
+        for record in records:
+            name = record.metadata.get("name") or ""
+            keys = set()
+            raw = (record.metadata.get("data_type") or "").startswith("원재료")
+            # raw cuts name their alias in parentheses too (돼지고기 삼겹살(삼겹살) 생것), but a
+            # bare 삼겹살 is eaten cooked: aliases only index prepared dishes
+            if not raw:
+                # an alias that is itself a food the DB lists (토스트(식빵), 쑥전(부침개)) names a
+                # broader food: the regular lookup finds that food's own rows
+                keys.update(k for k in _dish_alias_keys(name) if k not in generic_names)
+            if raw and record.metadata.get("major_category") in _EATEN_RAW_CATEGORIES:
+                words = _PAREN_TEXT_RE.sub(" ", name).split()
+                if (len(words) == 3 and words[2] == "생것" and len(words[1]) >= 2
+                        and re.fullmatch(r"[가-힣]+", words[1]) and not _VARIETY_QUALIFIER_RE.match(words[1])):
+                    keys.add(words[1])
+            for key in keys:
+                _append_unique(self.lexical.setdefault(key, []), record)
+
+    def lookup_lexical(self, query: str | None, limit: int = 5) -> list[FoodCanonicalRecord]:
+        return list(self.lexical.get(_compact(clean_food_index_key(query)), []))[:limit]
 
     def lookup_reordered(self, query: str | None) -> FoodCanonicalRecord | None:
         return self.reordered.get(_compact(clean_food_index_key(query)))

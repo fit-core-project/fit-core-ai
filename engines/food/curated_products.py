@@ -16,7 +16,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-from .food_units import GRAM_UNITS, food_unit_overrides
+from .food_units import GRAM_UNITS, food_unit_override_key, food_unit_overrides
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +129,30 @@ def _processed_index() -> dict[str, IndexedProduct]:
 
 
 GENERIC_FOOD_CSV = Path(__file__).resolve().parents[2] / "data" / "food_db" / "food_db_clean.csv"
+
+
+_PRODUCE_CATEGORIES = frozenset({"과일류", "채소류", "견과 및 종실류"})
+_RAW_STATE_WORDS = frozenset({"생것", "말린것", "냉동", "삶은것", "찐것", "구운것"})
+
+
+@lru_cache(maxsize=1)
+def _produce_words() -> frozenset[str]:
+    """Fruit / vegetable / nut words of the raw-ingredient DB rows (딸기, 한라봉, 땅콩): on a
+    flavoured product they name the flavour, not a piece of the product."""
+    words: set[str] = set()
+    if GENERIC_FOOD_CSV.exists():
+        with GENERIC_FOOD_CSV.open(encoding="utf-8-sig") as handle:
+            for row in csv.DictReader(handle):
+                if not (row.get("data_type") or "").startswith("원재료"):
+                    continue
+                if (row.get("major_category") or "") not in _PRODUCE_CATEGORIES:
+                    continue
+                name = re.sub(r"\([^)]*\)", " ", row.get("name") or "")
+                for token in [row.get("rep_name") or ""] + name.split():
+                    word = _norm_key(token)
+                    if len(word) >= 2 and word not in _RAW_STATE_WORDS:
+                        words.add(word)
+    return frozenset(words)
 
 
 @lru_cache(maxsize=1)
@@ -317,6 +341,10 @@ def _indexed_grams(product: IndexedProduct, food_name: str, qty: float, unit: st
         # 교자 / 만두 / 초밥 have a known piece weight smaller than the package; "라면 1개 = 600 g"
         # is the cooked generic dish and must not scale a dry-weight product row.
         piece = food_unit_overrides(food_name).get("개")
+        # an ice-cream product named after its flavour is one cup / bar: "하겐다즈 미니컵 딸기 1개" is
+        # not one strawberry. A piece word that is the product itself (미니 아이스 마카롱) still counts.
+        if product.category_lv3 == "빙과류" and food_unit_override_key(food_name) in _produce_words():
+            piece = None
         # drinks are never counted in pieces: "덴마크 요구르트 딸기 하나" is a bottle, not a strawberry
         is_drink = product.category_lv3 in ("음료류", "유가공품류", "주류")
         use_piece = piece is not None and piece < product.unit_g and not is_drink

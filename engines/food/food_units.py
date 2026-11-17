@@ -296,13 +296,13 @@ def _food_key(food_name: str | None) -> str:
 _ONE_SYLLABLE_HEADS = frozenset({"떡", "전", "빵", "닭"})
 
 
-def food_unit_overrides(food_name: str | None) -> dict[str, float]:
-    """Return per-food unit overrides (exact name first, then head-noun suffix)."""
+def food_unit_override_key(food_name: str | None) -> str:
+    """The FOOD_UNIT_GRAMS key that supplies `food_name`'s overrides ("" when none)."""
     key = _food_key(food_name)
     if not key:
-        return {}
+        return ""
     if key in FOOD_UNIT_GRAMS:
-        return FOOD_UNIT_GRAMS[key]
+        return key
     # Korean head noun is the last element: "양념치킨" -> "치킨", "삶은계란" -> "계란".
     best = ""
     for candidate in FOOD_UNIT_GRAMS:
@@ -310,7 +310,12 @@ def food_unit_overrides(food_name: str | None) -> dict[str, float]:
         ok_len = len(candidate) >= 2 or candidate in _ONE_SYLLABLE_HEADS
         if ok_len and key.endswith(candidate) and len(candidate) > len(best):
             best = candidate
-    return FOOD_UNIT_GRAMS.get(best, {})
+    return best
+
+
+def food_unit_overrides(food_name: str | None) -> dict[str, float]:
+    """Return per-food unit overrides (exact name first, then head-noun suffix)."""
+    return FOOD_UNIT_GRAMS.get(food_unit_override_key(food_name), {})
 
 
 def is_countable_food(food_name: str | None) -> bool:

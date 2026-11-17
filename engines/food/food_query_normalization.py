@@ -52,7 +52,26 @@ ENGLISH_FOOD_WORDS: dict[str, str] = {
     "unsweetened": "무가당", "plain": "플레인", "greek": "그릭", "yogurt": "요거트", "banana": "바나나",
     "steak": "스테이크", "sweet": "", "pumpkin": "단호박", "cabbage": "양배추", "sprout": "새싹",
     "sprouts": "새싹", "cheese": "치즈", "sausage": "소시지", "ham": "햄", "dumpling": "만두", "dumplings": "만두",
+    # common café / western dish words and fruit / vegetable modifiers
+    "smoothie": "스무디", "smoothies": "스무디", "shake": "쉐이크", "juice": "주스", "pizza": "피자",
+    "pasta": "파스타", "spaghetti": "스파게티", "sandwich": "샌드위치", "burger": "버거", "toast": "토스트",
+    "waffle": "와플", "muffin": "머핀", "cookie": "쿠키", "cookies": "쿠키", "mango": "망고",
+    "strawberry": "딸기", "strawberries": "딸기", "blueberry": "블루베리", "chocolate": "초코",
+    "vanilla": "바닐라", "carrot": "당근", "carrots": "당근", "tomato": "토마토", "tomatoes": "토마토",
+    "apple": "사과", "grape": "포도", "lemon": "레몬", "peach": "복숭아", "onion": "양파", "corn": "옥수수",
+    "peanut": "땅콩", "walnut": "호두", "salmon": "연어", "tuna": "참치", "squid": "오징어",
+    "turkey": "칠면조", "duck": "오리", "americano": "아메리카노",
 }
+# Size / temperature words on a café order name the cup, not the drink ("venti cold brew",
+# "iced americano"). On anything but a drink they are part of the food ("hot chocolate", "small
+# pizza"), so a name that loses one is translated only when what remains is a drink.
+_ENGLISH_IGNORED_WORDS = frozenset({
+    "iced", "ice", "hot", "venti", "grande", "tall", "short", "large", "medium", "small", "regular",
+})
+_ENGLISH_DRINK_HEADS = frozenset({
+    "coffee", "latte", "americano", "tea", "smoothie", "smoothies", "shake", "juice", "cold brew",
+    "black coffee", "mocha", "espresso", "cappuccino",
+})
 ENGLISH_COOKING_SUFFIXES: dict[str, str] = {
     "braised": "조림", "stir-fried": "볶음", "stir-fry": "볶음", "stirfried": "볶음", "grilled": "구이",
     "steamed": "찜", "fried": "튀김", "seasoned": "무침", "pickled": "장아찌",
@@ -71,6 +90,10 @@ ENGLISH_FOOD_PHRASES: dict[str, str] = {
     "rice noodle": "쌀국수", "black coffee": "아메리카노", "black bean noodles": "짜장면",
     "bean sprouts": "콩나물", "soybean sprouts": "콩나물", "mung bean sprouts": "숙주나물",
     "fried chicken": "후라이드치킨", "seaweed soup": "미역국",
+    "cold brew": "콜드브루", "carrot cake": "당근케이크", "cheese cake": "치즈케이크",
+    "hot chocolate": "핫초코", "hot cocoa": "핫초코", "iced tea": "아이스티", "ice tea": "아이스티",
+    "ice cream": "아이스크림", "hot dog": "핫도그", "hotdog": "핫도그",
+    "raisin": "포도 말린것", "raisins": "포도 말린것", "pizza bread": "피자빵",
 }
 # Words that change what the word before them means when they head a compound (rice + cake,
 # banana + pancake, soy + milk, black + coffee): an unlisted compound ending in one is not
@@ -93,6 +116,7 @@ def translate_english_food_name(name: str | None) -> str | None:
         return ENGLISH_FOOD_PHRASES[text]
     prefix, suffix, body = "", "", []
     food_words: list[str] = []  # English food words translated one by one (not via a phrase)
+    dropped_size_word = False
     words = text.split()
     i = 0
     while i < len(words):
@@ -103,7 +127,9 @@ def translate_english_food_name(name: str | None) -> str | None:
             i += 2
             continue
         word = words[i]
-        if word in ENGLISH_COOKING_PREFIXES:
+        if word in _ENGLISH_IGNORED_WORDS:
+            dropped_size_word = True
+        elif word in ENGLISH_COOKING_PREFIXES:
             prefix = ENGLISH_COOKING_PREFIXES[word] + " "
         elif word in ENGLISH_COOKING_SUFFIXES:
             suffix = ENGLISH_COOKING_SUFFIXES[word]
@@ -118,6 +144,8 @@ def translate_english_food_name(name: str | None) -> str | None:
             return None  # rice cake / banana pancake / black bean noodles: not word-by-word compounds
     if suffix and food_words and food_words[-1] in _STAPLE_WORDS:
         return None
+    if dropped_size_word and not (food_words and food_words[-1] in _ENGLISH_DRINK_HEADS):
+        return None  # "small pizza", "hot chocolate milk": the size / temperature word mattered
     korean = "".join(body) + suffix
     return (prefix + korean).strip() if korean else None
 
@@ -341,7 +369,22 @@ def _dedupe_preserve_order(values: Iterable[str]) -> list[str]:
 
 
 def build_food_search_queries(query: str | None) -> list[str]:
-    """Build ordered vector retrieval queries for a food search input."""
+    """Build ordered vector retrieval queries for a food search input.
+
+    계란 and 달걀 name the same food but the DB mostly spells it 달걀 (달걀찜, 달걀국): a 계란
+    query the alias rules did not already rewrite (and that is not a protected golden name such as
+    계란빵) also retrieves with the 달걀 spelling, after its own queries.
+    """
+    queries = _build_food_search_queries(query)
+    if (query and "계란" in query and not any("달걀" in q for q in queries)
+            and not analyze_food_query_for_search(query).protected):
+        for alt in _build_food_search_queries(query.replace("계란", "달걀")):
+            if alt not in queries:
+                queries.append(alt)
+    return queries
+
+
+def _build_food_search_queries(query: str | None) -> list[str]:
     analysis = analyze_food_query_for_search(query)
     if not analysis.cleaned_query:
         return []

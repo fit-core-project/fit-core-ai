@@ -1,10 +1,13 @@
 """Deterministic food search reranking helpers."""
 from __future__ import annotations
 
+import csv
 import difflib
+import functools
 import re
 from dataclasses import dataclass
-from typing import Any
+from pathlib import Path
+from typing import Any, Optional
 
 from engines.food.food_query_normalization import FoodQueryAnalysis
 
@@ -233,6 +236,105 @@ def is_implausible_food_candidate(analysis: FoodQueryAnalysis, candidate: FoodSe
     """
     if analysis.protected:
         return False
+    if not _base_implausible(analysis, candidate):
+        return False
+    if _names_composite_variant(analysis, candidate) or _query_is_name_tail(analysis, candidate):
+        return False
+    return True
+
+
+# Size / temperature markers that trail a DB row name without naming a different food
+# ("커피 아메리카노 아이스 L", "피자 불고기 피자 R").
+_SIZE_MARKER_RE = re.compile(
+    r"^(?:핫|아이스|HOT|ICED|hot|iced|R|L|M|S|XL|EX|J|\d+(?:\.\d+)?(?:g|ml|개|조각|인분|리터|L)?|\d+인)$"
+)
+_NAME_WORD_SPLIT_RE = re.compile(r"[\s/,&·+]+")
+_FOOD_DB_CSV_PATH = Path(__file__).resolve().parents[2] / "data" / "food_db" / "food_db_clean.csv"
+
+
+def _name_words(name: str) -> list[str]:
+    """Row-name words without parentheticals, cooking-state words and size markers."""
+    stripped = _PAREN_RE.sub(" ", name or "")
+    state_words = set(_STATE_WORDS) | {"후라이"}
+    return [
+        w for w in _NAME_WORD_SPLIT_RE.split(stripped)
+        if w and w not in state_words and not _SIZE_MARKER_RE.match(w)
+    ]
+
+
+@dataclass(frozen=True)
+class _FoodNameVocab:
+    # last word of every non-composite (rep not a composite dish) prepared-food row
+    standalone_heads: frozenset
+    # every rep_name, compacted
+    rep_names: frozenset
+    # rep_names of raw-ingredient rows (달걀, 감자, 딸기): heads of descriptive compounds only
+    raw_rep_names: frozenset = frozenset()
+
+
+@functools.lru_cache(maxsize=1)
+def _food_name_vocab() -> Optional[_FoodNameVocab]:
+    """Vocabulary of the food DB used to tell a standalone food from a dish variant name."""
+    if not _FOOD_DB_CSV_PATH.exists():
+        return None
+    heads, reps, raw_reps = set(), set(), set()
+    with _FOOD_DB_CSV_PATH.open(encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            rep = _compact_food_text(_PAREN_RE.sub("", row.get("rep_name") or ""))
+            if (row.get("data_type") or "").startswith("원재료"):
+                raw_reps.add(rep)
+                continue
+            reps.add(rep)
+            words = _name_words(row.get("name") or "")
+            if words and rep not in _COMPOSITE_DISH_REPS:
+                heads.add(words[-1])
+    return _FoodNameVocab(standalone_heads=frozenset(heads), rep_names=frozenset(reps),
+                          raw_rep_names=frozenset(raw_reps))
+
+
+# English loanword heads of descriptive compounds, as the DB spells that food
+_LOANWORD_HEADS = {"에그": "달걀", "밀크": "우유"}
+
+
+def _names_composite_variant(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> bool:
+    """A one-word query that is a whole variant word of a composite-dish row and never a food on
+    its own: "브라우니" -> 케이크 브라우니, "휘낭시에" -> 머핀 휘낭시에. "치킨" -> 햄버거 치킨 stays
+    implausible because 치킨 heads standalone rows (닭튀김 ... 치킨)."""
+    vocab = _food_name_vocab()
+    query = analysis.normalized_query or ""
+    if vocab is None or len(_food_tokens(query)) != 1:
+        return False
+    q = _compact_food_text(query)
+    words = _name_words(get_food_candidate_name(candidate.document))
+    if q not in words[1:] or q in vocab.standalone_heads or q in vocab.rep_names:
+        return False
+    # a descriptive compound whose head noun is a food on its own (딸기우유, 감자베이컨,
+    # 생딸기요거트): it names that food, not a dessert / pizza variant
+    known = (vocab.standalone_heads, vocab.rep_names, vocab.raw_rep_names)
+    for i in range(1, len(q) - 1):
+        suffix = q[i:]
+        suffix = _LOANWORD_HEADS.get(suffix, suffix)  # 햄에그: 에그 is 달걀
+        if any(suffix in words_set for words_set in known):
+            return False
+    # a drink word (쉐이크) is not a variant of a smoothie / café row
+    if _is_drink_text(q):
+        return False
+    # "피자 감자베이컨 피자", "크로플 누텔라 크로플": a word followed by the row's category word
+    # again is that category's topping / flavour, not the item itself (케이크 브라우니)
+    return words[0] not in words[words.index(q) + 1:]
+
+
+def _query_is_name_tail(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> bool:
+    """A multi-word query that is the tail of the row name names that row:
+    "까르보나라 파스타" -> 스파게티 까르보나라 파스타, "토마토 주스" -> 과ㆍ채주스 토마토 주스."""
+    query_tokens = _food_tokens(analysis.normalized_query or "")
+    if len(query_tokens) < 2:
+        return False
+    words = _name_words(get_food_candidate_name(candidate.document))
+    return words[-len(query_tokens):] == query_tokens
+
+
+def _base_implausible(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> bool:
     if _names_only_the_modifier(analysis.normalized_query, candidate):
         return True
     if _canonical_match_score(analysis, candidate) > 0:
@@ -468,7 +570,48 @@ def _rerank_key(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> 
 _MODIFIER_PREFIXES = ("한우", "돼지", "국산", "수입", "수제", "소")
 
 
+_HANGUL_BASE = 0xAC00
+_HANGUL_COUNT = 11172
+
+
 def has_lexical_relation(query: str, name: str, rep_name: str = "") -> bool:
+    """`_direct_lexical_relation`, plus the 계란/달걀 synonym and one-vowel spelling variants
+    (배추젼 ~ 배추전, 현미쥭 ~ 현미죽, 멘보사 ~ 멘보샤, 깐쇼새오 ~ 깐쇼새우)."""
+    if _direct_lexical_relation(query, name, rep_name):
+        return True
+    q = _compact_food_text(query or "").replace("계란", "달걀")
+    if _direct_lexical_relation(q, (name or "").replace("계란", "달걀"), rep_name):
+        return True
+    if len(q) < 3:
+        return False
+    for word in [w for w in _food_tokens(name or "") if len(w) >= 3] + [_compact_food_text(name or "")]:
+        if _vowel_spelling_variant(q, word):
+            return True
+    return False
+
+
+def _vowel_spelling_variant(a: str, b: str) -> bool:
+    """Same syllables except one vowel (배추젼 ~ 배추전, 현미쥭 ~ 현미죽, 깐쇼새오 ~ 깐쇼새우).
+    A changed initial or final consonant changes the food (녹두죽 / 녹두묵, 미역죽 / 미역국,
+    칼국수 / 쌀국수, 새우깡 / 새우탕), so only a vowel may differ."""
+    if len(a) != len(b) or a == b:
+        return False
+    diffs = 0
+    for x, y in zip(a, b):
+        if x == y:
+            continue
+        ox, oy = ord(x) - _HANGUL_BASE, ord(y) - _HANGUL_BASE
+        if not (0 <= ox < _HANGUL_COUNT and 0 <= oy < _HANGUL_COUNT):
+            return False
+        same_initial = ox // 588 == oy // 588
+        same_final = ox % 28 == oy % 28
+        if not (same_initial and same_final):
+            return False
+        diffs += 1
+    return diffs == 1
+
+
+def _direct_lexical_relation(query: str, name: str, rep_name: str = "") -> bool:
     """Whether a DB row names the queried food at all, ignoring spaces.
 
     True when one contains the other ("양념치킨" ~ "닭튀김 양념 치킨", "저지방 우유" ~ "우유") or
