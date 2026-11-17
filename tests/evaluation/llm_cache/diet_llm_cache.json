@@ -9376,5 +9376,1337 @@
   "provider": "local",
   "model": "gemma4:latest",
   "raw_json": true
+ },
+ "어 오늘 PX에서 그 뭐냐 슈넬치킨 반 봉지랑 음 맛다시 한 숟갈 밥에 비벼 먹음": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"슈넬치킨\",\"amount\":1.0,\"unit\":\"봉지\",\"protein_g\":25.0,\"carbs_g\":0.0,\"fat_g\":10.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"맛다시\",\"amount\":1.0,\"unit\":\"숟갈\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":null,\"unit\":null,\"protein_g\":3.0,\"carbs_g\":55.0,\"fat_g\":1.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:24",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "음 점심 짬밥 김치볶음 조금 하고 어 콩나물국 아니 그 꽁치김치찌개 한 그릇 먹었습니다": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"짬밥\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"김치볶음\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"꽁치김치찌개\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":15.0,\"fat_g\":10.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:29",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "그 야간 근무 끝나고 어 건빵 한 주먹하고 별사탕 몇 개 먹었어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"건빵\",\"amount\":null,\"unit\":\"주먹\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"별사탕\",\"amount\":null,\"unit\":\"몇 개\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:31",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 그 김치큰사발 하나 음 뽀글이로 먹었고 그 국물까지 다": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"김치\",\"amount\":1.0,\"unit\":\"사발\",\"protein_g\":2.0,\"carbs_g\":5.0,\"fat_g\":0.5,\"meal_type\":null,\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:33",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "PX 핵불닭볶음면 1개 먹었는데 몇 칼로리임?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"PX 핵불닭볶음면\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":25.0,\"carbs_g\":38.0,\"fat_g\":10.0,\"meal_type\":null,\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:34",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "휴가 나와서 엄마가 해준 김치찜 한 접시랑 밥 두 공기 먹었는데 칼로리 얼마나 돼?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"김치찜\",\"amount\":1.0,\"unit\":\"접시\",\"protein_g\":25.0,\"carbs_g\":40.0,\"fat_g\":10.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":2.0,\"unit\":\"공기\",\"protein_g\":16.0,\"carbs_g\":80.0,\"fat_g\":2.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:36",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "PX에서 찰떡아이스 2개랑 옥동자 1개 먹었는데 이거 몇 칼로리야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"찰떡아이스\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"옥동자\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:38",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "외출 나가서 페퍼로니 피자 L 세 조각이랑 닥터페퍼 한 캔 먹었는데 계산 좀": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"페퍼로니 피자\",\"amount\":3.0,\"unit\":\"조각\",\"protein_g\":25.0,\"carbs_g\":45.0,\"fat_g\":18.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"닥터페퍼\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:41",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "당직 서면서 레드향 두 개 까먹었는데 칼로리 얼마나 돼?": {
+  "kind": "raw",
+  "payload": "{\"items\":[]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:41",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심 짬밥 고추장 불고기 1인분. 아 그리고 오이무침도 좀 먹음": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"짬밥\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"고추장 불고기\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"오이무침\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:44",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "슈넬치킨 한 봉 다 먹음... 아 아니다 동기랑 반 나눠먹었으니까 반": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"슈넬치킨\",\"amount\":0.5,\"unit\":\"봉\",\"protein_g\":35.0,\"carbs_g\":0.0,\"fat_g\":15.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:46",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁 김치전골 1인분 먹고 나서 아 맞다 PX 꿀꽈배기 한 봉도 먹었네": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"김치전골\",\"amount\":null,\"unit\":\"1인분\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":10.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"꿀꽈배기\",\"amount\":null,\"unit\":\"한 봉\",\"protein_g\":4.0,\"carbs_g\":50.0,\"fat_g\":15.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:48",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "새우탕 작은컵 하나 먹음. 아 그리고 거기에 밥 반공기 말아먹음": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"새우탕\",\"amount\":1.0,\"unit\":\"작은컵\",\"protein_g\":25.0,\"carbs_g\":15.0,\"fat_g\":8.0,\"meal_type\":\"null\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":0.5,\"unit\":\"공기\",\"protein_g\":3.5,\"carbs_g\":15.0,\"fat_g\":0.5,\"meal_type\":\"null\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:50",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#휴가첫끼 돌솥비빔밥 한 그릇 + 메밀전 1장 진짜 살 것 같다 🙏": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"돌솥비빔밥\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":40.0,\"fat_g\":8.0,\"meal_type\":\"null\",\"time_of_day\":null},{\"food_name\":\"메밀전\",\"amount\":1.0,\"unit\":\"장\",\"protein_g\":3.0,\"carbs_g\":5.0,\"fat_g\":6.0,\"meal_type\":\"null\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:52",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#PX털이 🛒 스윙칩 간장치킨맛 1봉 + 펩시 1캔 🔥": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"스윙칩 간장치킨맛\",\"amount\":1.0,\"unit\":\"봉\",\"protein_g\":0.0,\"carbs_g\":15.0,\"fat_g\":7.2,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"펩시\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":39.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:55",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#불침번 끝 🌙 신라면툼바 하나 끓여먹음 존맛탱": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"신라면\",\"amount\":1.0,\"unit\":\"봉지\",\"protein_g\":25.0,\"carbs_g\":48.0,\"fat_g\":9.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:56",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#외박 #치킨 🍗 후라이드 한 마리 둘이서 나눠먹고 펩시 한 캔 소대장님 몰래ㅋㅋ": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"후라이드 치킨\",\"amount\":1.0,\"unit\":\"마리\",\"protein_g\":50.0,\"carbs_g\":30.0,\"fat_g\":25.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"펩시\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:58",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "오늘 저녁 배식은 해물덮밥이었고 나는 한 그릇 반 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"해물덮밥\",\"amount\":1.5,\"unit\":\"그릇\",\"protein_g\":30.0,\"carbs_g\":45.0,\"fat_g\":8.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:07:59",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "훈련 끝나고 PX에서 마운틴듀 한 캔이랑 자갈치 한 봉지 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"마운틴듀\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":25.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"자갈치\",\"amount\":1.0,\"unit\":\"봉지\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:02",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "아침에 누룽지 한 그릇이랑 파김치 조금 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"누룽지\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":3.5,\"carbs_g\":68.0,\"fat_g\":2.0,\"meal_type\":\"breakfast\",\"time_of_day\":null},{\"food_name\":\"파김치\",\"amount\":null,\"unit\":null,\"protein_g\":1.0,\"carbs_g\":3.0,\"fat_g\":0.5,\"meal_type\":\"breakfast\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:04",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "주말 면회 때 여자친구가 싸 온 거봉 반 송이랑 마들렌 두 개를 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"거봉\",\"amount\":0.5,\"unit\":\"송이\",\"protein_g\":1.0,\"carbs_g\":20.0,\"fat_g\":0.2,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"마들렌\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":4.0,\"carbs_g\":60.0,\"fat_g\":15.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:06",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심) 짬밥 버섯전골1인분, 총각김치2개": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"버섯전골\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":35.0,\"carbs_g\":20.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"총각김치\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":1.0,\"carbs_g\":4.0,\"fat_g\":0.5,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:08",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "야식 짜슐랭1 맛다시x": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"짜슐랭1\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:10",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "간식 건빵+별사탕 조금, 닥터페퍼1캔": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"건빵\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"별사탕\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"닥터페퍼\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:13",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "휴가복귀 전 바지락칼국수1 + 김치만두3개": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"바지락칼국수\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":25.0,\"carbs_g\":45.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"김치만두\",\"amount\":3.0,\"unit\":\"개\",\"protein_g\":15.0,\"carbs_g\":25.0,\"fat_g\":9.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:15",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 신호 대기 중에 그 음 스니커즈 하나 먹었고 그 마운틴듀 말고 펩시 한 캔": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"스니커즈\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":2.5,\"carbs_g\":28.0,\"fat_g\":9.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"펩시\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":12.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:17",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "음 콜 끊겨서 편의점에서 열무비빔면 하나 그리고 어 삶은 계란 두 개": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"열무비빔면\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":25.0,\"carbs_g\":35.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"계란\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":12.6,\"carbs_g\":0.4,\"fat_g\":9.5,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:19",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "그 배달 끝나고 어 집 와서 어제 남은 페퍼로니 피자 두 조각 데워 먹음": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"페퍼로니 피자\",\"amount\":2.0,\"unit\":\"조각\",\"protein_g\":35.0,\"carbs_g\":40.0,\"fat_g\":18.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:21",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 그 오모리 김치찌개라면 컵으로 하나 먹었고 음 밥은 안 말았어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"김치찌개라면\",\"amount\":1.0,\"unit\":\"컵\",\"protein_g\":25.0,\"carbs_g\":40.0,\"fat_g\":8.0,\"meal_type\":\"null\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:22",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 콜 기다리다가 음 하리보 골드베렌 한 봉이랑 그 마운틴듀 반 캔": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"하리보 골드베렌\",\"amount\":1.0,\"unit\":\"봉지\",\"protein_g\":0.0,\"carbs_g\":25.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"마운틴듀\",\"amount\":0.5,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":15.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:24",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "배달하다가 조지아 고티카 빈티지 라떼 한 캔 마셨는데 이거 칼로리 높아?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"조지아 고티카 빈티지 라떼\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":2.5,\"carbs_g\":35.0,\"fat_g\":4.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:26",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "라이더 점심으로 김치큰사발 하나랑 공깃밥 반 공기 말아 먹으면 몇 kcal야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"김치\",\"amount\":1.0,\"unit\":\"큰사발\",\"protein_g\":2.0,\"carbs_g\":8.0,\"fat_g\":0.5,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"공깃밥\",\"amount\":0.5,\"unit\":\"공기\",\"protein_g\":3.5,\"carbs_g\":15.0,\"fat_g\":0.5,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:28",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "비 와서 쉬는 중에 치즈떡볶이 1인분이랑 물만두 반 접시 먹었는데 칼로리 계산해죠": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"치즈떡볶이\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":25.0,\"carbs_g\":40.0,\"fat_g\":10.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"물만두\",\"amount\":0.5,\"unit\":\"접시\",\"protein_g\":8.0,\"carbs_g\":12.0,\"fat_g\":4.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:30",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "새벽에 핵불닭 반 개랑 삶은 계란 하나 먹었는데 몇 칼로리야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"핵불닭\",\"amount\":0.5,\"unit\":\"개\",\"protein_g\":12.6,\"carbs_g\":37.5,\"fat_g\":8.4,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"삶은 계란\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":6.3,\"carbs_g\":0.2,\"fat_g\":5.5,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:32",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심 가자미구이 정식 먹음 가자미 한 마리랑 밥 한 공기. 아 그리고 반찬으로 파래무침도": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"가자미구이\",\"amount\":1.0,\"unit\":\"마리\",\"protein_g\":35.0,\"carbs_g\":0.0,\"fat_g\":4.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":1.0,\"unit\":\"공기\",\"protein_g\":2.7,\"carbs_g\":60.0,\"fat_g\":0.5,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"파래무침\",\"amount\":null,\"unit\":null,\"protein_g\":1.0,\"carbs_g\":3.0,\"fat_g\":0.2,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:35",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "편의점 찰떡아이스 하나 먹음 *정정: 두 개, 그리고 써니텐 포도 한 캔": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"찰떡아이스\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":15.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"써니텐 포도\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":25.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:38",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "써니텐 포도 한 캔 마심. 아 그리고 눈을감자도 한 봉": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"포도\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"눈을감자\",\"amount\":1.0,\"unit\":\"봉\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:40",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁은 낙곱새 1인분이랑 공기밥 하나. 아 볶음밥은 안 먹었고": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"낙곱새\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":35.0,\"carbs_g\":25.0,\"fat_g\":15.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"공기밥\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":3.0,\"carbs_g\":4.0,\"fat_g\":0.2,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:42",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#라이더일상 오늘 콜 폭발🔥 점심은 불고기덮밥 한 그릇 후딱": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"불고기덮밥\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":35.0,\"carbs_g\":60.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:44",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#편의점털이 Cheetos 1봉 + Dr Pepper 1캔 이 조합 미쳤다🤤": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"Cheetos\",\"amount\":1.0,\"unit\":\"봉\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"Dr Pepper\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:46",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#야간배달 끝 🌃 백순대 1인분 + 콜라 한 캔 포장해서": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"백순대\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":35.0,\"carbs_g\":20.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"콜라\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":39.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:48",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#비오는날 바지락칼국수 아니고 들깨칼국수 한 그릇 뜨끈 😌": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"들깨칼국수\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":60.0,\"fat_g\":8.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:50",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "배달 대기하면서 편의점 매일우유 커피맛 하나 마셨다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"매일우유 커피맛\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":3.4,\"carbs_g\":12.0,\"fat_g\":2.5,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:51",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "오늘 점심은 기사식당에서 고추장불고기 1인분에 밥 한 공기 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"고추장불고기\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":35.0,\"carbs_g\":45.0,\"fat_g\":12.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":1.0,\"unit\":\"공기\",\"protein_g\":3.0,\"carbs_g\":40.0,\"fat_g\":1.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:53",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "집에 와서 군고구마 두 개랑 열무김치 조금 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"군고구마\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":3.6,\"carbs_g\":14.8,\"fat_g\":0.4,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"열무김치\",\"amount\":null,\"unit\":null,\"protein_g\":0.2,\"carbs_g\":1.5,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:55",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "퇴근길에 옥동자 하나 먹고 집에 와서 꽁치김치찌개에 밥 반 공기 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"옥동자\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":25.0,\"carbs_g\":0.0,\"fat_g\":13.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"꽁치김치찌개\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":25.0,\"carbs_g\":20.0,\"fat_g\":10.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":0.5,\"unit\":\"공기\",\"protein_g\":8.0,\"carbs_g\":27.0,\"fat_g\":1.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:08:58",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심: 해물탕 1인분 / 밥1공기": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"해물탕\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":35.0,\"carbs_g\":20.0,\"fat_g\":15.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":1.0,\"unit\":\"공기\",\"protein_g\":3.0,\"carbs_g\":45.0,\"fat_g\":1.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:01",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "간식 포테토칩 먹태청양마요 1봉, 콜라x 물만": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"포테토칩\",\"amount\":1.0,\"unit\":\"봉\",\"protein_g\":2.5,\"carbs_g\":38.0,\"fat_g\":9.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:02",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "아침 X / 점심 김치만두5 / 저녁 울면1 먹엇음": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"김치만두\",\"amount\":5.0,\"unit\":null,\"protein_g\":25.0,\"carbs_g\":40.0,\"fat_g\":15.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"울면\",\"amount\":1.0,\"unit\":null,\"protein_g\":30.0,\"carbs_g\":50.0,\"fat_g\":10.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:04",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "야식 하겐다즈 미니컵 딸기1": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"하겐다즈 미니컵 딸기\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":3.5,\"carbs_g\":20.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:06",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 십 킬로 뛰고 와서 음 바나나 두 개랑 그 요거트스무디 한 잔 마셨어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"바나나\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":1.8,\"carbs_g\":54.0,\"fat_g\":1.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"요거트스무디\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":12.0,\"carbs_g\":20.0,\"fat_g\":5.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:08",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "음 하프 뛰기 전날이라 그 탄수 로딩으로 크림파스타 한 접시 그리고 어 마들렌 두 개": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"크림파스타\",\"amount\":1.0,\"unit\":\"접시\",\"protein_g\":35.0,\"carbs_g\":45.0,\"fat_g\":20.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"마들렌\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":1.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:10",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "그 대회 끝나고 어 뒷풀이로 후라이드 치킨 음 세 조각이랑 치즈떡볶이 조금 먹었어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"후라이드 치킨\",\"amount\":3.0,\"unit\":\"조각\",\"protein_g\":25.0,\"carbs_g\":10.0,\"fat_g\":15.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"치즈떡볶이\",\"amount\":null,\"unit\":null,\"protein_g\":3.0,\"carbs_g\":8.0,\"fat_g\":4.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:12",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 아침 조깅 전에 그 단감 하나랑 음 아메리카노 반 잔 마시고 뛰었어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"단감\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":0.5,\"carbs_g\":12.0,\"fat_g\":0.2,\"meal_type\":\"breakfast\",\"time_of_day\":null},{\"food_name\":\"아메리카노\",\"amount\":0.5,\"unit\":\"잔\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"breakfast\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:14",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "풀코스 완주하고 돌솥비빔밥 한 그릇이랑 레드향 하나 먹었는데 회복식으로 몇 칼로리 들어간 거야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"돌솥비빔밥\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":35.0,\"carbs_g\":45.0,\"fat_g\":12.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"레드향\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:17",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "러닝 끝나고 고구마라떼 톨사이즈 한 잔 마셨는데 칼로리 얼마나 돼?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"고구마라떼\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":3.5,\"carbs_g\":45.0,\"fat_g\":2.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:18",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "LSD 30km 뛰고 참치덮밥 곱빼기 먹었는데 이거 몇 칼로리야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"참치덮밥\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:20",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "인터벌 끝나고 천도복숭아 2개랑 우유 한 팩 먹었는데 칼로리 얼마?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"천도복숭아\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":0.3,\"carbs_g\":15.0,\"fat_g\":0.4,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"우유\",\"amount\":1.0,\"unit\":\"팩\",\"protein_g\":2.8,\"carbs_g\":16.0,\"fat_g\":3.5,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:22",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "회복식으로 연포탕 1인분 먹었음. 아 공기밥도 반 공기 추가": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"연포탕\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"공기밥\",\"amount\":0.5,\"unit\":\"공기\",\"protein_g\":1.5,\"carbs_g\":20.0,\"fat_g\":0.3,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:24",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "아침 protein 보충으로 삶은 계란 3개랑 우유 한 컵. 아 계란은 2개였네": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"삶은 계란\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":12.6,\"carbs_g\":0.4,\"fat_g\":9.5,\"meal_type\":\"breakfast\",\"time_of_day\":null},{\"food_name\":\"우유\",\"amount\":1.0,\"unit\":\"컵\",\"protein_g\":8.0,\"carbs_g\":17.0,\"fat_g\":3.2,\"meal_type\":\"breakfast\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:26",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁 바지락칼국수 한 그릇. 아 그리고 겉절이 대신 부추무침 조금": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"바지락칼국수\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":45.0,\"fat_g\":8.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"부추무침\",\"amount\":null,\"unit\":null,\"protein_g\":1.0,\"carbs_g\":3.0,\"fat_g\":0.2,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:29",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "레이스 전 에너지 보충 브라우니 한 조각. 아 그리고 아샷추 한 잔도": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"브라우니\",\"amount\":1.0,\"unit\":\"조각\",\"protein_g\":2.5,\"carbs_g\":45.0,\"fat_g\":10.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"아샷추\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":0.0,\"carbs_g\":20.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:31",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#러닝크루 #뒷풀이 🍕 페퍼로니 피자 2조각 + 펩시 반 캔 🏃‍♀️": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"페퍼로니 피자\",\"amount\":2.0,\"unit\":\"조각\",\"protein_g\":35.0,\"carbs_g\":40.0,\"fat_g\":18.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"펩시\",\"amount\":0.5,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":12.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:33",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#오운완 🏃 10K 완주 기념 mango smoothie 한 잔 🥭": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"mango smoothie\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":1.0,\"carbs_g\":30.0,\"fat_g\":2.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:34",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#carbloading 🍝 toowoomba pasta 1인분 싹싹 비움": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"toowoomba pasta\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":null,\"carbs_g\":null,\"fat_g\":null,\"meal_type\":\"null\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:36",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#회복식 🥣 누룽지 한 그릇 + 열무김치 조금": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"누룽지\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":2.0,\"carbs_g\":65.0,\"fat_g\":0.5,\"meal_type\":\"null\",\"time_of_day\":null},{\"food_name\":\"열무김치\",\"amount\":1.0,\"unit\":\"조금\",\"protein_g\":0.5,\"carbs_g\":3.0,\"fat_g\":0.1,\"meal_type\":\"null\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:38",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "오늘 아침은 군고구마 하나랑 아메리카노 한 잔으로 때웠다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"군고구마\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":2.3,\"carbs_g\":45.0,\"fat_g\":0.5,\"meal_type\":\"breakfast\",\"time_of_day\":null},{\"food_name\":\"아메리카노\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":0.3,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"breakfast\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:40",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심에는 메밀전 한 장이랑 모밀국수 한 그릇을 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"메밀전\",\"amount\":1.0,\"unit\":\"장\",\"protein_g\":2.5,\"carbs_g\":3.0,\"fat_g\":6.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"모밀국수\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":8.0,\"carbs_g\":45.0,\"fat_g\":2.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:42",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "러닝 후에 청포도에이드 한 잔을 마셨다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"청포도에이드\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":0.0,\"carbs_g\":25.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:44",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁은 닭가슴살 대신 가자미구이 반 마리를 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"가자미구이\",\"amount\":0.5,\"unit\":\"마리\",\"protein_g\":28.0,\"carbs_g\":0.0,\"fat_g\":4.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:45",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "운동후 바나나1 + 휘낭시애1": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"바나나\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":1.0,\"carbs_g\":27.0,\"fat_g\":0.5,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"휘낭시애\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":3.0,\"carbs_g\":40.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:47",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심 김치전골1인분, 밥 2/3공기": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"김치전골\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":10.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":0.67,\"unit\":\"공기\",\"protein_g\":11.0,\"carbs_g\":29.0,\"fat_g\":1.5,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:50",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "대회날 아침: 거봉 10알, 아메리카노": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"거봉\",\"amount\":10.0,\"unit\":\"알\",\"protein_g\":0.5,\"carbs_g\":12.0,\"fat_g\":0.2,\"meal_type\":\"breakfast\",\"time_of_day\":null},{\"food_name\":\"아메리카노\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"breakfast\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:52",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "보충 요거트스무디1잔 / 삶은계란1": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"보충 요거트스무디\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":8.0,\"carbs_g\":15.0,\"fat_g\":4.0,\"meal_type\":\"null\",\"time_of_day\":null},{\"food_name\":\"삶은계란\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":6.3,\"carbs_g\":0.0,\"fat_g\":5.5,\"meal_type\":\"null\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:54",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 오늘 데이트하면서 음 당근케이크 한 조각을 둘이 나눠 먹었고 그 토피넛라떼 한 잔 마셨어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"당근케이크\",\"amount\":null,\"unit\":\"조각\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"토피넛라떼\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":2.5,\"carbs_g\":35.0,\"fat_g\":4.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:56",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "음 남자친구랑 그 해물탕 중자 하나 시켜서 반씩 먹었어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"해물탕\",\"amount\":1.0,\"unit\":\"중자\",\"protein_g\":35.0,\"carbs_g\":20.0,\"fat_g\":15.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:58",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "그 영화 보면서 어 팝콘 말고 그 오감자 한 봉지 같이 먹었어 나는 한 삼분의 일": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"오감자\",\"amount\":0.33,\"unit\":\"봉지\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:09:59",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 여자친구가 만들어준 고추잡채 한 접시 음 나는 반 정도 먹었어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"고추잡채\",\"amount\":0.5,\"unit\":\"접시\",\"protein_g\":15.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"null\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:01",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "커플 세트로 치즈돈가스 하나랑 크림파스타 하나 시켜서 반반 나눠 먹었는데 나 몇 칼로리 먹은 거야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:01",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "여친이랑 투움바파스타 하나랑 레드벨벳 한 조각 나눠 먹었으면 내 몫은 몇 칼로리야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:02",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "남친이 사온 Ferrero 로쉐 3알 먹었는데 칼로리 높아?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"Ferrero 로쉐\",\"amount\":3.0,\"unit\":\"알\",\"protein_g\":1.5,\"carbs_g\":24.0,\"fat_g\":9.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:03",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "카페에서 휘낭시에 2개랑 아샷추 한 잔 먹었는데 계산해줄래?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"휘낭시에\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":14.0,\"carbs_g\":80.0,\"fat_g\":35.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"아샷추\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":2.0,\"carbs_g\":40.0,\"fat_g\":1.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:06",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심 둘이서 버섯전골 2인분 먹음. 아 볶음밥은 안 먹음": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"버섯전골\",\"amount\":2.0,\"unit\":\"인분\",\"protein_g\":35.0,\"carbs_g\":40.0,\"fat_g\":15.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:07",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "청포도에이드 한 잔이랑 마들렌 하나 먹음. 아 근데 에이드는 여친이 반 뺏어먹음": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"청포도에이드\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"마들렌\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":1.5,\"carbs_g\":25.0,\"fat_g\":10.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:09",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁 데이트 난자완스 시켜서 내가 1/3 먹음. 아 그리고 울면도 한 그릇": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"난자완스\",\"amount\":0.33,\"unit\":\"공기\",\"protein_g\":25.0,\"carbs_g\":40.0,\"fat_g\":10.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"울면\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":15.0,\"carbs_g\":30.0,\"fat_g\":5.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:11",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "쿠키 대신 브라우니 한 입만 먹음, 아 그리고 커피는 아메리카노": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"브라우니\",\"amount\":1.0,\"unit\":\"입\",\"protein_g\":2.5,\"carbs_g\":4.0,\"fat_g\":1.5,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"아메리카노\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":0.3,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:14",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#데이트 #성수카페 🍰 레드벨벳 케이크 한 조각 + 고구마라떼 ☕️ 행복💕": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"레드벨벳 케이크\",\"amount\":1.0,\"unit\":\"조각\",\"protein_g\":3.5,\"carbs_g\":45.0,\"fat_g\":12.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"고구마라떼\",\"amount\":1.0,\"unit\":\"\",\"protein_g\":4.0,\"carbs_g\":30.0,\"fat_g\":3.5,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:16",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#100일 🎉 돌솥비빔밥이랑 미나리전 하나 시켜서 나눠먹음 🥰 내 몫 반": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"돌솥비빔밥\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"미나리전\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:18",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#한강데이트 🌉 치토스 한 봉지 + 마운틴 듀 1캔 혼자 다 먹음ㅋㅋ": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"치토스\",\"amount\":1.0,\"unit\":\"봉지\",\"protein_g\":2.5,\"carbs_g\":38.0,\"fat_g\":14.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"마운틴 듀\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":25.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:20",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#집데이트 🍳 둘이 김치찜 해먹음 나는 한 그릇 + 오이무침 조금 😋": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"김치찜\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":35.0,\"fat_g\":8.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"오이무침\",\"amount\":null,\"unit\":null,\"protein_g\":1.0,\"carbs_g\":2.0,\"fat_g\":0.5,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:23",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "여자친구와 함께 들깨칼국수 두 그릇을 시켰고 나는 한 그릇을 다 먹었다. 그리고 메밀전 한 장을 나눠 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"들깨칼국수\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":40.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"메밀전\",\"amount\":1.0,\"unit\":\"장\",\"protein_g\":3.0,\"carbs_g\":5.0,\"fat_g\":6.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:25",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "남자친구가 사준 하겐다즈 미니컵 하나랑 페레로 로쉐 두 알을 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"하겐다즈 미니컵\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":2.0,\"carbs_g\":35.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"페레로 로쉐\",\"amount\":2.0,\"unit\":\"알\",\"protein_g\":1.0,\"carbs_g\":15.0,\"fat_g\":6.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:27",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "데이트 끝나고 편의점에서 빵빠레 초코바 하나씩 사 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"빵빠레 초코바\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":25.0,\"carbs_g\":45.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:29",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "둘이서 골뱅이무침 한 접시를 안주로 반씩 나눠 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"골뱅이무침\",\"amount\":null,\"unit\":\"접시\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:30",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "데이트) 바지락칼국수1 + 물만두 반접시": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"바지락칼국수\",\"amount\":1.0,\"unit\":null,\"protein_g\":25.0,\"carbs_g\":40.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"물만두\",\"amount\":1.0,\"unit\":\"반접시\",\"protein_g\":10.0,\"carbs_g\":25.0,\"fat_g\":5.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:32",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "카페: 당근케이크1조각(혼자), 아메리카노": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"당근케이크\",\"amount\":1.0,\"unit\":\"조각\",\"protein_g\":2.5,\"carbs_g\":45.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"아메리카노\",\"amount\":null,\"unit\":null,\"protein_g\":0.1,\"carbs_g\":3.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:34",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "디저트 휘낭시에 1/2개, 토피넛라떼 1잔": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"휘낭시에\",\"amount\":0.5,\"unit\":\"개\",\"protein_g\":3.0,\"carbs_g\":40.0,\"fat_g\":15.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"토피넛라떼\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":8.0,\"carbs_g\":25.0,\"fat_g\":4.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:37",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "야식 둘이 낙곱새 2인분 → 나 1인분": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"낙곱새\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":35.0,\"carbs_g\":40.0,\"fat_g\":15.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:38",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "데이트 간식: waffle 1 반띵, 청포도에이드1잔(혼자)": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"waffle\",\"amount\":0.5,\"unit\":\"개\",\"protein_g\":2.0,\"carbs_g\":30.0,\"fat_g\":1.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"청포도에이드\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":0.0,\"carbs_g\":25.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:40",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 마감 끝나고 음 배달로 유산슬덮밥 시켜서 한 그릇 다 먹었어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"유산슬덮밥\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":35.0,\"carbs_g\":45.0,\"fat_g\":12.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:42",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "음 그 오전에 작업하면서 고구마라떼 아니 토피넛 라떼 한 잔 마셨고 어 마들렌 하나": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"토피넛 라떼\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":5.0,\"carbs_g\":25.0,\"fat_g\":4.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"마들렌\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":1.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:44",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 어제 시켜 먹고 남은 고추장불고기 한 반 인분 정도 데워 먹었어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"고추장불고기\",\"amount\":0.5,\"unit\":\"인분\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":10.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:45",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "그 점심으로 어 냉장고에 있던 애호박볶음이랑 음 김치볶음 조금에 밥 한 공기": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"애호박볶음\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"김치볶음\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":1.0,\"unit\":\"공기\",\"protein_g\":3.0,\"carbs_g\":26.0,\"fat_g\":0.5,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:48",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "재택하면서 에이스 반 곽 먹었는데 이거 몇 칼로리야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:49",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심에 잡탕밥 한 그릇 먹고 저녁에 군만두 아니 김치만두 4개 먹었는데 하루 총 몇 kcal야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"잡탕밥\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":60.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"김치만두\",\"amount\":4.0,\"unit\":\"개\",\"protein_g\":18.0,\"carbs_g\":35.0,\"fat_g\":12.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:51",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "작업하면서 꿀꽈베기 한 봉지 반 먹었는데 칼로리 얼마나 돼?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"꿀꽈베기\",\"amount\":1.5,\"unit\":\"봉지\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:53",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "아침 겸 점심으로 브런치 카페에서 yogurt smoothie 한 잔이랑 carrot cake 한 조각 먹었는데 칼로리 계산해줘": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"yogurt smoothie\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":5.0,\"carbs_g\":20.0,\"fat_g\":3.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"carrot cake\",\"amount\":1.0,\"unit\":\"조각\",\"protein_g\":4.0,\"carbs_g\":50.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:55",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁 고추잡채 1인분에 밥 반공기. 아 꽃빵은 안 먹었어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"고추잡채\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":0.5,\"unit\":\"공기\",\"protein_g\":10.0,\"carbs_g\":170.0,\"fat_g\":2.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:57",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "americano 2잔 마심. 아 그리고 오후에 아샷추 한 잔 더": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"americano\",\"amount\":2.0,\"unit\":\"잔\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":null,\"time_of_day\":null},{\"food_name\":\"아샷추\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":null,\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:10:59",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심 김치찜 남은 거 한 그릇 먹음. 아 그리고 두릅무침도 조금": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"김치찜\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"두릅무침\",\"amount\":1.0,\"unit\":\"조금\",\"protein_g\":2.0,\"carbs_g\":4.0,\"fat_g\":1.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:01",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "간식 스니커즈 한 개. 아 정정 반 개만": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"스니커즈\",\"amount\":0.5,\"unit\":\"개\",\"protein_g\":1.0,\"carbs_g\":20.0,\"fat_g\":0.5,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:03",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#재택러 #점심 🍲 버섯전골 1인분 + 참나물무침 조금 🌿": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"버섯전골\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"참나물무침\",\"amount\":null,\"unit\":null,\"protein_g\":1.0,\"carbs_g\":2.0,\"fat_g\":0.5,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:05",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#마감끝 🎉 투움바파스타 + 청포도에이드 셀프 보상🥂": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"투움바파스타\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":null,\"time_of_day\":null},{\"food_name\":\"청포도에이드\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":null,\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:07",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#홈카페 ☕ 토피넛라떼 직접 만들어봄 + 브라우니 1조각": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"토피넛라떼\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"브라우니\",\"amount\":1.0,\"unit\":\"조각\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:09",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#야식 🌙 물만두 15개 + 하이볼은 참음ㅠ": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"물만두\",\"amount\":15.0,\"unit\":\"개\",\"protein_g\":25.0,\"carbs_g\":36.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:11",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "오늘은 점심에 불낙전골 1인분을 먹고 밥은 반 공기만 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"불낙전골\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":35.0,\"carbs_g\":40.0,\"fat_g\":15.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":0.5,\"unit\":\"공기\",\"protein_g\":3.5,\"carbs_g\":15.0,\"fat_g\":0.5,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:13",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "오후에 출출해서 레드향 하나랑 우유 한 잔을 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"레드향\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":0.0,\"carbs_g\":20.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"우유\",\"amount\":1.0,\"unit\":\"잔\",\"protein_g\":3.4,\"carbs_g\":17.0,\"fat_g\":3.5,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:15",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁에는 크림파스타를 만들어서 한 접시 먹엇다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"크림파스타\",\"amount\":1.0,\"unit\":\"접시\",\"protein_g\":35.0,\"carbs_g\":45.0,\"fat_g\":20.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:16",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "자기 전에 찰떡아이스 하나를 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"찰떡아이스\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":3.5,\"carbs_g\":45.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:18",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심은 어제 남은 연포탕을 데워서 한 그릇 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"연포탕\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:19",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "아점: 누룽지1그릇, 무말랭이 약간, 삶은계란1": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"누룽지\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":2.5,\"carbs_g\":60.0,\"fat_g\":0.5,\"meal_type\":\"breakfast\",\"time_of_day\":null},{\"food_name\":\"무말랭이\",\"amount\":null,\"unit\":null,\"protein_g\":0.1,\"carbs_g\":2.0,\"fat_g\":0.0,\"meal_type\":\"breakfast\",\"time_of_day\":null},{\"food_name\":\"삶은계란\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":6.3,\"carbs_g\":0.4,\"fat_g\":5.5,\"meal_type\":\"breakfast\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:22",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "간식) 하리보 반봉": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"하리보\",\"amount\":null,\"unit\":\"반봉\",\"protein_g\":0.0,\"carbs_g\":15.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:24",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁 메밀전1, 막걸리x": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"메밀전\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":35.0,\"carbs_g\":40.0,\"fat_g\":12.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:25",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "야식 오징어채볶음 조금 + 밥 1/2공기": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"오징어채볶음\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":0.5,\"unit\":\"공기\",\"protein_g\":12.6,\"carbs_g\":180.0,\"fat_g\":3.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:27",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 가게 문 열기 전에 음 그 시장에서 산 꽈리고추멸치볶음이랑 콩자반 말고 그냥 그거랑 밥 한 공기": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"꽈리고추멸치볶음\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":null,\"time_of_day\":null},{\"food_name\":\"콩자반\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":null,\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":1.0,\"unit\":\"공기\",\"protein_g\":3.0,\"carbs_g\":26.0,\"fat_g\":0.8,\"meal_type\":null,\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:30",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "음 손님 없을 때 어 컵라면 새우탕 작은 거 하나 먹었어": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"컵라면 새우탕\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":25.0,\"carbs_g\":35.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:32",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "그 점심 배달로 음 백순대 한 이인분 시켜서 어 알바생이랑 반 나눠 먹고 써니텐 한 캔": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"백순대\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":35.0,\"carbs_g\":20.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"써니텐\",\"amount\":1.0,\"unit\":\"캔\",\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":null,\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:34",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "어 마감하고 그 포장마차에서 와플 하나 먹었어 음 생크림 들어간 거 말고 그냥": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"와플\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":25.0,\"carbs_g\":40.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:35",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "가게에서 바빠서 짜슐랭 하나에 총각김치 몇 개 먹었는데 몇 칼로리야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"짜슐랭\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":25.0,\"carbs_g\":40.0,\"fat_g\":8.0,\"meal_type\":null,\"time_of_day\":null},{\"food_name\":\"총각김치\",\"amount\":null,\"unit\":null,\"protein_g\":1.0,\"carbs_g\":5.0,\"fat_g\":0.2,\"meal_type\":null,\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:37",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "반찬가게에서 도토리묵무침 한 팩 사서 반 먹었는데 칼로리 얼마나 될까?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"도토리묵무침\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":null,\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:38",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "시장 칼국수집에서 들깨칼국수 한 그릇 먹고 김치만두 2개 먹으면 칼로리 얼마야?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"들깨칼국수\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":35.0,\"carbs_g\":60.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"김치만두\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":14.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:41",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "단골이 준 단감 2개랑 거봉 반 송이 먹었는데 칼로리?": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"단감\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":0.5,\"carbs_g\":10.0,\"fat_g\":0.2,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"거봉\",\"amount\":0.5,\"unit\":\"송이\",\"protein_g\":0.3,\"carbs_g\":6.0,\"fat_g\":0.1,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:43",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심 유산슬 조금이랑 밥 한 공기. 아 짬뽕 국물도 몇 숟갈 먹었는데 그건 빼줘": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"유산슬\",\"amount\":null,\"unit\":null,\"protein_g\":0.0,\"carbs_g\":0.0,\"fat_g\":0.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"밥\",\"amount\":1.0,\"unit\":\"공기\",\"protein_g\":3.0,\"carbs_g\":260.0,\"fat_g\":1.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:45",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "옆 가게 사장님이랑 해물파전 아니고 미나리전 한 장 나눠 먹음": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"미나리전\",\"amount\":1.0,\"unit\":\"장\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":10.0,\"meal_type\":null,\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:46",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "매일우유 커피맛 하나 마심. 아 그리고 마들렌 하나도": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"매일우유 커피맛\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":2.5,\"carbs_g\":25.0,\"fat_g\":3.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"마들렌\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":1.0,\"carbs_g\":20.0,\"fat_g\":5.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:49",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁은 김치전골. 아 가게 끝나고 혼자라 1인분만 했음": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"김치전골\",\"amount\":1.0,\"unit\":\"인분\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":10.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:50",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#자영업자 #점심 🍱 오늘은 가자미구이 한 마리 + 청포묵무침 🌿 맛있당": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"가자미구이\",\"amount\":1.0,\"unit\":\"마리\",\"protein_g\":25.0,\"carbs_g\":0.0,\"fat_g\":4.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"청포묵무침\",\"amount\":null,\"unit\":null,\"protein_g\":1.0,\"carbs_g\":5.0,\"fat_g\":0.2,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:52",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#장사끝 🏪 혼술 안주로 골뱅이무침 반 접시 + 눈을감자 1봉 😋": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"골뱅이무침\",\"amount\":null,\"unit\":\"반 접시\",\"protein_g\":25.0,\"carbs_g\":15.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"눈을감자\",\"amount\":1.0,\"unit\":\"봉\",\"protein_g\":0.0,\"carbs_g\":20.0,\"fat_g\":0.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:55",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#가게일상 😅 바빠서 점심 거르고 오후 4시에 잡탕밥 한 그릇 🔥": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"잡탕밥\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":60.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:56",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "#시장투어 🧆 물만두 한 접시 + 군고구마 1개 🍠": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"물만두\",\"amount\":null,\"unit\":\"한 접시\",\"protein_g\":25.0,\"carbs_g\":35.0,\"fat_g\":8.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"군고구마\",\"amount\":1.0,\"unit\":\"개\",\"protein_g\":1.5,\"carbs_g\":25.0,\"fat_g\":0.3,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:11:58",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "가게 문 닫고 집에 와서 콩나물국 대신 꽁치김치찌개 한 그릇을 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"꽁치김치찌개\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":35.0,\"carbs_g\":20.0,\"fat_g\":15.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:12:00",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심은 시장에서 파는 치즈떡볶이 한 컵이었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"치즈떡볶이\",\"amount\":1.0,\"unit\":\"컵\",\"protein_g\":15.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:12:01",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "손님이 사 온 옥동자 두 개를 먹었다.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"옥동자\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":15.0,\"carbs_g\":0.0,\"fat_g\":3.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:12:02",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁으로 모밀국수 한 그릇과 김치만두 세 개를 먹었따.": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"모밀국수\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":45.0,\"fat_g\":8.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"김치만두\",\"amount\":3.0,\"unit\":\"개\",\"protein_g\":15.0,\"carbs_g\":25.0,\"fat_g\":9.0,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:12:04",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "아침 x / 점심 해물덮밥 반그릇 / 간식 자갈치 반봉": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"해물덮밥\",\"amount\":null,\"unit\":\"반그릇\",\"protein_g\":25.0,\"carbs_g\":35.0,\"fat_g\":8.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"자갈치\",\"amount\":null,\"unit\":\"반봉\",\"protein_g\":15.0,\"carbs_g\":20.0,\"fat_g\":5.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:12:07",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "점심 돌솥비빔밥1 (계란x) + 파김치": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"돌솥비빔밥\",\"amount\":1.0,\"unit\":\"\",\"protein_g\":35.0,\"carbs_g\":60.0,\"fat_g\":12.0,\"meal_type\":\"lunch\",\"time_of_day\":null},{\"food_name\":\"파김치\",\"amount\":null,\"unit\":null,\"protein_g\":1.0,\"carbs_g\":3.0,\"fat_g\":0.5,\"meal_type\":\"lunch\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:12:09",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "간식 빵빠레 초코바 2, 매일우유 커피맛1": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"빵빠레 초코바\",\"amount\":2.0,\"unit\":\"개\",\"protein_g\":35.0,\"carbs_g\":60.0,\"fat_g\":15.0,\"meal_type\":\"snack\",\"time_of_day\":null},{\"food_name\":\"매일우유 커피맛\",\"amount\":1.0,\"unit\":\"팩\",\"protein_g\":2.0,\"carbs_g\":18.0,\"fat_g\":3.0,\"meal_type\":\"snack\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:12:11",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
+ },
+ "저녁 버섯전골 남은거 1그릇 + 파래무침": {
+  "kind": "raw",
+  "payload": "{\"items\":[{\"food_name\":\"버섯전골\",\"amount\":1.0,\"unit\":\"그릇\",\"protein_g\":25.0,\"carbs_g\":30.0,\"fat_g\":8.0,\"meal_type\":\"dinner\",\"time_of_day\":null},{\"food_name\":\"파래무침\",\"amount\":null,\"unit\":null,\"protein_g\":4.0,\"carbs_g\":6.0,\"fat_g\":1.5,\"meal_type\":\"dinner\",\"time_of_day\":null}]}",
+  "prompt_hash": "f6831227f34d",
+  "ts": "2026-11-17T17:12:13",
+  "provider": "local",
+  "model": "gemma4:latest",
+  "raw_json": true
  }
 }
