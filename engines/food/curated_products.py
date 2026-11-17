@@ -29,6 +29,9 @@ _PIECE_UNITS = {"", "개", "인분", "판"}
 _PLAIN_MARKERS = ("오리지널", "original", "클래식", "classic", "플레인", "plain", "고소한맛", "기본", "순한맛")
 _MAX_BRAND_PREFIX = 4
 _BULK_PACK_G = 2000.0
+_PLACEHOLDER_SERVING_G = 100.0
+_DRINK_CATEGORIES = ("음료류", "유가공품류", "주류")
+_GLASS_UNITS = {"잔", "컵"}
 _MAX_VARIANT_SUFFIX = 6
 _PACKAGED_CATEGORIES = {
     "과자류·빵류 또는 떡류", "음료류", "코코아가공품류 또는 초콜릿류", "면류", "유가공품류",
@@ -268,7 +271,7 @@ def find_processed_product(food_name: Optional[str], allow_single_line: bool = T
     # Company root, first two syllables: 롯데제과 / 롯데웰푸드 (renamed) are one maker.
     makers = [p.maker_root[:2] for p in family if p.maker_root]
     if makers:
-        top = max(set(makers), key=makers.count)
+        top = max(sorted(set(makers)), key=makers.count)  # sorted: ties must not depend on the hash seed
         if makers.count(top) / len(makers) < 0.5:
             return None
         family = [p for p in family if p.maker_root[:2] == top] or family
@@ -280,7 +283,9 @@ def _single_serve_package(product: IndexedProduct) -> Optional[float]:
     serving (아침햇살 50|180 ml, 200 ml serving -> 180; 포스틱 84|156 g, 30 g serving -> 84).
     A 50 ml sample or a multi-pack is not "하나"."""
     serving = product.serving_g
-    if serving <= 0 or not product.package_sizes:
+    # 0 and an exact 100 g are placeholders in the MFDS label data, not a real label serving
+    # (누가바 serving "100" picked its 160 g multi-pack over the 63 g bar)
+    if serving <= 0 or serving == _PLACEHOLDER_SERVING_G or not product.package_sizes:
         return None
     fits = [s for s in product.package_sizes if 0.8 * serving <= s <= 4.0 * serving]
     return min(fits) if fits else None
@@ -305,6 +310,9 @@ def _indexed_grams(product: IndexedProduct, food_name: str, qty: float, unit: st
             if product.category_lv3 == "면류" and size > 2.5 * product.unit_g:
                 size = product.unit_g
         return qty * size
+    if unit in _GLASS_UNITS and product.category_lv3 in _DRINK_CATEGORIES:
+        # "쏘굿 아몬드 언스위트 1잔": one serving of the bottled drink (its single-serve package)
+        return qty * (_single_serve_package(product) or product.unit_g)
     if unit in _PIECE_UNITS:
         # 교자 / 만두 / 초밥 have a known piece weight smaller than the package; "라면 1개 = 600 g"
         # is the cooked generic dish and must not scale a dry-weight product row.
@@ -374,3 +382,60 @@ def product_nutrition(food_name: Optional[str], amount, unit: Optional[str],
         "kcal": round(product.kcal * factor, 1),
         "matched_product": product.name,
     }
+
+
+_FAMILY_MIN_ROWS = 3
+_FAMILY_MAX_UNIT_G = 1000.0
+
+
+@lru_cache(maxsize=512)
+def _family_rows(key: str) -> tuple[IndexedProduct, ...]:
+    """Processed-index rows that name this food: the exact key, else the product line (keys
+    starting / ending with it), else every key containing it (at least three rows)."""
+    index = _processed_index()
+    if not index or len(key) < 2:
+        return ()
+    if key in index:
+        return (index[key],)
+    line = [p for k, p in index.items()
+            if (k.startswith(key) and len(k) - len(key) <= _MAX_VARIANT_SUFFIX)
+            or (k.endswith(key) and len(k) - len(key) <= _MAX_BRAND_PREFIX)]
+    if len(line) >= 2:
+        return tuple(line)
+    if len(key) >= 3:
+        contained = [p for k, p in index.items() if key in k]
+        if len(contained) >= _FAMILY_MIN_ROWS:
+            return tuple(contained)
+    return ()
+
+
+def _median(values: list[float]) -> float:
+    values = sorted(values)
+    mid = len(values) // 2
+    return values[mid] if len(values) % 2 else (values[mid - 1] + values[mid]) / 2.0
+
+
+def product_family_density(food_name: Optional[str]) -> Optional[dict]:
+    """Median per-100 g label values (and median unit weight) of the processed-index rows that
+    name `food_name` (exact key, product line, or keys containing it). Used only when the LLM's
+    own estimate is implausible; None when the index is absent or nothing names the food."""
+    key = _norm_key(food_name or "")
+    if key:
+        rows = _family_rows(key)
+        if not rows:
+            return None
+        kcals = [p.kcal_100 for p in rows]
+        median_kcal = _median(kcals)
+        # interquartile window: drop powders / dried mixes far from the line's typical density
+        kept = [p for p in rows if 0.5 * median_kcal <= p.kcal_100 <= 2.0 * median_kcal] or list(rows)
+        units = [p.unit_g for p in kept if 0 < p.unit_g <= _FAMILY_MAX_UNIT_G]
+        return {
+            "kcal_100": _median([p.kcal_100 for p in kept]),
+            "protein_100": _median([p.protein_100 for p in kept]),
+            "carbs_100": _median([p.carbs_100 for p in kept]),
+            "fat_100": _median([p.fat_100 for p in kept]),
+            "unit_g": _median(units) if units else None,
+            "rows": len(kept),
+            "key": key,
+        }
+    return None

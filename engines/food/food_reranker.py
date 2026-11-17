@@ -233,6 +233,8 @@ def is_implausible_food_candidate(analysis: FoodQueryAnalysis, candidate: FoodSe
     """
     if analysis.protected:
         return False
+    if _names_only_the_modifier(analysis.normalized_query, candidate):
+        return True
     if _canonical_match_score(analysis, candidate) > 0:
         return False
     queries = {q for q in (analysis.normalized_query, analysis.cleaned_query) if q}
@@ -247,6 +249,28 @@ def is_implausible_food_candidate(analysis: FoodQueryAnalysis, candidate: FoodSe
         if not any(_token_match_is_plausible(query, t, rep_name, data_type) for t in tokens):
             return True
     return False
+
+
+# Dish heads that make "<food><head>" a different dish from the food itself: 두부면 is noodles,
+# not tofu; 두부포케 a poke bowl. Cooking suffixes (구이, 볶음, 튀김 ...) are not here: 삼겹살구이
+# is still 삼겹살.
+_DISH_HEADS = frozenset({
+    "면", "국", "탕", "밥", "죽", "국수", "김밥", "빵", "떡", "찌개", "전골", "샐러드", "포케", "라떼",
+    "주스", "스무디", "국밥", "덮밥", "볶음밥", "버거", "피자", "케이크", "칩", "쿠키", "우유", "수프",
+    "스프", "짜장", "짬뽕", "파스타", "스파게티", "만두", "냉면", "라면", "쌈",
+})
+_STATE_WORDS = ("생것", "구운것", "삶은것", "찐것", "볶은것", "튀긴것", "말린것", "데친것")
+
+
+def _names_only_the_modifier(query: str, candidate: FoodSearchCandidate) -> bool:
+    """The row is the plain food that is only the modifier of the queried dish (두부면 -> 두부)."""
+    q = _compact_food_text(query or "")
+    name_words = [w for w in _PAREN_RE.sub(" ", get_food_candidate_name(candidate.document) or "").split()
+                  if w not in _STATE_WORDS]
+    name = "".join(name_words)
+    if len(name) < 2 or len(q) <= len(name) or not q.startswith(name):
+        return False
+    return q[len(name):] in _DISH_HEADS
 
 
 def _canonical_match_score(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> int:

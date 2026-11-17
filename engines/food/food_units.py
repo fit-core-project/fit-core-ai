@@ -23,6 +23,12 @@ _LITER_UNITS = {"l", "리터"}
 # Length sizes ("샌드위치 15cm", "30센치"): 15 cm is one standard piece, 30 cm two.
 _LENGTH_UNITS = {"cm", "센치", "센티", "센티미터"}
 _STANDARD_PIECE_CM = 15.0
+# A pot ("꽃게탕 1냄비", "나는 1/4"): a 탕/전골/찌개 pot is cooked for the table (about four
+# servings); any other dish in a pot (라면 한 냄비, 떡볶이 한 냄비) is one serving cooked in it.
+_VESSEL_UNITS = {"냄비", "전골냄비"}
+_SHARED_POT_SERVINGS = 4.0
+_SHARED_POT_DISH_RE = re.compile(r"(?:탕|전골|찌개|샤브샤브|국)$")
+_VESSEL_DEFAULT_SERVING_G = 400.0
 
 # Generic per-unit defaults (used when no per-food override exists).
 UNIT_DEFAULT_GRAMS: dict[str, float] = {
@@ -345,6 +351,9 @@ def resolve_portion_grams(food_name: str | None, amount, unit: str | None) -> fl
     if u in _LENGTH_UNITS:
         piece = unit_to_grams(food_name, "개") or 200.0
         return max(1.0, amount / _STANDARD_PIECE_CM) * piece
+    if u in _VESSEL_UNITS:
+        servings = _SHARED_POT_SERVINGS if _SHARED_POT_DISH_RE.search(_food_key(food_name)) else 1.0
+        return amount * servings * (serving_grams(food_name) or _VESSEL_DEFAULT_SERVING_G)
     if not u:
         # Bare count: "계란 2" -> 2 pieces, not 2 g.
         if is_countable_food(food_name):
@@ -411,3 +420,97 @@ def preferred_basis_unit(unit: str | None) -> str:
     if u in {"ml", "밀리리터", "cc", "l", "리터", "캔", "병", "잔"}:
         return "ml"
     return "g"
+
+
+# ---------- Category-level portion weights (the matched DB row's dish category) ----------
+# Side-dish values: MFDS 식품영양성분 DB 음식 rows, 식품중량 column, school/home-meal rows per
+# category (franchise rows and exact-100 g placeholders dropped), median rounded: 나물 50, 김치 51,
+# 생채·무침 70, 조림 80. 장아찌/젓갈/볶음 and the plate weights are estimated house values.
+# Per-dish MFDS weights are NOT used: they mix package sizes, school portions and servings.
+# A side dish logged with no amount (and no dish-suffix serving): one banchan portion.
+SIDE_DISH_SERVING_GRAMS: dict[str, float] = {
+    "나물·숙채류": 50.0, "김치류": 50.0, "생채·무침류": 70.0, "장아찌·절임류": 40.0,
+    "젓갈류": 20.0, "조림류": 80.0, "볶음류": 80.0,
+}
+_SIDE_DISH_MAX_PROTEIN = 8.0  # g/100 g: 멸치볶음/장조림-style protein dishes keep their basis
+# "한 접시" of a side dish / pan dish is a shared plate of that dish type, not the 300 g default.
+PLATE_GRAMS_BY_CATEGORY: dict[str, float] = {
+    "나물·숙채류": 100.0, "김치류": 100.0, "생채·무침류": 150.0, "조림류": 120.0, "볶음류": 120.0,
+    "전·적 및 부침류": 200.0, "찜류": 250.0, "구이류": 200.0,
+}
+_RICE_BOWL_G = 210.0
+_JJIM_SUFFIX_SERVING_G = SERVING_GRAMS_BY_SUFFIX["찜"]
+_JJIM_HOME_SERVING_G = 250.0
+_JEON_PIECE_G = 25.0
+_CUTLET_PIECE_G = 130.0  # "돈가스 한 장": one fried cutlet, not a 20 g sheet
+# only cutlets: 깻잎튀김 / 김부각 / 고추튀김 "장" are 10-20 g sheets
+_CUTLET_NAME_RE = re.compile(r"[가까]스|커틀릿|커틀렛|카츠|슈니첼")
+# 전 sold as a pan-sized pancake: 개 of these is one pancake (the 장 weight), not a 25 g bite
+_PANCAKE_JEON_RE = re.compile(r"파전|김치전|부추전|감자전|빈대떡|부침개|녹두전|장떡|배추전|메밀전|지짐|해물전")
+# "조기찜 한 마리", "임연수 구이 한 마리": one fish (edible part), not one 400 g dish serving.
+_FISH_PIECE_G = 120.0
+_FISH_DISH_CATEGORIES = frozenset({"구이류", "찜류", "조림류", "튀김류"})
+_NOT_FISH_RE = re.compile(r"닭|치킨|오리|칠면조|메추리|게|랍스터|가재|낙지|오징어|문어|주꾸미|쭈꾸미|새우|전복")
+_EGG_WORDS_RE = re.compile(r"달걀|계란|오믈렛")
+
+
+def _row_num(meta: dict, key: str) -> float:
+    try:
+        return float(meta.get(key) or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def category_portion_grams(meta: dict | None, food_name: str | None, amount, unit: str | None,
+                           grams: float | None, *, basis_fallback: bool = False,
+                           small_portion: bool = False) -> float | None:
+    """Portion grams from the matched dish row's MFDS category, or None to keep `grams`.
+
+    `grams` is what the name/unit tables resolved (the suffix serving when no amount was given);
+    `basis_fallback` says nothing resolved and the 100 g basis is in use. Rules (dish rows only):
+      - 공기 of a 밥류 row is one rice bowl (210 g), whatever the X밥 prefix.
+      - 접시 of a side/pan dish: category plate weight (vegetable 볶음 only; 잡채/마파두부 keep theirs).
+      - 찜 that fell to the generic 400 g 찜 serving (접시 or no unit): a 250 g home serving.
+      - 개 of a 전·적 row (호박전 2개): one small 25 g piece; egg rolls/omelettes excluded, and a
+        pancake-type 전 (김치전 / 파전 1개) is one pan-sized pancake (the 장 weight).
+      - 장 of a cutlet row (돈가스 / 생선가스 1장): one 130 g cutlet (other 튀김 sheets keep 장).
+      - a low-protein side dish with no amount and no serving hit: one banchan portion.
+    """
+    if not meta or (meta.get("data_type") or "") != "음식":
+        return None
+    category = meta.get("major_category") or ""
+    u = (unit or "").strip().lower()
+    try:
+        n = float(amount) if amount is not None else 1.0
+    except (TypeError, ValueError):
+        return None
+    protein = _row_num(meta, "protein_g")
+    kcal = _row_num(meta, "kcal")
+    if amount is None:
+        if basis_fallback and category in SIDE_DISH_SERVING_GRAMS and protein < _SIDE_DISH_MAX_PROTEIN:
+            return SIDE_DISH_SERVING_GRAMS[category]
+        if (category == "찜류" and not small_portion and grams is not None
+                and grams >= _JJIM_SUFFIX_SERVING_G - 1):
+            return _JJIM_HOME_SERVING_G
+        return None
+    if u == "공기" and category == "밥류":
+        return _RICE_BOWL_G * n
+    if u == "접시" and category in PLATE_GRAMS_BY_CATEGORY:
+        if category == "볶음류" and not (protein < 5.0 and kcal < 120.0):
+            return None
+        return PLATE_GRAMS_BY_CATEGORY[category] * n
+    if (category == "찜류" and u == "" and not small_portion and grams is not None
+            and grams >= _JJIM_SUFFIX_SERVING_G * n - 1):
+        return _JJIM_HOME_SERVING_G * n
+    row_and_query = (meta.get("name") or "") + " " + (food_name or "")
+    if (u == "개" and category == "전·적 및 부침류" and not _EGG_WORDS_RE.search(meta.get("name") or "")
+            and "개" not in FOOD_UNIT_GRAMS.get(_food_key(food_name), {})):
+        if _PANCAKE_JEON_RE.search(row_and_query):
+            return (unit_to_grams(food_name, "장") or PLATE_GRAMS_BY_CATEGORY[category]) * n
+        return _JEON_PIECE_G * n
+    if u == "장" and category == "튀김류" and _CUTLET_NAME_RE.search(row_and_query):
+        return _CUTLET_PIECE_G * n
+    if (u == "마리" and category in _FISH_DISH_CATEGORIES and "마리" not in food_unit_overrides(food_name)
+            and not _NOT_FISH_RE.search((meta.get("name") or "") + (food_name or ""))):
+        return _FISH_PIECE_G * n
+    return None

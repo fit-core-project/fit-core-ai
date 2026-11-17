@@ -28,6 +28,7 @@ from engines.food.food_units import (
     FOOD_UNIT_GRAMS,
     GRAM_UNITS,
     UNIT_DEFAULT_GRAMS,
+    category_portion_grams,
     preferred_basis_unit,
     resolve_portion_grams,
     serving_grams,
@@ -56,6 +57,12 @@ FOOD_CSV_PATH = PROJECT_ROOT / "data" / "food_db" / "food_db_clean.csv"
 LEXICAL_GUARD_SIMILARITY = 0.9
 LITERAL_HIT_SIMILARITY = 0.45
 _DISH_SERVING_G = 300.0
+_REORDERED_SOURCE_INDEX = -10
+
+
+def _compact_name(candidate) -> str:
+    return "".join(str((candidate.document.metadata or {}).get("name") or "").split())
+_DRIED_WORDS_RE = re.compile(r"말린|말랭이|건조|마른|육포|dried|dry|건면")
 
 
 def _protein_dense(meta: dict) -> bool:
@@ -396,6 +403,13 @@ class FoodSearchEngine:
         if index is None:
             return []
         candidates = []
+        reordered = index.lookup_reordered(analysis.normalized_query) if hasattr(index, "lookup_reordered") else None
+        if reordered is not None:
+            # "고구마돈가스" = DB row "돈가스 고구마" (grams still follow the user's name)
+            doc = reordered.to_document()
+            candidates.append(FoodSearchCandidate(
+                document=doc, vector_score=0.0, source_query=analysis.normalized_query,
+                source_query_index=_REORDERED_SOURCE_INDEX, original_rank=0, dedupe_key=build_food_candidate_dedupe_key(doc)))
         for lookup_index, query in enumerate(self._canonical_lookup_queries(analysis)):
             for original_rank, record in enumerate(index.lookup(query, limit=TOP_K)):
                 doc = record.to_document()
@@ -412,6 +426,30 @@ class FoodSearchEngine:
                 )
         return self._dedupe_candidates(candidates)
 
+    def _cooked_sibling(self, meta: dict, food_name: str) -> dict | None:
+        """A dried pulse / pasta row ("병아리콩 ... 말린것") for a food the user ate cooked: its
+        "말린것을 삶은 것" sibling row, unless the user said it was dried."""
+        name = meta.get("name") or ""
+        index = getattr(self, "_canonical_index", None)
+        if (index is None or not hasattr(index, "lookup_name") or not name.endswith("말린것")
+                or _DRIED_WORDS_RE.search(food_name or "")):
+            return None
+        siblings = [index.lookup_name(name + suffix) for suffix in ("을 삶은 것", "을 삶은것")]
+        # else the cooked row of a sibling variety (렌즈콩 … 갈색 말린것 -> 렌즈콩 … 빨간색 말린것을
+        # 삶은 것): same first word and word count, one word different
+        words = name.split()
+        for record in index.lookup(meta.get("rep_name"), limit=200):
+            m = re.match(r"^(.*말린것)을\s*삶은\s*것$", record.metadata.get("name") or "")
+            other = m.group(1).split() if m else []
+            if (len(other) == len(words) and other[0] == words[0]
+                    and sum(a != b for a, b in zip(other, words)) <= 1):
+                siblings.append(record)
+        sibling = next((s for s in siblings if s is not None), None)
+        if sibling is None:
+            return None
+        logger.info("[food_engine] dried row replaced by its cooked sibling")
+        return {**meta, **sibling.metadata}
+
     @classmethod
     def _dedupe_results(cls, result_groups):
         candidates = cls._collect_candidates(
@@ -423,7 +461,7 @@ class FoodSearchEngine:
             for candidate in candidates[:TOP_K]
         ]
 
-    def search(self, food_name: str, amount=None, unit=None) -> Optional[dict]:
+    def search(self, food_name: str, amount=None, unit=None, small_portion: bool = False) -> Optional[dict]:
         if not self.available or self._vector_store is None:
             return None
         analysis = analyze_food_query_for_search(food_name)
@@ -444,6 +482,10 @@ class FoodSearchEngine:
         vector_candidates = self._collect_candidates(result_groups, search_queries)
         candidates = self._dedupe_candidates(canonical_candidates + vector_candidates)
         candidates = rerank_food_candidates(analysis, candidates, final_k=FOOD_SEARCH_FINAL_K)
+        reordered = [c for c in canonical_candidates if c.source_query_index == _REORDERED_SOURCE_INDEX]
+        if reordered and not any(_compact_name(c) == "".join(analysis.normalized_query.split()) for c in candidates):
+            # the exact dish in MFDS word order beats the generic head row (돈가스 for 고구마돈가스)
+            candidates = reordered + [c for c in candidates if c.dedupe_key != reordered[0].dedupe_key]
         if not candidates:
             return None
         candidates = self._prefer_basis_unit(candidates, unit)
@@ -476,6 +518,7 @@ class FoodSearchEngine:
             return None
 
         meta = _median_density_row(meta_top, analysis.normalized_query) or (doc.metadata or {})
+        meta = self._cooked_sibling(meta, food_name) or meta
         protein = meta.get("protein_g")
         carbs = meta.get("carb_g")   # CSV 컬럼명은 carb_g (출력은 carbs_g)
         fat = meta.get("fat_g")
@@ -495,6 +538,16 @@ class FoodSearchEngine:
             # not the 200 g raw-meat 1인분
             grams = float(amount) * _DISH_SERVING_G
         serving = serving_grams(food_name) if amount is None else None
+        # the matched row's dish category refines blind table portions (공기 of any 밥류 row,
+        # 접시 of a side dish, 전 pieces, 찜 home servings, banchan with no amount)
+        category_grams = category_portion_grams(
+            meta, food_name, amount, unit, grams if amount is not None else serving,
+            basis_fallback=(grams is None and serving is None), small_portion=small_portion)
+        if category_grams is not None:
+            if amount is None:
+                serving = category_grams
+            else:
+                grams = category_grams
         if grams is None and serving is not None:
             # 수량 미기재 → 1인분 기준 ("된장찌개 먹었어" 는 100g 이 아니라 한 그릇)
             factor = serving / float(basis_value)

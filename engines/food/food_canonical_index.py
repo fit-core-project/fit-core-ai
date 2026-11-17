@@ -78,11 +78,51 @@ def _append_unique(target: list[FoodCanonicalRecord], record: FoodCanonicalRecor
     target.append(record)
 
 
+_PAREN_TEXT_RE = re.compile(r"\([^()]*\)")
+
+
+def _compact(value: str | None) -> str:
+    return "".join((value or "").split())
+
+
+def reordered_dish_key(name: str | None, rep_name: str | None) -> str:
+    """MFDS names dishes "<rep> <modifier>" ("돈가스 고구마", "비빔밥 멍게"); users write the
+    Korean compound "<modifier><rep>" (고구마돈가스). Key = compact(modifier) + compact(rep), or ""
+    when the row is not a two-word "<rep> <modifier>" name."""
+    words = _PAREN_TEXT_RE.sub(" ", name or "").split()
+    rep = _compact(rep_name)
+    if len(words) != 2 or not rep or words[0] != rep or len(words[1]) < 2:
+        return ""
+    return words[1] + rep
+
+
 class FoodCanonicalIndex:
     def __init__(self, records: list[FoodCanonicalRecord]):
         self.by_key: dict[str, list[FoodCanonicalRecord]] = {}
+        self.by_name: dict[str, FoodCanonicalRecord] = {}
+        reorder: dict[str, list[FoodCanonicalRecord]] = {}
         for record in records:
             self._add_record(record)
+            name = record.metadata.get("name") or ""
+            self.by_name.setdefault(name, record)
+            if (record.metadata.get("data_type") or "") == "음식":
+                key = reordered_dish_key(name, record.metadata.get("rep_name"))
+                if key:
+                    reorder.setdefault(key, []).append(record)
+        exact = {_compact(k) for k in self.by_key}
+        # a name word equal to the query ("라떼 바닐라라떼 핫" for 바닐라라떼) already names it
+        exact |= {w for r in records for w in _PAREN_TEXT_RE.sub(" ", r.metadata.get("name") or "").split()}
+        # unique, and never shadowing a row that already carries that compact name
+        self.reordered: dict[str, FoodCanonicalRecord] = {
+            key: rows[0] for key, rows in reorder.items()
+            if key not in exact and len({r.metadata.get("name") for r in rows}) == 1
+        }
+
+    def lookup_reordered(self, query: str | None) -> FoodCanonicalRecord | None:
+        return self.reordered.get(_compact(clean_food_index_key(query)))
+
+    def lookup_name(self, name: str | None) -> FoodCanonicalRecord | None:
+        return self.by_name.get(name or "")
 
     @classmethod
     def from_rows(cls, rows) -> "FoodCanonicalIndex":

@@ -38,6 +38,90 @@ PROTECTED_FOOD_SEARCH_QUERIES: set[str] = {
 }
 
 
+# English food words (the LLM sometimes keeps the user's English). Korean compounds are
+# head-final like English noun phrases, so "zucchini jeon" -> 애호박 + 전 = 애호박전. Cooking
+# adjectives become the Korean dish suffix ("braised lotus root" -> 연근조림).
+ENGLISH_FOOD_WORDS: dict[str, str] = {
+    "egg": "계란", "eggs": "계란", "rice": "밥", "bean": "콩", "beans": "콩", "soup": "국", "stew": "찌개",
+    "noodle": "국수", "noodles": "국수", "tofu": "두부", "salad": "샐러드", "chicken": "닭", "beef": "소고기",
+    "pork": "돼지고기", "milk": "우유", "almond": "아몬드", "oat": "귀리", "soy": "두유", "latte": "라떼",
+    "coffee": "커피", "zucchini": "애호박", "jeon": "전", "shrimp": "새우", "radish": "무", "kimchi": "김치",
+    "mushroom": "버섯", "mushrooms": "버섯", "potato": "감자", "potatoes": "감자", "spinach": "시금치",
+    "cucumber": "오이", "seaweed": "미역", "stem": "줄기", "spicy": "매운", "black": "검은", "tempeh": "템페",
+    "lotus": "연근", "root": "", "fish": "생선", "cake": "케이크", "bread": "빵", "pancake": "전",
+    "unsweetened": "무가당", "plain": "플레인", "greek": "그릭", "yogurt": "요거트", "banana": "바나나",
+    "steak": "스테이크", "sweet": "", "pumpkin": "단호박", "cabbage": "양배추", "sprout": "새싹",
+    "sprouts": "새싹", "cheese": "치즈", "sausage": "소시지", "ham": "햄", "dumpling": "만두", "dumplings": "만두",
+}
+ENGLISH_COOKING_SUFFIXES: dict[str, str] = {
+    "braised": "조림", "stir-fried": "볶음", "stir-fry": "볶음", "stirfried": "볶음", "grilled": "구이",
+    "steamed": "찜", "fried": "튀김", "seasoned": "무침", "pickled": "장아찌",
+}
+ENGLISH_COOKING_PREFIXES: dict[str, str] = {"boiled": "삶은", "hard-boiled": "삶은", "roasted": "구운", "baked": "구운"}
+# whole English phrases whose Korean name is not the word-by-word compound
+ENGLISH_FOOD_PHRASES: dict[str, str] = {
+    "black rice": "흑미밥", "brown rice": "현미밥", "black bean rice": "검은콩밥", "radish kimchi": "깍두기",
+    "poached egg": "수란", "poached eggs": "수란", "sweet potato": "고구마", "sweet potatoes": "고구마",
+    "chicken breast": "닭가슴살", "fried egg": "계란후라이", "fried eggs": "계란후라이",
+    "oat milk": "귀리음료", "almond milk": "아몬드음료", "unsweetened almond milk": "아몬드음료 무가당",
+    # common English dish names whose words do not compose (rice cake is 떡, not 밥 + 케이크)
+    "rice cake": "떡", "rice cakes": "떡", "spicy rice cake": "떡볶이", "spicy rice cakes": "떡볶이",
+    "fish cake": "어묵", "fish cakes": "어묵", "soy milk": "두유", "fried rice": "볶음밥",
+    "egg fried rice": "계란볶음밥", "kimchi fried rice": "김치볶음밥", "rice noodles": "쌀국수",
+    "rice noodle": "쌀국수", "black coffee": "아메리카노", "black bean noodles": "짜장면",
+    "bean sprouts": "콩나물", "soybean sprouts": "콩나물", "mung bean sprouts": "숙주나물",
+    "fried chicken": "후라이드치킨", "seaweed soup": "미역국",
+}
+# Words that change what the word before them means when they head a compound (rice + cake,
+# banana + pancake, soy + milk, black + coffee): an unlisted compound ending in one is not
+# translated word by word. A staple word as a modifier (rice ..., milk ...) is refused too.
+_NON_COMPOSING_HEADS = frozenset({
+    "cake", "cakes", "milk", "noodle", "noodles", "pancake", "pancakes", "bread", "sprout", "sprouts",
+    "coffee", "rice", "pie", "roll", "rolls", "stick", "sticks", "ball", "balls", "chips", "tea",
+})
+_NON_MODIFIER_WORDS = frozenset({"rice", "milk", "noodle", "noodles", "bread", "cake", "coffee", "black", "sweet"})
+# A cooking word does not turn a staple into a 튀김 / 볶음 by itself (fried rice is 볶음밥, not 밥튀김).
+_STAPLE_WORDS = frozenset({"rice", "noodle", "noodles", "bread", "cake", "milk", "coffee", "latte"})
+
+
+def translate_english_food_name(name: str | None) -> str | None:
+    """Korean name for an all-English food name made only of known food words, else None."""
+    text = " ".join((name or "").lower().replace("_", " ").split())
+    if not text or re.search(r"[가-힣]", text) or not re.search(r"[a-z]", text):
+        return None
+    if text in ENGLISH_FOOD_PHRASES:
+        return ENGLISH_FOOD_PHRASES[text]
+    prefix, suffix, body = "", "", []
+    food_words: list[str] = []  # English food words translated one by one (not via a phrase)
+    words = text.split()
+    i = 0
+    while i < len(words):
+        pair = " ".join(words[i:i + 2])
+        if pair in ENGLISH_FOOD_PHRASES and i + 2 <= len(words):
+            body.append(ENGLISH_FOOD_PHRASES[pair])
+            food_words.append(pair)
+            i += 2
+            continue
+        word = words[i]
+        if word in ENGLISH_COOKING_PREFIXES:
+            prefix = ENGLISH_COOKING_PREFIXES[word] + " "
+        elif word in ENGLISH_COOKING_SUFFIXES:
+            suffix = ENGLISH_COOKING_SUFFIXES[word]
+        elif word in ENGLISH_FOOD_WORDS:
+            body.append(ENGLISH_FOOD_WORDS[word])
+            food_words.append(word)
+        else:
+            return None  # an unknown word (a brand, a dish we do not know): leave it to search
+        i += 1
+    if len(food_words) >= 2:
+        if food_words[-1] in _NON_COMPOSING_HEADS or any(w in _NON_MODIFIER_WORDS for w in food_words[:-1]):
+            return None  # rice cake / banana pancake / black bean noodles: not word-by-word compounds
+    if suffix and food_words and food_words[-1] in _STAPLE_WORDS:
+        return None
+    korean = "".join(body) + suffix
+    return (prefix + korean).strip() if korean else None
+
+
 FOOD_SEARCH_ALIAS_RULES: dict[str, str] = {
     "계란": "달걀",
     "계란 생것": "달걀 생것",

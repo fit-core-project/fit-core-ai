@@ -7,6 +7,7 @@ Macros are floats with 1 decimal place, or null when unknown.
 
 from __future__ import annotations
 
+import contextvars
 import logging
 import os
 import re
@@ -18,7 +19,8 @@ from pydantic import BaseModel, Field
 from engines.llm_router import _parse_json_content, get_llm, resolve_llm_provider
 from engines.log_redaction import sanitize_exception_for_log, summarize_text_for_log
 
-from engines.food.curated_products import find_processed_product, product_nutrition
+from engines.food.curated_products import find_processed_product, product_family_density, product_nutrition
+from engines.food.food_query_normalization import FOOD_SEARCH_ALIAS_RULES, translate_english_food_name
 try:
     from engines.food.food_engine import category_nutrition
 except Exception:  # pragma: no cover - food engine optional
@@ -457,6 +459,123 @@ def _sanity_check_llm_macros(item: DietParseItem) -> DietParseItem:
     return item.model_copy(update={"protein_g": None, "carbs_g": None, "fat_g": None, "kcal": None})
 
 
+# ---------- implausible LLM macros (DB miss) ----------
+# Foods that really are (near) zero kcal: water, black coffee / plain tea, zero drinks, supplements.
+# Anchored at the end of the name: a zero drink / vegetable head may follow any brand or shop word
+# (스타벅스 아메리카노, 아이스 현미녹차) and take a trailing size word (콜드브루 라지). Short words
+# (물, 김, 미역, 오이, 블랙) only as a whole word, so 귤튀김, 고사리나물, 해물, 블랙타이거새우 stay
+# caloric; plain 커피 only as the whole name (믹스커피 is caloric).
+_ZERO_SIZE_WORDS = r"(?:톨|그란데|벤티|라지|레귤러|스몰|아이스|핫|tall|grande|venti|large|regular|small|medium|ice|iced|hot)"
+_ZERO_KCAL_NAME_RE = re.compile(
+    r"(?:아메리카노|에스프레소|콜드\s*브루|cold\s*brew|americano|espresso|블랙\s*커피|원두\s*커피|드립\s*커피|"
+    r"black\s*coffee|보리차|녹차|홍차|우롱차|둥굴레차|결명자차|옥수수차|허브티|무가당\s*차|탄산수|생수|정수기?\s*물|"
+    r"water|곤약젤리|다시마|쌈채소|상추|양상추|샐러리|셀러리)"
+    rf"(?:\s*{_ZERO_SIZE_WORDS})?$"
+    rf"|(?:^|\s)(?:물|김|조미김|미역|오이|블랙)(?:\s*{_ZERO_SIZE_WORDS})?$"
+    rf"|^(?:(?:{_ZERO_SIZE_WORDS}|디카페인|decaf|따뜻한|차가운)\s*)*커피(?:\s*{_ZERO_SIZE_WORDS})?$"
+    r"|제로|zero|크레아틴|creatine|bcaa|eaa|비타민|vitamin|오메가|omega|유산균|영양제|전해질",
+    re.IGNORECASE,
+)
+# a caloric dish head after the tea / coffee word: 녹차라떼, 제로슈거 아이스크림 are not zero
+_ZERO_KCAL_CALORIC_HEAD_RE = re.compile(r"라떼|latte|아이스크림|케이크|튀김|빵|쿠키|모찌|떡|초콜릿|스무디|프라푸치노")
+_MIN_LLM_KCAL = 5.0
+_MIN_LLM_DENSITY = 15.0           # kcal per 100 g: below this only water-like foods
+_MAX_DRINK_DENSITY = 150.0        # kcal per 100 ml for a non-alcoholic drink (shakes ~120)
+_DRINK_UNITS = frozenset({"잔", "캔", "병", "ml", "밀리리터", "l", "리터", "cc"})  # 컵 also measures 닭강정 / 밥
+_ALCOHOL_RE = re.compile(r"소주|위스키|양주|보드카|데킬라|럼$|진$|리큐르|고량주|사케|청주|와인|하이볼|칵테일|whisk|vodka|liquor|wine")
+_CONCENTRATE_RATIO = 10.0
+_PACKAGE_COUNT_UNITS = frozenset({"개", "팩", "봉지", "봉", "통", "갑", "알", "piece"})
+GRAM_LIKE_UNITS = frozenset({"g", "gram", "grams", "그램", "ml", "밀리리터", "cc", "kg", "l", "리터"})
+_DRINK_CLASS_DENSITY = {"kcal": 45.0, "protein_g": 0.8, "carbs_g": 9.0, "fat_g": 0.6}  # per 100 ml
+
+
+def _llm_macro_density(item: DietParseItem) -> tuple[float, float | None]:
+    kcal = max(_macro_kcal(item.protein_g, item.carbs_g, item.fat_g), item.kcal or 0.0)
+    grams = _deterministic_grams(item)
+    return kcal, (kcal / grams * 100.0 if grams else None)
+
+
+_MAX_PLAUSIBLE_PORTION_G = 3000.0  # "곤약밥 130팩": a misread amount, not 26 kg of food
+
+
+def _deterministic_grams(item: DietParseItem) -> float | None:
+    if item.amount is None:
+        grams = serving_grams(item.food_name)
+    else:
+        grams = resolve_portion_grams(item.food_name, item.amount, item.unit)
+    return grams if grams and grams <= _MAX_PLAUSIBLE_PORTION_G else None
+
+
+def _is_drink_item(item: DietParseItem) -> bool:
+    unit = (item.unit or "").strip().lower()
+    return unit in _DRINK_UNITS or bool(_DRINK_NAME_RE.search(item.food_name or ""))
+
+
+def _llm_macros_implausible(item: DietParseItem) -> bool:
+    """0 kcal for a real food, a water-like density, or a drink denser than a milkshake."""
+    name = item.food_name or ""
+    if all(getattr(item, k) is None for k in ("protein_g", "carbs_g", "fat_g", "kcal")):
+        return False  # nothing to judge (the caller keeps its own no-macro behaviour)
+    kcal, density = _llm_macro_density(item)
+    compact = name.strip()
+    if _ZERO_KCAL_NAME_RE.search(compact) and not _ZERO_KCAL_CALORIC_HEAD_RE.search(compact):
+        return False
+    if kcal < _MIN_LLM_KCAL or (density is not None and density < _MIN_LLM_DENSITY):
+        return True
+    return (density is not None and density > _MAX_DRINK_DENSITY and _is_drink_item(item)
+            and not _ALCOHOL_RE.search(name))
+
+
+def _category_density_implausible(item: DietParseItem, category: dict) -> bool:
+    grams = category.get("grams") or 0.0
+    if grams <= 0 or category.get("kcal") is None:
+        return False
+    density = category["kcal"] / grams * 100.0
+    return density > _MAX_DRINK_DENSITY and _is_drink_item(item) and not _ALCOHOL_RE.search(item.food_name or "")
+
+
+def _density_macros(per100: dict, grams: float) -> dict:
+    f = grams / 100.0
+    return {k: _r1(per100[k] * f) for k in ("protein_g", "carbs_g", "fat_g", "kcal")}
+
+
+def _replace_implausible_llm_macros(item: DietParseItem) -> DietParseItem:
+    """Implausible LLM macros -> a deterministic density x deterministic grams: the processed-
+    product line that names the food (label medians), else a drink-class density. Otherwise the
+    LLM numbers stay (nothing better is known)."""
+    if not _llm_macros_implausible(item):
+        return item
+    family = product_family_density(item.food_name)
+    unit = (item.unit or "").strip().lower()
+    confidence = portion_confidence(item.food_name, item.amount, item.unit)
+    det_grams = _deterministic_grams(item)
+    count = float(item.amount if item.amount is not None else 1.0)
+    grams = None
+    per100 = None
+    if family is not None and family["kcal_100"] >= _MIN_LLM_DENSITY:
+        unit_g = family.get("unit_g")
+        if confidence == "explicit" or (confidence != "default" and unit not in _PACKAGE_COUNT_UNITS):
+            grams = det_grams  # a weight, or a known dish / drink serving (광어회 한 접시, 보쌈 1인분)
+        elif unit_g:
+            grams = count * unit_g  # one package / piece of that product line
+        if not (unit_g and det_grams and det_grams > _CONCENTRATE_RATIO * unit_g and unit not in GRAM_LIKE_UNITS):
+            # (a 12 g freeze-dried soup block is not a bowl of soup)
+            per100 = {"kcal": family["kcal_100"], "protein_g": family["protein_100"],
+                      "carbs_g": family["carbs_100"], "fat_g": family["fat_100"]}
+    elif (_is_drink_item(item) and not _ALCOHOL_RE.search(item.food_name or "")
+          and (confidence != "default" or unit in {"잔", "컵", "캔"})):
+        per100 = _DRINK_CLASS_DENSITY
+        grams = det_grams
+    if per100 is None or not grams:
+        return item
+    logger.info("[diet macros] implausible LLM macros replaced by a %s density",
+                "product-line" if family is not None else "drink-class")
+    update = {**_density_macros(per100, grams), "source": "db"}
+    if item.amount is None:
+        update.update({"amount": 1.0, "unit": item.unit or "인분"})
+    return item.model_copy(update=update)
+
+
 # When the portion is a blind guess (generic "개 = 100 g", or a head-noun suffix such as
 # 잡채밥 -> 밥 = one rice bowl), the DB density x guessed grams can be several times off
 # (약과 3개 = 1197 kcal, 잡채밥 = 315 kcal). The LLM estimated the whole portion it read; when
@@ -683,9 +802,39 @@ _CHICKEN_BRAND_RE = re.compile(
 
 def _lookup_name(food_name: str) -> str:
     name = food_name or ""
+    # "zucchini jeon", "boiled eggs": look the food up (and size its portion) by its Korean name;
+    # the user still sees their own words
+    korean = translate_english_food_name(name) if name.lower() not in FOOD_SEARCH_ALIAS_RULES else None
+    if korean:
+        name = korean
     if _CHICKEN_BRAND_RE.search(name) and "버거" not in name:
         return "양념치킨" if "양념" in name or "레드" in name else "후라이드치킨"
     return name
+
+
+# Food names the user marked as a small amount ("단호박찜 조금"): category serving upgrades
+# (찜 home serving) must not apply to them. Set per request in parse_diet_log.
+_SMALL_PORTION_NAMES: contextvars.ContextVar[frozenset] = contextvars.ContextVar("_SMALL_PORTION_NAMES", default=frozenset())
+_SMALL_WORD_RE = r"\s*(?:은|는|을|를|도|이|가)?\s*(?:조금|약간|쪼금|쪼끔|조끔|살짝|몇\s*점|한\s*입)"
+
+
+def _small_portion_names(parsed: ParsedDietLog, user_text: str) -> frozenset:
+    text = user_text or ""
+    names = set()
+    for item in parsed.items:
+        name = (item.food_name or "").strip()
+        if item.amount is None and name and re.search(re.escape(name) + _SMALL_WORD_RE, text):
+            names.add(name)
+    return frozenset(names)
+
+
+def _engine_search(engine, item: DietParseItem):
+    if (item.food_name or "").strip() in _SMALL_PORTION_NAMES.get():
+        try:
+            return engine.search(item.food_name, item.amount, item.unit, small_portion=True)
+        except TypeError:  # engines without the keyword (test doubles)
+            pass
+    return engine.search(item.food_name, item.amount, item.unit)
 
 
 def _enrich_macros(parsed: ParsedDietLog) -> ParsedDietLog:
@@ -722,7 +871,7 @@ def _enrich_macros_by_name(parsed: ParsedDietLog) -> ParsedDietLog:
         db_hit = None
         if engine is not None and getattr(engine, "available", False):
             try:
-                db_hit = engine.search(item.food_name, item.amount, item.unit)
+                db_hit = _engine_search(engine, item)
             except Exception:
                 db_hit = None
         if db_hit is not None:
@@ -744,6 +893,8 @@ def _enrich_macros_by_name(parsed: ParsedDietLog) -> ParsedDietLog:
         # No DB row for this exact food: the median density of its head-noun category
         # ("X볶음" -> 볶음 rows, "X라떼" -> 라떼 rows) x deterministic grams, before any LLM number.
         category = category_nutrition(item.food_name, item.amount, item.unit) if engine is not None else None
+        if category is not None and _category_density_implausible(item, category):
+            category = None  # "쏘굿 아몬드 언스위트" -> a 277 kcal/100 g "스위트" dessert median
         if category is not None:
             update = {k: category[k] for k in ("protein_g", "carbs_g", "fat_g", "kcal")}
             update["source"] = "db"
@@ -764,7 +915,7 @@ def _enrich_macros_by_name(parsed: ParsedDietLog) -> ParsedDietLog:
             macros = _macros_from_table(food_key, item.amount, item.unit)
             item = item.model_copy(update=macros)
         else:
-            item = _sanity_check_llm_macros(item)
+            item = _replace_implausible_llm_macros(_sanity_check_llm_macros(item))
         enriched.append(item)
     return ParsedDietLog(items=enriched)
 
@@ -831,8 +982,9 @@ def _normalize_llm_units(parsed: ParsedDietLog) -> ParsedDietLog:
             unit = _ENGLISH_UNITS.get(unit.lower(), unit)
             unit = _UNIT_TYPOS.get(unit, unit)
             half = _HALF_UNIT_RE.match(unit)
-            if half and (amount is None or amount in (1, 1.0)):
-                amount, unit = 0.5, half.group(1)  # "반근", "반공기", "반그릇" as the unit
+            if half and (amount is None or amount in (1, 1.0, 0.5)):
+                # "반근", "반공기", "반그릇" as the unit (amount 0.5 + "반근" is the same half, once)
+                amount, unit = 0.5, half.group(1)
             m = _UNIT_WITH_NUMBER_RE.match(_normalize_number_words(unit).replace(" ", ""))
             if m:
                 amount, unit = float(m["n"]), m["unit"].strip()
@@ -928,7 +1080,36 @@ def _local_raw_json_enabled() -> bool:
     return os.getenv("ENABLE_LOCAL_RAW_JSON_INVOKE", "").strip().lower() in _TRUE_VALUES
 
 
+# Local models sometimes emit raw byte tokens for rare Hangul syllables ("미고<0xEB><0xA0><0x9D>"
+# = 미고렝): decode each run of byte tokens as UTF-8.
+_BYTE_TOKEN_RUN_RE = re.compile(r"(?:<0x[0-9A-Fa-f]{2}>)+")
+
+
+def _decode_byte_tokens(value: str | None) -> str | None:
+    if not value or "<0x" not in value:
+        return value
+
+    def _decode(match: re.Match) -> str:
+        raw = bytes(int(h, 16) for h in re.findall(r"<0x([0-9A-Fa-f]{2})>", match.group(0)))
+        return raw.decode("utf-8", errors="ignore")
+
+    return _BYTE_TOKEN_RUN_RE.sub(_decode, value).strip() or value
+
+
+def _decode_parsed_byte_tokens(parsed: ParsedDietLog) -> ParsedDietLog:
+    if not any("<0x" in (i.food_name or "") + (i.unit or "") for i in parsed.items):
+        return parsed
+    return ParsedDietLog(items=[
+        i.model_copy(update={"food_name": _decode_byte_tokens(i.food_name), "unit": _decode_byte_tokens(i.unit)})
+        for i in parsed.items
+    ])
+
+
 def _parse_payload(payload) -> ParsedDietLog:
+    return _decode_parsed_byte_tokens(_validate_payload(payload))
+
+
+def _validate_payload(payload) -> ParsedDietLog:
     if isinstance(payload, ParsedDietLog):
         return payload
     if isinstance(payload, dict):
@@ -950,15 +1131,23 @@ def _food_engine_available() -> bool:
 
 # "둘이서 / 셋이서 / 반띵 / 나눠 먹음": the logged amount was shared.
 _SHARE_RE = re.compile(
-    r"(?<![가-힣0-9])(둘|두\s*명|2\s*명|셋|세\s*명|3\s*명|넷|네\s*명|4\s*명)이(?:서)?(?:\s*(?:나눠|노나|같이|먹))?"
+    r"(?<![가-힣0-9])(둘|두\s*명|2\s*명|셋|세\s*명|3\s*명|넷|네\s*명|4\s*명|다섯\s*명|5\s*명|여섯\s*명|6\s*명"
+    r"|일곱\s*명|7\s*명|여덟\s*명|8\s*명|아홉\s*명|9\s*명|열\s*명|10\s*명)이(?:서)?(?:\s*(?:나눠|노나|같이|먹))?"
     r"|반띵|반반\s*나눠|반씩\s*나눠"
     r"|(?:와이프|아내|남편|친구|동생|언니|오빠|누나|형|엄마|아빠|애인|여친|남친)(?:랑|하고|와|과)\s*(?:같이\s*)?나눠"
 )
-_SHARE_DIVISOR = {"둘": 2, "두": 2, "2": 2, "셋": 3, "세": 3, "3": 3, "넷": 4, "네": 4, "4": 4}
+_SHARE_DIVISOR = {"둘": 2, "두": 2, "2": 2, "셋": 3, "세": 3, "3": 3, "넷": 4, "네": 4, "4": 4,
+                  "다": 5, "5": 5, "여": 6, "6": 6, "일": 7, "7": 7, "8": 8, "아": 9, "9": 9, "열": 10, "10": 10}
+# Units of a portion one person eats by themself: with a shared dish in the same log ("갈치조림
+# 2인분 3명이서 / 밥 2/3공기") the rice bowl / glass / can is not divided. A 병 (소주 2병, 콜라
+# 1.25L 1병) is poured for the table and stays shared.
+_PERSONAL_UNITS = frozenset({"공기", "잔", "컵", "캔", "팩"})
+_PERSONAL_SERVING_UNITS = frozenset({"그릇"})  # a 인분 is often ordered for the table
 # Size words right next to a food ("짜장면 곱빼기", "라지 감자튀김", "바닐라라떼 그란데").
 _SIZE_FACTORS = {
     "곱빼기": 1.5, "특대": 1.5, "특": 1.3, "라지": 1.4, "large": 1.4, "점보": 1.6,
     "그란데": 473 / 355, "벤티": 591 / 355, "스몰": 0.75, "숏": 0.67, "큰사이즈": 1.4, "빅사이즈": 1.4,
+    "큰거": 1.4, "큰것": 1.4, "작은거": 0.75, "작은것": 0.75,
     # 족발·보쌈·찜·탕 포장 크기 (1인분 대비)
     "대자": 3.5, "중자": 2.5, "소자": 1.8, "小자": 1.8, "大자": 3.5, "中자": 2.5,
 }
@@ -971,7 +1160,8 @@ def _share_divisor(user_text: str) -> float:
         return 1.0
     if m.group(1) is None:
         return 2.0  # 반띵 / 반씩 나눠 / 와이프랑 나눠: two people
-    head = m.group(1).replace(" ", "")[0]
+    word = m.group(1).replace(" ", "")
+    head = "10" if word.startswith("10") else ("8" if word.startswith("여덟") else word[0])
     return float(_SHARE_DIVISOR.get(head, 1))
 
 
@@ -1045,11 +1235,43 @@ def _apply_portion_context(parsed: ParsedDietLog, user_text: str) -> ParsedDietL
     """Size words scale the item next to them; sharing ("둘이서") divides every item;
     "반은 남김" halves the item it follows."""
     divisor = _share_divisor(user_text)
+    shared = {id(i) for i in parsed.items if _has_nutrition(i) and not _is_personal_portion(i)}
+    if not any(not _is_drink_item(i) for i in parsed.items if id(i) in shared):
+        shared = set()  # only drinks shared ("소주 1병 맥주 2캔 둘이"): every drink is divided
     items = [
-        _scale_item(i, _size_factor(i.food_name, user_text) * _leftover_factor(i, parsed.items, user_text) / divisor)
+        _scale_item(i, _size_factor(i.food_name, user_text) * _leftover_factor(i, parsed.items, user_text)
+                    / (divisor if (id(i) in shared or not shared) else 1.0))
         for i in parsed.items
     ]
     return ParsedDietLog(items=items)
+
+
+def _is_personal_portion(item: DietParseItem) -> bool:
+    unit = (item.unit or "").strip()
+    if unit in _PERSONAL_UNITS:
+        return True
+    try:
+        single = item.amount is not None and float(item.amount) <= 1.0
+    except (TypeError, ValueError):
+        single = False
+    return unit in _PERSONAL_SERVING_UNITS and single  # "중식우동 한 그릇" next to a shared 깐풍새우
+
+
+# "콜라 X", "피타 X", "방탄커피 ❌": the user marks a food as NOT eaten.
+# An ASCII X/x followed by a count is a multiplier ("닭가슴살 x 2", "아메리카노 X 2잔"), not a mark.
+_NEGATION_MARK = (r"\s*(?:(?:X|x)(?!\s*(?:\d|[한두세네]\s*(?:개|잔|공기|그릇|장|조각|마리|병|캔|팩|봉지|인분)))"
+                  r"|❌|✖️?|✗)(?=$|[\s,./)!→\-])")
+
+
+def _drop_negated_items(parsed: ParsedDietLog, user_text: str) -> ParsedDietLog:
+    text = user_text or ""
+    if not re.search(r"[Xx❌✖✗]", text):
+        return parsed
+    kept = [i for i in parsed.items
+            if not (i.food_name and re.search(r"(?<![A-Za-z])" + re.escape(i.food_name.strip()) + _NEGATION_MARK, text))]
+    if not kept or len(kept) == len(parsed.items):
+        return parsed
+    return ParsedDietLog(items=kept)
 
 
 def _has_nutrition(item: DietParseItem) -> bool:
@@ -1098,7 +1320,13 @@ def parse_diet_log(user_text: str) -> str:
         parsed = _apply_ordered_dish_serving(parsed, user_text)
         parsed = _apply_half_half_text(parsed, user_text)
         parsed = _expand_set_menus(parsed)
-        return _apply_portion_context(_enrich_macros(parsed), user_text).model_dump_json()
+        parsed = _drop_negated_items(parsed, user_text)
+        token = _SMALL_PORTION_NAMES.set(_small_portion_names(parsed, user_text))
+        try:
+            enriched = _enrich_macros(parsed)
+        finally:
+            _SMALL_PORTION_NAMES.reset(token)
+        return _apply_portion_context(enriched, user_text).model_dump_json()
     except Exception as exc:
         logger.warning("[LLM diet parsing fallback] %s", sanitize_exception_for_log(exc))
     # LLM down: deterministic parse still gets DB / curated macros (previously none at all).

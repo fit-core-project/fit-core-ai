@@ -316,14 +316,14 @@ def install(args, cap: Capture, cache: dict):
 
         from engines.food.food_query_normalization import build_food_search_queries
 
-        def w_search(food_name, amount=None, unit=None):
+        def w_search(food_name, amount=None, unit=None, **kwargs):
             cap.top = None
             try:
                 queries = list(build_food_search_queries(food_name))
             except Exception:
                 queries = None
             try:
-                res = o_search(food_name, amount, unit)
+                res = o_search(food_name, amount, unit, **kwargs)
             except Exception as exc:
                 cap.search_log.append({"query": food_name, "amount": amount, "unit": unit,
                                        "outcome": f"exception:{type(exc).__name__}", "top": cap.top,
