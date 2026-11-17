@@ -7,13 +7,14 @@ import shutil
 import tempfile
 import urllib.request
 from contextlib import asynccontextmanager, redirect_stderr
+from typing import Literal
 
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
@@ -27,6 +28,7 @@ from engines.quicklog.diet_parser import parse_diet_log
 from engines.routine_pipeline import generate_smart_routine
 from engines.schemas import RoutineDraftResponse, RoutineFeedbackRequest, RoutineFeedbackResponse, RoutineRequest
 from engines.supplement.supplement_engine import SupplementRAGEngine
+from engines.supplement_history import resolve_follow_up_question
 from models.routine_feedback import RoutineFeedback
 
 load_dotenv()
@@ -151,6 +153,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "request_body",
             "text",
             "question",
+            "history",
+            "content",
             "transcript",
             "user_note",
             "userNote",
@@ -281,18 +285,48 @@ async def api_speech_to_text(audio_file: UploadFile = File(...)):
             os.remove(temp_file_path)
 
 
+CHAT_TURN_MAX_CONTENT_CHARS = 2000
+CHAT_HISTORY_MAX_TURNS = 12
+
+
+class ChatTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def _truncate_content(cls, value):
+        if isinstance(value, str) and len(value) > CHAT_TURN_MAX_CONTENT_CHARS:
+            return value[:CHAT_TURN_MAX_CONTENT_CHARS]
+        return value
+
+
 class SupplementChatRequest(BaseModel):
     question: str
+    history: list[ChatTurn] = Field(default_factory=list)
+
+    @field_validator("history", mode="before")
+    @classmethod
+    def _keep_recent_turns(cls, value):
+        if value is None:
+            return []
+        if isinstance(value, list) and len(value) > CHAT_HISTORY_MAX_TURNS:
+            return value[-CHAT_HISTORY_MAX_TURNS:]
+        return value
 
 
 @app.post("/api/ai/supplement-chat")
 def api_supplement_chat(req: SupplementChatRequest):
+    question = req.question
     try:
         logger.info(f"[supplement question] {summarize_text_for_log(req.question)}")
-        return get_supplement_engine().answer_question(req.question)
+        if req.history:
+            question = resolve_follow_up_question(req.question, req.history)
+            logger.info(f"[supplement history] turns={len(req.history)} follow_up_rewritten={question != req.question}")
+        return get_supplement_engine().answer_question(question)
     except Exception as exc:
         logger.error(f"[Supplement Error] {sanitize_exception_for_log(exc)}")
-        return SupplementRAGEngine.degraded("endpoint_runtime_error").answer_question(req.question)
+        return SupplementRAGEngine.degraded("endpoint_runtime_error").answer_question(question)
 
 
 if __name__ == "__main__":
