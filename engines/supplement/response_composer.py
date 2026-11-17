@@ -58,6 +58,7 @@ def compose_supplement_response(
     generated_answer: str | dict | None,
     generated_caution: str | None,
     selected_docs: list[Any],
+    llm_refused: bool = False,
 ) -> ComposedSupplementResponse:
     answer, parsed_caution = _normalize_answer(generated_answer)
     caution_parts = [generated_caution, parsed_caution]
@@ -100,8 +101,14 @@ def compose_supplement_response(
     answer = _apply_coverage_honesty(answer, question, parsed_query, selected_docs)
     answer = _apply_efficacy_policy(answer, question, parsed_query, selected_docs)
     answer, caution = _dedupe_answer_and_caution(answer, caution, parsed_query, risk_query=risk_query)
-    answer = _strip_dose_numbers(answer)
-    caution = _strip_dose_numbers(caution) if caution else caution
+    if llm_refused and answer and not any(m in answer for m in _HONEST_LEAD_MARKERS):
+        # the LLM judged the documents insufficient (WEB_SEARCH_REQUIRED); the fallback answer is
+        # built from whatever KB text matched, so say first that the question itself is not covered
+        answer = f"{_REFUSED_LEAD} {answer}"
+        if _has_risk_context(parsed_query) and _CONSULT_TEXT not in answer:
+            answer = f"{answer} {_CONSULT_TEXT}"
+    answer = _plain_text(_strip_dose_numbers(answer))
+    caution = _plain_text(_strip_dose_numbers(caution)) if caution else caution
 
     return ComposedSupplementResponse(
         answer=answer,
@@ -116,6 +123,55 @@ _DOSE_NUMBER_RE = re.compile(
     r"(?:하루\s*)?\d+(?:[.,]\d+)?\s*(?:~|-|∼)?\s*(?:\d+(?:[.,]\d+)?\s*)?"
     r"(?:mg|㎎|밀리그램|mcg|µg|μg|IU|iu|그램|g)(?![A-Za-z])"
 )
+
+
+_REFUSED_LEAD = "확보된 근거 문서에서는 질문하신 내용을 직접 확인할 수 없어, 아래는 확인된 관련 정보와 일반적인 참고 정보입니다."
+
+
+def _has_risk_context(parsed_query: ParsedSupplementQuery) -> bool:
+    return any(e.type in (EntityType.DRUG_OR_DRUG_CLASS, EntityType.CONDITION, EntityType.RISK_CONTEXT)
+               for e in parsed_query.entities)
+
+
+_MD_EMPHASIS_RE = re.compile(r"(\*\*|__)(.+?)\1")
+_NUMBERED_RE = re.compile(r"^(\s*)(\d+)[.)]\s+")
+_LABEL_LINE_RE = re.compile(r"^\s*\S[^:\n]{0,30}:\s")
+
+
+def _plain_text(text: str | None) -> str | None:
+    """The app renders plain text: drop markdown emphasis / headings / code marks, turn "* " bullets
+    into "- ", and renumber each numbered list from 1 (an LLM list can lose its "1." when the first
+    item is a bold label line)."""
+    if not text:
+        return text
+    out = _MD_EMPHASIS_RE.sub(r"\2", text)
+    out = out.replace("**", "").replace("`", "")
+    lines = []
+    for line in out.split("\n"):
+        line = re.sub(r"^\s*#{1,6}\s+", "", line)
+        line = re.sub(r"^(\s*)\*\s+", r"\1- ", line)
+        lines.append(line)
+    # renumber contiguous numbered blocks; a label line right before a block that starts at 2 is item 1
+    numbered_idx = [i for i, l in enumerate(lines) if _NUMBERED_RE.match(l)]
+    if numbered_idx:
+        blocks: list[list[int]] = []
+        for i in numbered_idx:
+            if blocks and all(not lines[j].strip() for j in range(blocks[-1][-1] + 1, i)):
+                blocks[-1].append(i)
+            else:
+                blocks.append([i])
+        for block in blocks:
+            first = int(_NUMBERED_RE.match(lines[block[0]]).group(2))
+            prev = block[0] - 1
+            while prev >= 0 and not lines[prev].strip():
+                prev -= 1
+            start = 1
+            if first == 2 and prev >= 0 and _LABEL_LINE_RE.match(lines[prev]) and not _NUMBERED_RE.match(lines[prev]):
+                lines[prev] = "1. " + lines[prev].lstrip()
+                start = 2
+            for n, i in enumerate(block, start):
+                lines[i] = _NUMBERED_RE.sub(lambda m: f"{m.group(1)}{n}. ", lines[i], count=1)
+    return "\n".join(lines)
 
 
 def _strip_dose_numbers(text: str | None) -> str | None:
@@ -1164,7 +1220,8 @@ def _josa(word: str, with_final: str, without_final: str) -> str:
 _OUTCOME_RE = re.compile(
     r"(?:아|어|여|펴|커|빠|꺼|쳐|켜|낮아|높아|밝아|좋아|나아|없어|줄어|늘어)\s*(?:지|져)"
     r"|안\s*걸|걸리지\s*않|막아\s*주|막아줘|막을|낮춰|높여|올려\s*주|줄여\s*주|생기지\s*않|된다던데|다던데"
-    r"|멈추|멈출|키\s*(?:큼|크|커)|올라가|덜\s*피곤|(?:아|어)진다|좋다고|좋대|효과\s*있"
+    r"|멈추|멈출|키\s*(?:큼|크|커)|올라가|덜\s*피곤|(?:아|어)진다|좋다고|좋대|효과\s*있|내려가|내려감|내려갈"
+    r"|\bhelps?\b|\bboost|\bprevent|\bcure|stay awake"
 )
 
 
@@ -1309,7 +1366,7 @@ def _uncovered_pair_lead(entity: Any, label: str, parsed_query: ParsedSupplement
             other_label = other.text or other.canonical
             return (
                 f"확보된 근거 문서에는 {label}{_josa(label, '과', '와')} {other_label}의 병용에 대한 자료가 없어, "
-                "아래 내용은 일반적인 참고 정보입니다."
+                "아래 내용은 각 성분 자료와 일반적인 참고 정보입니다."
             )
     return None
 

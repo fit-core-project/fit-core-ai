@@ -194,3 +194,18 @@ def test_efficacy_outcome_without_needle_gets_honesty_lead():
                                          generated_answer="콜라겐은 피부 보습에 도움을 줄 수 있습니다.",
                                          generated_caution=None, selected_docs=[])
     assert result.answer.startswith("확보된 근거 문서에서는")
+
+
+def test_answers_are_plain_text_with_renumbered_lists():
+    from engines.supplement.response_composer import _plain_text
+    raw = ("마그네슘과 아연은 **흡수 경쟁**이 있을 수 있어요.\n"
+           "**다른 미네랄 복용 여부:** 칼슘·철분도 드시면 간격을 두세요.\n"
+           "2. **복용 시간:** 시간을 나눠 드세요.\n"
+           "3. 증상이 있으면 의사 또는 약사와 상담하세요.")
+    out = _plain_text(raw)
+    assert "**" not in out
+    lines = out.split("\n")
+    assert lines[1].startswith("1. 다른 미네랄 복용 여부:")
+    assert lines[2].startswith("2. 복용 시간:") and lines[3].startswith("3. ")
+    assert _plain_text("* 첫째\n* 둘째") == "- 첫째\n- 둘째"
+    assert _plain_text("5. a\n6. b") == "1. a\n2. b"
