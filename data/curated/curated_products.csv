@@ -1,0 +1,16 @@
+name,aliases,unit,unit_grams,kcal,protein_g,carbs_g,fat_g,macro_basis,confidence,source
+바나나맛우유,바나나우유|빙그레 바나나맛우유,개,240,208,7,27,8,label,high,https://www.fatsecret.kr/칼로리-영양소/빙그레/바나나-우유/1회
+신라면,농심 신라면,봉지,120,500,10,79,16,label,high,https://www.costco.co.kr/Foods/Processed-Food/PastaNoodles/Nongshim-Shin-Ramyun-120g-x-30/p/524497
+진라면,진라면 매운맛|진라면 순한맛|오뚜기 진라면,봉지,120,500,10,77,16,label,high,https://thewiki.kr/w/진매
+불닭볶음면,삼양 불닭볶음면|불닭,봉지,140,530,12,85,17,kcal_label_macros_estimated,medium,https://geniet.co.kr/review/3044
+육개장 사발면,육개장사발면|사발면|컵라면,개,86,375,7,53,15,label,high,https://www.costco.co.kr/Food/Processed-Food/PastaNoodles/Nongshim-Yukejang-Bowl-Noodle-86g-x-24/p/513710
+햇반,즉석밥|햇반 백미|cj 햇반,개,210,315,5,70,1.5,label,high,https://www.costco.co.kr/Foods/Processed-Food/Instant-Food/Hetbahn-Icheon-Cooked-Rice-210g-x-18ea/p/608719
+빅맥,big mac|맥도날드 빅맥,개,223,582,27,46,30,kcal_label_macros_estimated,medium,https://thewiki.kr/w/빅맥
+포카리스웨트,포카리|포카리 스웨트,병,500,120,0,30,0,label,high,https://www.ssg.com/item/itemView.ssg?itemId=0000006609134
+초코파이,오리온 초코파이,개,39,171,2,25,7,label,high,https://www.fatsecret.kr/칼로리-영양소/오리온/초코파이-(39g)/1개
+허니버터칩,해태 허니버터칩,봉지,60,330,3.5,33,20,label,medium,https://www.fatsecret.kr/칼로리-영양소/해태/허니버터칩-(60g)/1인분
+빼빼로,빼빼로 오리지널|롯데 빼빼로,갑,46,230,3,30,11,kcal_label_macros_estimated,medium,https://www.ssg.com/item/itemView.ssg?itemId=1000005222500
+핫식스,핫식스 에너지드링크,캔,250,115,0,29,0,label,high,https://www.ssg.com/item/itemView.ssg?itemId=0000007688282
+메로나,빙그레 메로나,개,75,120,1,18,5,label,medium,https://www.fatsecret.kr/칼로리-영양소/빙그레/메로나-(75ml)/1개
+참치마요 삼각김밥,삼각김밥 참치마요|참치마요삼각김밥,개,112,217,6,28,9,label,low,https://www.fatsecret.kr/칼로리-영양소/gs25/new-참치마요/1인분
+빅맥 세트,빅맥세트|빅맥 세트 레귤러|big mac set,세트,1,1105,32,125,52,kcal_label_macros_estimated,medium,https://thewiki.kr/w/빅맥

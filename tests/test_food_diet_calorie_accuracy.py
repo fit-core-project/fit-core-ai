@@ -223,7 +223,8 @@ def test_llm_per100g_macros_on_small_portion_are_rescaled(no_food_db):
     # 버터 10g with per-100g macros (81 g fat = 729 kcal in 10 g) is impossible.
     item = DietParseItem(food_name="버터", amount=10, unit="g", protein_g=0.9, carbs_g=0.1, fat_g=81.0)
     out = _enrich_macros(ParsedDietLog(items=[item])).items[0]
-    assert out.fat_g == pytest.approx(8.1)
+    # rescaled LLM macros (8.1 g) or, when the MFDS processed-food index is present, its butter row
+    assert 7.5 <= out.fat_g <= 8.6
     kcal = 4 * out.protein_g + 4 * out.carbs_g + 9 * out.fat_g
     assert kcal / 10 <= 9.0
 
@@ -413,3 +414,144 @@ def test_llm_unit_strings_with_numbers_are_split(amount, unit, expected):
     parsed = ParsedDietLog(items=[DietParseItem(food_name="x", amount=amount, unit=unit)])
     item = diet_parser._normalize_llm_units(parsed).items[0]
     assert (item.amount, item.unit) == expected
+
+
+def test_curated_product_uses_label_values_per_package():
+    from engines.food.curated_products import product_nutrition
+    assert product_nutrition("신라면", 1, "봉지")["kcal"] == 500.0
+    assert product_nutrition("편의점 바나나우유", None, None)["kcal"] == 208.0  # alias inside the name
+    assert product_nutrition("포카리", 250, "ml")["kcal"] == 60.0  # grams scale the package
+    assert product_nutrition("빅맥 세트", 1, "")["kcal"] == 1105.0  # the set row, not the burger alone
+    assert product_nutrition("빅맥", 1, "개")["kcal"] == 582.0
+    assert product_nutrition("라면", 1, "개") is None  # generic dish stays on the DB path
+
+
+
+def test_sharing_and_size_words_scale_the_logged_portion():
+    from engines.quicklog.diet_parser import _share_divisor, _size_factor
+    assert _share_divisor("치킨 한 마리를 셋이서 나눠먹음") == 3.0
+    assert _share_divisor("라볶이 2인분 시켜서 친구랑 반띵") == 2.0
+    assert _share_divisor("김밥 두 줄") == 1.0
+    assert _size_factor("짜장면", "짜장면 곱빼기") == 1.5
+    assert _size_factor("감자튀김", "감자튀김 라지") == 1.4
+    assert _size_factor("특제 소스", "특제 소스") == 1.0  # "특" inside a word is not a size
+
+
+def test_supplement_capsules_and_spirit_glasses_use_small_portions():
+    from engines.food.food_units import unit_to_grams
+    parsed = diet_parser._deterministic_diet_parse("오메가3 2알이랑 멀티비타민 1알")
+    items = [(i.food_name, i.amount, i.unit) for i in parsed.items]
+    assert items == [("오메가3", 2.0, "알"), ("멀티비타민", 1.0, "알")]  # "3" is part of the name
+    assert parsed.items[0].kcal == 18.0  # ~1 g fish-oil softgel each, not a product named 오메가…
+    assert unit_to_grams("위스키", "잔") == 40.0  # a shot glass, not a beer glass
+    assert diet_parser._deterministic_diet_parse("닭가슴살 100g").items[0].amount == 100.0
+
+
+def test_bbq_meat_cuts_resolve_to_cooked_rows():
+    from engines.food.food_query_normalization import FOOD_SEARCH_ALIAS_RULES
+    assert FOOD_SEARCH_ALIAS_RULES["목살"] == "돼지고기 목심 구운것"
+    assert FOOD_SEARCH_ALIAS_RULES["차돌박이"] == "차돌박이구이"
+    assert FOOD_SEARCH_ALIAS_RULES["LA갈비"] == "소갈비 구이"
+
+
+def test_processed_index_single_serve_and_dish_variants():
+    from engines.food import curated_products as cp
+    if not cp._processed_index():
+        pytest.skip("processed product index not built (generated file)")
+    # "하나" of a drink / snack bag is the single-serve package, not a 50 ml sample or a serving
+    assert cp.product_nutrition("아침햇살", 1, "개")["kcal"] > 90
+    assert cp.product_nutrition("포스틱", 1, "개")["kcal"] > 300
+    # a flavour word at the end of a drink name is not a piece ("…요구르트 딸기" is not 15 g)
+    assert cp.product_nutrition("덴마크 드링킹 요구르트 딸기", 1, "개")["kcal"] > 150
+    # menu dishes named "<variant><category>" stay on the generic dish path
+    assert cp.find_processed_product("콤비네이션 피자") is None
+    assert cp.find_processed_product("고구마피자") is None
+    # brand prefix dropped by the user: "왕뚜껑" -> 팔도 왕뚜껑
+    assert cp.find_processed_product("왕뚜껑") is not None
+
+
+def test_set_meals_and_half_half_chicken_are_expanded():
+    from engines.quicklog.diet_parser import _apply_half_half_text, _expand_set_menus
+    p = ParsedDietLog(items=[DietParseItem(food_name="1955버거 세트", amount=100.0, unit="g")])
+    assert [(i.food_name, i.unit) for i in _expand_set_menus(p).items] == [
+        ("1955버거", "개"), ("감자튀김", "인분"), ("콜라", "잔")]
+    p = ParsedDietLog(items=[DietParseItem(food_name="생선까스 정식", amount=1.0, unit="인분")])
+    assert [i.food_name for i in _expand_set_menus(p).items] == ["생선까스", "쌀밥"]
+    p = ParsedDietLog(items=[DietParseItem(food_name="후라이드 반 양념 반", amount=1.0, unit="마리")])
+    assert [(i.food_name, i.unit) for i in _expand_set_menus(p).items] == [("치킨", "마리")]
+    p = ParsedDietLog(items=[DietParseItem(food_name="치킨", amount=1.0, unit="인분")])
+    assert _apply_half_half_text(p, "치킨 반반 시켜서 반씩 나눠먹음").items[0].unit == "마리"
+
+
+def test_leftovers_and_nothing_eaten():
+    from engines.quicklog.diet_parser import _NOTHING_EATEN_RE, _leftover_factor
+    item = DietParseItem(food_name="진라면", amount=1.0, unit="개")
+    assert _leftover_factor(item, [item], "진라면 하나 끓였는데 반은 남김") == 0.5
+    half = DietParseItem(food_name="물냉면", amount=0.5, unit="그릇")
+    assert _leftover_factor(half, [half], "물냉면 반 그릇만 먹음") == 1.0  # already logged as half
+    assert _NOTHING_EATEN_RE.search("라면 끓이려다 그냥 굶음")
+
+
+def test_alcohol_uses_label_values_not_llm_macros():
+    from engines.food.food_units import unit_to_grams
+    assert diet_parser._FOOD_PER_100G["청하"]["kcal"] > 90
+    assert diet_parser._FOOD_PER_100G["대선"]["kcal"] == 88.0  # MFDS label
+    assert unit_to_grams("고량주", "잔") == 30.0
+
+
+def test_portion_confidence_levels():
+    from engines.food.food_units import portion_confidence
+    assert portion_confidence("닭가슴살", 200, "g") == "explicit"
+    assert portion_confidence("계란", 2, "개") == "exact"
+    assert portion_confidence("양념치킨", 3, "조각") == "suffix"
+    assert portion_confidence("두부김치", 1, "개") == "default"  # no piece weight known
+
+
+def test_dish_over_rice_and_drink_servings():
+    from engines.food.food_units import serving_grams
+    assert serving_grams("잡채밥") == 400.0  # dish over rice, not one bowl of rice (210)
+    assert serving_grams("보리밥") == 210.0
+    assert serving_grams("자몽에이드") == 450.0
+
+
+def test_lexical_relation_accepts_spelling_variants_only():
+    from engines.food.food_reranker import has_lexical_relation as rel
+    assert rel("쭈꾸미볶음", "주꾸미볶음")
+    assert rel("소대창", "대창구이 소고기")
+    assert not rel("소주", "소금")
+    assert not rel("맥주", "버거 맥치킨 버거")
+
+
+def test_english_food_names_have_korean_aliases():
+    from engines.food.food_query_normalization import FOOD_SEARCH_ALIAS_RULES as alias
+    assert alias["pad thai"] == "팟타이"
+    assert alias["croquettes"] == "고로케"
+
+
+def test_gram_rules_precedence_a_to_f():
+    from engines.food.food_units import resolve_portion_grams as grams
+    assert grams("닭가슴살", 200, "g") == 200.0            # a explicit weight wins
+    assert grams("삼겹살", 1, "근") == 600.0                # a 근
+    assert grams("계란", 2, "개") == 100.0                  # b exact per-food table
+    assert grams("감자전", 2, "장") == 400.0                # c head-noun table (전 장 = 200 g)
+    assert grams("김치찌개", 1, "인분") == 400.0            # d serving suffix
+    assert grams("잡채밥", 1, "그릇") == 400.0              # d dish over rice
+    assert grams("미지의음식", 2, "개") == 200.0            # f generic default (개 = 100 g)
+    assert grams("잣", 1, "숟가락") == 10.0                 # f spoon
+
+
+def test_explicit_amount_beats_ordered_dish_serving():
+    from engines.quicklog.diet_parser import _apply_ordered_dish_serving
+    p = ParsedDietLog(items=[DietParseItem(food_name="미지의요리", amount=100.0, unit="g")])
+    assert _apply_ordered_dish_serving(p, "미지의요리 100g 시켜먹음").items[0].unit == "g"
+    assert _apply_ordered_dish_serving(p, "미지의요리 시켜먹음").items[0].unit == "인분"
+
+
+def test_category_fallback_uses_median_of_one_basis():
+    from engines.food.food_engine import category_nutrition
+    hit = category_nutrition("쭈꾸미볶음", 200, "g")
+    if hit is None:
+        pytest.skip("food DB not available")
+    assert hit["category"] == "볶음" and hit["basis"] == "g" and hit["category_rows"] >= 5
+    assert hit["grams"] == 200.0
+    assert category_nutrition("ㅋㅋ", 1, "개") is None

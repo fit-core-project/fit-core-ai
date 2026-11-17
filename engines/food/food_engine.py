@@ -13,6 +13,9 @@
 from __future__ import annotations
 
 import logging
+import functools
+import csv
+import re
 import os
 import threading
 from pathlib import Path
@@ -28,6 +31,7 @@ from engines.food.food_units import (
     preferred_basis_unit,
     resolve_portion_grams,
     serving_grams,
+    portion_confidence,
     unit_to_grams,
 )
 from engines.food.food_reranker import (
@@ -50,6 +54,19 @@ FOOD_COLLECTION_NAME = "food_db"
 FOOD_CSV_PATH = PROJECT_ROOT / "data" / "food_db" / "food_db_clean.csv"
 # Below this similarity a top hit must also share wording with the query.
 LEXICAL_GUARD_SIMILARITY = 0.9
+LITERAL_HIT_SIMILARITY = 0.45
+_DISH_SERVING_G = 300.0
+
+
+def _protein_dense(meta: dict) -> bool:
+    """Grilled meat / fish / cutlet rows (장어구이, 대창, 오겹살): a 1인분 is the ~200 g meat portion."""
+    try:
+        kcal = float(meta.get("kcal") or 0)
+        protein = float(meta.get("protein_g") or 0)
+        fat = float(meta.get("fat_g") or 0)
+    except (TypeError, ValueError):
+        return False
+    return kcal > 0 and (protein * 4 + fat * 9) / kcal > 0.6
 
 # 코사인 유사도 임계값. 이 값 미만이면 매칭 실패로 간주(오탐 방지). 캘리브레이션 필요.
 SIMILARITY_THRESHOLD = float(os.getenv("FOOD_SIM_THRESHOLD", "0.55"))
@@ -106,6 +123,134 @@ def build_embeddings():
         encode_kwargs={"normalize_embeddings": True},
     )
 
+
+
+# Same dish, very different densities: "식혜" rows are 40-47 kcal/100 except one at 87, "샐러드"
+# rows ~125-145 except a bare 15. When the matched dish row is far from the median of the rows
+# that name the same food (same rep_name, query in the name), use the median row instead.
+_MEDIAN_MIN_ROWS = 3
+_MEDIAN_MAX_DEVIATION = 0.4
+
+
+@functools.lru_cache(maxsize=1)
+def _dish_rows_by_rep() -> dict[str, list[dict]]:
+    out: dict[str, list[dict]] = {}
+    try:
+        with FOOD_CSV_PATH.open(encoding="utf-8-sig") as handle:
+            for row in csv.DictReader(handle):
+                if row.get("data_type") != "음식" or not row.get("kcal"):
+                    continue
+                out.setdefault(row.get("rep_name") or "", []).append(row)
+    except OSError:
+        return {}
+    return out
+
+
+_CATEGORY_MIN_ROWS = 5
+_DRINK_SUFFIX_RE = re.compile(r"(라떼|커피|차|티|에이드|주스|스무디|쉐이크|음료|우유|하이볼|맥주|소주|와인|막걸리)$")
+
+
+@functools.lru_cache(maxsize=1)
+def _dish_rows_by_suffix() -> dict[str, list[dict]]:
+    """Dish rows grouped by the last 2-4 syllables of their name words (볶음, 버거, 치킨, 하이볼)."""
+    out: dict[str, list[dict]] = {}
+    words_of: list[tuple[dict, set[str]]] = []
+    vocabulary: set[str] = set()
+    for rows in _dish_rows_by_rep().values():
+        for row in rows:
+            words = {w for w in re.sub(r"\([^)]*\)", " ", row.get("name") or "").split() if len(w) >= 2}
+            words_of.append((row, words))
+            vocabulary |= words
+    for row, words in words_of:
+        for word in words:
+            for size in (2, 3, 4):
+                suffix = word[-size:]
+                # only head nouns that are food words themselves (볶음, 치킨, 하이볼), not "이볼"
+                if len(word) >= size and suffix in vocabulary:
+                    out.setdefault(suffix, []).append(row)
+    return out
+
+
+def category_nutrition(food_name: str, amount=None, unit=None) -> dict | None:
+    """Deterministic fallback when no DB row names the food: the median kcal/macros per 100 of the
+    dish rows whose representative name is the query's head noun (longest rep_name the name ends
+    with, at least two syllables and three rows), times the deterministic portion grams."""
+    compact = "".join((food_name or "").split())
+    if len(compact) < 3:
+        return None
+    by_suffix = _dish_rows_by_suffix()
+    best = ""
+    for size in (4, 3, 2):
+        suffix = compact[-size:]
+        if len(compact) > size and len(by_suffix.get(suffix, ())) >= _CATEGORY_MIN_ROWS:
+            best = suffix
+            break
+    rows = by_suffix.get(best) if best else None
+    if not rows:
+        return None
+    # one basis only: g rows, or ml rows for drinks (a soup's ml row and a dish's g row differ)
+    basis = "ml" if _DRINK_SUFFIX_RE.search(compact) else "g"
+    rows = [r for r in rows if (r.get("basis_unit") or "g") == basis]
+    if len(rows) < _CATEGORY_MIN_ROWS:
+        return None
+
+    def med(key):
+        vals = sorted(float(r[key]) for r in rows if r.get(key) not in (None, ""))
+        return vals[len(vals) // 2] if vals else None
+    kcal, protein, carbs, fat = med("kcal"), med("protein_g"), med("carb_g"), med("fat_g")
+    if kcal is None:
+        return None
+    grams = resolve_portion_grams(food_name, amount, unit)
+    out_amount, out_unit = amount, unit
+    if grams is None:
+        grams = serving_grams(food_name) or serving_grams(best) or 200.0
+        out_amount, out_unit = 1.0, "인분"
+    factor = grams / 100.0
+    r1 = lambda v: round(v * factor, 1) if v is not None else None  # noqa: E731
+    logger.info("[food_engine] category fallback '%s' (%s rows, basis %s, median %s kcal/100)",
+                best, len(rows), basis, kcal)
+    return {"kcal": r1(kcal), "protein_g": r1(protein), "carbs_g": r1(carbs), "fat_g": r1(fat),
+            "amount": out_amount, "unit": out_unit, "category": best, "category_rows": len(rows),
+            "basis": basis, "grams": grams}
+
+
+def _median_density_row(meta_top: dict, query: str) -> dict | None:
+    if (meta_top.get("data_type") or "") != "음식":
+        return None
+    rep = meta_top.get("rep_name") or ""
+    q = "".join((query or "").split())
+    if not rep or len(q) < 2:
+        return None
+    basis = meta_top.get("basis_unit") or "g"
+    # same basis only: a dish's g row and ml row are measured differently (soup with broth)
+    rows = [r for r in _dish_rows_by_rep().get(rep, [])
+            if q in "".join((r.get("name") or "").split()) and (r.get("basis_unit") or "g") == basis]
+    if len(rows) < _MEDIAN_MIN_ROWS:
+        return None
+    try:
+        top_kcal = float(meta_top.get("kcal"))
+        kcals = sorted(float(r["kcal"]) for r in rows)
+    except (TypeError, ValueError):
+        return None
+    median = kcals[len(kcals) // 2]
+    if top_kcal < 10:
+        return None  # black coffee / plain tea rows are legitimately ~0 kcal; flavoured variants are not them
+    if median <= 0 or abs(top_kcal - median) / median <= _MEDIAN_MAX_DEVIATION:
+        return None
+    best = min(rows, key=lambda r: abs(float(r["kcal"]) - median))
+
+    def _num(v):
+        try:
+            return float(v) if v not in (None, "") else None
+        except ValueError:
+            return None
+    logger.info("[food_engine] outlier row replaced by median-density row (%s -> %s)", top_kcal, best["kcal"])
+    return {**meta_top, "name": best.get("name"), "kcal": _num(best.get("kcal")),
+            "protein_g": _num(best.get("protein_g")), "carb_g": _num(best.get("carb_g")),
+            "fat_g": _num(best.get("fat_g")), "sugar_g": _num(best.get("sugar_g")),
+            "fiber_g": _num(best.get("fiber_g")), "sodium_mg": _num(best.get("sodium_mg")),
+            "basis_value": _num(best.get("basis_value")) or 100.0, "basis_unit": best.get("basis_unit") or basis,
+            "food_id": best.get("food_id")}
 
 class FoodSearchEngine:
     """식품 DB 검색 싱글톤. 인스턴스는 항상 생성되며, 사용 불가 시 available=False."""
@@ -307,7 +452,18 @@ class FoodSearchEngine:
         doc = candidates[0].document
         distance = candidates[0].vector_score
         similarity = 1.0 - float(distance)
-        if similarity < SIMILARITY_THRESHOLD:
+        meta_first = doc.metadata or {}
+        query_compact = "".join((analysis.normalized_query or "").split())
+        raw_name = meta_first.get("name") or ""
+        paren_words = [w for part in re.findall(r"\(([^()]*)\)", raw_name) for w in part.split()]
+        head_words = [w for w in re.sub(r"\([^()]*\)", " ", raw_name).split()
+                      if w not in {"생것", "구운것", "삶은것", "찐것", "볶은것", "튀긴것", "말린것", "데친것"}]
+        # the queried name IS the row's food ("항정살" = "돼지고기 앞다리(항정살) 생것", "x" as the
+        # head word): a weak embedding score must not hide it. A modifier word ("프로틴" in
+        # "프로틴 돌체 라떼") is not that food.
+        literal_hit = len(query_compact) >= 2 and (
+            query_compact in paren_words or (head_words and head_words[-1] == query_compact))
+        if similarity < SIMILARITY_THRESHOLD and not (literal_hit and similarity >= LITERAL_HIT_SIMILARITY):
             logger.debug("[food_engine] 임계값 미달: '%s' sim=%.3f", search_queries, similarity)
             return None
         meta_top = doc.metadata or {}
@@ -319,7 +475,7 @@ class FoodSearchEngine:
             logger.debug("[food_engine] 어휘 불일치: '%s' -> '%s' sim=%.3f", food_name, meta_top.get("name"), similarity)
             return None
 
-        meta = doc.metadata or {}
+        meta = _median_density_row(meta_top, analysis.normalized_query) or (doc.metadata or {})
         protein = meta.get("protein_g")
         carbs = meta.get("carb_g")   # CSV 컬럼명은 carb_g (출력은 carbs_g)
         fat = meta.get("fat_g")
@@ -333,6 +489,11 @@ class FoodSearchEngine:
         basis_unit = meta.get("basis_unit") or "g"
 
         grams = self._resolve_grams(food_name, amount, unit)
+        if (grams is not None and (unit or "").strip() == "인분" and (meta.get("data_type") or "") == "음식"
+                and portion_confidence(food_name, amount, unit) == "default" and not _protein_dense(meta)):
+            # one serving of a prepared dish with no known serving (분짜, 쫄볶이 1인분): a meal portion,
+            # not the 200 g raw-meat 1인분
+            grams = float(amount) * _DISH_SERVING_G
         serving = serving_grams(food_name) if amount is None else None
         if grams is None and serving is not None:
             # 수량 미기재 → 1인분 기준 ("된장찌개 먹었어" 는 100g 이 아니라 한 그릇)

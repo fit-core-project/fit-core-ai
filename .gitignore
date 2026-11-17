@@ -319,6 +319,9 @@ $RECYCLE.BIN/
 /data/*
 !/data/eval/
 !/data/eval/**
+# Hand-curated reference tables (product labels, serving sizes) are source, not generated data.
+!/data/curated/
+!/data/curated/**
 pre-phase-archive/
 
 .claude

@@ -1,6 +1,7 @@
 """Deterministic food search reranking helpers."""
 from __future__ import annotations
 
+import difflib
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -189,6 +190,39 @@ def _token_match_is_plausible(query: str, token: str, rep_name: str, data_type: 
     return False
 
 
+# A drink row for a food query (티라미수 -> 커피 티라미수 라떼, 자몽 -> 에이드 자몽 에이드) or a
+# dessert row for a drink query (초코라떼 -> 마카롱 초코라떼 마카롱): the flavour name matches,
+# the food category does not.
+_DRINK_WORDS = ("커피", "라떼", "에이드", "스무디", "쉐이크", "주스", "음료", "프라푸치노", "아이스티",
+                "차", "티", "밀크티", "콜드브루", "버블티", "우유", "요구르트", "드링크", "소다",
+                "카푸치노", "플랫화이트", "에스프레소", "마끼아또", "마키아토", "모카", "아메리카노",
+                "아인슈페너", "돌체", "샷", "아샷추", "주스")
+_CONDIMENT_WORDS = ("소스", "드레싱", "양념장", "시럽", "분말", "가루", "육수")
+_DESSERT_REPS = ("마카롱", "케이크", "쿠키", "빵", "크로플", "와플", "도넛", "아이스크림", "빙수", "타르트", "푸딩")
+
+
+def _is_drink_text(text: str) -> bool:
+    compact = _compact_food_text(text or "")
+    return any(compact.endswith(w) or w in compact for w in _DRINK_WORDS if len(w) >= 2) or compact.endswith(("차", "티"))
+
+
+def _category_mismatch(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> bool:
+    query = analysis.normalized_query or ""
+    name = _compact_food_text(get_food_candidate_name(candidate.document) or "")
+    # a sauce / dressing row for a dish query ("까르보나라 파스타" -> 까르보나라소스)
+    if any(w in name for w in _CONDIMENT_WORDS) and not any(w in query for w in _CONDIMENT_WORDS):
+        return True
+    rep = _compact_food_text(get_food_candidate_rep_name(candidate.document) or "")
+    if not query or not rep or _compact_food_text(query) == rep:
+        return False
+    rep_is_drink = rep in {_compact_food_text(w) for w in _DRINK_WORDS if len(w) >= 2}
+    if rep_is_drink and not _is_drink_text(query):
+        return True
+    if rep in _DESSERT_REPS and _is_drink_text(query) and not any(d in query for d in _DESSERT_REPS):
+        return True
+    return False
+
+
 def is_implausible_food_candidate(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> bool:
     """True when the query only appears in the candidate as a modifier or substring of a
     different food (콜라 -> 쇼콜라 케이크, 치킨 -> 햄버거 치킨치즈마요버거), not as its head noun.
@@ -244,10 +278,14 @@ def _canonical_match_score(analysis: FoodQueryAnalysis, candidate: FoodSearchCan
     # canonical equivalences.
     if normalized and name and len(name) >= 2 and normalized != name and name in normalized:
         position = normalized.find(name)
+        end = position + len(name)
+        # A name at the start only counts when it is a whole word ("국수 말린것" in "삶은 국수
+        # 말린것을"); "순대" at the start of the single word "순대국밥" is a modifier, not the dish.
+        starts_whole_word = position == 0 and (end == len(normalized) or normalized[end].isspace())
         if (
             _compact_food_text(normalized).endswith(_compact_food_text(name))
-            or position == 0
-            or normalized[position - 1].isspace()
+            or starts_whole_word
+            or (position > 0 and normalized[position - 1].isspace())
         ):
             return 2
     # Forward direction (query ⊂ name) only counts as a leading token match
@@ -356,9 +394,14 @@ def _plainness_score(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate
     if not query or analysis.cooking_state or len(_food_tokens(query)) != 1:
         return 0
     name = get_food_candidate_name(candidate.document)
-    if _forward_match_kind(query, name) != "prefix":
+    tokens = _food_tokens(name)
+    if _forward_match_kind(query, name) == "prefix":
+        extra = tokens[1:]
+    elif query in tokens[1:] and get_food_candidate_data_type(candidate.document) == "원재료성 식품":
+        # raw-ingredient rows name the variety second: "옥수수 찰옥수수 말린것", "호박 단호박 생것"
+        extra = tokens[tokens.index(query) + 1:]
+    else:
         return 0
-    extra = _food_tokens(name)[1:]
     if any(marker in token for token in extra for marker in _PROCESSED_MARKERS) and not any(
         marker in query for marker in _PROCESSED_MARKERS
     ):
@@ -382,6 +425,9 @@ def _rerank_key(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> 
         and _non_cooking_token_overlap_score(analysis, candidate) > 0
     ):
         canonical = max(canonical, 3)
+    if _category_mismatch(analysis, candidate):
+        # a drink row for a food query (or the reverse) only wins when nothing else matches
+        canonical -= 5
     return (
         _protected_dish_score(analysis, candidate),
         canonical,
@@ -393,6 +439,9 @@ def _rerank_key(analysis: FoodQueryAnalysis, candidate: FoodSearchCandidate) -> 
         -candidate.source_query_index,
         -candidate.original_rank,
     )
+
+
+_MODIFIER_PREFIXES = ("한우", "돼지", "국산", "수입", "수제", "소")
 
 
 def has_lexical_relation(query: str, name: str, rep_name: str = "") -> bool:
@@ -408,7 +457,24 @@ def has_lexical_relation(query: str, name: str, rep_name: str = "") -> bool:
     if qc in nc or nc in qc or (len(rc) >= 2 and rc in qc):
         return True
     words = [w for w in _food_tokens(query) if len(w) >= 2]
-    return bool(words) and all(w in nc for w in words)
+    if words and all(w in nc for w in words):
+        return True
+    # Spelling variants of the same dish: 쭈꾸미볶음 ~ 주꾸미볶음, 아구찜 ~ 아귀찜, 오리로스 ~
+    # 오리고기로스, 항정살 ~ 앞다리(항정살). Short words stay strict (소주 vs 소금, 맥주 vs 맥치킨).
+    for prefix in _MODIFIER_PREFIXES:
+        # "소대창" ~ 대창구이, "돼지막창" ~ 막창구이: an origin word in front of the dish name
+        head = qc[len(prefix):]
+        if qc.startswith(prefix) and len(head) >= 2 and head in nc:
+            return True
+    if len(qc) >= 3:
+        name_words = [w for w in _food_tokens(name or "") if len(w) >= 2] + [nc]
+        for w in name_words:
+            if w == qc or (len(w) >= 3 and (qc in w or w in qc)):
+                return True
+            ratio = difflib.SequenceMatcher(None, qc, w).ratio()
+            if ratio >= 0.8 or (ratio >= 0.66 and len(w) == len(qc) and qc[-1] == w[-1] and qc[0] == w[0]):
+                return True
+    return False
 
 
 def rerank_food_candidates(

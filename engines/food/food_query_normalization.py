@@ -68,6 +68,21 @@ FOOD_SEARCH_ALIAS_RULES: dict[str, str] = {
     "와퍼": "햄버거 와퍼",
     "김볶밥": "김치볶음밥",
     "돈까스": "돈가스", "돈까쓰": "돈가스",
+    "toast": "토스트", "egg": "달걀", "eggs": "달걀", "banana": "바나나", "rice": "쌀밥",
+    "아메리까노": "커피 아메리카노", "떡뽁이": "떡볶이",
+    "물냉": "물냉면", "비냉": "비빔냉면", "삼김": "삼각김밥", "아아": "커피 아메리카노",
+    "cheeseburger": "치즈버거", "fries": "감자튀김", "french fries": "감자튀김", "cold brew": "콜드브루",
+    "맥너겟": "치킨너겟", "초코라떼": "더블초코라떼", "combination pizza": "콤비네이션 피자",
+    # varieties without a raw row of their own -> the nearest plain raw row (not 에이드 / 샐러드)
+    "샤인머스캣": "포도 마스캇함브르그 생것", "단호박": "호박 단호박 찐것",
+    # English dish names (LLM keeps the user's English words); plural forms included
+    "pad thai": "팟타이", "pad thais": "팟타이", "croquette": "고로케", "croquettes": "고로케", "cappuccino": "카푸치노", "cappuccinoes": "카푸치노", "fried rice": "볶음밥", "fried rices": "볶음밥", "kimchi stew": "김치찌개", "kimchi stews": "김치찌개", "bibimbap": "비빔밥", "bibimbaps": "비빔밥", "ramen": "라면", "ramens": "라면", "salad": "샐러드", "salads": "샐러드", "sandwich": "샌드위치", "sandwiches": "샌드위치", "bagel": "베이글", "bagels": "베이글", "latte": "카페라떼", "lattes": "카페라떼", "americano": "아메리카노", "americanoes": "아메리카노", "pizza": "피자", "pizzas": "피자", "burger": "햄버거", "burgers": "햄버거", "hamburger": "햄버거", "hamburgers": "햄버거", "fried chicken": "후라이드치킨", "fried chickens": "후라이드치킨", "tteokbokki": "떡볶이", "tteokbokkis": "떡볶이", "kimbap": "김밥", "kimbaps": "김밥", "gimbap": "김밥", "gimbaps": "김밥", "dumpling": "만두", "dumplings": "만두", "pasta": "파스타", "pastas": "파스타", "steak": "스테이크", "steaks": "스테이크", "sushi": "초밥", "sushis": "초밥", "udon": "우동", "udons": "우동", "curry": "카레라이스", "currys": "카레라이스", "oatmeal": "오트밀", "oatmeals": "오트밀", "yogurt": "요거트", "yogurts": "요거트", "omelette": "오믈렛", "omelettes": "오믈렛", "omelet": "오믈렛", "omelets": "오믈렛", "pancake": "팬케이크", "pancakes": "팬케이크", "waffle": "와플", "waffles": "와플", "donut": "도넛", "donuts": "도넛", "doughnut": "도넛", "doughnuts": "도넛", "cookie": "쿠키", "cookies": "쿠키", "cake": "케이크", "cakes": "케이크", "chicken breast": "닭가슴살", "chicken breasts": "닭가슴살", "milk": "우유", "milks": "우유", "orange juice": "오렌지주스", "orange juices": "오렌지주스", "beer": "맥주", "beers": "맥주", "wine": "와인", "wines": "와인", "soju": "소주", "sojus": "소주", "coke": "콜라", "cokes": "콜라", "protein shake": "단백질 쉐이크", "protein shakes": "단백질 쉐이크", "croissant": "크루아상", "croissants": "크루아상", "muffin": "머핀", "muffins": "머핀", "granola": "그래놀라", "granolas": "그래놀라", "smoothie": "스무디", "smoothies": "스무디", "hot dog": "핫도그", "hot dogs": "핫도그", "nachos": "나초", "taco": "타코", "tacoes": "타코", "burrito": "부리또", "burritoes": "부리또", "risotto": "리조또", "risottoes": "리조또", "carbonara": "까르보나라", "carbonaras": "까르보나라", "spaghetti": "스파게티", "spaghettis": "스파게티", "tiramisu": "티라미수", "tiramisus": "티라미수", "cheesecake": "치즈케이크", "cheesecakes": "치즈케이크", "brownie": "브라우니", "brownies": "브라우니", "apple": "사과", "apples": "사과", "banana": "바나나", "bananas": "바나나", "orange": "오렌지", "oranges": "오렌지", "sweet potato": "고구마", "sweet potatoes": "고구마", "potato": "감자", "potatoes": "감자", "boiled egg": "삶은 달걀", "boiled eggs": "삶은 달걀", "rice": "쌀밥", "rices": "쌀밥", "ramyeon": "라면", "ramyeons": "라면",
+    "갈매기": "돼지고기 삼겹살(갈매기살) 생것", "갈매기살": "돼지고기 삼겹살(갈매기살) 생것",
+    # meat cuts as ordered at a BBQ restaurant -> the cooked DB rows
+    "목살": "돼지고기 목심 구운것", "돼지목살": "돼지고기 목심 구운것", "목살구이": "돼지고기 목심 구운것",
+    "차돌": "차돌박이구이", "차돌박이": "차돌박이구이",
+    "막창": "막창구이", "소막창": "막창구이 소고기", "돼지막창": "막창구이",
+    "la갈비": "소갈비 구이", "LA갈비": "소갈비 구이", "엘에이갈비": "소갈비 구이",
     "계란 프라이": "달걀후라이", "계란프라이": "달걀후라이", "달걀프라이": "달걀후라이",
 }
 
