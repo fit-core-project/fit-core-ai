@@ -1,13 +1,13 @@
 {
   "diet_full": {
-    "pass": 168,
-    "test_pass": 86,
-    "total_kcal_acc_pct": 79.7,
-    "parse_ok": 254
+    "pass": 195,
+    "test_pass": 101,
+    "total_kcal_acc_pct": 93.2,
+    "parse_ok": 255
   },
   "supplement": {
-    "pass": 102,
-    "test_pass": 40,
+    "pass": 106,
+    "test_pass": 43,
     "parse_ok": 109
   },
   "routine": {
@@ -16,9 +16,25 @@
     "pool_ok": 71
   },
   "diet_curated": {
-    "pass": 45,
-    "test_pass": 19,
-    "total_kcal_acc_pct": 61.7,
-    "parse_ok": 245
+    "pass": 57,
+    "test_pass": 24,
+    "total_kcal_acc_pct": 69.2,
+    "parse_ok": 246
+  },
+  "diet_products": {
+    "pass": 29,
+    "test_pass": 18,
+    "total_kcal_acc_pct": 72.5,
+    "parse_ok": 40
+  },
+  "supplement_kbexpand": {
+    "pass": 29,
+    "test_pass": 13,
+    "parse_ok": 30
+  },
+  "supplement_kbpilot": {
+    "pass": 9,
+    "test_pass": 5,
+    "parse_ok": 9
   }
 }

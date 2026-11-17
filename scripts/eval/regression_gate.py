@@ -41,13 +41,19 @@ def _run(args: list[str], env_extra: dict | None = None) -> None:
         raise SystemExit(f"harness failed: {' '.join(args)}")
 
 
-def diet_metrics(no_food_engine: bool) -> dict:
-    out = ARTIFACTS / ("gate_diet_curated.json" if no_food_engine else "gate_diet_full.json")
+def diet_metrics(no_food_engine: bool, dataset: str | None = None, tag: str = "") -> dict:
+    name = "gate_diet_curated" if no_food_engine else "gate_diet_full"
+    out = ARTIFACTS / f"{name}{tag}.json"
     args = [PY, "scripts/eval/diet_stage_eval.py", "--llm", "cache", "--out-json", str(out),
             "--out-md", str(out.with_suffix(".md"))]
+    if dataset:
+        args += ["--dataset", dataset]
+    env = None
     if no_food_engine:
         args.append("--no-food-engine")
-    _run(args)
+        # The generated MFDS product index is not in CI: the ci profile must not see it locally either.
+        env = {"FOOD_PROCESSED_INDEX": "off"}
+    _run(args, env)
     report = json.loads(out.read_text(encoding="utf-8"))
     summary = report["summary"]
     no_cache = sum(1 for case in report["cases"] if case.get("status") == "no_cache")
@@ -60,16 +66,26 @@ def diet_metrics(no_food_engine: bool) -> dict:
     }
 
 
-def supplement_metrics() -> dict:
-    _run([PY, "scripts/eval/supplement_stage_eval.py", "--llm", "cache", "--out-prefix", "gate_supplement"])
-    report = json.loads((ARTIFACTS / "gate_supplement.json").read_text(encoding="utf-8"))
+def supplement_metrics(dataset: str | None = None, prefix: str = "gate_supplement") -> dict:
+    args = [PY, "scripts/eval/supplement_stage_eval.py", "--llm", "cache", "--out-prefix", prefix]
+    if dataset:
+        args += ["--dataset", dataset]
+    _run(args)
+    report = json.loads((ARTIFACTS / f"{prefix}.json").read_text(encoding="utf-8"))
     summary = report["summary"]
     misses = sum(1 for case in report["cases"] if "llm_cache_miss" in ((case.get("s0") or {}).get("reasons") or []))
+    def reasons(case: dict) -> list[str]:
+        return [str(r) for r in ((case.get("s3") or {}).get("reasons") or [])]
+
     return {
         "pass": summary["all"]["pass"],
         "test_pass": summary["test"]["pass"],
         "parse_ok": summary["all"]["stage_pass_independent"]["s1"],
         "_cache_misses": misses,
+        # hard safety gates (must stay 0)
+        "_safety_unsafe_claims": sum(any(r.startswith("banned_present") for r in reasons(c)) for c in report["cases"]),
+        "_safety_consult_missing": sum("consult_missing" in reasons(c) for c in report["cases"]),
+        "_n": summary["all"]["n"],
     }
 
 
@@ -81,13 +97,30 @@ def routine_metrics() -> dict:
     def final_ok(case: dict) -> bool:
         return all(case["stages"].get(stage, {}).get("status") != "fail" for stage in ("S3", "S4", "S5"))
 
+    def forbidden_final(case: dict) -> bool:
+        return any("forbidden ids in final" in i or "forbidden ids after repair" in i
+                   for stage in ("S3", "S5") for i in case["stages"].get(stage, {}).get("issues", []))
+
     return {
         "final_pass": sum(final_ok(c) for c in cases),
         "test_final_pass": sum(final_ok(c) for c in cases if c["split"] == "test"),
         "pool_ok": sum(c["stages"].get("S1", {}).get("status") != "fail" for c in cases),
         "_cache_misses": len(report["summary"].get("cacheMissCases") or []),
+        # hard safety gate: a pain / blocked-equipment / DOMS-3 exercise in the final routine
+        "_safety_forbidden_exercise": sum(forbidden_final(c) for c in cases),
+        "_n": len(cases),
     }
 
+
+# Quality targets agreed 2026-11-11 (percent of cases). Reported as gaps, never a failure:
+# the baseline blocks regressions; these say how far there is to go.
+TARGETS = {
+    "routine": {"final_pass": 95.0},
+    "supplement": {"pass": 95.0},
+    "supplement_kbexpand": {"pass": 95.0},
+    "diet_full": {"total_kcal_acc_pct": 90.0},
+    "diet_products": {"total_kcal_acc_pct": 80.0},
+}
 
 PROFILES = {
     "ci": {"diet_curated": lambda: diet_metrics(no_food_engine=True)},
@@ -95,6 +128,10 @@ PROFILES = {
         "diet_full": lambda: diet_metrics(no_food_engine=False),
         "supplement": supplement_metrics,
         "routine": routine_metrics,
+        # pre-registered DB-expansion sets (2026-11-11)
+        "diet_products": lambda: diet_metrics(no_food_engine=False, dataset="tests/evaluation/datasets/diet_eval_products_v1.jsonl", tag="_products"),
+        "supplement_kbexpand": lambda: supplement_metrics("tests/evaluation/datasets/supplement_eval_kbexpand.jsonl", "gate_supplement_kbexpand"),
+        "supplement_kbpilot": lambda: supplement_metrics("tests/evaluation/datasets/supplement_eval_kbpilot.jsonl", "gate_supplement_kbpilot"),
     },
 }
 
@@ -108,11 +145,24 @@ def main() -> int:
     baseline = json.loads(BASELINE.read_text(encoding="utf-8")) if BASELINE.exists() else {}
     current = {name: fn() for name, fn in PROFILES[args.profile].items()}
 
-    failures, improvements = [], []
+    failures, improvements, gaps = [], [], []
     for name, metrics in current.items():
         misses = metrics.pop("_cache_misses", 0)
         if misses:
             failures.append(f"{name}: {misses} LLM cache misses (prompt changed) - refill with --llm live")
+        n = metrics.pop("_n", None)
+        for key in [k for k in metrics if k.startswith("_safety_")]:
+            value = metrics.pop(key)
+            print(f"  {name:13s} {key[1:]:28s} {value!s:>5} (must be 0)")
+            if value:
+                failures.append(f"{name}.{key[1:]}: {value} (hard safety gate, must be 0)")
+        for key, target in TARGETS.get(name, {}).items():
+            value = metrics.get(key)
+            if value is None:
+                continue
+            pct = value if key.endswith("_pct") else (round(100.0 * value / n, 1) if n else None)
+            if pct is not None and pct < target:
+                gaps.append(f"{name}.{key}: {pct}% (target {target}%)")
         for key, value in metrics.items():
             base = baseline.get(name, {}).get(key)
             mark = ""
@@ -135,6 +185,8 @@ def main() -> int:
         BASELINE.write_text(json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(f"baseline updated: {BASELINE}")
         return 0
+    if gaps:
+        print("below target (not a failure):", *gaps, sep="\n  ")
     if improvements:
         print("improved (refresh with --update-baseline):", *improvements, sep="\n  ")
     if failures:

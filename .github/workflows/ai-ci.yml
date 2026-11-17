@@ -30,6 +30,7 @@ jobs:
       LOCAL_LLM_NUM_CTX: "8192"
       # No database in CI: anything that needs one must be marked integration.
       DATABASE_URL: mysql+pymysql://ci:ci@127.0.0.1:1/none
+      FOOD_PROCESSED_INDEX: "off"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

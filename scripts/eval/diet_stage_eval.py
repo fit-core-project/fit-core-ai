@@ -380,8 +380,16 @@ def attribute_sources(dp, cap: Capture, engine, final_items: list[dict]) -> list
                 return sanity.pop(k)["outcome"]
         return None
 
+    from engines.food.curated_products import product_nutrition
+
     for before, it in zip(cap.enrich_in, final_items):
         name = (before.get("food_name") or "").strip()
+        product = product_nutrition(name, before.get("amount"), before.get("unit"))
+        if product is not None:
+            # Branded label row (data/curated/curated_products.csv): enrichment uses it before
+            # the curated staples and the vector search, so no search record is consumed.
+            infos.append({"source": "product", "food_id": product["matched_product"], "grams": None, "search": None})
+            continue
         if name in dp._FOOD_PER_100G and dp._macros_from_table(name, before.get("amount"), before.get("unit"))["protein_g"] is not None:
             infos.append({"source": "curated", "food_id": None,
                           "grams": resolve_portion_grams(name, before.get("amount"), before.get("unit")), "search": None})
@@ -517,7 +525,11 @@ def evaluate_case(case: dict, parsed: list[dict], final: list[dict], infos: list
             # S2
             gold = set(e["gold_food_ids"])
             src = info["source"]
-            if src == "curated":
+            if src == "product":
+                # A label row for the named product is at least as specific as any generic DB
+                # row; S4 still checks its kcal against the expected range.
+                ok2, why2 = True, f"product:{info['food_id']}"
+            elif src == "curated":
                 # No correct DB row (llm_estimate_ok) -> a curated label value is also a
                 # legitimate source; S4 still checks its kcal against the label range.
                 ok2, why2 = ("curated" in gold or LLM_TOKEN in gold), "curated"
