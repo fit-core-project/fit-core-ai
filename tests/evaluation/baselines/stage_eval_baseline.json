@@ -1,9 +1,9 @@
 {
   "diet_full": {
-    "pass": 195,
-    "test_pass": 101,
-    "total_kcal_acc_pct": 93.2,
-    "parse_ok": 255
+    "pass": 199,
+    "test_pass": 102,
+    "total_kcal_acc_pct": 94.4,
+    "parse_ok": 256
   },
   "supplement": {
     "pass": 106,
@@ -16,10 +16,10 @@
     "pool_ok": 71
   },
   "diet_curated": {
-    "pass": 57,
+    "pass": 59,
     "test_pass": 24,
     "total_kcal_acc_pct": 69.2,
-    "parse_ok": 246
+    "parse_ok": 248
   },
   "diet_products": {
     "pass": 29,

@@ -441,6 +441,10 @@ def check_amount(e: dict, p: dict):
         return True, "literal"
     if not unit and units_ok & COUNT_UNITS and lo - eps <= float(amt) <= hi + eps:
         return True, "bare_count"
+    # the user wrote no unit word ("쑥떡3", "두부포케 1"): a unit-less or count-unit parse of the right
+    # number is the literal reading
+    if not units_ok and (not unit or unit.lower() in COUNT_UNITS) and lo - eps <= float(amt) <= hi + eps:
+        return True, "bare_count_no_unit_word"
     if unit in GRAM_UNITS or unit.lower() in GRAM_UNITS:
         if e["grams"][0] * 0.95 <= float(amt) <= e["grams"][1] * 1.05:
             return True, "converted_to_grams"
