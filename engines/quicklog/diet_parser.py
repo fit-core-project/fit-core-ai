@@ -603,6 +603,38 @@ def _expand_set_menus(parsed: ParsedDietLog) -> ParsedDietLog:
     return ParsedDietLog(items=out)
 
 
+# Spoken self-corrections: "스콘 하나랑 … 아 아니다 스콘 두 개", "율무죽 한 그릇 아 반 그릇만": the last
+# amount said for the item after the correction marker is the one eaten.
+_CORRECTION_RE = re.compile(r"(?:아\s*)?아니(?:다|야|지|고)?\b|아\s+(?=반|\d|한|두|세|네)|정정|수정")
+
+
+def _apply_spoken_correction(parsed: ParsedDietLog, user_text: str) -> ParsedDietLog:
+    text = user_text or ""
+    m = _CORRECTION_RE.search(text)
+    if not m:
+        return parsed
+    tail = _normalize_number_words(text[m.end():])
+    tail_items = _deterministic_diet_parse(tail).items
+    out = []
+    for item in parsed.items:
+        name = "".join((item.food_name or "").split())
+        hit = next((t for t in reversed(tail_items) if t.amount is not None and (
+            name and ("".join(t.food_name.split()) in name or name in "".join(t.food_name.split())))), None)
+        if hit is None and len(parsed.items) == 1:
+            nums = list(_AMOUNT_UNIT_RE.finditer(tail)) or []
+            half = re.search(r"반\s*(공기|그릇|접시|판|마리|인분|개|병|캔)", tail)
+            if half:
+                hit = DietParseItem(food_name=item.food_name, amount=0.5, unit=half.group(1))
+            elif nums:
+                last = nums[-1]
+                hit = DietParseItem(food_name=item.food_name, amount=float(last.group("amount")), unit=last.group("unit"))
+        if hit is not None and (hit.amount != item.amount or (hit.unit or item.unit) != item.unit):
+            item = item.model_copy(update={"amount": hit.amount, "unit": hit.unit or item.unit,
+                                           "protein_g": None, "carbs_g": None, "fat_g": None, "kcal": None})
+        out.append(item)
+    return ParsedDietLog(items=out)
+
+
 def _restore_brand_prefix(parsed: ParsedDietLog, user_text: str) -> ParsedDietLog:
     """The LLM often drops the brand word the user wrote ("설레임 밀크쉐이크" -> 밀크쉐이크,
     "새로 다래" -> 다래). When the words right before the item name in the text form a known
@@ -747,6 +779,9 @@ _CUP_SIZE_UNITS = frozenset({"라지", "레귤러", "톨", "그란데", "벤티"
 _DRINK_NAME_RE = re.compile(
     r"(커피|라떼|아메리카노|티$|차$|에이드|주스|스무디|쉐이크|프라푸치노|아샷추|음료|콜드브루|모카|마끼아또|버블티|밀크티|콜라|사이다|맥주)"
 )
+_UNIT_TYPOS = {"조깍": "조각", "조각이": "조각", "그륵": "그릇", "그룻": "그릇", "공귀": "공기", "게": "개", "갸": "개",
+               "봉다리": "봉지", "잔씩": "잔", "개씩": "개"}
+_HALF_UNIT_RE = re.compile(r"^반\s*(근|공기|그릇|접시|판|마리|인분|병|캔|개|봉지|팩|컵|잔)$")
 _ENGLISH_UNITS = {
     "slice": "조각", "slices": "조각", "piece": "개", "pieces": "개", "pc": "개", "pcs": "개",
     "cup": "컵", "cups": "컵", "can": "캔", "cans": "캔", "bottle": "병", "bottles": "병",
@@ -794,6 +829,10 @@ def _normalize_llm_units(parsed: ParsedDietLog) -> ParsedDietLog:
                 else ("잔" if _DRINK_NAME_RE.search(item.food_name or "") else "인분") if unit in _CUP_SIZE_UNITS
                 else unit)
             unit = _ENGLISH_UNITS.get(unit.lower(), unit)
+            unit = _UNIT_TYPOS.get(unit, unit)
+            half = _HALF_UNIT_RE.match(unit)
+            if half and (amount is None or amount in (1, 1.0)):
+                amount, unit = 0.5, half.group(1)  # "반근", "반공기", "반그릇" as the unit
             m = _UNIT_WITH_NUMBER_RE.match(_normalize_number_words(unit).replace(" ", ""))
             if m:
                 amount, unit = float(m["n"]), m["unit"].strip()
@@ -1054,6 +1093,7 @@ def parse_diet_log(user_text: str) -> str:
         parsed = _normalize_llm_units(parsed)
         parsed = _drop_placeholder_amounts(parsed, user_text)
         parsed = _reconcile_amounts_with_text(parsed, user_text)
+        parsed = _apply_spoken_correction(parsed, user_text)
         parsed = _restore_brand_prefix(parsed, user_text)
         parsed = _apply_ordered_dish_serving(parsed, user_text)
         parsed = _apply_half_half_text(parsed, user_text)
