@@ -233,6 +233,21 @@ def test_supplement_ingredient_profile_corpus_validates_against_schema():
         "ING_PROBIOTIC",
         "ING_ZINC",
         "ING_PROTEIN",
+        "ING_CALCIUM",
+        "ING_VITAMIN_C",
+        "ING_MELATONIN",
+        "ING_VITAMIN_B",
+        "ING_FOLATE",
+        "ING_BIOTIN",
+        "ING_LUTEIN",
+        "ING_COENZYME_Q10",
+        "ING_COLLAGEN",
+        "ING_ARGININE",
+        "ING_BCAA",
+        "ING_GLUTAMINE",
+        "ING_SELENIUM",
+        "ING_THEANINE",
+        "ING_ASHWAGANDHA",
     ]
     assert {profile.type for profile in profiles} == {"ingredient_profile"}
     assert all(profile.aliases for profile in profiles)
@@ -259,6 +274,10 @@ def test_supplement_interaction_rule_corpus_validates_against_schema():
         "INT_ZINC_IRON_CALCIUM",
         "INT_MULTIVITAMIN_MINERAL_OVERLAP",
         "INT_SILYMARIN_MEDICATIONS",
+        "INT_COENZYME_Q10_WARFARIN",
+        "INT_COENZYME_Q10_BLOOD_PRESSURE_MEDICATION",
+        "INT_ARGININE_BLOOD_PRESSURE_MEDICATION",
+        "INT_ASHWAGANDHA_THYROID_MEDICATION",
     ]
     assert {rule.type for rule in rules} == {"interaction_rule"}
     assert all(rule.entity_a.canonical for rule in rules)
@@ -287,6 +306,12 @@ def test_supplement_safety_rule_corpus_validates_against_schema():
         "SAFE_HIGH_DOSE_ZINC",
         "SAFE_LIVER_SILYMARIN",
         "SAFE_PREGNANCY_MULTIVITAMIN",
+        "SAFE_BIOTIN_LAB_TEST",
+        "SAFE_PREGNANCY_FOLATE",
+        "SAFE_HIGH_DOSE_SELENIUM",
+        "SAFE_HIGH_DOSE_VITAMIN_B6",
+        "SAFE_LUTEIN_SMOKING",
+        "SAFE_PREGNANCY_ASHWAGANDHA",
     ]
     assert {rule.type for rule in rules} == {"safety_rule"}
     assert all(rule.trigger_conditions for rule in rules)

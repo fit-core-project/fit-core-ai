@@ -371,7 +371,7 @@ def test_efficacy_question_with_documented_use_names_the_use_only():
     from engines.supplement.response_composer import _apply_efficacy_policy
     q = "비타민D 뼈 건강에 도움 되나요?"
     out = _apply_efficacy_policy("A", q, parse_supplement_query(q), _curated_docs())
-    assert "'뼈 건강 관련 영양 보충' 용도로 안내" in out and "직접 확인한 근거는 없습니다" in out
+    assert "'뼈 건강 관련 영양 보충' 용도로 안내" in out and "직접 확인한 근거가 없습니다" in out
 
 
 def test_non_efficacy_question_is_untouched():

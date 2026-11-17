@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import json
 import re
 from dataclasses import dataclass
@@ -96,14 +97,32 @@ def compose_supplement_response(
         selected_docs,
         allow_follow_up=used_kb_fallback,
     )
+    answer = _apply_coverage_honesty(answer, question, parsed_query, selected_docs)
     answer = _apply_efficacy_policy(answer, question, parsed_query, selected_docs)
     answer, caution = _dedupe_answer_and_caution(answer, caution, parsed_query, risk_query=risk_query)
+    answer = _strip_dose_numbers(answer)
+    caution = _strip_dose_numbers(caution) if caution else caution
 
     return ComposedSupplementResponse(
         answer=answer,
         caution=caution or None,
         used_kb_fallback=used_kb_fallback,
     )
+
+
+# Policy: no concrete dose numbers in answers (the product label and a professional decide the
+# amount). The LLM sometimes writes "하루 1000mg"; replace the number, keep the sentence.
+_DOSE_NUMBER_RE = re.compile(
+    r"(?:하루\s*)?\d+(?:[.,]\d+)?\s*(?:~|-|∼)?\s*(?:\d+(?:[.,]\d+)?\s*)?"
+    r"(?:mg|㎎|밀리그램|mcg|µg|μg|IU|iu|그램|g)(?![A-Za-z])"
+)
+
+
+def _strip_dose_numbers(text: str | None) -> str | None:
+    if not text:
+        return text
+    out = _DOSE_NUMBER_RE.sub("제품에 표시된 양", text)
+    return re.sub(r"(제품에 표시된 양)(\s*(?:이상|이하|정도|까지)?\s*,?\s*제품에 표시된 양)+", r"", out)
 
 
 def _normalize_answer(value: str | dict | None) -> tuple[str, str | None]:
@@ -207,6 +226,24 @@ def _caution_parts_from_docs(docs: list[Any], parsed_query: ParsedSupplementQuer
     return [part for part in parts if part]
 
 
+def _supplement_canonicals() -> set[str]:
+    from engines.supplement.query_understanding import ALIAS_REGISTRY
+    return {e.canonical.lower() for e in ALIAS_REGISTRY if e.entity_type == EntityType.SUPPLEMENT_INGREDIENT}
+
+
+def _doc_supplement_canonicals(meta: dict) -> set[str]:
+    """Supplement ingredients a KB doc is about (profile canonical, rule entities, affected list)."""
+    known = _supplement_canonicals()
+    values: set[str] = set()
+    for key in ("canonical", "entity_a_canonical", "entity_b_canonical", "affected_entities"):
+        raw = meta.get(key)
+        parts = raw.split(",") if isinstance(raw, str) else (raw or [])
+        for part in parts:
+            # profile ids say "probiotic", the parser says "probiotics": compare expanded forms
+            values.update(_expand_canonical(str(part)))
+    return {v for v in values if v in known}
+
+
 def _doc_is_relevant_for_caution(doc: Any, parsed_query: ParsedSupplementQuery, answer: str) -> bool:
     meta = getattr(doc, "metadata", {}) or {}
     source = meta.get("source") or meta.get("type")
@@ -214,6 +251,12 @@ def _doc_is_relevant_for_caution(doc: Any, parsed_query: ParsedSupplementQuery, 
         return False
 
     query_values = {entity.canonical.lower() for entity in parsed_query.entities}
+    # A rule or profile about a specific ingredient only belongs in the caution when that
+    # ingredient was asked about. Shared risk words ("장기 복용", "고용량") let
+    # SAFE_HIGH_DOSE_SELENIUM into a creatine/kidney answer after the 2026-11-11 KB expansion.
+    doc_supplements = _doc_supplement_canonicals(meta)
+    if doc_supplements and not (doc_supplements & query_values):
+        return False
     answer_text = (answer or "").lower()
     doc_values: set[str] = set()
     doc_id = meta.get("id")
@@ -464,7 +507,8 @@ def _fallback_answer_from_docs(
 
 _UNKNOWN_INGREDIENT_ANSWER = (
     "확보된 근거 문서에서 확인되지 않는 성분이나 제품이라 복용 가능 여부를 단정하기 어렵습니다. "
-    "제품명, 성분표, 함량, 복용량과 함께 복용 중인 약이나 질환 정보를 알려주면 확인 가능한 범위에서 나눠서 안내할 수 있습니다."
+    "제품명, 성분표, 함량, 복용량과 함께 복용 중인 약이나 질환 정보를 알려주면 확인 가능한 범위에서 나눠서 안내할 수 있습니다. "
+    "복용 중인 약이 있다면 함께 먹기 전에 의사 또는 약사와 상담하세요."
 )
 _TIMING_LABEL_KEYS = (
     ("General:", "general"),
@@ -752,7 +796,7 @@ def _direct_answer_from_query_and_docs(parsed_query: ParsedSupplementQuery, docs
 
 
 _GOAL_RECOMMENDATION_ANSWER = (
-    "목적 기반 보충제 추천은 현재 확인된 corpus 범위 안에서만 조심스럽게 볼 수 있습니다. 운동 전인지 운동 후인지, 수면 목적이면 카페인 민감도와 "
+    "목적 기반 보충제 추천은 확보된 근거 문서 범위 안에서만 조심스럽게 볼 수 있습니다. 운동 전인지 운동 후인지, 수면 목적이면 카페인 민감도와 "
     "복용 중인 약, 질환, 현재 먹는 제품을 알려주면 안전 범위 안에서 후보를 좁혀볼 수 있습니다."
 )
 
@@ -852,6 +896,19 @@ def _entity_label(canonical: str) -> str:
         "vitamin c": "비타민C",
         "vitamin d": "비타민D",
         "vitamin e": "비타민E",
+        "melatonin": "멜라토닌",
+        "vitamin b": "비타민B군",
+        "folate": "엽산",
+        "biotin": "비오틴",
+        "lutein": "루테인",
+        "coenzyme q10": "코엔자임Q10",
+        "collagen": "콜라겐",
+        "arginine": "아르기닌",
+        "bcaa": "BCAA",
+        "glutamine": "글루타민",
+        "selenium": "셀레늄",
+        "theanine": "테아닌",
+        "ashwagandha": "아쉬와간다",
     }.get(canonical, canonical)
 
 
@@ -1082,9 +1139,12 @@ def _dict_get(data: dict[str, Any], *keys: str) -> Any:
 # ingredient is used for, not whether it achieves a health outcome. The answer must say that
 # first; anything after it is general reference information, not a documented effect.
 _EFFICACY_NEEDLES = (
-    "도움 돼", "도움돼", "도움 되", "도움되", "효과", "좋아지", "좋아져", "예방", "치료", "완치",
-    "낫", "나아", "개선", "커지", "커져", "보호", "안 걸리", "잘 와", "회복", "빠지", "늘어",
+    "도움 돼", "도움돼", "도움 되", "도움되", "효과", "좋아지", "좋아져", "예방", "치료돼", "치료되",
+    "치료 효과", "치료할", "치료해", "치료 되", "치료 돼", "완치",
+    "낫나", "낫는", "나아지", "나아져", "나아요", "개선", "커지", "커져", "보호", "안 걸리", "잘 와", "회복", "빠지", "빠져",
+    "늘어", "없어지", "없어져", "낮출", "낮춰", "낮아지", "낮아져", "줄어", "고쳐", "잘 타", "태워", "다이어트 돼", "다이어트 되",
 )
+_GENERIC_EFFICACY_NEEDLES = frozenset({"도움 돼", "도움돼", "도움 되", "도움되", "효과"})
 _EFFICACY_STOPWORDS = frozenset({
     "먹으면", "먹고", "먹어도", "되나요", "돼요", "되죠", "되요", "하나요", "있나요", "정말", "확실히",
     "무조건", "바로", "많이", "계속", "매일", "같이", "그냥", "진짜", "효과", "도움",
@@ -1099,8 +1159,18 @@ def _josa(word: str, with_final: str, without_final: str) -> str:
     return without_final
 
 
+# Outcome predicates ("주름 펴져요", "톤이 밝아지나요", "코로나 안 걸린다던데"): a claimed health
+# result, whatever the verb. Used only when the question is not a timing / pairing question.
+_OUTCOME_RE = re.compile(
+    r"(?:아|어|여|펴|커|빠|꺼|쳐|켜|낮아|높아|밝아|좋아|나아|없어|줄어|늘어)\s*(?:지|져)"
+    r"|안\s*걸|걸리지\s*않|막아\s*주|막아줘|막을|낮춰|높여|올려\s*주|줄여\s*주|생기지\s*않|된다던데|다던데"
+    r"|멈추|멈출|키\s*(?:큼|크|커)|올라가|덜\s*피곤|(?:아|어)진다|좋다고|좋대|효과\s*있"
+)
+
+
 def _is_efficacy_question(question: str) -> bool:
-    return any(needle in (question or "") for needle in _EFFICACY_NEEDLES)
+    q = question or ""
+    return any(needle in q for needle in _EFFICACY_NEEDLES) or bool(_OUTCOME_RE.search(q))
 
 
 def _claim_words(question: str, entity_texts: set[str]) -> list[str]:
@@ -1118,6 +1188,17 @@ def _claim_words(question: str, entity_texts: set[str]) -> list[str]:
 def _apply_efficacy_policy(answer: str, question: str, parsed_query: ParsedSupplementQuery, docs: list[Any]) -> str:
     if not answer or not _is_efficacy_question(question):
         return answer
+    # "공복에 먹어도 효과 있어요?", "커피랑 먹으면 효과 없어지나요?": timing / pairing questions that
+    # happen to say 효과 are answered by the timing and interaction text, not as efficacy claims.
+    # Only when 효과 / 도움 is the sole outcome word: "밤에 다리 쥐 나는 거 없어지나요" still claims one.
+    # "커피랑 먹으면 효과 없어지나요" asks whether the supplement still works (a pairing question)
+    stripped = re.sub(r"효과\s*(?:가|이|는)?\s*(?:없어지|없어져|떨어지|떨어져|줄어)", "효과", question or "")
+    hits = [n for n in _EFFICACY_NEEDLES if n in stripped]
+    # an outcome predicate alone counts as generic: pairing questions say "흡수가 떨어지나요"
+    generic_only = all(n in _GENERIC_EFFICACY_NEEDLES for n in hits)
+    if generic_only and set(parsed_query.intents) & {IntentType.TIMING, IntentType.SUPPLEMENT_INTERACTION,
+                                                     IntentType.DRUG_INTERACTION, IntentType.FOOD_COMPOUND_INTERACTION}:
+        return answer
     entities = _supplement_entities(parsed_query)
     if not entities:
         return answer  # out-of-KB ingredient: the unknown-ingredient template already says so
@@ -1133,9 +1214,148 @@ def _apply_efficacy_policy(answer: str, question: str, parsed_query: ParsedSuppl
     if documented:
         lead = (
             f"근거 문서에는 {label}{_josa(label, '이', '가')} '{documented[0]}' 용도로 안내되어 있지만, "
-            "질문하신 효과를 직접 확인한 근거는 없습니다."
+            "질문하신 효과를 직접 확인한 근거가 없습니다."
         )
     else:
         lead = f"확보된 근거 문서에서는 {label}의 그런 효과를 확인할 수 없습니다."
     return f"{lead} 아래 내용은 일반적인 참고 정보이며 개인에 따라 다를 수 있습니다. {answer}"
+
+
+# ---------- Say what the KB does not cover (policy 2026-11-11) ----------
+# An ingredient without a profile (비타민A/E), a risk context with no rule for that ingredient
+# (밀크씨슬 + 임신), or a symptom the profile never mentions (유산균 + 더부룩): the LLM answers from
+# general knowledge, so the answer must first say the curated documents do not cover it.
+# Common supplements with no curated profile or rule (the parser does not know them either).
+_UNCOVERED_SUPPLEMENT_NAMES = (
+    "가르시니아", "글루코사민", "콘드로이친", "홍삼", "인삼", "프로폴리스", "쏘팔메토", "크릴오일", "스피루리나",
+    "클로렐라", "히알루론산", "보스웰리아", "녹용", "흑마늘", "커큐민", "강황", "은행잎", "달맞이꽃",
+    "감마리놀렌산", "녹차추출물", "카테킨", "키토산", "공액리놀레산", "알로에", "레시틴", "비타민k", "비타민 k",
+    "세인트존스워트", "nac", "엔에이씨", "아세틸시스테인", "퀘르세틴", "nmn", "베르베린", "크롬", "요오드",
+    "마카", "쏘팔", "타트체리", "엘더베리", "에키네시아", "비타민 젤리", "젤리 비타민", "빌베리", "여주",
+)
+_CONTEXT_WORDS = {
+    "pregnancy": ("임신", "임산부"),
+    "breastfeeding": ("수유",),
+    "surgery": ("수술", "시술"),
+    "child": ("어린이", "소아", "영유아", "유아", "청소년", "아이"),
+    "immunocompromised": ("면역저하", "면역 저하", "면역력이 떨어", "항암", "이식", "중증"),
+}
+_CONTEXT_LABEL = {"pregnancy": "임신 중", "breastfeeding": "수유 중", "surgery": "수술 전후",
+                  "child": "어린이·청소년", "immunocompromised": "항암·면역저하 상태"}
+_TOPIC_WORDS = ("보관", "냉장", "실온", "유통기한", "상한", "산패")
+_SYMPTOM_WORDS = ("가스", "더부룩", "메스꺼", "설사", "변비", "두드러기", "속쓰림", "복통", "트림", "두통", "어지러")
+
+
+@functools.lru_cache(maxsize=1)
+def _curated_kb() -> tuple[tuple[str, dict, str], ...]:
+    """All curated profiles / rules (data/documents JSON) as (text, metadata, source)."""
+    from pathlib import Path
+
+    from engines.supplement.kb_documents import load_curated_kb_records
+
+    root = Path(__file__).resolve().parents[2] / "data" / "documents"
+    return tuple(load_curated_kb_records(root))
+
+
+def _kb_text_for(canonical: str, sources: set[str]) -> str:
+    """Curated KB text about this ingredient: the whole KB, not only what retrieval returned."""
+    return "\n".join(
+        text for text, meta, source in _curated_kb()
+        if source in sources and canonical in _doc_supplement_canonicals(meta)
+    )
+
+
+def _doc_entity_canonicals(meta: dict) -> set[str]:
+    """Every entity a rule is about (supplements and drugs / foods), expanded."""
+    values: set[str] = set()
+    for key in ("canonical", "entity_a_canonical", "entity_b_canonical", "affected_entities"):
+        raw = meta.get(key)
+        parts = raw.split(",") if isinstance(raw, str) else (raw or [])
+        for part in parts:
+            values.update(_expand_canonical(str(part)))
+    return values
+
+
+_UNSPECIFIC_MEDICATION_TEXTS = {"처방약", "복용 중인 약", "약물", "medication", "medicine", "처방 받", "처방받"}
+
+
+def _uncovered_pair_lead(entity: Any, label: str, parsed_query: ParsedSupplementQuery) -> str | None:
+    """"아연이랑 마그네슘 같이", "당뇨약 먹는데 프로틴": a combination question for which no curated
+    interaction / safety rule names both sides. The LLM then answers from general knowledge."""
+    if not set(parsed_query.intents) & {IntentType.SUPPLEMENT_INTERACTION, IntentType.DRUG_INTERACTION}:
+        return None
+    canonical = entity.canonical.lower()
+    others = [
+        e for e in parsed_query.entities
+        if e is not entity and e.canonical.lower() != canonical and e.text != entity.text  # "칼마디" names both
+        and e.type in (EntityType.SUPPLEMENT_INGREDIENT, EntityType.DRUG_OR_DRUG_CLASS)
+        # "복용 중인 약" names no specific pair; "고지혈증약", "녹내장 안약" do
+        and not (e.canonical.lower() == "medication" and e.text in _UNSPECIFIC_MEDICATION_TEXTS)
+    ]
+    for other in others:
+        other_forms = _expand_canonical(other.canonical.lower())
+        other_names = {other.text, _entity_label(other.canonical)} - {"", None}
+        covered = any(
+            canonical in _doc_supplement_canonicals(meta)
+            and (
+                # a rule naming both sides, or a profile that discusses the pairing
+                (source in {"interaction_rule", "safety_rule"} and other_forms & _doc_entity_canonicals(meta))
+                or (source in {"interaction_rule", "safety_rule", "ingredient_profile"}
+                    and any(name in text for name in other_names))
+            )
+            for text, meta, source in _curated_kb()
+        )
+        if not covered:
+            other_label = other.text or other.canonical
+            return (
+                f"확보된 근거 문서에는 {label}{_josa(label, '과', '와')} {other_label}의 병용에 대한 자료가 없어, "
+                "아래 내용은 일반적인 참고 정보입니다."
+            )
+    return None
+
+
+def _apply_coverage_honesty(answer: str, question: str, parsed_query: ParsedSupplementQuery, docs: list[Any]) -> str:
+    if not answer or any(marker in answer for marker in _HONEST_LEAD_MARKERS):
+        return answer
+    entities = [e for e in parsed_query.entities if e.type == EntityType.SUPPLEMENT_INGREDIENT]
+    if not entities:
+        named = next((name for name in _UNCOVERED_SUPPLEMENT_NAMES if name in (question or "").lower()), None)
+        if named:
+            return f"확보된 근거 문서에는 {named}에 대한 자료가 없어, 아래 내용은 일반적인 참고 정보입니다. {answer}"
+        return answer
+    entity = entities[0]
+    label = _entity_label(entity.canonical)
+    canonical = entity.canonical.lower()
+    if not _curated_kb():
+        return answer  # KB files unavailable: nothing to judge coverage against
+    profile_text = _kb_text_for(canonical, {"ingredient_profile"})
+    rule_text = _kb_text_for(canonical, {"safety_rule", "interaction_rule"})
+    if not profile_text and not rule_text:
+        lead = f"확보된 근거 문서에는 {label}에 대한 자료가 없어, 아래 내용은 일반적인 참고 정보입니다."
+        return f"{lead} {answer}"
+    covered_text = profile_text + "\n" + rule_text
+    pair_lead = _uncovered_pair_lead(entity, label, parsed_query)
+    if pair_lead:
+        return f"{pair_lead} {answer}"
+    contexts = [e.canonical.lower() for e in parsed_query.entities if e.canonical.lower() in _CONTEXT_WORDS]
+    for context in contexts:
+        if not any(word in covered_text for word in _CONTEXT_WORDS[context]):
+            lead = (
+                f"확보된 근거 문서에는 {label}의 {_CONTEXT_LABEL[context]} 안전성에 대한 구체적인 자료가 없습니다. "
+                "복용 전 반드시 의사 또는 약사와 상담하세요."
+            )
+            return f"{lead} {answer}"
+    asked_topics = [w for w in _TOPIC_WORDS if w in (question or "")]
+    if asked_topics and not any(w in covered_text for w in asked_topics):
+        # "냉장 보관해야 돼요?": storage / shelf-life questions the KB does not cover
+        return (f"확보된 근거 문서에는 {label}의 보관 방법에 대한 자료가 없어, 아래 내용은 일반적인 참고 정보입니다. "
+                f"{answer}")
+    asked_symptoms = [w for w in _SYMPTOM_WORDS if w in (question or "")]
+    if asked_symptoms and not any(w in covered_text for w in asked_symptoms):
+        lead = (
+            f"확보된 근거 문서에서는 {label} 복용 후 이런 증상에 대한 자료를 확인할 수 없습니다. "
+            "증상이 계속되면 복용을 중단하고 의사 또는 약사와 상담하세요."
+        )
+        return f"{lead} {answer}"
+    return answer
 

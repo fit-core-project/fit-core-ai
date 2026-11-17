@@ -12,7 +12,14 @@ from dotenv import load_dotenv
 
 from engines.llm_router import get_llm
 from engines.log_redaction import sanitize_exception_for_log
-from engines.supplement.query_understanding import EntityType, IntentType, ParsedSupplementQuery, parse_supplement_query
+from engines.supplement.query_understanding import (
+    EntityType,
+    IntentType,
+    ParsedSupplementQuery,
+    llm_refine_parsed_query,
+    needs_llm_parse,
+    parse_supplement_query,
+)
 from engines.supplement.response_composer import compose_supplement_response
 
 load_dotenv()
@@ -557,6 +564,10 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                     score += 90.0
                 elif supplement_match:
                     score += 35.0
+                elif risk_match and not supplement_entities:
+                    # "혈압약 먹는 사람은 어떤 보충제 조심해야 해요?": no ingredient named, so every
+                    # rule about that drug / context is the answer
+                    score += 60.0
                 if score > 0 and intents & {IntentType.DRUG_INTERACTION, IntentType.FOOD_COMPOUND_INTERACTION, IntentType.SUPPLEMENT_INTERACTION}:
                     score += 30.0
                 if score > 0 and str(meta.get("caution_level") or "").lower() in {"high", "critical"}:
@@ -576,6 +587,9 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
                     score += 125.0
                 elif affected_match:
                     score += 70.0
+                elif trigger_match and not supplement_entities and (risk_entities | drug_entities | condition_entities):
+                    # "임신 초기인데 영양제 뭐 먹어야 돼요?": the context's rules, whatever the ingredient
+                    score += 60.0
                 if score > 0 and intents & {
                     IntentType.CONDITION_SAFETY,
                     IntentType.PREGNANCY_OR_HIGH_DOSE_SAFETY,
@@ -664,6 +678,10 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
         stage_start = time.perf_counter()
         normalized_question = (question or "").strip()
         parsed_query = parse_supplement_query(normalized_question)
+        if needs_llm_parse(parsed_query) and os.getenv("SUPPLEMENT_LLM_PARSE_FALLBACK", "1") != "0":
+            # rules found no supplement or no intent: map the wording onto the KB vocabulary with the LLM
+            parsed_query = llm_refine_parsed_query(parsed_query, lambda prompt: self.llm.invoke(prompt))
+            counts["llmParseFallback"] = True
         mark("inputNormalization", stage_start)
         counts["parsedEntityCount"] = len(parsed_query.entities)
         counts["parsedIntents"] = [intent.value for intent in parsed_query.intents]

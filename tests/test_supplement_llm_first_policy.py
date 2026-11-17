@@ -87,7 +87,9 @@ def test_multi_supplement_valid_llm_answer_is_not_replaced():
         selected_docs=[],
     )
 
-    assert result.answer.startswith("둘은 목적이 달라")
+    # the LLM text is kept; no curated rule covers this pair, so an honesty lead may precede it
+    assert "둘은 목적이 달라 함께 고려할 수 있지만" in result.answer
+    assert result.answer.startswith(("둘은 목적이 달라", "확보된 근거 문서에는"))
     assert "확인된 성분은" not in result.answer
     assert result.used_kb_fallback is False
 
@@ -140,3 +142,55 @@ def test_llm_timeout_falls_back_to_deterministic_answer(monkeypatch):
     assert result["answer"]
     assert result["debugCounts"]["llmAnswerFallbackReason"] == "generation_error"
     assert result["debugCounts"]["answerRecoveredFromKbDocs"] is True
+
+
+def test_pair_without_a_curated_rule_gets_an_honesty_lead():
+    question = "당뇨약 먹는데 프로틴 쉐이크 먹어도 되나요"
+    result = compose_supplement_response(
+        question=question,
+        parsed_query=parse_supplement_query(question),
+        generated_answer="프로틴 쉐이크는 탄수화물 함량을 확인하고 혈당 변화를 관찰하세요.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+    assert result.answer.startswith("확보된 근거 문서에는")
+    assert "병용에 대한 자료가 없어" in result.answer
+    assert "혈당 변화를 관찰하세요" in result.answer
+
+
+def test_pair_with_a_curated_rule_has_no_honesty_lead():
+    question = "마그네슘이랑 갑상선약 같이 먹어도 돼요?"
+    result = compose_supplement_response(
+        question=question,
+        parsed_query=parse_supplement_query(question),
+        generated_answer="마그네슘은 갑상선약 흡수를 방해할 수 있어 4시간 간격을 두세요.",
+        generated_caution=None,
+        selected_docs=[],
+    )
+    assert "병용에 대한 자료가 없어" not in result.answer
+
+
+def test_dose_numbers_are_removed_from_answers():
+    from engines.supplement.response_composer import _strip_dose_numbers
+    out = _strip_dose_numbers("하루 1000mg 이상 드시면 설사가 생길 수 있어요.")
+    assert "1000" not in out and "mg" not in out
+
+
+def test_context_parsing_child_lab_value_and_typos():
+    assert "child" in {e.canonical for e in parse_supplement_query("돌 지난 아기한테 철분제 먹여도 되나요").entities}
+    # "아기 낳고 모유 먹이는데" is about the mother
+    mother = {e.canonical for e in parse_supplement_query("아기 낳고 모유 먹이는데 밀크시슬 먹어도 될까요").entities}
+    assert "child" not in mother and "breastfeeding" in mother
+    lab = {e.canonical for e in parse_supplement_query("비타민D 고용량으로 먹다가 칼슘 수치 높다고 나왔어요").entities}
+    assert "calcium" not in lab
+    assert "magnesium" in {e.canonical for e in parse_supplement_query("magnesiun before bed ok??").entities}
+    q = parse_supplement_query("감기약 먹는 중인데 타이레놀도 같이 먹어도 돼요?")
+    assert "medication_safety" in {i.value for i in q.intents}
+
+
+def test_efficacy_outcome_without_needle_gets_honesty_lead():
+    q = "콜라겐 마시면 주름 펴져요?"
+    result = compose_supplement_response(question=q, parsed_query=parse_supplement_query(q),
+                                         generated_answer="콜라겐은 피부 보습에 도움을 줄 수 있습니다.",
+                                         generated_caution=None, selected_docs=[])
+    assert result.answer.startswith("확보된 근거 문서에서는")

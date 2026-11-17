@@ -298,5 +298,105 @@
       "임신 또는 수유 중",
       "여러 보충제를 함께 복용 중"
     ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_COENZYME_Q10_WARFARIN",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "coenzyme q10",
+      "label": "코엔자임Q10"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "warfarin",
+      "label": "와파린"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "코엔자임Q10은 와파린의 효과를 약하게 할 수 있다는 보고가 있어 혈액 응고 수치(INR) 조절이 달라지고 혈전 위험에 영향을 줄 수 있습니다.",
+    "recommendation": "와파린을 복용 중이면 코엔자임Q10을 임의로 시작하거나 중단하지 말고 처방 의사 또는 약사와 상담하세요.",
+    "spacing_guidance": "복용 간격만으로 해결되지 않으므로 시작하거나 중단할 때 혈액 응고 검사가 필요한지 의료진에게 확인하세요.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "와파린 복용 중",
+      "항응고제 복용 중",
+      "수술 예정",
+      "출혈 또는 혈전 병력"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_COENZYME_Q10_BLOOD_PRESSURE_MEDICATION",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "coenzyme q10",
+      "label": "코엔자임Q10"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "blood pressure medication",
+      "label": "혈압약"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "코엔자임Q10은 혈압을 낮출 수 있다고 알려져 있어 혈압약과 함께 복용하면 혈압이 과도하게 낮아질 가능성이 제기됩니다. 다만 혈압에 대한 효과 크기는 연구마다 다릅니다.",
+    "recommendation": "혈압약을 복용 중이면 코엔자임Q10 복용 여부를 의사 또는 약사에게 알리고 혈압 변화를 확인하세요. 혈압약을 임의로 줄이거나 대체하지 마세요.",
+    "spacing_guidance": "복용 간격보다 혈압 변화와 어지러움 같은 증상을 확인하는 것이 중요합니다.",
+    "caution_level": "moderate",
+    "consultation_required_when": [
+      "혈압약 복용 중",
+      "저혈압 또는 어지러움",
+      "심혈관 질환 치료 중",
+      "와파린 복용 중"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_ARGININE_BLOOD_PRESSURE_MEDICATION",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "arginine",
+      "label": "아르기닌"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "blood pressure medication",
+      "label": "혈압약"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "아르기닌은 혈관을 이완시켜 혈압을 낮출 수 있어 혈압약과 함께 복용하면 혈압이 너무 낮아질 수 있습니다.",
+    "recommendation": "혈압약, 질산염 계열 협심증약, 발기부전 치료제를 복용 중이면 아르기닌을 임의로 함께 복용하지 말고 의사 또는 약사와 상담하세요.",
+    "spacing_guidance": "복용 간격만으로 혈압 저하 위험이 해결되지 않으므로 병용 여부 자체를 의료진과 확인하세요.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "혈압약 복용 중",
+      "협심증약 복용 중",
+      "최근 심근경색",
+      "저혈압 또는 어지러움"
+    ]
+  },
+  {
+    "type": "interaction_rule",
+    "id": "INT_ASHWAGANDHA_THYROID_MEDICATION",
+    "entity_a": {
+      "type": "supplement_ingredient",
+      "canonical": "ashwagandha",
+      "label": "아쉬와간다"
+    },
+    "entity_b": {
+      "type": "drug_or_drug_class",
+      "canonical": "thyroid medication",
+      "label": "갑상선약"
+    },
+    "interaction_type": "medication_timing_interference",
+    "mechanism": "아쉬와간다는 갑상선 호르몬 수치에 영향을 줄 수 있다는 연구가 있어 갑상선약과 함께 복용하면 호르몬 수치 조절이 달라질 수 있습니다.",
+    "recommendation": "갑상선약을 복용 중이거나 갑상선 질환이 있으면 아쉬와간다를 임의로 시작하지 말고 의사 또는 약사와 상담하세요.",
+    "spacing_guidance": "복용 간격만으로 영향이 해결된다고 보기 어려우므로 병용 여부와 갑상선 수치 확인을 의료진과 상의하세요.",
+    "caution_level": "high",
+    "consultation_required_when": [
+      "갑상선약 복용 중",
+      "갑상선 질환 치료 중",
+      "자가면역질환",
+      "임신 또는 수유 중"
+    ]
   }
 ]

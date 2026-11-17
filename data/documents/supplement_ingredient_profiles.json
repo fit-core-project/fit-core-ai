@@ -217,5 +217,275 @@
     ],
     "high_risk_groups": ["kidney disease", "lactose intolerance", "milk allergy"],
     "related_interactions": ["SAFE_KIDNEY_PROTEIN"]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_CALCIUM",
+    "name": "칼슘",
+    "aliases": ["칼슘", "calcium", "탄산칼슘", "구연산칼슘"],
+    "category": "mineral",
+    "common_uses": ["칼슘 보충", "뼈 건강 관련 영양 보충"],
+    "timing": {
+      "general": "칼슘은 제품 지침에 따라 복용하고, 한 번에 많은 양보다 나누어 복용하는 방식이 흡수에 유리할 수 있습니다.",
+      "with_food": "탄산칼슘 제품은 식사와 함께 복용하는 것이 흡수에 유리하고, 구연산칼슘은 식사와 관계없이 복용할 수 있습니다.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": ["철분, 아연, 갑상선약, 일부 항생제와 흡수 간섭 가능성이 있어 복용 간격 확인이 필요합니다."],
+    "cautions": ["신장결석 병력이나 신장질환이 있으면 복용 전 의료진과 상담하세요.", "변비나 복부 팽만이 생길 수 있습니다.", "종합비타민 등 다른 제품의 칼슘 함량과 합산해 과다 섭취를 피하세요."],
+    "high_risk_groups": ["kidney disease", "kidney stones", "thyroid medication", "antibiotics"],
+    "related_interactions": ["INT_IRON_CALCIUM", "INT_CALCIUM_IRON", "INT_ZINC_IRON_CALCIUM"]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_VITAMIN_C",
+    "name": "비타민C",
+    "aliases": ["비타민C", "비타민 C", "비타민씨", "vitamin c", "아스코르브산"],
+    "category": "vitamin",
+    "common_uses": ["비타민C 보충"],
+    "timing": {
+      "general": "비타민C는 제품 지침에 따라 복용하며 식사 여부와 관계없이 복용할 수 있습니다.",
+      "with_food": "공복에 속쓰림이나 위장 불편이 있으면 식후 복용을 고려하세요.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": ["철분 보충제와 함께 복용하면 철분 흡수를 도울 수 있다고 알려져 있습니다."],
+    "cautions": ["고용량 복용 시 설사나 위장 불편이 생길 수 있습니다.", "신장결석 병력이 있으면 고용량 복용 전 의료진과 상담하세요.", "철 과잉(혈색소증)이 있으면 철분 흡수를 늘릴 수 있어 주의가 필요합니다."],
+    "high_risk_groups": ["kidney stones", "high dose", "hemochromatosis"],
+    "related_interactions": []
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_MELATONIN",
+    "name": "멜라토닌",
+    "aliases": ["멜라토닌", "melatonin"],
+    "category": "sleep",
+    "common_uses": ["수면 리듬 관련 보조 목적"],
+    "timing": {
+      "general": "국내에서 멜라토닌은 의사 처방이 필요한 전문의약품으로 분류되므로 처방과 복약 지도에 따라 복용하세요.",
+      "with_food": "",
+      "before_bed": "취침 전 복용하도록 처방되는 경우가 많습니다.",
+      "exercise_related": ""
+    },
+    "spacing": ["진정제, 수면제, 항응고제 등 다른 약을 복용 중이면 의사나 약사와 상의하세요."],
+    "cautions": ["졸음이 생길 수 있어 복용 후 운전이나 위험한 작업은 피하세요.", "임신·수유 중이거나 자가면역질환이 있으면 의료진과 상담하세요.", "장기 복용 여부는 처방한 의사와 상의하세요."],
+    "high_risk_groups": ["pregnancy", "breastfeeding", "anticoagulant", "sedatives"],
+    "related_interactions": []
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_VITAMIN_B",
+    "name": "비타민B군",
+    "aliases": ["비타민B군", "비타민B", "비타민 B", "비타민B 복합체", "vitamin b", "vitamin b complex", "비타민B1", "비타민B2", "비타민B6", "비타민B12"],
+    "category": "vitamin",
+    "common_uses": ["비타민B군 보충", "에너지 대사에 필요한 영양소 보충"],
+    "timing": {
+      "general": "비타민B군은 수용성 비타민으로 제품 지침에 따라 복용하며, 속 불편을 줄이기 위해 식후에 복용하는 방식이 일반적으로 무난합니다.",
+      "with_food": "공복에 메스꺼움이나 속 불편이 있으면 식사와 함께 복용하세요.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": ["종합비타민이나 피로 관련 제품에 비타민B군이 함께 들어 있는 경우가 많아 여러 제품의 함량이 중복되는지 확인하세요."],
+    "cautions": ["비타민B2(리보플라빈) 성분 때문에 소변이 진한 노란색으로 보일 수 있으며, 이는 비타민B2 복용 시 나타날 수 있는 변화로 알려져 있습니다. 다른 증상이 함께 있으면 의료진과 상담하세요.", "비타민B6를 고용량으로 장기간 복용하면 손발 저림, 감각 저하 등 감각 신경 이상이 보고되어 있어 고함량 제품은 의사 또는 약사와 상담하세요.", "비타민B군은 에너지 대사에 필요한 영양소이지만 결핍이 없는 상태에서 피로를 해결한다고 단정할 수는 없습니다.", "임신·수유 중이거나 복용 중인 약이 있으면 의료진과 상담하세요."],
+    "high_risk_groups": ["high dose", "long-term use", "pregnancy"],
+    "related_interactions": ["SAFE_HIGH_DOSE_VITAMIN_B6"]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_FOLATE",
+    "name": "엽산",
+    "aliases": ["엽산", "폴산", "folate", "folic acid"],
+    "category": "vitamin",
+    "common_uses": ["엽산 보충", "임신 준비 및 임신 초기 영양 관리"],
+    "timing": {
+      "general": "엽산은 제품 지침에 따라 하루 중 일정한 시간에 복용하며 식사 여부와 관계없이 복용할 수 있습니다.",
+      "with_food": "속이 불편하면 식후에 복용할 수 있습니다.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": ["메토트렉세이트, 일부 항경련제 등 엽산과 관련된 약을 복용 중이면 엽산을 임의로 복용하거나 중단하지 말고 처방한 의사와 상의하세요.", "임산부용 종합비타민에 엽산이 들어 있는 경우가 많아 중복 섭취를 확인하세요."],
+    "cautions": ["임신을 계획 중이라면 임신 전부터 임신 초기까지 엽산 섭취가 태아의 신경관 결손 위험을 낮추는 데 중요하다고 알려져 있어 의료진과 복용 시점과 함량을 상의하세요.", "고용량 엽산은 비타민B12 결핍으로 인한 빈혈을 가려 신경 손상 발견을 늦출 수 있어 고함량 제품은 의사 또는 약사와 상담하세요.", "복용 중인 약이 있으면 의료진과 상담하세요."],
+    "high_risk_groups": ["pregnancy", "high dose", "methotrexate", "anticonvulsants"],
+    "related_interactions": ["SAFE_PREGNANCY_FOLATE"]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_BIOTIN",
+    "name": "비오틴",
+    "aliases": ["비오틴", "biotin"],
+    "category": "vitamin",
+    "common_uses": ["비오틴 보충", "에너지 대사에 필요한 영양소 보충"],
+    "timing": {
+      "general": "비오틴은 제품 지침에 따라 복용하며 식사 여부와 관계없이 복용할 수 있습니다.",
+      "with_food": "",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": ["모발·손톱 제품이나 종합비타민에도 비오틴이 들어 있는 경우가 많아 총 함량을 확인하세요."],
+    "cautions": ["고함량 비오틴은 갑상선 호르몬, 트로포닌 등 일부 혈액검사 결과를 실제보다 높거나 낮게 나오게 할 수 있어 검사 전 복용 사실을 의료진에게 알리세요.", "비오틴 결핍은 드문 편이며, 결핍이 없는 사람에서 모발이나 손톱 개선 근거는 충분하지 않습니다.", "항경련제를 복용 중이거나 임신·수유 중이면 의료진과 상담하세요."],
+    "high_risk_groups": ["lab test", "thyroid test", "pregnancy"],
+    "related_interactions": ["SAFE_BIOTIN_LAB_TEST"]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_LUTEIN",
+    "name": "루테인",
+    "aliases": ["루테인", "lutein", "마리골드꽃추출물", "루테인지아잔틴"],
+    "category": "carotenoid",
+    "common_uses": ["노화로 감소할 수 있는 황반색소밀도 유지 관련 눈 건강 보조(국내 기능성 원료명: 마리골드꽃추출물)"],
+    "timing": {
+      "general": "루테인은 지용성 성분이라 지방이 포함된 식사와 함께 또는 식후에 복용하면 흡수에 유리할 수 있습니다.",
+      "with_food": "식사와 함께 복용하는 방식이 일반적으로 무난합니다.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": ["여러 눈 건강 제품이나 종합비타민에 루테인이 중복으로 들어 있는지 확인하세요."],
+    "cautions": ["국내에서 인정된 기능성은 노화로 감소할 수 있는 황반색소밀도 유지에 관한 것으로, 시력 자체를 개선한다고 단정할 수 없습니다.", "흡연자 또는 과거 흡연자는 장기 복용 시 폐암 위험 증가와의 연관성이 보고되어 있어 복용 전 의사 또는 약사와 상담하세요.", "임신·수유 중이거나 어린이는 섭취 전 의료진과 상담하세요."],
+    "high_risk_groups": ["smoking", "pregnancy", "breastfeeding"],
+    "related_interactions": ["SAFE_LUTEIN_SMOKING"]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_COENZYME_Q10",
+    "name": "코엔자임Q10",
+    "aliases": ["코엔자임Q10", "코엔자임 Q10", "코큐텐", "CoQ10", "coenzyme q10", "유비퀴논", "유비퀴놀"],
+    "category": "antioxidant",
+    "common_uses": ["항산화 관련 영양 보조", "높은 혈압 감소 관련 보조(국내 건강기능식품 기능성 원료)"],
+    "timing": {
+      "general": "코엔자임Q10은 지용성 성분이라 제품 지침에 따라 식사와 함께 또는 식후에 복용하면 흡수에 유리할 수 있습니다.",
+      "with_food": "공복보다 식후 복용이 일반적으로 무난합니다.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": ["와파린 등 항응고제를 복용 중이면 와파린의 효과를 약하게 할 수 있다는 보고가 있어 의사 또는 약사와 상담하세요.", "혈압약을 복용 중이면 혈압이 더 낮아질 가능성이 있어 복용 전 의료진과 상의하세요."],
+    "cautions": ["속 불편, 메스꺼움, 불면 등이 나타날 수 있습니다.", "스타틴 복용자의 근육 증상 완화 효과는 근거가 확실하지 않아 복용 여부는 처방 의사와 상의하세요.", "항암 치료 중이거나 임신·수유 중이면 의료진과 상담하세요."],
+    "high_risk_groups": ["anticoagulant", "warfarin", "blood pressure medication", "chemotherapy", "pregnancy"],
+    "related_interactions": ["INT_COENZYME_Q10_WARFARIN", "INT_COENZYME_Q10_BLOOD_PRESSURE_MEDICATION"]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_COLLAGEN",
+    "name": "콜라겐",
+    "aliases": ["콜라겐", "collagen", "저분자콜라겐펩타이드", "콜라겐 펩타이드", "collagen peptide"],
+    "category": "protein_peptide",
+    "common_uses": ["피부 보습 관련 보조(국내에서는 개별인정형 원료별로 기능성이 다름)"],
+    "timing": {
+      "general": "콜라겐은 특정 시간보다 제품 지침에 따라 매일 꾸준히 복용하는 것이 중요하며 식사와 관계없이 편한 시간에 복용할 수 있습니다.",
+      "with_food": "",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": ["단백질 보충제 등과 함께 먹는다면 하루 총 단백질 섭취량에 포함해 생각하세요."],
+    "cautions": ["국내에서 인정된 콜라겐 기능성은 원료마다 다르며, 주로 피부 보습이나 자외선에 의한 피부 손상 관련 원료가 인정되어 있으므로 제품의 기능성 표시를 확인하세요.", "어류, 돼지, 소 등 원료 유래가 다양해 해당 식품 알레르기가 있으면 제품의 원료를 확인하세요.", "콜라겐은 필수아미노산 구성이 불완전해 일반적인 단백질 보충을 대신하기는 어렵습니다.", "신장질환이 있거나 단백질 섭취 제한을 받고 있으면 의료진과 상담하세요."],
+    "high_risk_groups": ["fish allergy", "kidney disease"],
+    "related_interactions": []
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_ARGININE",
+    "name": "아르기닌",
+    "aliases": ["아르기닌", "아르지닌", "L-아르기닌", "L-아르지닌", "arginine", "l-arginine"],
+    "category": "amino_acid",
+    "common_uses": ["혈관 이완을 통한 혈행 개선 관련 보조(국내 개별인정형 원료)"],
+    "timing": {
+      "general": "아르기닌은 제품 지침에 따라 복용하며, 속 불편이 있으면 식후에 복용하는 방식을 고려하세요.",
+      "with_food": "속 불편이 있으면 식후 복용을 고려하세요.",
+      "before_bed": "",
+      "exercise_related": "운동 능력 향상 효과는 근거가 확실하지 않아 운동 전후 특정 복용 시점을 단정하지 않습니다."
+    },
+    "spacing": ["혈압약, 질산염 계열 협심증약, 발기부전 치료제 등 혈압을 낮추는 약과 함께 복용하면 혈압이 너무 낮아질 수 있어 의사 또는 약사와 상담하세요."],
+    "cautions": ["최근 심근경색을 겪은 경우 아르기닌 복용이 사망 위험을 높일 수 있다는 보고가 있어 임의로 복용하지 말고 주치의와 상의하세요.", "헤르페스(입술 포진 등)가 자주 재발하면 악화 가능성이 제기되어 있어 의료진과 상담하세요.", "복부 팽만, 설사 등 위장 증상이 생길 수 있습니다.", "국내 기능성은 혈관 이완을 통한 혈행 개선에 관한 것이며 운동 능력 향상 근거는 충분하지 않습니다."],
+    "high_risk_groups": ["blood pressure medication", "heart attack", "herpes"],
+    "related_interactions": ["INT_ARGININE_BLOOD_PRESSURE_MEDICATION"]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_BCAA",
+    "name": "BCAA(분지쇄아미노산)",
+    "aliases": ["BCAA", "분지쇄아미노산", "branched-chain amino acids"],
+    "category": "sports_supplement",
+    "common_uses": ["운동 중 아미노산 보충 목적"],
+    "timing": {
+      "general": "BCAA는 제품 지침에 따라 운동 전후나 운동 중에 물에 타서 마실 수 있으며, 특정 시간보다 하루 총 단백질 섭취량이 더 중요합니다.",
+      "with_food": "",
+      "before_bed": "",
+      "exercise_related": "운동 중 마시는 것은 가능하지만 식사나 단백질 보충제로 총 단백질을 충분히 섭취하고 있다면 추가 이점은 확실하지 않습니다."
+    },
+    "spacing": ["단백질 보충제나 고단백 식품에도 BCAA가 들어 있으므로 총 단백질 섭취량과 함께 확인하세요."],
+    "cautions": ["BCAA의 근육 성장이나 회복 효과는 연구 결과가 일관되지 않아 근거가 확실하지 않습니다.", "신장질환이 있거나 단백질 섭취 제한을 받고 있으면 아미노산 보충제 복용 전 의료진과 상담하세요.", "단풍당뇨증 등 선천성 아미노산 대사 질환이 있으면 복용하지 마세요.", "임신·수유 중이면 의료진과 상담하세요."],
+    "high_risk_groups": ["kidney disease", "maple syrup urine disease", "pregnancy"],
+    "related_interactions": ["SAFE_KIDNEY_PROTEIN"]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_GLUTAMINE",
+    "name": "글루타민",
+    "aliases": ["글루타민", "L-글루타민", "glutamine", "l-glutamine"],
+    "category": "amino_acid",
+    "common_uses": ["아미노산 보충 목적"],
+    "timing": {
+      "general": "글루타민은 제품 지침에 따라 복용하며, 운동 전후 특정 시점보다 식단과 하루 총 단백질 섭취량을 먼저 확인하세요.",
+      "with_food": "",
+      "before_bed": "",
+      "exercise_related": "운동 후 복용할 수 있지만 근육 회복이나 운동 수행 향상 효과는 근거가 분명하지 않습니다."
+    },
+    "spacing": ["단백질 보충제나 고단백 식품에도 글루타민이 들어 있어 총 섭취량을 함께 고려하세요."],
+    "cautions": ["건강한 성인에서 근육량이나 운동 능력 향상 근거는 확실하지 않습니다.", "간질환이나 신장질환이 있으면 복용 전 의료진과 상담하세요.", "임신·수유 중이거나 항암 치료 중이면 의료진과 상담하세요."],
+    "high_risk_groups": ["liver disease", "kidney disease", "pregnancy"],
+    "related_interactions": []
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_SELENIUM",
+    "name": "셀레늄",
+    "aliases": ["셀레늄", "셀렌", "selenium"],
+    "category": "mineral",
+    "common_uses": ["셀레늄 보충", "유해산소로부터 세포를 보호하는 데 필요한 영양소 보충"],
+    "timing": {
+      "general": "셀레늄은 제품 지침에 따라 식후에 복용하는 방식이 일반적으로 무난합니다.",
+      "with_food": "속 불편이 있으면 식사와 함께 복용하세요.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": ["종합비타민이나 항산화 제품에도 셀레늄이 들어 있는 경우가 많아 따로 복용하기 전 함량이 중복되는지 합산해 확인하세요."],
+    "cautions": ["셀레늄은 과다 섭취 시 독성이 나타날 수 있어 음식과 보충제를 합한 섭취량이 상한 섭취량을 넘지 않도록 주의하세요.", "장기간 과량 섭취하면 마늘 냄새 같은 입냄새, 탈모, 손톱이 약해지거나 빠짐, 메스꺼움, 설사 등이 생길 수 있습니다.", "브라질너트처럼 셀레늄 함량이 높은 식품을 자주 먹는다면 보충제와 합산해 판단하세요.", "갑상선 질환이 있거나 복용 중인 약이 있으면 의료진과 상담하세요."],
+    "high_risk_groups": ["high dose", "long-term use"],
+    "related_interactions": ["SAFE_HIGH_DOSE_SELENIUM"]
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_THEANINE",
+    "name": "테아닌",
+    "aliases": ["테아닌", "L-테아닌", "엘테아닌", "theanine", "l-theanine"],
+    "category": "amino_acid",
+    "common_uses": ["스트레스로 인한 긴장 완화 관련 보조(국내 개별인정형 원료)"],
+    "timing": {
+      "general": "테아닌은 제품 지침에 따라 복용하며 식사 여부와 관계없이 복용할 수 있습니다.",
+      "with_food": "",
+      "before_bed": "수면 개선 자체보다는 긴장 완화 관련 기능성으로 인정된 원료이므로 취침 전 복용 효과를 단정하지 않습니다.",
+      "exercise_related": ""
+    },
+    "spacing": ["혈압을 낮출 수 있다는 보고가 있어 혈압약을 복용 중이면 의사 또는 약사와 상담하세요.", "녹차 등 카페인 음료와 함께 섭취되는 경우가 많으며, 카페인 제품과 함께 쓸 때는 총 카페인 섭취량도 확인하세요."],
+    "cautions": ["국내 기능성은 스트레스로 인한 긴장 완화에 관한 것으로 수면 개선을 단정할 수 없습니다.", "임신·수유 중 안전성 자료가 충분하지 않아 복용 전 의료진과 상담하세요.", "복용 중인 약이 있으면 의사 또는 약사와 상담하세요."],
+    "high_risk_groups": ["pregnancy", "breastfeeding", "blood pressure medication"],
+    "related_interactions": []
+  },
+  {
+    "type": "ingredient_profile",
+    "id": "ING_ASHWAGANDHA",
+    "name": "아쉬와간다",
+    "aliases": ["아쉬와간다", "아슈와간다", "ashwagandha", "위타니아 솜니페라", "Withania somnifera"],
+    "category": "herbal",
+    "common_uses": ["스트레스, 수면 관련 보조 목적으로 사용되는 허브 원료"],
+    "timing": {
+      "general": "아쉬와간다는 제품 지침에 따라 복용하며, 국내에서 건강기능식품으로 인정된 제품인지와 표시된 기능성 내용을 먼저 확인하세요.",
+      "with_food": "속 불편이 있으면 식후에 복용할 수 있습니다.",
+      "before_bed": "",
+      "exercise_related": ""
+    },
+    "spacing": ["갑상선약을 복용 중이면 아쉬와간다가 갑상선 호르몬 수치에 영향을 줄 수 있어 임의로 함께 복용하지 말고 의사 또는 약사와 상담하세요.", "당뇨약, 혈압약, 진정제, 면역억제제, 항경련제를 복용 중이면 상호작용 가능성이 있어 의료진과 상의하세요."],
+    "cautions": ["임신 중에는 유산 관련 보고가 있어 복용을 피하고, 수유 중에도 사용을 피하는 것이 권장됩니다.", "드물게 간 손상 사례가 보고되어 있어 황달, 심한 피로 등이 있으면 복용을 중단하고 진료를 받으세요.", "단기간 사용 자료는 있으나 장기간 복용의 안전성은 확실하지 않습니다.", "스트레스나 수면 관련 연구가 있지만 근거가 제한적이어서 효과를 단정할 수 없습니다.", "갑상선 질환, 자가면역질환, 호르몬 민감성 전립선암이 있거나 수술 예정이면 의료진과 상담하세요."],
+    "high_risk_groups": ["pregnancy", "breastfeeding", "thyroid medication", "liver disease", "surgery", "autoimmune disease"],
+    "related_interactions": ["INT_ASHWAGANDHA_THYROID_MEDICATION", "SAFE_PREGNANCY_ASHWAGANDHA"]
   }
 ]

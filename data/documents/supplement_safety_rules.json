@@ -142,5 +142,77 @@
     "caution_level": "high",
     "evidence_summary": "임신 중 지용성 비타민과 미네랄 중복 섭취는 보수적으로 확인해야 합니다.",
     "source_refs": ["supplement_ingredient_profiles.json#ING_MULTIVITAMIN"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_BIOTIN_LAB_TEST",
+    "trigger_conditions": ["혈액검사", "피검사", "검사", "갑상선 검사", "트로포닌", "lab test", "blood test"],
+    "affected_entities": ["biotin", "비오틴"],
+    "risk": "고함량 비오틴은 갑상선 호르몬, 트로포닌 등 일부 면역측정 방식 혈액검사 결과를 실제보다 높거나 낮게 나오게 해 잘못된 진단으로 이어질 수 있습니다.",
+    "recommendation": "혈액검사, 특히 갑상선 검사나 심장 관련 검사를 앞두고 있다면 비오틴이나 비오틴이 든 종합비타민·모발 제품 복용 사실을 의료진에게 알리고 검사 전 중단 여부를 상의하세요.",
+    "when_to_consult": "갑상선 검사, 심장 관련 검사, 호르몬 검사를 앞두고 있거나 검사 결과가 증상과 맞지 않는 경우",
+    "caution_level": "high",
+    "evidence_summary": "미국 FDA는 비오틴이 트로포닌 등 일부 검사 결과에 간섭할 수 있다는 안전성 정보를 발표했습니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_BIOTIN"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_PREGNANCY_FOLATE",
+    "trigger_conditions": ["임신", "임신 준비", "임산부", "가임기", "pregnancy"],
+    "affected_entities": ["folate", "엽산", "folic acid"],
+    "risk": "임신 초기는 태아 신경관이 형성되는 시기로, 엽산이 부족하면 신경관 결손 위험이 높아질 수 있습니다.",
+    "recommendation": "임신을 계획 중이라면 임신 전부터 엽산 섭취를 시작하는 것이 일반적으로 권장되므로 복용 시점과 함량은 의사(산부인과) 또는 약사와 상의하세요.",
+    "when_to_consult": "임신 준비 중, 임신 중, 신경관 결손 병력, 항경련제나 메토트렉세이트 등 처방약 복용 중인 경우",
+    "caution_level": "high",
+    "evidence_summary": "임신 전후 엽산 섭취는 신경관 결손 위험을 낮추는 것으로 알려져 있으며, 국내에서도 태아 신경관의 정상 발달에 필요한 영양소로 안내됩니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_FOLATE"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_HIGH_DOSE_SELENIUM",
+    "trigger_conditions": ["고용량", "과량", "많이", "장기 복용", "장기복용", "high dose", "long-term use"],
+    "affected_entities": ["selenium", "셀레늄"],
+    "risk": "셀레늄을 장기간 과량 섭취하면 입냄새, 탈모, 손톱 이상, 위장 증상, 신경 증상 등 독성이 나타날 수 있습니다.",
+    "recommendation": "셀레늄은 음식과 종합비타민 등에서 섭취하는 양을 합산해 상한 섭취량을 넘지 않도록 하고, 고함량 제품은 의사 또는 약사와 상담하세요.",
+    "when_to_consult": "고함량 제품 복용, 여러 제품 병용, 탈모나 손톱 이상, 지속되는 위장 증상이 있는 경우",
+    "caution_level": "high",
+    "evidence_summary": "미네랄은 과량 섭취 시 독성이 생길 수 있으며 셀레늄은 상한 섭취량 확인이 특히 중요합니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_SELENIUM"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_HIGH_DOSE_VITAMIN_B6",
+    "trigger_conditions": ["고용량", "장기 복용", "장기복용", "오래", "high dose", "long-term use", "비타민B6"],
+    "affected_entities": ["vitamin b", "비타민B6", "비타민B군", "pyridoxine"],
+    "risk": "비타민B6를 고용량으로 장기간 복용하면 손발 저림, 감각 저하, 보행 불안정 등 감각 신경 이상이 생길 수 있습니다.",
+    "recommendation": "고함량 비타민B6 또는 비타민B군 제품을 오래 복용 중이고 손발 저림이 있다면 복용을 중단하고 의료진과 상담하세요. 여러 제품의 비타민B6 함량을 합산해 확인하세요.",
+    "when_to_consult": "고함량 제품 장기 복용, 손발 저림이나 감각 이상, 여러 비타민 제품 병용 중인 경우",
+    "caution_level": "high",
+    "evidence_summary": "고용량 비타민B6 장기 복용과 감각 신경병증의 연관성이 보고되어 있습니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_VITAMIN_B"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_LUTEIN_SMOKING",
+    "trigger_conditions": ["흡연", "흡연자", "담배", "smoking", "smoker"],
+    "affected_entities": ["lutein", "루테인", "마리골드꽃추출물"],
+    "risk": "흡연자에서 루테인 보충제 장기 복용과 폐암 위험 증가의 연관성이 관찰 연구에서 보고되었고, 국내에서도 흡연자 섭취 주의가 안내되어 있습니다.",
+    "recommendation": "흡연자 또는 과거 흡연자는 루테인 보충제 복용 전 의사 또는 약사와 상담하세요.",
+    "when_to_consult": "현재 흡연 중이거나 과거 흡연 이력이 있는 경우, 여러 카로티노이드 제품을 함께 복용하는 경우",
+    "caution_level": "moderate",
+    "evidence_summary": "관찰 연구 결과이므로 인과관계는 확정되지 않았지만 흡연자는 보수적으로 판단해야 합니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_LUTEIN"]
+  },
+  {
+    "type": "safety_rule",
+    "id": "SAFE_PREGNANCY_ASHWAGANDHA",
+    "trigger_conditions": ["임신", "임신 준비", "임산부", "수유", "pregnancy", "breastfeeding"],
+    "affected_entities": ["ashwagandha", "아쉬와간다"],
+    "risk": "아쉬와간다는 임신 중 유산 관련 보고가 있어 임신 중 사용을 피하도록 권고되며, 수유 중 안전성도 확립되지 않았습니다.",
+    "recommendation": "임신 중이거나 임신 가능성이 있는 경우, 수유 중이라면 아쉬와간다 복용을 피하고 필요하면 의료진과 상담하세요.",
+    "when_to_consult": "임신 중, 임신 준비 중, 수유 중, 호르몬 관련 질환이 있는 경우",
+    "caution_level": "high",
+    "evidence_summary": "미국 NIH 자료는 임신·수유 중 아쉬와간다 사용을 피하도록 안내합니다.",
+    "source_refs": ["supplement_ingredient_profiles.json#ING_ASHWAGANDHA"]
   }
 ]
