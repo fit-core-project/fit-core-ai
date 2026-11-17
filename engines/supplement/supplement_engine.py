@@ -841,6 +841,7 @@ Do not diagnose. Include a recommendation to consult a pharmacist or physician w
             timing_ms["sourceFormatting"] = 0
 
         composed = compose_supplement_response(
+            llm_refused=counts.get("llmAnswerFallbackReason") == "web_search_required",
             question=normalized_question,
             parsed_query=parsed_query,
             generated_answer=answer,

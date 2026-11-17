@@ -107,6 +107,8 @@ def compose_supplement_response(
         answer = f"{_REFUSED_LEAD} {answer}"
         if _has_risk_context(parsed_query) and _CONSULT_TEXT not in answer:
             answer = f"{answer} {_CONSULT_TEXT}"
+    if answer and _has_risk_context(parsed_query) and not _CONSULT_WORDS_RE.search(answer)             and not (caution and _CONSULT_WORDS_RE.search(caution)):
+        answer = f"{answer} {_CONSULT_TEXT}"  # a drug / condition / risk context always gets the consult line
     answer = _plain_text(_strip_dose_numbers(answer))
     caution = _plain_text(_strip_dose_numbers(caution)) if caution else caution
 
@@ -125,6 +127,7 @@ _DOSE_NUMBER_RE = re.compile(
 )
 
 
+_CONSULT_WORDS_RE = re.compile(r"의사|약사|의료진|전문가|상담|상의")
 _REFUSED_LEAD = "확보된 근거 문서에서는 질문하신 내용을 직접 확인할 수 없어, 아래는 확인된 관련 정보와 일반적인 참고 정보입니다."
 
 
@@ -1300,6 +1303,15 @@ _CONTEXT_WORDS = {
 _CONTEXT_LABEL = {"pregnancy": "임신 중", "breastfeeding": "수유 중", "surgery": "수술 전후",
                   "child": "어린이·청소년", "immunocompromised": "항암·면역저하 상태"}
 _TOPIC_WORDS = ("보관", "냉장", "실온", "유통기한", "상한", "산패")
+_TOPICS = (
+    (_TOPIC_WORDS, "보관 방법"),
+    (("동물성", "식물성", "비건", "채식", "원료", "유래", "vegan", "wool", "gelatin", "젤라틴"), "원료·유래"),
+)
+_CONDITION_WORDS = {
+    "kidney disease": ("신장", "투석", "신부전", "콩팥"),
+    "liver disease": ("간 질환", "간질환", "간 기능", "간수치", "간"),
+    "hypertension": ("혈압", "고혈압"),
+}
 _SYMPTOM_WORDS = ("가스", "더부룩", "메스꺼", "설사", "변비", "두드러기", "속쓰림", "복통", "트림", "두통", "어지러")
 
 
@@ -1402,11 +1414,18 @@ def _apply_coverage_honesty(answer: str, question: str, parsed_query: ParsedSupp
                 "복용 전 반드시 의사 또는 약사와 상담하세요."
             )
             return f"{lead} {answer}"
-    asked_topics = [w for w in _TOPIC_WORDS if w in (question or "")]
-    if asked_topics and not any(w in covered_text for w in asked_topics):
-        # "냉장 보관해야 돼요?": storage / shelf-life questions the KB does not cover
-        return (f"확보된 근거 문서에는 {label}의 보관 방법에 대한 자료가 없어, 아래 내용은 일반적인 참고 정보입니다. "
-                f"{answer}")
+    for topic_words, topic_label in _TOPICS:
+        asked_topics = [w for w in topic_words if w in (question or "")]
+        if asked_topics and not any(w in covered_text for w in asked_topics):
+            # "냉장 보관해야 돼요?", "비건인데 동물성 성분 들었나요?": topics the KB does not cover
+            return (f"확보된 근거 문서에는 {label}의 {topic_label}에 대한 자료가 없어, 아래 내용은 일반적인 참고 정보입니다. "
+                    f"{answer}")
+    for entity_ in parsed_query.entities:
+        words = _CONDITION_WORDS.get(entity_.canonical.lower())
+        if entity_.type == EntityType.CONDITION and words and not any(w in covered_text for w in words):
+            # "투석 중인데 셀레늄 괜찮나요?": the condition is not in any curated text for this ingredient
+            return (f"확보된 근거 문서에는 {label}의 {words[0]} 관련 안전성 자료가 없습니다. "
+                    f"복용 전 반드시 의사 또는 약사와 상담하세요. {answer}")
     asked_symptoms = [w for w in _SYMPTOM_WORDS if w in (question or "")]
     if asked_symptoms and not any(w in covered_text for w in asked_symptoms):
         lead = (
